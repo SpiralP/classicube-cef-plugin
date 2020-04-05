@@ -1,2 +1,4 @@
 /target
 Cargo.lock
+cef_binary*
+/cef.exe

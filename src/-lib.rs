@@ -1,3 +1,6 @@
+mod interface;
+
+use crate::interface::*;
 use classicube_sys::*;
 use std::{os::raw::c_int, ptr};
 
@@ -6,6 +9,16 @@ extern "C" fn init() {
 
     unsafe {
         Chat_Add(owned_string.as_cc_string());
+    }
+
+    unsafe {
+        assert_eq!(cef_init(), 0);
+    }
+}
+
+extern "C" fn free() {
+    unsafe {
+        assert_eq!(cef_free(), 0);
     }
 }
 
@@ -17,7 +30,7 @@ pub static mut Plugin_Component: IGameComponent = IGameComponent {
     /* Called when the game is being loaded. */
     Init: Some(init),
     /* Called when the component is being freed. (e.g. due to game being closed) */
-    Free: None,
+    Free: Some(free),
     /* Called to reset the component's state. (e.g. reconnecting to server) */
     Reset: None,
     /* Called to update the component's state when the user begins loading a new map. */

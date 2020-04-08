@@ -4,11 +4,14 @@ version = "0.1.0"
 authors = ["SpiralP <spiral.palmer@gmail.com>"]
 edition = "2018"
 
-# [lib]
-# crate-type = ["cdylib"]
+[lib]
+crate-type = ["cdylib"]
 
 [build-dependencies]
-cmake = "0.1"
+cmake = "0.1.42"
 
 [dependencies]
+classicube-helpers = { git = "https://github.com/SpiralP/rust-classicube-helpers.git" }
 classicube-sys = { git = "https://github.com/SpiralP/rust-classicube-sys.git" }
+color-backtrace = { git = "https://github.com/SpiralP/color-backtrace-msgbox.git" }
+lazy_static = "1.4.0"

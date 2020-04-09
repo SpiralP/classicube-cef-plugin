@@ -1,4 +1,4 @@
-# CEF (Chromium Embedded Framework) in ClassiCube
+# [CEF](https://bitbucket.org/chromiumembedded/cef) (Chromium Embedded Framework) in [ClassiCube](https://www.classicube.net/)
 
 ## Compiling
 

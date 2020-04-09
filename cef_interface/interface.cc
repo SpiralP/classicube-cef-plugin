@@ -202,8 +202,7 @@ class MyClient : public CefClient,
   DISALLOW_COPY_AND_ASSIGN(MyClient);
 };
 
-const char kStartupURL[] =
-    "https://www.youtube.com/embed/CsM0YMt7CQI?autoplay=1";
+const char kStartupURL[] = "";
 
 // Minimal implementation of CefApp for the browser process.
 class MyApp : public CefApp, public CefBrowserProcessHandler {
@@ -295,6 +294,20 @@ extern "C" int cef_free() {
 
 extern "C" int cef_step() {
   CefDoMessageLoopWork();
+
+  return 0;
+}
+
+extern "C" int cef_load(const char* url) {
+  app->client->browser_->GetMainFrame()->LoadURL(url);
+
+  return 0;
+}
+
+extern "C" int cef_run_script(const char* code) {
+  auto frame = app->client->browser_->GetMainFrame();
+
+  frame->ExecuteJavaScript(code, frame->GetURL(), 0);
 
   return 0;
 }

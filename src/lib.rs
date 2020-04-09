@@ -1,6 +1,6 @@
+mod bindings;
 mod cef;
 mod helpers;
-mod interface;
 mod owned_entity;
 mod owned_model;
 

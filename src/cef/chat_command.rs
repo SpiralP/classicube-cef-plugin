@@ -13,18 +13,10 @@ pub extern "C" fn c_chat_command_callback(args: *const classicube_sys::String, a
 fn command_callback(args: Vec<String>) {
     let args: Vec<&str> = args.iter().map(|s| s.as_ref()).collect();
 
-    match args.as_slice() {
-        ["bap", arg] => {
-            print((*arg).to_string());
-        }
-
-        ["meow"] => {
-            print("yes");
-        }
-
-        ["here"] => {
-            CEF.with(|cell| {
-                if let Some(cef) = cell.borrow_mut().as_mut() {
+    CEF.with(|cell| {
+        if let Some(cef) = cell.borrow_mut().as_mut() {
+            match args.as_slice() {
+                ["here"] => {
                     if let Some(entity) = cef.entity.as_mut() {
                         let entity = entity.as_mut().project();
                         let entity = entity.entity;
@@ -37,11 +29,15 @@ fn command_callback(args: Vec<String>) {
                         }
                     }
                 }
-            });
+
+                ["play", url] => {
+                    cef.load((*url).to_string());
+                }
+
+                _ => {}
+            }
+        } else {
+            print("Cef not initialized!");
         }
-
-        _ => {}
-    }
-
-    print("meow");
+    });
 }

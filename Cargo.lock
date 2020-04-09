@@ -209,6 +209,7 @@ dependencies = [
 name = "classicube-cef"
 version = "0.1.0"
 dependencies = [
+ "bindgen",
  "classicube-helpers",
  "classicube-sys",
  "cmake",
@@ -304,7 +305,7 @@ dependencies = [
 [[package]]
 name = "detour"
 version = "0.7.1"
-source = "git+https://github.com/SpiralP/detour-rs.git#88a9940c21c261eccff0996265b2d63467a3043b"
+source = "git+https://github.com/SpiralP/detour-rs.git#a7ba1a97f0d0fe289c3bc6386d9f8251db681153"
 dependencies = [
  "cfg-if",
  "detours-sys",
@@ -321,7 +322,7 @@ dependencies = [
 [[package]]
 name = "detours-sys"
 version = "0.1.0"
-source = "git+https://github.com/SpiralP/rust-detours-sys.git#624eaf14cf3f47a08babbea340cb24ce13f8a302"
+source = "git+https://github.com/SpiralP/rust-detours-sys.git#96ba4cf7c7dfbb8fc07c2469f1c5cafbf81d4187"
 dependencies = [
  "bindgen",
  "cc",

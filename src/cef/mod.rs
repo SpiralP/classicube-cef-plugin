@@ -6,11 +6,12 @@ use self::{
     cef_paint::cef_paint_callback, chat_command::c_chat_command_callback,
     render_model::local_player_render_model_hook,
 };
-use crate::{interface::*, owned_entity::OwnedEntity, owned_model::*};
+use crate::{bindings::*, helpers::*, owned_entity::OwnedEntity, owned_model::*};
 use classicube_helpers::{detour::*, tick::*};
-use classicube_sys::*;
+use classicube_sys::{Entities, Entity, OwnedChatCommand, ENTITIES_SELF_ID};
 use std::{
     cell::RefCell,
+    ffi::CString,
     os::raw::{c_double, c_float},
     pin::Pin,
 };
@@ -19,13 +20,6 @@ use std::{
 thread_local!(
     pub static CEF: RefCell<Option<Cef>> = RefCell::new(None);
 );
-
-fn print<S: Into<Vec<u8>>>(s: S) {
-    let owned_string = OwnedString::new(s);
-    unsafe {
-        Chat_Add(owned_string.as_cc_string());
-    }
-}
 
 pub fn initialize() {
     print("cef initialize");
@@ -87,6 +81,14 @@ impl Cef {
             tick_handler: TickEventHandler::new(),
             initialized: false,
             chat_command,
+        }
+    }
+
+    pub fn load(&mut self, url: String) {
+        let c_str = CString::new(url).unwrap();
+
+        unsafe {
+            assert_eq!(cef_load(c_str.as_ptr()), 0);
         }
     }
 

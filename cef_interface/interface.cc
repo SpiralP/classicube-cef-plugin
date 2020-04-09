@@ -311,7 +311,7 @@ extern "C" int cef_init(OnPaintCallback onPaintCallback) {
   settings.multi_threaded_message_loop = false;
 
   // Specify the path for the sub-process executable.
-  CefString(&settings.browser_subprocess_path).FromASCII("cef.exe");
+  CefString(&settings.browser_subprocess_path).FromASCII("cefsimple.exe");
 
   app = new MyApp(onPaintCallback);
 

@@ -52,7 +52,7 @@ fn main() {
             .join("build/cef_binary/tests/cefsimple")
             .join(profile)
             .join("cefsimple.exe"),
-        Path::new(&out_dir).join("cef.exe"),
+        Path::new(&out_dir).join("cefsimple.exe"),
     )
     .unwrap();
 

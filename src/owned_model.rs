@@ -3,8 +3,12 @@ use classicube_sys::*;
 use pin_project::{pin_project, project};
 use std::{ffi::CString, mem, pin::Pin};
 
-const WIDTH: usize = 512;
-const HEIGHT: usize = 512;
+// cef window size
+// rect.width = 1280;
+// rect.height = 720;
+
+const WIDTH: usize = 2048;
+const HEIGHT: usize = 1024;
 
 static mut PIXELS: [u8; 4 * WIDTH * HEIGHT] = [255; 4 * WIDTH * HEIGHT];
 
@@ -84,40 +88,31 @@ impl OwnedModel {
         Model_RegisterTexture(model_tex.as_mut().get_unchecked_mut());
     }
 
-    #[project]
-    fn draw_model(&mut self, _entity: *mut Entity) {
-        let texture = self.texture.as_ref().unwrap();
-
+    unsafe extern "C" fn draw(entity: *mut Entity) {
         println!("draw");
 
+        let entity = &mut *entity;
+
+        let model = &*entity.Model;
+        let model_tex = &*model.defaultTex;
+        let resource_id = model_tex.texID;
+
         let mut tex = Texture {
-            ID: texture.resource_id,
+            ID: resource_id,
             X: 0,
             Y: 0,
-            Width: 16,
-            Height: 9,
+            Width: 4 * 2,
+            Height: 4,
             uv: TextureRec {
                 U1: 0.0,
                 V1: 0.0,
-                U2: 1.0,
-                V2: 1.0,
+                U2: 1280f32 / WIDTH as f32,
+                V2: 720f32 / HEIGHT as f32,
             },
         };
 
-        unsafe {
-            // Gfx_Draw2DFlat(0, 0, 64, 64, col);
-            Texture_Render(&mut tex);
-        }
-    }
-
-    unsafe extern "C" fn draw(entity: *mut Entity) {
-        CEF.with(|option| {
-            if let Some(cef) = &mut *option.borrow_mut() {
-                let model = cef.model.as_mut().unwrap();
-                let mut model = model.as_mut().project();
-                model.draw_model(entity);
-            }
-        });
+        // Gfx_Draw2DFlat(0, 0, 64, 64, col);
+        Texture_RenderShaded(&mut tex, PackedCol_Make(255, 255, 255, 0));
     }
 
     #[project]

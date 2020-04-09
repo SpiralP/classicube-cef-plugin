@@ -64,8 +64,8 @@ class MyRenderHandler : public CefRenderHandler {
     printf("GetViewRect\n");
     rect.x = 0;
     rect.y = 0;
-    rect.width = 512;
-    rect.height = 512;
+    rect.width = 1280;
+    rect.height = 720;
   }
 
   void OnAcceleratedPaint(CefRefPtr<CefBrowser> browser,
@@ -236,7 +236,8 @@ class MyApp : public CefApp, public CefBrowserProcessHandler {
     windowInfo.SetAsWindowless(NULL);
 
     const CefString& url = kStartupURL;
-    const CefBrowserSettings settings;
+    CefBrowserSettings settings;
+    settings.windowless_frame_rate = 30;
 
     CefBrowserHost::CreateBrowser(windowInfo, client.get(), url, settings, NULL,
                                   NULL);

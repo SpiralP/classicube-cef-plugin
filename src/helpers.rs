@@ -148,6 +148,11 @@ pub unsafe fn Texture_Render(tex: &mut Texture) {
     Gfx_Draw2DTexture(tex, white);
 }
 
+pub unsafe fn Texture_RenderShaded(tex: &mut Texture, shadeCol: PackedCol) {
+    Gfx_BindTexture(tex.ID);
+    Gfx_Draw2DTexture(tex, shadeCol);
+}
+
 pub struct OwnedGfxTexture {
     pub resource_id: GfxResourceID,
 }

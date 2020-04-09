@@ -1,13 +1,19 @@
 mod cef;
 mod helpers;
 mod interface;
+mod owned_entity;
 mod owned_model;
 
-use crate::{helpers::*, owned_model::*};
+use crate::{helpers::*, owned_entity::*, owned_model::*};
 use classicube_sys::*;
-use std::{cell::RefCell, os::raw::c_int, pin::Pin, ptr};
+use std::{
+    cell::RefCell,
+    os::raw::{c_double, c_float, c_int},
+    pin::Pin,
+    ptr,
+};
 
-extern "C" fn init() {
+unsafe extern "C" fn init() {
     color_backtrace::install_with_settings(
         color_backtrace::Settings::new().verbosity(color_backtrace::Verbosity::Full),
     );
@@ -27,6 +33,7 @@ extern "C" fn free() {
     });
 }
 
+// TODO needs to hook on Gfx
 unsafe extern "C" fn on_new_map_loaded() {
     println!("OnNewMapLoaded");
 

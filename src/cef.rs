@@ -1,7 +1,12 @@
-use crate::{helpers::*, interface::*, owned_model::*};
-use classicube_helpers::tick::*;
+use crate::{helpers::*, interface::*, owned_entity::OwnedEntity, owned_model::*};
+use classicube_helpers::{detour::*, tick::*};
 use classicube_sys::*;
-use std::{cell::RefCell, pin::Pin};
+use std::{
+    cell::RefCell,
+    os::raw::{c_double, c_float, c_int},
+    pin::Pin,
+    ptr,
+};
 
 // Some means we are initialized
 thread_local!(
@@ -42,22 +47,62 @@ pub fn shutdown() {
 
 pub struct Cef {
     pub model: Option<Pin<Box<OwnedModel>>>,
+    pub entity: Option<Pin<Box<OwnedEntity>>>,
+
+    pub LocalPlayer_RenderModel_Detour:
+        GenericDetour<unsafe extern "C" fn(*mut Entity, c_double, c_float)>,
     tick_handler: TickEventHandler,
     initialized: bool,
 }
 
 impl Cef {
     pub fn new() -> Self {
+        let LocalPlayer_RenderModel_Detour = unsafe {
+            let me = &*Entities.List[ENTITIES_SELF_ID as usize];
+            let v_table = &*me.VTABLE;
+            let target = v_table.RenderModel.unwrap();
+            GenericDetour::new(
+                target,
+                Self::LocalPlayer_RenderModel_Hook
+                    as unsafe extern "C" fn(*mut Entity, c_double, c_float),
+            )
+            .unwrap()
+        };
+
         Self {
             model: None,
+            entity: None,
+            LocalPlayer_RenderModel_Detour,
             tick_handler: TickEventHandler::new(),
             initialized: false,
         }
     }
 
+    extern "C" fn LocalPlayer_RenderModel_Hook(entity: *mut Entity, delta: c_double, t: c_float) {
+        CEF.with(|option| {
+            if let Some(cef) = &mut *option.borrow_mut() {
+                unsafe {
+                    cef.LocalPlayer_RenderModel_Detour.call(entity, delta, t);
+
+                    let entity = cef.entity.as_mut().unwrap();
+                    let entity = entity.as_mut().project();
+                    let entity = entity.entity;
+
+                    // Entities.List[i]->VTABLE->RenderModel(Entities.List[i], delta, t);
+                    let v_table = &*entity.VTABLE;
+                    let RenderModel = v_table.RenderModel.unwrap();
+                    RenderModel(entity, delta, t);
+                }
+            }
+        });
+    }
+
     pub fn initialize(&mut self) {
         unsafe {
-            self.model = Some(OwnedModel::register("bap", "ag"));
+            self.model = Some(OwnedModel::register("cef", "cef"));
+            self.entity = Some(OwnedEntity::register());
+
+            self.LocalPlayer_RenderModel_Detour.enable().unwrap();
         }
 
         unsafe {

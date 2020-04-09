@@ -15,3 +15,4 @@ classicube-helpers = { git = "https://github.com/SpiralP/rust-classicube-helpers
 classicube-sys = { git = "https://github.com/SpiralP/rust-classicube-sys.git" }
 color-backtrace = { git = "https://github.com/SpiralP/color-backtrace-msgbox.git" }
 lazy_static = "1.4.0"
+pin-project = "0.4.8"

@@ -8,7 +8,7 @@ use self::{
 };
 use crate::{bindings::*, helpers::*, owned_entity::OwnedEntity, owned_model::*};
 use classicube_helpers::{detour::*, tick::*};
-use classicube_sys::{Entities, Entity, OwnedChatCommand, ENTITIES_SELF_ID};
+use classicube_sys::{Entities, Entity, OwnedChatCommand, Vec3, ENTITIES_SELF_ID};
 use std::{
     cell::RefCell,
     ffi::CString,
@@ -92,6 +92,13 @@ impl Cef {
         }
     }
 
+    pub fn run_script(&mut self, code: String) {
+        let c_str = CString::new(code).unwrap();
+        unsafe {
+            assert_eq!(cef_run_script(c_str.as_ptr()), 0);
+        }
+    }
+
     pub fn initialize(&mut self) {
         self.chat_command.as_mut().register();
 
@@ -106,10 +113,30 @@ impl Cef {
             assert_eq!(cef_init(Some(cef_paint_callback)), 0);
         }
 
-        self.tick_handler.on(|_task| {
-            //
+        self.tick_handler.on(|_task| unsafe {
+            assert_eq!(cef_step(), 0);
+        });
+
+        std::thread::spawn(move || loop {
+            std::thread::sleep(std::time::Duration::from_millis(100));
+
+            let me = unsafe { &*Entities.List[ENTITIES_SELF_ID as usize] };
+            let player_pos = Vec3 {
+                X: 64.0 - 4.0,
+                Y: 48.0,
+                Z: 64.0,
+            };
+
+            let percent = (player_pos - me.Position).length_squared();
+            let percent = (100.0 - percent).max(0.0).min(100.0);
+
+            let code = format!(
+                "if (window.player && window.player.setVolume) {{ window.player.setVolume({}); }}",
+                percent
+            );
+            let c_str = CString::new(code).unwrap();
             unsafe {
-                assert_eq!(cef_step(), 0);
+                assert_eq!(crate::bindings::cef_run_script(c_str.as_ptr()), 0);
             }
         });
 
@@ -119,6 +146,12 @@ impl Cef {
     pub fn shutdown(&mut self) {
         if self.initialized {
             self.model.take();
+            self.entity.take();
+
+            unsafe {
+                // ignore result
+                let _ = self.local_player_render_model_detour.disable();
+            }
 
             unsafe {
                 assert_eq!(cef_free(), 0);

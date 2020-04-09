@@ -22,6 +22,9 @@ fn main() {
         println!("cargo:rustc-link-lib=ucrtd");
     }
 
+    println!("cargo:rerun-if-changed=cef_interface/interface.cc");
+    println!("cargo:rerun-if-changed=cef_interface/interface.hh");
+
     let cmake_path = cmake::Config::new("cef_interface")
         .build_target("cef_interface")
         .profile(profile)

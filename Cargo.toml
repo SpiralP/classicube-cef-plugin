@@ -13,6 +13,7 @@ classicube-sys = { git = "https://github.com/SpiralP/rust-classicube-sys.git" }
 color-backtrace = { git = "https://github.com/SpiralP/color-backtrace-msgbox.git" }
 lazy_static = "1.4.0"
 pin-project = "0.4.8"
+tokio = { version = "0.2", features = ["full"] }
 
 [build-dependencies]
 bindgen = "0.53.2"

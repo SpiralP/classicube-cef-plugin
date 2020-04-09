@@ -16,7 +16,7 @@ pub extern "C" fn cef_paint_callback(
                 };
 
                 unsafe {
-                    println!("cef paint");
+                    // println!("cef paint");
                     let texture = model.texture.as_ref().unwrap();
                     Gfx_UpdateTexturePart(texture.resource_id, 0, 0, &mut part, 0);
                 }

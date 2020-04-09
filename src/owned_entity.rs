@@ -1,3 +1,4 @@
+use crate::helpers::print;
 use classicube_sys::*;
 use pin_project::{pin_project, project};
 use std::{mem, pin::Pin};
@@ -50,7 +51,7 @@ impl OwnedEntity {
     }
 
     unsafe extern "C" fn get_col(_entity: *mut Entity) -> PackedCol {
-        println!("GetCol");
+        // println!("GetCol");
 
         PACKEDCOL_WHITE
     }
@@ -58,7 +59,7 @@ impl OwnedEntity {
     unsafe extern "C" fn render_model(entity: *mut Entity, _delta_time: f64, _t: f32) {
         let entity = &mut *entity;
 
-        println!("RenderModel");
+        // println!("RenderModel");
 
         Model_Render(entity.Model, entity);
     }
@@ -84,7 +85,9 @@ impl OwnedEntity {
 
         entity.VTABLE = v_table.as_mut().get_unchecked_mut();
         entity.Velocity.set(0.0, 0.0, 0.0);
-        entity.Position.set(0.0, 40.0, 0.0);
+
+        entity.Position.set(64.0 - 4.0, 48.0, 64.0);
+
         entity.RotX = 180.0;
 
         // entity.DisplayNameRaw =

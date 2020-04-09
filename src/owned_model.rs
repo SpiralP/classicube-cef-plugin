@@ -89,7 +89,7 @@ impl OwnedModel {
     }
 
     unsafe extern "C" fn draw(entity: *mut Entity) {
-        println!("draw");
+        // println!("draw");
 
         let entity = &mut *entity;
 

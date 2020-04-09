@@ -12,8 +12,6 @@ unsafe extern "C" fn init() {
     color_backtrace::install_with_settings(
         color_backtrace::Settings::new().verbosity(color_backtrace::Verbosity::Full),
     );
-
-    cef::initialize();
 }
 
 extern "C" fn free() {
@@ -45,6 +43,7 @@ unsafe extern "C" fn on_new_map_loaded() {
             4,
         ));
     });
+    cef::initialize();
 }
 
 #[no_mangle]

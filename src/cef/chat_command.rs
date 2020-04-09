@@ -22,16 +22,39 @@ fn command_callback(args: Vec<String>) {
                         let entity = entity.entity;
                         unsafe {
                             let me = &*Entities.List[ENTITIES_SELF_ID as usize];
-                            entity
-                                .Position
-                                .set(me.Position.X, me.Position.Y, me.Position.Z);
+                            entity.Position.set(
+                                me.Position.X - 4.0,
+                                me.Position.Y + 4.0,
+                                me.Position.Z,
+                            );
                             print(format!("moved screen to {:?}", me.Position));
                         }
                     }
                 }
 
-                ["play", url] => {
+                ["load", url] => {
                     cef.load((*url).to_string());
+                }
+
+                ["play", id] => {
+                    cef.run_script(format!("player.loadVideoById(\"{}\");", id));
+                }
+
+                ["volume", percent] => {
+                    // 0 to 100
+                    cef.run_script(format!("player.setVolume({});", percent));
+                }
+
+                ["test"] => {
+                    std::thread::spawn(move || {
+                        use std::ffi::CString;
+
+                        let code = format!("player.loadVideoById(\"{}\");", "gQngg8iQipk");
+                        let c_str = CString::new(code).unwrap();
+                        unsafe {
+                            assert_eq!(crate::bindings::cef_run_script(c_str.as_ptr()), 0);
+                        }
+                    });
                 }
 
                 _ => {}

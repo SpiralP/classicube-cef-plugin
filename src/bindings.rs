@@ -27,12 +27,24 @@ mod tests {
         ));
     }
 
+    #[ignore]
     #[test]
     fn it_works() {
         unsafe {
             assert_eq!(cef_init(Some(on_paint_callback)), 0);
 
-            for _ in 0..100 {
+            fn run_script(code: String) {
+                use std::ffi::CString;
+                let c_str = CString::new(code).unwrap();
+                unsafe {
+                    assert_eq!(cef_run_script(c_str.as_ptr()), 0);
+                }
+            }
+
+            for i in 0..200 {
+                if i == 50 {
+                    run_script(format!("player.loadVideoById(\"{}\");", "gQngg8iQipk"));
+                }
                 assert_eq!(cef_step(), 0);
                 std::thread::sleep(std::time::Duration::from_millis(20));
             }

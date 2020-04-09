@@ -1,4 +1,4 @@
-use crate::{cef::CEF, helpers::*};
+use crate::helpers::*;
 use classicube_sys::*;
 use pin_project::{pin_project, project};
 use std::{ffi::CString, mem, pin::Pin};

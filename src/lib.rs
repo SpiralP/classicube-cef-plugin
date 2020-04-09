@@ -4,14 +4,9 @@ mod interface;
 mod owned_entity;
 mod owned_model;
 
-use crate::{helpers::*, owned_entity::*, owned_model::*};
+use crate::helpers::*;
 use classicube_sys::*;
-use std::{
-    cell::RefCell,
-    os::raw::{c_double, c_float, c_int},
-    pin::Pin,
-    ptr,
-};
+use std::{os::raw::c_int, ptr};
 
 unsafe extern "C" fn init() {
     color_backtrace::install_with_settings(

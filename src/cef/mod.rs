@@ -60,7 +60,7 @@ pub struct Cef {
         GenericDetour<unsafe extern "C" fn(*mut Entity, c_double, c_float)>,
     tick_handler: TickEventHandler,
     initialized: bool,
-    _chat_command: OwnedChatCommand,
+    chat_command: Pin<Box<OwnedChatCommand>>,
 }
 
 impl Cef {
@@ -77,8 +77,8 @@ impl Cef {
             .unwrap()
         };
 
-        let _chat_command =
-            OwnedChatCommand::new("Cef", c_chat_command_callback, false, vec!["hello??"]);
+        let chat_command =
+            OwnedChatCommand::new("Cef", c_chat_command_callback, false, vec!["cef"]);
 
         Self {
             model: None,
@@ -86,11 +86,13 @@ impl Cef {
             local_player_render_model_detour,
             tick_handler: TickEventHandler::new(),
             initialized: false,
-            _chat_command,
+            chat_command,
         }
     }
 
     pub fn initialize(&mut self) {
+        self.chat_command.as_mut().register();
+
         unsafe {
             self.model = Some(OwnedModel::register("cef", "cef"));
             self.entity = Some(OwnedEntity::register());

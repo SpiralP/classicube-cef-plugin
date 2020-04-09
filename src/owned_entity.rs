@@ -60,9 +60,6 @@ impl OwnedEntity {
 
         println!("RenderModel");
 
-        entity.Position.set(0.0, 40.0, 0.0);
-        entity.RotX = 180.0;
-
         Model_Render(entity.Model, entity);
     }
 
@@ -87,6 +84,8 @@ impl OwnedEntity {
 
         entity.VTABLE = v_table.as_mut().get_unchecked_mut();
         entity.Velocity.set(0.0, 0.0, 0.0);
+        entity.Position.set(0.0, 40.0, 0.0);
+        entity.RotX = 180.0;
 
         // entity.DisplayNameRaw =
     }

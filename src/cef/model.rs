@@ -3,19 +3,19 @@ use classicube_sys::*;
 use pin_project::{pin_project, project};
 use std::{ffi::CString, mem, pin::Pin};
 
-// cef window size
-// rect.width = 1280;
-// rect.height = 720;
+const CEF_WIDTH: u32 = 1920;
+const CEF_HEIGHT: u32 = 1080;
 
-const WIDTH: usize = 2048;
-const HEIGHT: usize = 1024;
+const TEXTURE_WIDTH: usize = 2048;
+const TEXTURE_HEIGHT: usize = 2048;
 
-static mut PIXELS: [u8; 4 * WIDTH * HEIGHT] = [255; 4 * WIDTH * HEIGHT];
+static mut PIXELS: [u8; 4 * TEXTURE_WIDTH * TEXTURE_HEIGHT] =
+    [255; 4 * TEXTURE_WIDTH * TEXTURE_HEIGHT];
 
 static mut BMP: Bitmap = Bitmap {
     Scan0: unsafe { &mut PIXELS as *mut _ as *mut u8 },
-    Width: WIDTH as i32,
-    Height: HEIGHT as i32,
+    Width: TEXTURE_WIDTH as i32,
+    Height: TEXTURE_HEIGHT as i32,
 };
 
 #[pin_project]
@@ -99,17 +99,16 @@ impl CefModel {
             ID: resource_id,
             X: 0,
             Y: 0,
-            Width: 4 * 2,
-            Height: 4,
+            Width: 16,
+            Height: 9,
             uv: TextureRec {
                 U1: 0.0,
                 V1: 0.0,
-                U2: 1280f32 / WIDTH as f32,
-                V2: 720f32 / HEIGHT as f32,
+                U2: CEF_WIDTH as f32 / TEXTURE_WIDTH as f32,
+                V2: CEF_HEIGHT as f32 / TEXTURE_HEIGHT as f32,
             },
         };
 
-        // Gfx_Draw2DFlat(0, 0, 64, 64, col);
         Texture_RenderShaded(&mut tex, PackedCol_Make(255, 255, 255, 0));
     }
 

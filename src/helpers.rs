@@ -3,13 +3,6 @@
 use classicube_sys::*;
 use std::cell::RefCell;
 
-pub fn print<S: Into<Vec<u8>>>(s: S) {
-    let owned_string = OwnedString::new(s);
-    unsafe {
-        Chat_Add(owned_string.as_cc_string());
-    }
-}
-
 // Gfx_quadVb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FC4B, 4);
 // Gfx_texVb  = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, 4);
 

@@ -1,5 +1,4 @@
-use super::CEF;
-use crate::helpers::print;
+use super::{chat::print, CEF};
 use classicube_sys::{Entities, ENTITIES_SELF_ID};
 use std::{os::raw::c_int, slice};
 
@@ -10,7 +9,7 @@ pub extern "C" fn c_chat_command_callback(args: *const classicube_sys::String, a
     command_callback(args);
 }
 
-fn command_callback(args: Vec<String>) {
+pub fn command_callback(args: Vec<String>) {
     let args: Vec<&str> = args.iter().map(|s| s.as_ref()).collect();
 
     CEF.with(|cell| {

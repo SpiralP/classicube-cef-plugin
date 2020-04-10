@@ -44,6 +44,7 @@ class MyRenderHandler : public CefRenderHandler {
 
   bool GetRootScreenRect(CefRefPtr<CefBrowser> browser,
                          CefRect& rect) OVERRIDE {
+    // If this method returns false the rectangle from GetViewRect will be used
     return false;
   }
 
@@ -64,8 +65,8 @@ class MyRenderHandler : public CefRenderHandler {
     rust_print("GetViewRect");
     rect.x = 0;
     rect.y = 0;
-    rect.width = 1280;
-    rect.height = 720;
+    rect.width = 1920;
+    rect.height = 1080;
   }
 
   void OnAcceleratedPaint(CefRefPtr<CefBrowser> browser,
@@ -205,51 +206,7 @@ class MyClient : public CefClient,
   DISALLOW_COPY_AND_ASSIGN(MyClient);
 };
 
-const char kStartupURL[] = R"(data:text/html,
-<!DOCTYPE html>
-<html>
-  <body style="padding: 0; margin: 0;">
-    <div id="player"></div>
-
-    <script>
-      var tag = document.createElement('script');
-
-      tag.src = "https://www.youtube.com/iframe_api";
-      var firstScriptTag = document.getElementsByTagName('script')[0];
-      firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-
-      // 3. This function creates an <iframe> (and YouTube player)
-      //    after the API code downloads.
-      var player;
-      function onYouTubeIframeAPIReady() {
-        player = new YT.Player('player', {
-          width: '1280',
-          height: '720',
-          events: {
-            'onReady': onPlayerReady,
-            'onStateChange': onPlayerStateChange
-          }
-        });
-      }
-
-      // 4. The API will call this function when the video player is ready.
-      function onPlayerReady(event) {
-        event.target.playVideo();
-      }
-
-      // 5. The API calls this function when the player's state changes.
-      //    The function indicates that when playing a video (state=1),
-      //    the player should play for six seconds and then stop.
-      var done = false;
-      function onPlayerStateChange(event) {
-        // if (event.data == YT.PlayerState.PLAYING && !done) {
-        //   setTimeout(() => { player.stopVideo(); }, 6000);
-        //   done = true;
-        // }
-      }
-    </script>
-  </body>
-</html>)";
+const char kStartupURL[] = "https://www.classicube.net/";
 
 // Minimal implementation of CefApp for the browser process.
 class MyApp : public CefApp, public CefBrowserProcessHandler {
@@ -308,9 +265,10 @@ extern "C" int cef_init(OnPaintCallback onPaintCallback) {
   // Populate this structure to customize CEF behavior.
   CefSettings settings;
   settings.no_sandbox = true;
-  // might fix cef firing winproc events that cc catches
-  settings.external_message_pump = true;
   settings.windowless_rendering_enabled = true;
+
+  // fixes cef firing winproc events that cc catches
+  settings.external_message_pump = true;
 
   // We need to have the main thread process work
   // so that it can paint

@@ -1,18 +1,26 @@
 mod cef_paint;
+mod chat;
 mod chat_command;
 mod entity;
 mod model;
 mod render_model;
 
 use self::{
-    cef_paint::cef_paint_callback, chat_command::c_chat_command_callback, entity::CefEntity,
-    model::CefModel, render_model::local_player_render_model_hook,
+    cef_paint::cef_paint_callback,
+    chat::{handle_chat_received, print},
+    chat_command::c_chat_command_callback,
+    entity::CefEntity,
+    model::CefModel,
+    render_model::local_player_render_model_hook,
 };
 use crate::{bindings::*, cef::cef_paint::CEF_CAN_DRAW, helpers::*};
 use async_dispatcher::{Dispatcher, DispatcherHandle};
 use classicube_helpers::{
     detour::*,
-    events::gfx::{ContextLostEventHandler, ContextRecreatedEventHandler},
+    events::{
+        chat::{ChatReceivedEvent, ChatReceivedEventHandler},
+        gfx::{ContextLostEventHandler, ContextRecreatedEventHandler},
+    },
     tick::*,
 };
 use classicube_sys::{
@@ -79,6 +87,7 @@ pub struct Cef {
     context_lost_handler: ContextLostEventHandler,
     context_recreated_handler: ContextRecreatedEventHandler,
     ag: classicube_helpers::events::entity::RemovedEventHandler,
+    chat_received: ChatReceivedEventHandler,
 }
 
 impl Cef {
@@ -110,6 +119,7 @@ impl Cef {
             context_lost_handler: ContextLostEventHandler::new(),
             context_recreated_handler: ContextRecreatedEventHandler::new(),
             ag: classicube_helpers::events::entity::RemovedEventHandler::new(),
+            chat_received: ChatReceivedEventHandler::new(),
         }
     }
 
@@ -160,6 +170,15 @@ impl Cef {
 
     pub fn initialize(&mut self) {
         self.chat_command.as_mut().register();
+
+        self.chat_received.on(
+            |ChatReceivedEvent {
+                 message,
+                 message_type,
+             }| {
+                handle_chat_received(message.to_string(), *message_type);
+            },
+        );
 
         self.ag.on(|_| {
             println!("entity remove");

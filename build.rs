@@ -7,20 +7,26 @@ fn main() {
         "Release"
     };
 
+    // this must be linked first!
+    // or else we get debug assertion popups about heap corruption/crt memory
+    if profile == "Debug" {
+        // links to ucrtbased.dll
+        println!("cargo:rustc-link-lib=dylib=ucrtd");
+    }
+
+    // println!("cargo:rustc-link-lib=rpcrt4");
+    // println!("cargo:rustc-link-lib=comctl32");
+    // println!("cargo:rustc-link-lib=shlwapi");
+
     let out_dir = env::var("OUT_DIR").unwrap();
 
     println!(
         "cargo:rustc-link-search=native=cef_interface/cef_binary/{}",
         profile
     );
-    println!("cargo:rustc-link-lib=comctl32");
-    println!("cargo:rustc-link-lib=shlwapi");
-    println!("cargo:rustc-link-lib=rpcrt4");
-    println!("cargo:rustc-link-lib=libcef");
-    println!("cargo:rustc-link-lib=cef_sandbox");
-    if profile == "Debug" {
-        println!("cargo:rustc-link-lib=ucrtd");
-    }
+
+    println!("cargo:rustc-link-lib=dylib=libcef");
+    println!("cargo:rustc-link-lib=static=cef_sandbox");
 
     println!("cargo:rerun-if-changed=cef_interface/interface.cc");
     println!("cargo:rerun-if-changed=cef_interface/interface.hh");
@@ -38,14 +44,14 @@ fn main() {
             .join(profile)
             .display()
     );
-    println!("cargo:rustc-link-lib=libcef_dll_wrapper");
+    println!("cargo:rustc-link-lib=static=libcef_dll_wrapper");
 
     // link to cef_interface
     println!(
         "cargo:rustc-link-search=native={}",
         cmake_path.join("build/").join(profile).display()
     );
-    println!("cargo:rustc-link-lib=cef_interface");
+    println!("cargo:rustc-link-lib=static=cef_interface");
 
     fs::copy(
         cmake_path

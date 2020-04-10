@@ -19,7 +19,7 @@ static mut BMP: Bitmap = Bitmap {
 };
 
 #[pin_project]
-pub struct OwnedModel {
+pub struct CefModel {
     #[pin]
     name: CString,
     #[pin]
@@ -34,7 +34,7 @@ pub struct OwnedModel {
     pub texture: Option<OwnedGfxTexture>,
 }
 
-impl OwnedModel {
+impl CefModel {
     pub unsafe fn register<S: Into<Vec<u8>>, S2: Into<Vec<u8>>>(
         name: S,
         texture_name: S2,
@@ -63,7 +63,7 @@ impl OwnedModel {
 }
 
 #[project]
-impl OwnedModel {
+impl CefModel {
     #[project]
     unsafe fn register_gfx_texture(&mut self) {
         let texture = OwnedGfxTexture::create(&mut BMP, true, false);
@@ -74,7 +74,7 @@ impl OwnedModel {
     #[project]
     unsafe fn register_texture(&mut self) {
         #[project]
-        let OwnedModel {
+        let CefModel {
             model_tex,
             texture_name,
             ..
@@ -89,8 +89,6 @@ impl OwnedModel {
     }
 
     unsafe extern "C" fn draw(entity: *mut Entity) {
-        // println!("draw");
-
         let entity = &mut *entity;
 
         let model = &*entity.Model;
@@ -118,7 +116,7 @@ impl OwnedModel {
     #[project]
     unsafe fn register_model(&mut self) {
         #[project]
-        let OwnedModel {
+        let CefModel {
             model_tex,
             model,
             vertices,

@@ -3,14 +3,14 @@ use pin_project::{pin_project, project};
 use std::{mem, pin::Pin};
 
 #[pin_project]
-pub struct OwnedEntity {
+pub struct CefEntity {
     pub entity: Entity,
 
     #[pin]
     v_table: EntityVTABLE,
 }
 
-impl OwnedEntity {
+impl CefEntity {
     pub unsafe fn register() -> Pin<Box<Self>> {
         let entity = mem::zeroed();
 
@@ -69,11 +69,11 @@ impl OwnedEntity {
 }
 
 #[project]
-impl OwnedEntity {
+impl CefEntity {
     #[project]
     unsafe fn register_entity(&mut self) {
         #[project]
-        let OwnedEntity {
+        let CefEntity {
             entity, v_table, ..
         } = self;
 

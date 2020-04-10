@@ -61,7 +61,7 @@ class MyRenderHandler : public CefRenderHandler {
   }
 
   void GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) OVERRIDE {
-    printf("GetViewRect\n");
+    rust_print("GetViewRect");
     rect.x = 0;
     rect.y = 0;
     rect.width = 1280;
@@ -72,7 +72,7 @@ class MyRenderHandler : public CefRenderHandler {
                           CefRenderHandler::PaintElementType type,
                           const CefRenderHandler::RectList& dirtyRects,
                           void* shared_handle) OVERRIDE {
-    printf("OnAcceleratedPaint\n");
+    rust_print("OnAcceleratedPaint");
   }
 
   void OnCursorChange(CefRefPtr<CefBrowser> browser,
@@ -95,7 +95,7 @@ class MyRenderHandler : public CefRenderHandler {
                const void* pixels,
                int width,
                int height) OVERRIDE {
-    printf("OnPaint %d %d\n", width, height);
+    // rust_print("OnPaint");
 
     onPaintCallback(pixels, width, height);
   }
@@ -164,11 +164,12 @@ class MyClient : public CefClient,
 
   void OnTitleChange(CefRefPtr<CefBrowser> browser,
                      const CefString& title) OVERRIDE {
-    wprintf(L"OnTitleChange %s\n", title.c_str());
+    // wprintf(L"OnTitleChange %s", title.c_str());
+    rust_print("OnTitleChange");
   }
 
   void OnAfterCreated(CefRefPtr<CefBrowser> browser) OVERRIDE {
-    printf("OnAfterCreated\n");
+    rust_print("OnAfterCreated");
 
     CEF_REQUIRE_UI_THREAD();
     DCHECK(!browser_);
@@ -176,7 +177,7 @@ class MyClient : public CefClient,
   }
 
   bool DoClose(CefRefPtr<CefBrowser> browser) OVERRIDE {
-    printf("DoClose\n");
+    rust_print("DoClose");
 
     // Must be executed on the UI thread.
     CEF_REQUIRE_UI_THREAD();
@@ -188,13 +189,15 @@ class MyClient : public CefClient,
   }
 
   void OnBeforeClose(CefRefPtr<CefBrowser> browser) OVERRIDE {
-    printf("OnBeforeClose\n");
+    rust_print("OnBeforeClose");
 
     CEF_REQUIRE_UI_THREAD();
 
     browser_ = nullptr;
 
-    CefQuitMessageLoop();
+    // rust_print("wake_browser_closed");
+    // wake_browser_closed();
+    // CefQuitMessageLoop();
   }
 
  private:
@@ -269,6 +272,7 @@ class MyApp : public CefApp, public CefBrowserProcessHandler {
     // |process_type| is empty for the browser process.
     command_line->AppendSwitchWithValue("autoplay-policy",
                                         "no-user-gesture-required");
+    command_line->AppendSwitch("disable-extensions");
   }
 
   // CefBrowserProcessHandler methods:
@@ -304,6 +308,8 @@ extern "C" int cef_init(OnPaintCallback onPaintCallback) {
   // Populate this structure to customize CEF behavior.
   CefSettings settings;
   settings.no_sandbox = true;
+  // might fix cef firing winproc events that cc catches
+  settings.external_message_pump = true;
   settings.windowless_rendering_enabled = true;
 
   // We need to have the main thread process work
@@ -324,13 +330,28 @@ extern "C" int cef_init(OnPaintCallback onPaintCallback) {
 }
 
 extern "C" int cef_free() {
-  printf("closebrowser\n");
+  // We must close browser (and wait for it to close) before calling CefShutdown
+
+  // TODO move this logic into rust?
+
+  rust_print("CloseBrowser");
   app->client->browser_->GetHost()->CloseBrowser(false);
 
-  printf("wait\n");
-  CefRunMessageLoop();
+  while (app && app->client && app->client->browser_) {
+    rust_print("waiting");
 
-  printf("shut\n");
+    CefDoMessageLoopWork();
+    using namespace std::chrono_literals;
+
+    std::this_thread::sleep_for(64ms);
+  }
+  // rust_print("wait: wait_for_browser_close");
+  // wait_for_browser_close();
+
+  // rust_print("wait: CefRunMessageLoop");
+  // CefRunMessageLoop();
+
+  rust_print("CefShutdown");
   CefShutdown();
 
   return 0;
@@ -352,6 +373,5 @@ extern "C" int cef_run_script(const char* code) {
   auto frame = app->client->browser_->GetMainFrame();
 
   frame->ExecuteJavaScript(code, frame->GetURL(), 0);
-
   return 0;
 }

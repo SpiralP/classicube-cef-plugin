@@ -8,9 +8,11 @@ edition = "2018"
 crate-type = ["cdylib"]
 
 [dependencies]
+async-dispatcher = { git = "https://github.com/SpiralP/rust-async-dispatcher.git" }
 classicube-helpers = { git = "https://github.com/SpiralP/rust-classicube-helpers.git" }
 classicube-sys = { git = "https://github.com/SpiralP/rust-classicube-sys.git" }
 color-backtrace = { git = "https://github.com/SpiralP/color-backtrace-msgbox.git" }
+futures = "0.3.4"
 lazy_static = "1.4.0"
 pin-project = "0.4.8"
 tokio = { version = "0.2", features = ["full"] }

@@ -36,7 +36,9 @@ use std::{
     future::Future,
     os::raw::{c_double, c_float, c_int},
     pin::Pin,
+    rc::Rc,
     sync::{atomic::Ordering, Mutex},
+    thread,
     time::Duration,
 };
 
@@ -58,6 +60,15 @@ lazy_static! {
     static ref ASYNC_DISPATCHER_HANDLE: Mutex<Option<DispatcherHandle>> = Mutex::new(None);
 }
 
+lazy_static! {
+    static ref TOKIO_RUNTIME: Mutex<Option<tokio::runtime::Runtime>> = Mutex::new(None);
+}
+
+// identifier, browser
+thread_local!(
+    static BROWSERS: RefCell<HashMap<c_int, RustRefBrowser>> = RefCell::new(HashMap::new());
+);
+
 pub fn initialize() {
     print("cef initialize");
 
@@ -76,9 +87,12 @@ pub fn initialize() {
 pub fn shutdown() {
     print("cef shutdown");
 
-    CEF.with(|cell| {
-        let mut cef = cell.borrow_mut().take().unwrap();
+    CEF.with_inner_mut(|cef| {
         cef.shutdown();
+    });
+
+    CEF.with(|cell| {
+        cell.borrow_mut().take().unwrap();
     });
 }
 
@@ -93,15 +107,11 @@ pub struct Cef {
     chat_command: Pin<Box<OwnedChatCommand>>,
     chat_received: ChatReceivedEventHandler,
 
-    tokio_runtime: Option<tokio::runtime::Runtime>,
-
     context_lost_handler: ContextLostEventHandler,
     context_recreated_handler: ContextRecreatedEventHandler,
 
     app: Option<RustRefApp>,
     client: Option<RustRefClient>,
-    // identifier, browser
-    browsers: HashMap<c_int, RustRefBrowser>,
 }
 
 impl Cef {
@@ -127,13 +137,11 @@ impl Cef {
             local_player_render_model_detour,
             tick_handler: TickEventHandler::new(),
             chat_command,
-            tokio_runtime: None,
             context_lost_handler: ContextLostEventHandler::new(),
             context_recreated_handler: ContextRecreatedEventHandler::new(),
             chat_received: ChatReceivedEventHandler::new(),
             app: None,
             client: None,
-            browsers: HashMap::new(),
         }
     }
 
@@ -221,12 +229,7 @@ impl Cef {
         self.entity = Some(CefEntity::register());
 
         self.tick_handler.on(|_task| {
-            // process futures
-            ASYNC_DISPATCHER.with_inner_mut(|async_dispatcher| {
-                async_dispatcher.run_until_stalled();
-            });
-
-            CefInterface::step().unwrap();
+            Cef::step();
         });
 
         let async_dispatcher = Dispatcher::new();
@@ -244,7 +247,7 @@ impl Cef {
             .build()
             .unwrap();
 
-        self.tokio_runtime = Some(rt);
+        *TOKIO_RUNTIME.lock().unwrap() = Some(rt);
 
         // self.tokio_runtime.as_mut().unwrap().spawn(async {
         //     // :(
@@ -286,27 +289,70 @@ impl Cef {
 
             println!(
                 "on_context_initialized_callback {:?} {:?}",
-                client,
-                std::thread::current().id()
+                std::thread::current().id(),
+                client
             );
 
-            println!("QUEUE DEFFERED");
+            // need to defer here because app.initialize() calls context_initialized
+            // right away, and self is still borrowed there
             Cef::defer_on_main_thread(async {
-                println!("RUNNING DEFFERED");
                 CEF.with_inner_mut(|cef| cef.on_context_initialized(client))
                     .unwrap();
             });
         }
 
-        extern "C" fn on_after_created_callback(_browser: RustRefBrowser) {
-            println!("on_after_created_callback");
+        extern "C" fn on_after_created_callback(browser: RustRefBrowser) {
+            // on the main thread
+
+            println!(
+                "on_after_created_callback {:?} {:?}",
+                std::thread::current().id(),
+                browser
+            );
+
+            let id = browser.get_identifier();
+            BROWSERS.with(|cell| cell.borrow_mut().insert(id, browser));
+
+            TOKIO_RUNTIME
+                .with_inner(|rt| {
+                    rt.spawn(async move {
+                        tokio::time::delay_for(Duration::from_secs(4)).await;
+
+                        Cef::spawn_on_main_thread(async move {
+                            BROWSERS.with(|cell| {
+                                if let Some(browser) = cell.borrow_mut().get_mut(&id) {
+                                    browser
+                                        .load_url(
+                                            "https://www.youtube.com/embed/gQngg8iQipk?autoplay=1"
+                                                .to_string(),
+                                        )
+                                        .unwrap();
+                                }
+                            });
+                        });
+
+                        tokio::time::delay_for(Duration::from_secs(4)).await;
+                    });
+                })
+                .unwrap();
         }
 
-        extern "C" fn on_before_close_callback(_browser: RustRefBrowser) {
-            println!("on_before_close_callback");
+        extern "C" fn on_before_close_callback(browser: RustRefBrowser) {
+            println!(
+                "on_before_close_callback {:?} {:?}",
+                std::thread::current().id(),
+                browser
+            );
+
+            let id = browser.get_identifier();
+            BROWSERS.with(|cell| {
+                cell.borrow_mut()
+                    .remove(&id)
+                    .expect("browser already removed from browsers")
+            });
         }
 
-        let mut ref_app = RustRefApp::create(
+        let ref_app = RustRefApp::create(
             Some(on_context_initialized_callback),
             Some(on_after_created_callback),
             Some(on_before_close_callback),
@@ -317,7 +363,7 @@ impl Cef {
         self.app = Some(ref_app);
     }
 
-    fn on_context_initialized(&mut self, mut client: RustRefClient) {
+    fn on_context_initialized(&mut self, client: RustRefClient) {
         client
             .create_browser("https://www.classicube.net/".to_string())
             .unwrap();
@@ -328,43 +374,21 @@ impl Cef {
     /// Called once on our plugin's `free` or on Drop (crashed)
     pub fn shutdown(&mut self) {
         {
-            if self.tokio_runtime.is_some() {
-                println!("shutdown tokio");
-            } else {
-                println!("tokio already shutdown?");
-            }
-            if let Some(rt) = self.tokio_runtime.take() {
-                rt.shutdown_timeout(Duration::from_millis(100));
-            }
-        }
-
-        {
-            if ASYNC_DISPATCHER.with_inner(|_| ()).is_some() {
-                println!("shutdown async_dispatcher");
-            } else {
-                println!("async_dispatcher already shutdown?");
-            }
-            ASYNC_DISPATCHER_HANDLE.lock().unwrap().take();
-            ASYNC_DISPATCHER_LOCAL_HANDLE.with(|cell| cell.borrow_mut().take());
-            ASYNC_DISPATCHER.with(|cell| cell.borrow_mut().take());
-        }
-
-        {
             if self.entity.is_some() {
                 println!("shutdown entity");
+                self.entity.take();
             } else {
                 println!("entity already shutdown?");
             }
-            self.entity.take();
         }
 
         {
             if self.model.is_some() {
                 println!("shutdown model");
+                self.model.take();
             } else {
                 println!("model already shutdown?");
             }
-            self.model.take();
         }
 
         {
@@ -373,33 +397,88 @@ impl Cef {
         }
 
         {
-            if !self.browsers.is_empty() {
+            if !BROWSERS.with(|cell| cell.borrow().is_empty()) {
                 println!("shutdown cef browsers");
+
+                // get first browser in map, calling close on the browser and returning its id
+                while let Some((id, browser)) = BROWSERS.with(|cell| {
+                    let browsers = &*cell.borrow();
+
+                    if let Some((&id, browser)) = browsers.iter().next() {
+                        Some((id, browser.clone()))
+                    } else {
+                        None
+                    }
+                }) {
+                    println!("shutdown browser {} {:?}", id, browser);
+                    browser.close().unwrap();
+
+                    // keep looping until our id doesn't exist in the map anymore
+                    while BROWSERS.with(|cell| cell.borrow().contains_key(&id)) {
+                        println!("waiting for browser {}", id);
+                        Cef::step();
+
+                        thread::sleep(Duration::from_millis(64));
+                    }
+                }
+                println!("shut down all browsers");
             } else {
                 println!("cef browsers already shutdown?");
             }
-            self.browsers.clear();
         }
 
         {
             if self.client.is_some() {
                 println!("shutdown cef client");
+                self.client.take();
             } else {
                 println!("cef client already shutdown?");
             }
-            self.client.take();
+        }
+
+        {
+            let mut option = TOKIO_RUNTIME.lock().unwrap();
+            if option.is_some() {
+                println!("shutdown tokio");
+                if let Some(rt) = option.take() {
+                    rt.shutdown_timeout(Duration::from_millis(100));
+                }
+            } else {
+                println!("tokio already shutdown?");
+            }
+        }
+
+        {
+            if ASYNC_DISPATCHER.with_inner(|_| ()).is_some() {
+                println!("shutdown async_dispatcher");
+
+                ASYNC_DISPATCHER_HANDLE.lock().unwrap().take();
+                ASYNC_DISPATCHER_LOCAL_HANDLE.with(|cell| cell.borrow_mut().take());
+                ASYNC_DISPATCHER.with(|cell| cell.borrow_mut().take());
+            } else {
+                println!("async_dispatcher already shutdown?");
+            }
         }
 
         {
             if self.app.is_some() {
                 println!("shutdown cef app");
+                self.app.take();
             } else {
                 println!("cef app already shutdown?");
             }
-            self.app.take();
         }
 
         println!("shutdown OK");
+    }
+
+    pub fn step() {
+        // process futures
+        ASYNC_DISPATCHER.with_inner_mut(|async_dispatcher| {
+            async_dispatcher.run_until_stalled();
+        });
+
+        CefInterface::step().unwrap();
     }
 
     // pub fn load(&mut self, url: String) {

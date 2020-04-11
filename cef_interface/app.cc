@@ -31,5 +31,6 @@ void MyApp::OnBeforeCommandLineProcessing(
 
 // CefBrowserProcessHandler methods:
 void MyApp::OnContextInitialized() {
-  on_context_initialized_callback(create_rust_ref_client(this->client.get()));
+  on_context_initialized_callback(
+      cef_interface_add_ref_client(this->client.get()));
 }

@@ -15,7 +15,7 @@ extern "C" RustRefApp cef_interface_create_app(
       new MyApp(on_context_initialized_callback, on_after_created_callback,
                 on_before_close_callback, on_paint_callback);
 
-  return create_rust_ref_app(app);
+  return cef_interface_add_ref_app(app);
 }
 
 extern "C" int cef_interface_initialize(MyApp* app_ptr) {
@@ -50,6 +50,8 @@ extern "C" int cef_interface_initialize(MyApp* app_ptr) {
   return 0;
 }
 
+// Browser
+
 extern "C" int cef_interface_create_browser(MyClient* client_ptr,
                                             const char* startup_url) {
   // Create the browser window.
@@ -62,6 +64,37 @@ extern "C" int cef_interface_create_browser(MyClient* client_ptr,
 
   CefBrowserHost::CreateBrowser(windowInfo, client_ptr, url, settings, NULL,
                                 NULL);
+
+  return 0;
+}
+
+extern "C" int cef_interface_browser_get_identifier(CefBrowser* browser_ptr) {
+  return browser_ptr->GetIdentifier();
+}
+
+extern "C" int cef_interface_browser_load_url(CefBrowser* browser_ptr,
+                                              const char* url) {
+  browser_ptr->GetMainFrame()->LoadURL(url);
+  return 0;
+}
+
+extern "C" int cef_interface_browser_execute_javascript(CefBrowser* browser_ptr,
+                                                        const char* code) {
+  CefRefPtr<CefFrame> frame = browser_ptr->GetMainFrame();
+  if (!frame) {
+    return -1;
+  }
+
+  frame->ExecuteJavaScript(code, frame->GetURL(), 0);
+
+  return 0;
+}
+
+extern "C" int cef_interface_browser_close(CefBrowser* browser_ptr) {
+  auto browser_host = browser_ptr->GetHost();
+
+  // force_close: true because we don't want popups!
+  browser_host->CloseBrowser(true);
 
   return 0;
 }
@@ -99,51 +132,43 @@ extern "C" int cef_interface_step() {
   return 0;
 }
 
-extern "C" int cef_interface_browser_load_url(CefBrowser* browser_ptr,
-                                              const char* url) {
-  browser_ptr->GetMainFrame()->LoadURL(url);
+extern "C" int cef_interface_shutdown() {
+  CefShutdown();
   return 0;
 }
 
-// extern "C" int cef_run_script(const char* code) {
-//   auto frame = app->client->browser_->GetMainFrame();
-
-//   frame->ExecuteJavaScript(code, frame->GetURL(), 0);
-//   return 0;
-// }
-
-RustRefApp create_rust_ref_app(MyApp* ptr) {
+RustRefApp cef_interface_add_ref_app(MyApp* ptr) {
   ptr->AddRef();
 
   RustRefApp r;
   r.ptr = ptr;
   return r;
 }
-int cef_interface_release_rust_ref_app(MyApp* app_ptr) {
+int cef_interface_release_ref_app(MyApp* app_ptr) {
   app_ptr->Release();
   return 0;
 }
 
-RustRefClient create_rust_ref_client(MyClient* ptr) {
+RustRefClient cef_interface_add_ref_client(MyClient* ptr) {
   ptr->AddRef();
 
   RustRefClient r;
   r.ptr = ptr;
   return r;
 }
-int cef_interface_release_rust_ref_client(MyClient* client_ptr) {
+int cef_interface_release_ref_client(MyClient* client_ptr) {
   client_ptr->Release();
   return 0;
 }
 
-RustRefBrowser create_rust_ref_browser(CefBrowser* ptr) {
+RustRefBrowser cef_interface_add_ref_browser(CefBrowser* ptr) {
   ptr->AddRef();
 
   RustRefBrowser r;
   r.ptr = ptr;
   return r;
 }
-int cef_interface_release_rust_ref_browser(CefBrowser* browser_ptr) {
+int cef_interface_release_ref_browser(CefBrowser* browser_ptr) {
   browser_ptr->Release();
   return 0;
 }

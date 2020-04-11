@@ -1,5 +1,5 @@
 use super::{cef_paint::CEF_CAN_DRAW, CEF};
-use crate::helpers::RefCellOptionUnwrap;
+use crate::helpers::WithInner;
 use classicube_sys::*;
 use std::{
     os::raw::{c_double, c_float},

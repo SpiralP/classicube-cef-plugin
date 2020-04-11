@@ -49,54 +49,84 @@ impl RustRefApp {
         }
     }
 
-    pub fn initialize(&mut self) -> CefResult<()> {
+    pub fn initialize(&self) -> CefResult<()> {
         to_result(unsafe { cef_interface_initialize(self.get()) })
     }
 
-    fn get(&mut self) -> *mut MyApp {
+    fn get(&self) -> *mut MyApp {
         self.ptr
     }
 }
 impl Drop for RustRefApp {
     fn drop(&mut self) {
-        println!("drop RustRefApp {:?}", self.get());
-        to_result(unsafe { cef_interface_release_rust_ref_app(self.get()) }).unwrap();
+        to_result(unsafe { cef_interface_release_ref_app(self.get()) }).unwrap();
+
+        unsafe {
+            cef_interface_shutdown();
+        }
+    }
+}
+impl Clone for RustRefApp {
+    fn clone(&self) -> Self {
+        unsafe { cef_interface_add_ref_app(self.get()) }
     }
 }
 
 impl RustRefClient {
-    pub fn create_browser(&mut self, startup_url: String) -> CefResult<()> {
+    pub fn create_browser(&self, startup_url: String) -> CefResult<()> {
         let startup_url = CString::new(startup_url).unwrap();
 
         to_result(unsafe { cef_interface_create_browser(self.get(), startup_url.as_ptr()) })
     }
 
-    fn get(&mut self) -> *mut MyClient {
+    fn get(&self) -> *mut MyClient {
         self.ptr
     }
 }
 impl Drop for RustRefClient {
     fn drop(&mut self) {
-        println!("drop RustRefClient {:?}", self.get());
-        to_result(unsafe { cef_interface_release_rust_ref_client(self.get()) }).unwrap();
+        to_result(unsafe { cef_interface_release_ref_client(self.get()) }).unwrap();
+    }
+}
+impl Clone for RustRefClient {
+    fn clone(&self) -> Self {
+        unsafe { cef_interface_add_ref_client(self.get()) }
     }
 }
 
 impl RustRefBrowser {
-    pub fn load_url(&mut self, url: String) -> CefResult<()> {
+    pub fn get_identifier(&self) -> c_int {
+        unsafe { cef_interface_browser_get_identifier(self.get()) }
+    }
+
+    pub fn load_url(&self, url: String) -> CefResult<()> {
         let url = CString::new(url).unwrap();
 
         to_result(unsafe { cef_interface_browser_load_url(self.get(), url.as_ptr()) })
     }
 
-    fn get(&mut self) -> *mut CefBrowser {
+    pub fn execute_javascript(&self, code: String) -> CefResult<()> {
+        let code = CString::new(code).unwrap();
+
+        to_result(unsafe { cef_interface_browser_execute_javascript(self.get(), code.as_ptr()) })
+    }
+
+    pub fn close(&self) -> CefResult<()> {
+        to_result(unsafe { cef_interface_browser_close(self.get()) })
+    }
+
+    fn get(&self) -> *mut CefBrowser {
         self.ptr
     }
 }
 impl Drop for RustRefBrowser {
     fn drop(&mut self) {
-        println!("drop RustRefBrowser {:?}", self.get());
-        to_result(unsafe { cef_interface_release_rust_ref_browser(self.get()) }).unwrap();
+        to_result(unsafe { cef_interface_release_ref_browser(self.get()) }).unwrap();
+    }
+}
+impl Clone for RustRefBrowser {
+    fn clone(&self) -> Self {
+        unsafe { cef_interface_add_ref_browser(self.get()) }
     }
 }
 

@@ -30,7 +30,7 @@ void MyClient::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
 
   CEF_REQUIRE_UI_THREAD();
 
-  on_after_created_callback(create_rust_ref_browser(browser.get()));
+  on_after_created_callback(cef_interface_add_ref_browser(browser.get()));
 }
 
 bool MyClient::DoClose(CefRefPtr<CefBrowser> browser) {
@@ -50,5 +50,5 @@ void MyClient::OnBeforeClose(CefRefPtr<CefBrowser> browser) {
 
   CEF_REQUIRE_UI_THREAD();
 
-  on_before_close_callback(create_rust_ref_browser(browser.get()));
+  on_before_close_callback(cef_interface_add_ref_browser(browser.get()));
 }

@@ -1,5 +1,5 @@
 use super::{interface::*, CEF};
-use crate::helpers::RefCellOptionUnwrap;
+use crate::helpers::WithInner;
 use classicube_sys::*;
 use lazy_static::lazy_static;
 use std::sync::atomic::{AtomicBool, Ordering};

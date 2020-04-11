@@ -6,7 +6,7 @@ MyRenderHandler::MyRenderHandler(OnPaintCallback on_paint_callback) {
 
 void MyRenderHandler::GetViewRect(CefRefPtr<CefBrowser> browser,
                                   CefRect& rect) {
-  rust_print("GetViewRect");
+  // rust_print("GetViewRect");
   rect.x = 0;
   rect.y = 0;
   rect.width = 1920;
@@ -21,6 +21,6 @@ void MyRenderHandler::OnPaint(CefRefPtr<CefBrowser> browser,
                               int height) {
   // rust_print("OnPaint");
 
-  on_paint_callback(create_rust_ref_browser(browser.get()), pixels, width,
+  on_paint_callback(cef_interface_add_ref_browser(browser.get()), pixels, width,
                     height);
 }

@@ -1,5 +1,5 @@
 use super::{chat::print, CEF};
-use crate::helpers::RefCellOptionUnwrap;
+use crate::helpers::WithInner;
 use classicube_sys::{Entities, ENTITIES_SELF_ID};
 use std::{os::raw::c_int, slice};
 

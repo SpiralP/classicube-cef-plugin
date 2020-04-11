@@ -71,3 +71,41 @@ pub unsafe fn Texture_RenderShaded(tex: &mut Texture, shadeCol: PackedCol) {
     Gfx_BindTexture(tex.ID);
     Gfx_Draw2DTexture(tex, shadeCol);
 }
+
+pub trait RefCellOptionUnwrap<O> {
+    fn with_inner<F, T>(&'static self, f: F) -> Option<T>
+    where
+        F: FnOnce(&O) -> T;
+
+    fn with_inner_mut<F, T>(&'static self, f: F) -> Option<T>
+    where
+        F: FnOnce(&mut O) -> T;
+}
+
+impl<O> RefCellOptionUnwrap<O> for std::thread::LocalKey<RefCell<Option<O>>> {
+    fn with_inner<F, T>(&'static self, f: F) -> Option<T>
+    where
+        F: FnOnce(&O) -> T,
+    {
+        self.with(|cell| {
+            if let Some(inner) = &*cell.borrow() {
+                Some(f(inner))
+            } else {
+                None
+            }
+        })
+    }
+
+    fn with_inner_mut<F, T>(&'static self, f: F) -> Option<T>
+    where
+        F: FnOnce(&mut O) -> T,
+    {
+        self.with(|cell| {
+            if let Some(inner) = &mut *cell.borrow_mut() {
+                Some(f(inner))
+            } else {
+                None
+            }
+        })
+    }
+}

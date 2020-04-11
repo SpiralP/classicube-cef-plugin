@@ -14,7 +14,7 @@ impl From<c_int> for CefError {
     }
 }
 
-pub struct CefInterface {}
+pub struct CefInterface;
 impl CefInterface {
     pub fn step() -> CefResult<()> {
         to_result(unsafe { cef_interface_step() })

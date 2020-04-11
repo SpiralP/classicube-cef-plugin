@@ -11,8 +11,8 @@ pub struct CefEntity {
 }
 
 impl CefEntity {
-    pub unsafe fn register() -> Pin<Box<Self>> {
-        let entity = mem::zeroed();
+    pub fn register() -> Pin<Box<Self>> {
+        let entity = unsafe { mem::zeroed() };
 
         let v_table = EntityVTABLE {
             Tick: Some(Self::tick),
@@ -25,10 +25,9 @@ impl CefEntity {
 
         let mut this = Box::pin(Self { entity, v_table });
 
-        // this.as_mut().project().register_gfx_texture();
-        // this.as_mut().project().register_texture();
-        // this.as_mut().project().register_model();
-        this.as_mut().project().register_entity();
+        unsafe {
+            this.as_mut().project().register_entity();
+        }
 
         this
     }

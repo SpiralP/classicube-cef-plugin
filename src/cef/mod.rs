@@ -16,9 +16,9 @@ use self::{
     render_model::local_player_render_model_hook,
 };
 use crate::helpers::*;
-use async_dispatcher::{Dispatcher, DispatcherHandle};
+use async_dispatcher::{Dispatcher, DispatcherHandle, LocalDispatcherHandle};
 use classicube_helpers::{
-    detour::*,
+    detour::GenericDetour,
     events::{
         chat::{ChatReceivedEvent, ChatReceivedEventHandler},
         gfx::{ContextLostEventHandler, ContextRecreatedEventHandler},
@@ -32,8 +32,9 @@ use classicube_sys::{
 use lazy_static::lazy_static;
 use std::{
     cell::RefCell,
+    collections::HashMap,
     future::Future,
-    os::raw::{c_double, c_float},
+    os::raw::{c_double, c_float, c_int},
     pin::Pin,
     sync::{atomic::Ordering, Mutex},
     time::Duration,
@@ -42,6 +43,15 @@ use std::{
 // Some means we are initialized
 thread_local!(
     pub static CEF: RefCell<Option<Cef>> = RefCell::new(None);
+);
+
+thread_local!(
+    static ASYNC_DISPATCHER: RefCell<Option<Dispatcher>> = RefCell::new(None);
+);
+
+thread_local!(
+    static ASYNC_DISPATCHER_LOCAL_HANDLE: RefCell<Option<LocalDispatcherHandle>> =
+        RefCell::new(None);
 );
 
 lazy_static! {
@@ -57,11 +67,10 @@ pub fn initialize() {
         *cell.borrow_mut() = Some(Cef::new());
     });
 
-    CEF.with(|cell| {
-        if let Some(cef) = &mut *cell.borrow_mut() {
-            cef.initialize();
-        }
-    });
+    CEF.with_inner_mut(|cef| {
+        cef.initialize();
+    })
+    .unwrap();
 }
 
 pub fn shutdown() {
@@ -81,14 +90,18 @@ pub struct Cef {
         GenericDetour<unsafe extern "C" fn(*mut Entity, c_double, c_float)>,
 
     tick_handler: TickEventHandler,
-    initialized: bool,
     chat_command: Pin<Box<OwnedChatCommand>>,
-    async_dispatcher: Option<Dispatcher>,
+    chat_received: ChatReceivedEventHandler,
+
     tokio_runtime: Option<tokio::runtime::Runtime>,
+
     context_lost_handler: ContextLostEventHandler,
     context_recreated_handler: ContextRecreatedEventHandler,
-    ag: classicube_helpers::events::entity::RemovedEventHandler,
-    chat_received: ChatReceivedEventHandler,
+
+    app: Option<RustRefApp>,
+    client: Option<RustRefClient>,
+    // identifier, browser
+    browsers: HashMap<c_int, RustRefBrowser>,
 }
 
 impl Cef {
@@ -113,14 +126,14 @@ impl Cef {
             entity: None,
             local_player_render_model_detour,
             tick_handler: TickEventHandler::new(),
-            initialized: false,
             chat_command,
-            async_dispatcher: None,
             tokio_runtime: None,
             context_lost_handler: ContextLostEventHandler::new(),
             context_recreated_handler: ContextRecreatedEventHandler::new(),
-            ag: classicube_helpers::events::entity::RemovedEventHandler::new(),
             chat_received: ChatReceivedEventHandler::new(),
+            app: None,
+            client: None,
+            browsers: HashMap::new(),
         }
     }
 
@@ -154,9 +167,13 @@ impl Cef {
         CEF_CAN_DRAW.store(false, Ordering::SeqCst);
 
         // disable detour so we don't call our ModelRender
-        unsafe {
+        if self.local_player_render_model_detour.is_enabled() {
             println!("disable RenderModel detour");
-            self.local_player_render_model_detour.disable().unwrap();
+            unsafe {
+                self.local_player_render_model_detour.disable().unwrap();
+            }
+        } else {
+            println!("RenderModel detour already disabled?");
         }
 
         // delete vertex buffers
@@ -169,6 +186,7 @@ impl Cef {
         });
     }
 
+    /// Called once on our plugin's `init`
     pub fn initialize(&mut self) {
         self.chat_command.as_mut().register();
 
@@ -181,66 +199,31 @@ impl Cef {
             },
         );
 
-        self.ag.on(|_| {
-            println!("entity remove");
-        });
-
         self.context_lost_handler.on(|_| {
             println!("ContextLost {:?}", std::thread::current().id());
 
-            CEF.with(|cell| {
-                if let Some(cef) = &mut *cell.borrow_mut() {
-                    cef.context_lost();
-                }
-            });
+            CEF.with_inner_mut(|cef| {
+                cef.context_lost();
+            })
+            .unwrap();
         });
 
         self.context_recreated_handler.on(|_| {
             println!("ContextRecreated {:?}", std::thread::current().id());
 
-            CEF.with(|cell| {
-                if let Some(cef) = &mut *cell.borrow_mut() {
-                    cef.context_recreated();
-                }
-            });
+            CEF.with_inner_mut(|cef| {
+                cef.context_recreated();
+            })
+            .unwrap();
         });
 
-        unsafe {
-            self.model = Some(CefModel::register("cef", "cef"));
-            self.entity = Some(CefEntity::register());
-        }
-
-        extern "C" fn on_context_initialized_callback(mut client: RustRefClient) {
-            println!("on_context_initialized_callback {:?}", client);
-
-            client
-                .create_browser("https://www.classicube.net/".to_string())
-                .unwrap();
-        }
-
-        extern "C" fn on_after_created_callback(_browser: RustRefBrowser) {
-            println!("on_after_created_callback");
-        }
-
-        extern "C" fn on_before_close_callback(_browser: RustRefBrowser) {
-            println!("on_before_close_callback");
-        }
-
-        let mut ref_app = RustRefApp::create(
-            Some(on_context_initialized_callback),
-            Some(on_after_created_callback),
-            Some(on_before_close_callback),
-            Some(cef_paint_callback),
-        );
-        ref_app.initialize().unwrap();
+        self.model = Some(CefModel::register("cef", "cef"));
+        self.entity = Some(CefEntity::register());
 
         self.tick_handler.on(|_task| {
             // process futures
-            CEF.with(|cell| {
-                if let Some(cef) = &mut *cell.borrow_mut() {
-                    let async_dispatcher = cef.async_dispatcher.as_mut().unwrap();
-                    async_dispatcher.run_until_stalled();
-                }
+            ASYNC_DISPATCHER.with_inner_mut(|async_dispatcher| {
+                async_dispatcher.run_until_stalled();
             });
 
             CefInterface::step().unwrap();
@@ -248,8 +231,12 @@ impl Cef {
 
         let async_dispatcher = Dispatcher::new();
         *ASYNC_DISPATCHER_HANDLE.lock().unwrap() = Some(async_dispatcher.get_handle());
-
-        self.async_dispatcher = Some(async_dispatcher);
+        ASYNC_DISPATCHER_LOCAL_HANDLE.with(|cell| {
+            *cell.borrow_mut() = Some(async_dispatcher.get_handle_local());
+        });
+        ASYNC_DISPATCHER.with(|cell| {
+            *cell.borrow_mut() = Some(async_dispatcher);
+        });
 
         let rt = tokio::runtime::Builder::new()
             .threaded_scheduler()
@@ -292,40 +279,127 @@ impl Cef {
         //     }
         // });
 
-        self.initialized = true;
+        // finally initialize cef via our App
+
+        extern "C" fn on_context_initialized_callback(client: RustRefClient) {
+            // on the main thread
+
+            println!(
+                "on_context_initialized_callback {:?} {:?}",
+                client,
+                std::thread::current().id()
+            );
+
+            println!("QUEUE DEFFERED");
+            Cef::defer_on_main_thread(async {
+                println!("RUNNING DEFFERED");
+                CEF.with_inner_mut(|cef| cef.on_context_initialized(client))
+                    .unwrap();
+            });
+        }
+
+        extern "C" fn on_after_created_callback(_browser: RustRefBrowser) {
+            println!("on_after_created_callback");
+        }
+
+        extern "C" fn on_before_close_callback(_browser: RustRefBrowser) {
+            println!("on_before_close_callback");
+        }
+
+        let mut ref_app = RustRefApp::create(
+            Some(on_context_initialized_callback),
+            Some(on_after_created_callback),
+            Some(on_before_close_callback),
+            Some(cef_paint_callback),
+        );
+        ref_app.initialize().unwrap();
+
+        self.app = Some(ref_app);
     }
 
+    fn on_context_initialized(&mut self, mut client: RustRefClient) {
+        client
+            .create_browser("https://www.classicube.net/".to_string())
+            .unwrap();
+
+        self.client = Some(client);
+    }
+
+    /// Called once on our plugin's `free` or on Drop (crashed)
     pub fn shutdown(&mut self) {
-        if self.initialized {
-            {
+        {
+            if self.tokio_runtime.is_some() {
                 println!("shutdown tokio");
-                if let Some(rt) = self.tokio_runtime.take() {
-                    rt.shutdown_timeout(Duration::from_millis(100));
-                }
+            } else {
+                println!("tokio already shutdown?");
             }
-
-            {
-                println!("shutdown async_dispatcher");
-                ASYNC_DISPATCHER_HANDLE.lock().unwrap().take();
-                self.async_dispatcher.take();
+            if let Some(rt) = self.tokio_runtime.take() {
+                rt.shutdown_timeout(Duration::from_millis(100));
             }
-
-            {
-                self.model.take();
-                self.entity.take();
-            }
-
-            self.context_lost();
-
-            unsafe {
-                // println!("shutdown cef");
-                // assert_eq!(cef_free(), 0);
-            }
-
-            println!("shutdown");
-
-            self.initialized = false;
         }
+
+        {
+            if ASYNC_DISPATCHER.with_inner(|_| ()).is_some() {
+                println!("shutdown async_dispatcher");
+            } else {
+                println!("async_dispatcher already shutdown?");
+            }
+            ASYNC_DISPATCHER_HANDLE.lock().unwrap().take();
+            ASYNC_DISPATCHER_LOCAL_HANDLE.with(|cell| cell.borrow_mut().take());
+            ASYNC_DISPATCHER.with(|cell| cell.borrow_mut().take());
+        }
+
+        {
+            if self.entity.is_some() {
+                println!("shutdown entity");
+            } else {
+                println!("entity already shutdown?");
+            }
+            self.entity.take();
+        }
+
+        {
+            if self.model.is_some() {
+                println!("shutdown model");
+            } else {
+                println!("model already shutdown?");
+            }
+            self.model.take();
+        }
+
+        {
+            println!("shutdown context");
+            self.context_lost();
+        }
+
+        {
+            if !self.browsers.is_empty() {
+                println!("shutdown cef browsers");
+            } else {
+                println!("cef browsers already shutdown?");
+            }
+            self.browsers.clear();
+        }
+
+        {
+            if self.client.is_some() {
+                println!("shutdown cef client");
+            } else {
+                println!("cef client already shutdown?");
+            }
+            self.client.take();
+        }
+
+        {
+            if self.app.is_some() {
+                println!("shutdown cef app");
+            } else {
+                println!("cef app already shutdown?");
+            }
+            self.app.take();
+        }
+
+        println!("shutdown OK");
     }
 
     // pub fn load(&mut self, url: String) {
@@ -356,6 +430,7 @@ impl Cef {
         handle.spawn(f);
     }
 
+    #[allow(dead_code)]
     pub async fn run_on_main_thread<F, O>(f: F) -> O
     where
         F: Future<Output = O> + 'static + Send,
@@ -367,6 +442,18 @@ impl Cef {
         };
 
         handle.dispatch(f).await
+    }
+
+    #[allow(dead_code)]
+    pub fn defer_on_main_thread<F>(f: F)
+    where
+        F: Future<Output = ()> + 'static,
+    {
+        let mut handle = ASYNC_DISPATCHER_LOCAL_HANDLE
+            .with_inner(|handle| handle.clone())
+            .expect("ASYNC_DISPATCHER_LOCAL_HANDLE is None");
+
+        handle.spawn(f);
     }
 }
 

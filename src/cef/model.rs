@@ -35,15 +35,15 @@ pub struct CefModel {
 }
 
 impl CefModel {
-    pub unsafe fn register<S: Into<Vec<u8>>, S2: Into<Vec<u8>>>(
+    pub fn register<S: Into<Vec<u8>>, S2: Into<Vec<u8>>>(
         name: S,
         texture_name: S2,
     ) -> Pin<Box<Self>> {
-        let model = mem::zeroed();
+        let model = unsafe { mem::zeroed() };
         let name = CString::new(name).unwrap();
         let texture_name = CString::new(texture_name).unwrap();
-        let vertices = mem::zeroed();
-        let model_tex = mem::zeroed();
+        let vertices = unsafe { mem::zeroed() };
+        let model_tex = unsafe { mem::zeroed() };
 
         let mut this = Box::pin(Self {
             model,
@@ -54,9 +54,11 @@ impl CefModel {
             texture: None,
         });
 
-        this.as_mut().project().register_gfx_texture();
-        this.as_mut().project().register_texture();
-        this.as_mut().project().register_model();
+        unsafe {
+            this.as_mut().project().register_gfx_texture();
+            this.as_mut().project().register_texture();
+            this.as_mut().project().register_model();
+        }
 
         this
     }

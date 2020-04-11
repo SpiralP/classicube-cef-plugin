@@ -28,8 +28,14 @@ fn main() {
     println!("cargo:rustc-link-lib=dylib=libcef");
     println!("cargo:rustc-link-lib=static=cef_sandbox");
 
-    println!("cargo:rerun-if-changed=cef_interface/interface.cc");
     println!("cargo:rerun-if-changed=cef_interface/interface.hh");
+    println!("cargo:rerun-if-changed=cef_interface/interface.cc");
+    println!("cargo:rerun-if-changed=cef_interface/app.cc");
+    println!("cargo:rerun-if-changed=cef_interface/app.hh");
+    println!("cargo:rerun-if-changed=cef_interface/client.cc");
+    println!("cargo:rerun-if-changed=cef_interface/client.hh");
+    println!("cargo:rerun-if-changed=cef_interface/render_handler.cc");
+    println!("cargo:rerun-if-changed=cef_interface/render_handler.hh");
 
     let cmake_path = cmake::Config::new("cef_interface")
         .build_target("cef_interface")
@@ -66,7 +72,9 @@ fn main() {
     // to bindgen, and lets you build up options for
     // the resulting bindings.
     let bindings = bindgen::Builder::default()
+        .derive_copy(false)
         .clang_arg("-Icef_interface")
+        .clang_arg("-Icef_interface/cef_binary")
         .clang_arg("-xc++")
         // The input header we would like to generate
         // bindings for.
@@ -76,7 +84,7 @@ fn main() {
         // Tell cargo to invalidate the built crate whenever any of the
         // included header files changed.
         .parse_callbacks(Box::new(bindgen::CargoCallbacks))
-        .whitelist_function("cef_.*")
+        .whitelist_function("cef_interface_.*")
         // Finish the builder and generate the bindings.
         .generate()
         // Unwrap the Result and panic on failure.

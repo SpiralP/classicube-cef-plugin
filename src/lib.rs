@@ -1,5 +1,4 @@
 #![feature(core_intrinsics)]
-mod bindings;
 mod cef;
 mod helpers;
 

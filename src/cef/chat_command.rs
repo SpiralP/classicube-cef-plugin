@@ -31,31 +31,30 @@ pub fn command_callback(args: Vec<String>) {
                     }
                 }
 
-                ["load", url] => {
-                    cef.load((*url).to_string());
-                }
+                // ["load", url] => {
+                //     cef.load((*url).to_string());
+                // }
 
-                ["play", id] => {
-                    cef.run_script(format!("player.loadVideoById(\"{}\");", id));
-                }
+                // ["play", id] => {
+                //     cef.run_script(format!("player.loadVideoById(\"{}\");", id));
+                // }
 
-                ["volume", percent] => {
-                    // 0 to 100
-                    cef.run_script(format!("player.setVolume({});", percent));
-                }
+                // ["volume", percent] => {
+                //     // 0 to 100
+                //     cef.run_script(format!("player.setVolume({});", percent));
+                // }
 
-                ["test"] => {
-                    std::thread::spawn(move || {
-                        use std::ffi::CString;
+                // ["test"] => {
+                //     std::thread::spawn(move || {
+                //         use std::ffi::CString;
 
-                        let code = format!("player.loadVideoById(\"{}\");", "gQngg8iQipk");
-                        let c_str = CString::new(code).unwrap();
-                        unsafe {
-                            assert_eq!(crate::bindings::cef_run_script(c_str.as_ptr()), 0);
-                        }
-                    });
-                }
-
+                //         let code = format!("player.loadVideoById(\"{}\");", "gQngg8iQipk");
+                //         let c_str = CString::new(code).unwrap();
+                //         unsafe {
+                //             assert_eq!(crate::bindings::cef_run_script(c_str.as_ptr()), 0);
+                //         }
+                //     });
+                // }
                 _ => {}
             }
         } else {

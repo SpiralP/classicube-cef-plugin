@@ -1,49 +1,35 @@
-
-#include <include/cef_app.h>
-#include "client.cc"
-
-const char kStartupURL[] = "https://www.classicube.net/";
+#include "app.hh"
 
 // Minimal implementation of CefApp for the browser process.
-class MyApp : public CefApp, public CefBrowserProcessHandler {
- public:
-  MyApp(OnPaintCallback onPaintCallback) {
-    this->client = new MyClient(onPaintCallback);
-  }
 
-  CefRefPtr<MyClient> client;
+MyApp::MyApp(OnContextInitializedCallback on_context_initialized_callback,
+             OnAfterCreatedCallback on_after_created_callback,
+             OnBeforeCloseCallback on_before_close_callback,
+             OnPaintCallback on_paint_callback) {
+  this->on_context_initialized_callback = on_context_initialized_callback;
 
-  // CefApp methods:
-  CefRefPtr<CefBrowserProcessHandler> GetBrowserProcessHandler() OVERRIDE {
-    return this;
-  }
+  this->client = new MyClient(
+      on_after_created_callback, on_before_close_callback, on_paint_callback
 
-  void OnBeforeCommandLineProcessing(
-      const CefString& process_type,
-      CefRefPtr<CefCommandLine> command_line) OVERRIDE {
-    // Command-line flags can be modified in this callback.
-    // |process_type| is empty for the browser process.
-    command_line->AppendSwitchWithValue("autoplay-policy",
-                                        "no-user-gesture-required");
-    command_line->AppendSwitch("disable-extensions");
-  }
+  );
+}
 
-  // CefBrowserProcessHandler methods:
-  void OnContextInitialized() OVERRIDE {
-    // Create the browser window.
+// CefApp methods:
+CefRefPtr<CefBrowserProcessHandler> MyApp::GetBrowserProcessHandler() {
+  return this;
+}
 
-    CefWindowInfo windowInfo;
-    windowInfo.SetAsWindowless(NULL);
+void MyApp::OnBeforeCommandLineProcessing(
+    const CefString& process_type,
+    CefRefPtr<CefCommandLine> command_line) {
+  // Command-line flags can be modified in this callback.
+  // |process_type| is empty for the browser process.
+  command_line->AppendSwitchWithValue("autoplay-policy",
+                                      "no-user-gesture-required");
+  command_line->AppendSwitch("disable-extensions");
+}
 
-    const CefString& url = kStartupURL;
-    CefBrowserSettings settings;
-    settings.windowless_frame_rate = 30;
-
-    CefBrowserHost::CreateBrowser(windowInfo, client.get(), url, settings, NULL,
-                                  NULL);
-  }
-
- private:
-  IMPLEMENT_REFCOUNTING(MyApp);
-  DISALLOW_COPY_AND_ASSIGN(MyApp);
-};
+// CefBrowserProcessHandler methods:
+void MyApp::OnContextInitialized() {
+  on_context_initialized_callback(create_rust_ref_client(this->client.get()));
+}

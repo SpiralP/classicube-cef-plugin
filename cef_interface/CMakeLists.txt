@@ -233,6 +233,9 @@ PRINT_CEF_CONFIG()
 
 # cef_interface sources.
 set(CEF_INTERFACE_SRCS
+  render_handler.cc
+  client.cc
+  app.cc
   interface.cc
   )
 

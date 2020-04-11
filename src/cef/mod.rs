@@ -2,18 +2,20 @@ mod cef_paint;
 mod chat;
 mod chat_command;
 mod entity;
+mod interface;
 mod model;
 mod render_model;
 
 use self::{
-    cef_paint::cef_paint_callback,
+    cef_paint::{cef_paint_callback, CEF_CAN_DRAW},
     chat::{handle_chat_received, print},
     chat_command::c_chat_command_callback,
     entity::CefEntity,
+    interface::*,
     model::CefModel,
     render_model::local_player_render_model_hook,
 };
-use crate::{bindings::*, cef::cef_paint::CEF_CAN_DRAW, helpers::*};
+use crate::helpers::*;
 use async_dispatcher::{Dispatcher, DispatcherHandle};
 use classicube_helpers::{
     detour::*,
@@ -24,13 +26,12 @@ use classicube_helpers::{
     tick::*,
 };
 use classicube_sys::{
-    Entities, Entity, OwnedChatCommand, OwnedGfxVertexBuffer, Vec3,
-    VertexFormat__VERTEX_FORMAT_P3FC4B, VertexFormat__VERTEX_FORMAT_P3FT2FC4B, ENTITIES_SELF_ID,
+    Entities, Entity, OwnedChatCommand, OwnedGfxVertexBuffer, VertexFormat__VERTEX_FORMAT_P3FC4B,
+    VertexFormat__VERTEX_FORMAT_P3FT2FC4B, ENTITIES_SELF_ID,
 };
 use lazy_static::lazy_static;
 use std::{
     cell::RefCell,
-    ffi::CString,
     future::Future,
     os::raw::{c_double, c_float},
     pin::Pin,
@@ -209,9 +210,29 @@ impl Cef {
             self.entity = Some(CefEntity::register());
         }
 
-        unsafe {
-            assert_eq!(cef_init(Some(cef_paint_callback)), 0);
+        extern "C" fn on_context_initialized_callback(mut client: RustRefClient) {
+            println!("on_context_initialized_callback {:?}", client);
+
+            client
+                .create_browser("https://www.classicube.net/".to_string())
+                .unwrap();
         }
+
+        extern "C" fn on_after_created_callback(_browser: RustRefBrowser) {
+            println!("on_after_created_callback");
+        }
+
+        extern "C" fn on_before_close_callback(_browser: RustRefBrowser) {
+            println!("on_before_close_callback");
+        }
+
+        let mut ref_app = RustRefApp::create(
+            Some(on_context_initialized_callback),
+            Some(on_after_created_callback),
+            Some(on_before_close_callback),
+            Some(cef_paint_callback),
+        );
+        ref_app.initialize().unwrap();
 
         self.tick_handler.on(|_task| {
             // process futures
@@ -222,11 +243,7 @@ impl Cef {
                 }
             });
 
-            // *IN_CEF.lock().unwrap() = true;
-            unsafe {
-                assert_eq!(cef_step(), 0);
-            }
-            // *IN_CEF.lock().unwrap() = false;
+            CefInterface::step().unwrap();
         });
 
         let async_dispatcher = Dispatcher::new();
@@ -242,38 +259,38 @@ impl Cef {
 
         self.tokio_runtime = Some(rt);
 
-        self.tokio_runtime.as_mut().unwrap().spawn(async {
-            // :(
-            tokio::time::delay_for(Duration::from_millis(2000)).await;
+        // self.tokio_runtime.as_mut().unwrap().spawn(async {
+        //     // :(
+        //     tokio::time::delay_for(Duration::from_millis(2000)).await;
 
-            loop {
-                tokio::time::delay_for(Duration::from_millis(100)).await;
+        //     loop {
+        //         tokio::time::delay_for(Duration::from_millis(100)).await;
 
-                Self::run_on_main_thread(async {
-                    let me = unsafe { &*Entities.List[ENTITIES_SELF_ID as usize] };
-                    let player_pos = Vec3 {
-                        X: 64.0 - 4.0,
-                        Y: 48.0,
-                        Z: 64.0,
-                    };
+        //         Self::run_on_main_thread(async {
+        //             let me = unsafe { &*Entities.List[ENTITIES_SELF_ID as usize] };
+        //             let player_pos = Vec3 {
+        //                 X: 64.0 - 4.0,
+        //                 Y: 48.0,
+        //                 Z: 64.0,
+        //             };
 
-                    let percent = (player_pos - me.Position).length_squared() * 0.4;
-                    let percent = (100.0 - percent).max(0.0).min(100.0);
+        //             let percent = (player_pos - me.Position).length_squared() * 0.4;
+        //             let percent = (100.0 - percent).max(0.0).min(100.0);
 
-                    let code = format!(
-                        r#"if (window.player && window.player.setVolume) {{
-                            window.player.setVolume({});
-                        }}"#,
-                        percent
-                    );
-                    let c_str = CString::new(code).unwrap();
-                    unsafe {
-                        assert_eq!(crate::bindings::cef_run_script(c_str.as_ptr()), 0);
-                    }
-                })
-                .await;
-            }
-        });
+        //             let code = format!(
+        //                 r#"if (window.player && window.player.setVolume) {{
+        //                     window.player.setVolume({});
+        //                 }}"#,
+        //                 percent
+        //             );
+        //             let c_str = CString::new(code).unwrap();
+        //             unsafe {
+        //                 assert_eq!(crate::bindings::cef_run_script(c_str.as_ptr()), 0);
+        //             }
+        //         })
+        //         .await;
+        //     }
+        // });
 
         self.initialized = true;
     }
@@ -301,8 +318,8 @@ impl Cef {
             self.context_lost();
 
             unsafe {
-                println!("shutdown cef");
-                assert_eq!(cef_free(), 0);
+                // println!("shutdown cef");
+                // assert_eq!(cef_free(), 0);
             }
 
             println!("shutdown");
@@ -311,20 +328,20 @@ impl Cef {
         }
     }
 
-    pub fn load(&mut self, url: String) {
-        let c_str = CString::new(url).unwrap();
+    // pub fn load(&mut self, url: String) {
+    //     let c_str = CString::new(url).unwrap();
 
-        unsafe {
-            assert_eq!(cef_load(c_str.as_ptr()), 0);
-        }
-    }
+    //     unsafe {
+    //         assert_eq!(cef_load(c_str.as_ptr()), 0);
+    //     }
+    // }
 
-    pub fn run_script(&mut self, code: String) {
-        let c_str = CString::new(code).unwrap();
-        unsafe {
-            assert_eq!(cef_run_script(c_str.as_ptr()), 0);
-        }
-    }
+    // pub fn run_script(&mut self, code: String) {
+    //     let c_str = CString::new(code).unwrap();
+    //     unsafe {
+    //         assert_eq!(cef_run_script(c_str.as_ptr()), 0);
+    //     }
+    // }
 
     #[allow(dead_code)]
     pub fn spawn_on_main_thread<F>(f: F)

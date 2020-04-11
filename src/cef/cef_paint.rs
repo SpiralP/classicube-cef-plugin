@@ -1,4 +1,4 @@
-use super::CEF;
+use super::{interface::*, CEF};
 use classicube_sys::*;
 use lazy_static::lazy_static;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -11,6 +11,7 @@ lazy_static! {
 
 /// This gets called from cef browser's OnPaint
 pub extern "C" fn cef_paint_callback(
+    _browser: RustRefBrowser,
     new_pixels: *const ::std::os::raw::c_void,
     new_width: ::std::os::raw::c_int,
     new_height: ::std::os::raw::c_int,

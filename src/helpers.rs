@@ -64,7 +64,7 @@ pub unsafe fn Gfx_Draw2DTexture(tex: &mut Texture, col: PackedCol) {
     let mut vertices = Gfx_Make2DQuad(tex, col);
 
     Gfx_SetVertexFormat(VertexFormat__VERTEX_FORMAT_P3FT2FC4B);
-    QUAD_VB.with(|tex_vb| {
+    TEX_VB.with(|tex_vb| {
         let tex_vb = tex_vb.borrow_mut();
         let tex_vb = tex_vb.as_ref().unwrap();
         Gfx_UpdateDynamicVb_IndexedTris(tex_vb.resource_id, vertices.as_mut_ptr() as _, 4);

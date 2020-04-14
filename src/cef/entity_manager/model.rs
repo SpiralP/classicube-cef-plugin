@@ -102,6 +102,9 @@ impl CefModel {
         };
 
         unsafe {
+            classicube_sys::Gfx_SetAlphaTest(0);
+            classicube_sys::Gfx_SetTexturing(1);
+
             Texture_RenderShaded(&mut tex, WHITE_TRANSPARENT);
         }
     }
@@ -144,7 +147,6 @@ impl CefModel {
 
         model.bobbing = 0;
 
-        println!("Model_Register {:#?}", model);
         Model_Register(model.as_mut().get_unchecked_mut());
     }
 }

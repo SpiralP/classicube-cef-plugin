@@ -10,6 +10,8 @@
 
 ## Installing
 
+- Install the latest Microsoft Visual C++ Redistributable
+  - https://aka.ms/vs/16/release/vc_redist.x64.exe
 - Copy these files to the same folder as `ClassiCube.exe`:
   - All files in `cef_binary/Release/`
   - All files in `cef_binary/Resources/`

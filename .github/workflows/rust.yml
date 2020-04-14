@@ -55,7 +55,9 @@ jobs:
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: target/release/classicube_cef_windows_amd64.dll
+          files: |
+            target/release/classicube_cef_windows_amd64.dll
+            target/release/build/classicube-cef-plugin-*/out/cefsimple.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 #

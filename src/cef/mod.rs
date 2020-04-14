@@ -148,6 +148,7 @@ impl Cef {
                     .remove(&id)
                     .expect("browser already removed from browsers")
             });
+            CefEntityManager::on_browser_close(browser);
         }
 
         let ref_app = RustRefApp::create(
@@ -186,7 +187,6 @@ impl Cef {
 
     /// Called once on our plugin's `free` or on Drop (crashed)
     pub fn shutdown(&mut self) {
-        self.entity_manager.shutdown();
 
         {
             if !BROWSERS.with(|cell| cell.borrow().is_empty()) {
@@ -241,6 +241,7 @@ impl Cef {
             }
         }
 
+        self.entity_manager.shutdown();
         self.chat.shutdown();
         self.async_manager.shutdown();
 

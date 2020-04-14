@@ -31,8 +31,6 @@ pub extern "C" fn cef_paint_callback(
         let entities = &mut *entities.borrow_mut();
 
         if let Some((_browser, entity)) = entities.get_mut(&id) {
-            let mut entity = entity.as_mut().project();
-
             let part = Bitmap {
                 Scan0: new_pixels as *mut _,
                 Width: new_width as i32,

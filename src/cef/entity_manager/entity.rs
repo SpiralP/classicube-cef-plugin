@@ -3,31 +3,29 @@ use classicube_sys::{
     cc_bool, Bitmap, Entity, EntityVTABLE, Entity_Init, Entity_SetModel, Gfx_UpdateTexturePart,
     LocationUpdate, Model_Render, OwnedGfxTexture, OwnedString, PackedCol, PACKEDCOL_WHITE,
 };
-use pin_project::{pin_project, project};
 use std::{mem, pin::Pin};
 
-#[pin_project]
 pub struct CefEntity {
+    // We don't need to Pin entity because all the ffi operations
+    // are temporary, they never store our pointer
     pub entity: Entity,
 
-    #[pin]
-    v_table: EntityVTABLE,
-
+    v_table: Pin<Box<EntityVTABLE>>,
     texture: OwnedGfxTexture,
 }
 
 impl CefEntity {
-    pub fn register() -> Pin<Box<Self>> {
+    pub fn register() -> Self {
         let entity = unsafe { mem::zeroed() };
 
-        let v_table = EntityVTABLE {
+        let v_table = Box::pin(EntityVTABLE {
             Tick: Some(Self::tick),
             Despawn: Some(Self::despawn),
             SetLocation: Some(Self::set_location),
             GetCol: Some(Self::get_col),
             RenderModel: Some(Self::render_model),
             RenderName: Some(Self::render_name),
-        };
+        });
 
         let mut pixels: Vec<u8> = vec![255; 4 * TEXTURE_WIDTH * TEXTURE_HEIGHT];
 
@@ -39,14 +37,14 @@ impl CefEntity {
 
         let texture = OwnedGfxTexture::create(&mut bmp, true, false);
 
-        let mut this = Box::pin(Self {
+        let mut this = Self {
             entity,
             v_table,
             texture,
-        });
+        };
 
         unsafe {
-            this.as_mut().project().register_entity();
+            this.register_entity();
         }
 
         this
@@ -85,13 +83,8 @@ impl CefEntity {
     unsafe extern "C" fn render_name(_entity: *mut Entity) {
         // println!("RenderName");
     }
-}
 
-#[project]
-impl CefEntity {
-    #[project]
     unsafe fn register_entity(&mut self) {
-        #[project]
         let CefEntity {
             entity,
             v_table,
@@ -102,7 +95,7 @@ impl CefEntity {
         Entity_Init(entity);
 
         let model_name = OwnedString::new("cef");
-        Entity_SetModel(*entity, model_name.as_cc_string());
+        Entity_SetModel(entity, model_name.as_cc_string());
 
         entity.VTABLE = v_table.as_mut().get_unchecked_mut();
         entity.Velocity.set(0.0, 0.0, 0.0);
@@ -112,9 +105,7 @@ impl CefEntity {
         entity.Position.set(0.0, 0.0, 0.0);
     }
 
-    #[project]
     pub fn update_texture(&mut self, mut part: Bitmap) {
-        #[project]
         let CefEntity { texture, .. } = self;
 
         unsafe {
@@ -122,9 +113,7 @@ impl CefEntity {
         }
     }
 
-    #[project]
     pub fn set_scale(&mut self, scale: f32) {
-        #[project]
         let CefEntity { entity, .. } = self;
 
         entity.ModelScale.set(scale, scale, 1.0);

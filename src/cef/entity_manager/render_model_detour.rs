@@ -17,15 +17,14 @@ fn hook(local_player_entity: *mut Entity, delta: c_double, t: c_float) {
         let entities = &mut *entities.borrow_mut();
 
         for (_browser, entity) in entities.values_mut() {
-            let entity = entity.as_mut().project();
-            let entity = entity.entity;
+            let mut entity = entity.entity;
 
             // Entities.List[i]->VTABLE->RenderModel(Entities.List[i], delta, t);
 
             let v_table = unsafe { &*entity.VTABLE };
             let render_model = v_table.RenderModel.unwrap();
             unsafe {
-                render_model(entity, delta, t);
+                render_model(&mut entity, delta, t);
             }
         }
     });

@@ -186,9 +186,9 @@ dependencies = [
  "classicube-sys",
  "cmake",
  "color-backtrace",
+ "error-chain",
  "futures",
  "lazy_static",
- "pin-project",
  "tokio",
 ]
 
@@ -205,13 +205,12 @@ dependencies = [
 [[package]]
 name = "classicube-sys"
 version = "0.1.0"
-source = "git+https://github.com/SpiralP/rust-classicube-sys.git#962d64aece5b2a7e49dbb8d7546cd11c6acb4218"
+source = "git+https://github.com/SpiralP/rust-classicube-sys.git#2829264989a0029c747b79e2afd1a24bf657f758"
 dependencies = [
  "bindgen",
  "cc",
  "fs_extra",
  "paste",
- "pin-project",
  "regex",
 ]
 
@@ -272,6 +271,16 @@ dependencies = [
  "log",
  "regex",
  "termcolor",
+]
+
+[[package]]
+name = "error-chain"
+version = "0.12.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d371106cc88ffdfb1eabd7111e432da544f16f3e2d7bf1dfe8bf575f1df045cd"
+dependencies = [
+ "backtrace",
+ "version_check",
 ]
 
 [[package]]
@@ -692,26 +701,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "19b17cddbe7ec3f8bc800887bab5e717348c95ea2ca0b1bf0837fb964dc67099"
 
 [[package]]
-name = "pin-project"
-version = "0.4.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7804a463a8d9572f13453c516a5faea534a2403d7ced2f0c7e100eeff072772c"
-dependencies = [
- "pin-project-internal",
-]
-
-[[package]]
-name = "pin-project-internal"
-version = "0.4.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "385322a45f2ecf3410c68d2a549a4a2685e8051d0f278e39743ff4e451cb9b3f"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
 name = "pin-project-lite"
 version = "0.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -966,9 +955,9 @@ dependencies = [
 
 [[package]]
 name = "typenum"
-version = "1.11.2"
+version = "1.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6d2783fe2d6b8c1101136184eb41be8b1ad379e4657050b8aaff0c79ee7575f9"
+checksum = "373c8a200f9e67a0c95e62a4f52fbf80c23b4381c05a17845531982fa99e6b33"
 
 [[package]]
 name = "unicode-width"

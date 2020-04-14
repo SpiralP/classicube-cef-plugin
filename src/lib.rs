@@ -1,18 +1,29 @@
 mod cef;
+mod error;
 mod helpers;
 
 use classicube_helpers::events::gfx::ContextRecreatedEventHandler;
 use classicube_sys::*;
-use std::{cell::Cell, os::raw::c_int, ptr};
+use std::{cell::Cell, ffi::CString, os::raw::c_int, ptr};
 
 thread_local!(
     static CONTEXT: Cell<Option<ContextRecreatedEventHandler>> = Cell::new(None);
 );
 
-unsafe extern "C" fn init() {
+extern "C" fn init() {
     color_backtrace::install_with_settings(
         color_backtrace::Settings::new().verbosity(color_backtrace::Verbosity::Full),
     );
+
+    {
+        let append_app_name = CString::new(format!(" +cef{}", env!("CARGO_PKG_VERSION"))).unwrap();
+
+        let c_str = append_app_name.as_ptr();
+
+        unsafe {
+            String_AppendConst(&mut Server.AppName, c_str);
+        }
+    }
 
     cef::initialize();
 
@@ -34,7 +45,7 @@ extern "C" fn free() {
     cef::shutdown();
 }
 
-unsafe extern "C" fn on_new_map_loaded() {
+extern "C" fn on_new_map_loaded() {
     println!("OnNewMapLoaded");
 }
 

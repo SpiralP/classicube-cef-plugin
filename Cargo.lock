@@ -45,7 +45,7 @@ checksum = "cff77d8686867eceff3105329d4698d96c2391c176d5d03adc90c7389162b5b8"
 [[package]]
 name = "async-dispatcher"
 version = "0.1.0"
-source = "git+https://github.com/SpiralP/rust-async-dispatcher.git#0bea5b4f389ccea671ef28255faf92019fcc3318"
+source = "git+https://github.com/SpiralP/rust-async-dispatcher.git#6376638e2a71f020baa044b3fabab06f41b3e8ae"
 dependencies = [
  "futures",
 ]
@@ -205,7 +205,7 @@ dependencies = [
 [[package]]
 name = "classicube-sys"
 version = "0.1.0"
-source = "git+https://github.com/SpiralP/rust-classicube-sys.git#310c6907fc52736f6f86f762d28ceaf4a149cbdc"
+source = "git+https://github.com/SpiralP/rust-classicube-sys.git#962d64aece5b2a7e49dbb8d7546cd11c6acb4218"
 dependencies = [
  "bindgen",
  "cc",
@@ -499,9 +499,9 @@ checksum = "b294d6fa9ee409a054354afc4352b0b9ef7ca222c69b8812cbea9e7d2bf3783f"
 
 [[package]]
 name = "libc"
-version = "0.2.68"
+version = "0.2.69"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dea0c0405123bba743ee3f91f49b1c7cfb684eef0da0a50110f758ccf24cdff0"
+checksum = "99e85c08494b21a9054e7fe1374a732aeadaff3980b6990b94bfd3a70f690005"
 
 [[package]]
 name = "libloading"
@@ -931,9 +931,9 @@ dependencies = [
 
 [[package]]
 name = "tokio"
-version = "0.2.17"
+version = "0.2.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "39fb9142eb6e9cc37f4f29144e62618440b149a138eee01a7bbe9b9226aaf17c"
+checksum = "34ef16d072d2b6dc8b4a56c70f5c5ced1a37752116f8e7c1e80c659aa7cb6713"
 dependencies = [
  "bytes",
  "fnv",

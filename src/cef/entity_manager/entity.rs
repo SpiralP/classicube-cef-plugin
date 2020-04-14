@@ -1,4 +1,8 @@
-use classicube_sys::*;
+use super::{TEXTURE_HEIGHT, TEXTURE_WIDTH};
+use classicube_sys::{
+    cc_bool, Bitmap, Entity, EntityVTABLE, Entity_Init, Entity_SetModel, Gfx_UpdateTexturePart,
+    LocationUpdate, Model_Render, OwnedGfxTexture, OwnedString, PackedCol, PACKEDCOL_WHITE,
+};
 use pin_project::{pin_project, project};
 use std::{mem, pin::Pin};
 
@@ -8,6 +12,8 @@ pub struct CefEntity {
 
     #[pin]
     v_table: EntityVTABLE,
+
+    texture: OwnedGfxTexture,
 }
 
 impl CefEntity {
@@ -23,7 +29,21 @@ impl CefEntity {
             RenderName: Some(Self::render_name),
         };
 
-        let mut this = Box::pin(Self { entity, v_table });
+        let mut pixels: Vec<u8> = vec![255; 4 * TEXTURE_WIDTH * TEXTURE_HEIGHT];
+
+        let mut bmp = Bitmap {
+            Scan0: pixels.as_mut_ptr(),
+            Width: TEXTURE_WIDTH as i32,
+            Height: TEXTURE_HEIGHT as i32,
+        };
+
+        let texture = OwnedGfxTexture::create(&mut bmp, true, false);
+
+        let mut this = Box::pin(Self {
+            entity,
+            v_table,
+            texture,
+        });
 
         unsafe {
             this.as_mut().project().register_entity();
@@ -33,11 +53,11 @@ impl CefEntity {
     }
 
     unsafe extern "C" fn tick(_entity: *mut Entity, _delta: f64) {
-        println!("Tick");
+        // println!("Tick");
     }
 
     unsafe extern "C" fn despawn(_entity: *mut Entity) {
-        println!("Despawn");
+        // println!("Despawn");
     }
 
     unsafe extern "C" fn set_location(
@@ -45,7 +65,7 @@ impl CefEntity {
         _update: *mut LocationUpdate,
         _interpolate: cc_bool,
     ) {
-        println!("SetLocation");
+        // println!("SetLocation");
     }
 
     unsafe extern "C" fn get_col(_entity: *mut Entity) -> PackedCol {
@@ -63,7 +83,7 @@ impl CefEntity {
     }
 
     unsafe extern "C" fn render_name(_entity: *mut Entity) {
-        println!("RenderName");
+        // println!("RenderName");
     }
 }
 
@@ -73,7 +93,10 @@ impl CefEntity {
     unsafe fn register_entity(&mut self) {
         #[project]
         let CefEntity {
-            entity, v_table, ..
+            entity,
+            v_table,
+            texture,
+            ..
         } = self;
 
         Entity_Init(entity);
@@ -83,11 +106,27 @@ impl CefEntity {
 
         entity.VTABLE = v_table.as_mut().get_unchecked_mut();
         entity.Velocity.set(0.0, 0.0, 0.0);
-
-        entity.Position.set(64.0 - 4.0, 48.0, 64.0);
-
         entity.RotX = 180.0;
+        entity.TextureId = texture.resource_id;
 
-        // entity.DisplayNameRaw =
+        entity.Position.set(0.0, 0.0, 0.0);
+    }
+
+    #[project]
+    pub fn update_texture(&mut self, mut part: Bitmap) {
+        #[project]
+        let CefEntity { texture, .. } = self;
+
+        unsafe {
+            Gfx_UpdateTexturePart(texture.resource_id, 0, 0, &mut part, 0);
+        }
+    }
+
+    #[project]
+    pub fn set_scale(&mut self, scale: f32) {
+        #[project]
+        let CefEntity { entity, .. } = self;
+
+        entity.ModelScale.set(scale, scale, 1.0);
     }
 }

@@ -14,13 +14,6 @@ impl From<c_int> for CefError {
     }
 }
 
-pub struct CefInterface;
-impl CefInterface {
-    pub fn step() -> CefResult<()> {
-        to_result(unsafe { cef_interface_step() })
-    }
-}
-
 pub type CefResult<T> = Result<T, CefError>;
 
 fn to_result(n: c_int) -> CefResult<()> {
@@ -53,6 +46,14 @@ impl RustRefApp {
         to_result(unsafe { cef_interface_initialize(self.get()) })
     }
 
+    pub fn step() -> CefResult<()> {
+        to_result(unsafe { cef_interface_step() })
+    }
+
+    pub fn shutdown(&self) -> CefResult<()> {
+        to_result(unsafe { cef_interface_shutdown() })
+    }
+
     fn get(&self) -> *mut MyApp {
         self.ptr
     }
@@ -60,10 +61,6 @@ impl RustRefApp {
 impl Drop for RustRefApp {
     fn drop(&mut self) {
         to_result(unsafe { cef_interface_release_ref_app(self.get()) }).unwrap();
-
-        unsafe {
-            cef_interface_shutdown();
-        }
     }
 }
 impl Clone for RustRefApp {

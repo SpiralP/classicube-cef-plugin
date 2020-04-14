@@ -20,14 +20,9 @@ CefRefPtr<CefRenderHandler> MyClient::GetRenderHandler() {
 }
 
 void MyClient::OnTitleChange(CefRefPtr<CefBrowser> browser,
-                             const CefString& title) {
-  // wprintf(L"OnTitleChange %s", title.c_str());
-  rust_print("OnTitleChange");
-}
+                             const CefString& title) {}
 
 void MyClient::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
-  rust_print("OnAfterCreated");
-
   CEF_REQUIRE_UI_THREAD();
 
   on_after_created_callback(cef_interface_add_ref_browser(browser.get()));
@@ -46,8 +41,6 @@ bool MyClient::DoClose(CefRefPtr<CefBrowser> browser) {
 }
 
 void MyClient::OnBeforeClose(CefRefPtr<CefBrowser> browser) {
-  rust_print("OnBeforeClose");
-
   CEF_REQUIRE_UI_THREAD();
 
   on_before_close_callback(cef_interface_add_ref_browser(browser.get()));

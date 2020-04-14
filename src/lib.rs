@@ -1,9 +1,13 @@
-#![feature(core_intrinsics)]
 mod cef;
 mod helpers;
 
+use classicube_helpers::events::gfx::ContextRecreatedEventHandler;
 use classicube_sys::*;
-use std::{os::raw::c_int, ptr};
+use std::{cell::Cell, os::raw::c_int, ptr};
+
+thread_local!(
+    static CONTEXT: Cell<Option<ContextRecreatedEventHandler>> = Cell::new(None);
+);
 
 unsafe extern "C" fn init() {
     color_backtrace::install_with_settings(
@@ -11,6 +15,17 @@ unsafe extern "C" fn init() {
     );
 
     cef::initialize();
+
+    CONTEXT.with(|cell| {
+        let mut context = ContextRecreatedEventHandler::new();
+        context.on(|_| {
+            cef::on_first_context_created();
+
+            CONTEXT.with(|cell| cell.set(None));
+        });
+
+        cell.set(Some(context));
+    });
 }
 
 extern "C" fn free() {

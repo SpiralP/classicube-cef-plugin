@@ -8,7 +8,6 @@
 class MyApp : public CefApp, public CefBrowserProcessHandler {
  public:
   MyApp(OnContextInitializedCallback on_context_initialized_callback,
-        OnAfterCreatedCallback on_after_created_callback,
         OnBeforeCloseCallback on_before_close_callback,
         OnPaintCallback on_paint_callback);
 

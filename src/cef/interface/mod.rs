@@ -28,14 +28,12 @@ fn to_result(n: c_int) -> CefResult<()> {
 impl RustRefApp {
     pub fn create(
         on_context_initialized_callback: OnContextInitializedCallback,
-        on_after_created_callback: OnAfterCreatedCallback,
         on_before_close_callback: OnBeforeCloseCallback,
         on_paint_callback: OnPaintCallback,
     ) -> Self {
         unsafe {
             cef_interface_create_app(
                 on_context_initialized_callback,
-                on_after_created_callback,
                 on_before_close_callback,
                 on_paint_callback,
             )
@@ -70,10 +68,10 @@ impl Clone for RustRefApp {
 }
 
 impl RustRefClient {
-    pub fn create_browser(&self, startup_url: String) -> CefResult<()> {
+    pub fn create_browser(&self, startup_url: String) -> RustRefBrowser {
         let startup_url = CString::new(startup_url).unwrap();
 
-        to_result(unsafe { cef_interface_create_browser(self.get(), startup_url.as_ptr()) })
+        unsafe { cef_interface_create_browser(self.get(), startup_url.as_ptr()) }
     }
 
     fn get(&self) -> *mut MyClient {

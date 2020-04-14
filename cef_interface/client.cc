@@ -1,9 +1,7 @@
 #include "client.hh"
 
-MyClient::MyClient(OnAfterCreatedCallback on_after_created_callback,
-                   OnBeforeCloseCallback on_before_close_callback,
+MyClient::MyClient(OnBeforeCloseCallback on_before_close_callback,
                    OnPaintCallback on_paint_callback) {
-  this->on_after_created_callback = on_after_created_callback;
   this->on_before_close_callback = on_before_close_callback;
   this->render_handler = new MyRenderHandler(on_paint_callback);
 }
@@ -21,12 +19,6 @@ CefRefPtr<CefRenderHandler> MyClient::GetRenderHandler() {
 
 void MyClient::OnTitleChange(CefRefPtr<CefBrowser> browser,
                              const CefString& title) {}
-
-void MyClient::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
-  CEF_REQUIRE_UI_THREAD();
-
-  on_after_created_callback(cef_interface_add_ref_browser(browser.get()));
-}
 
 bool MyClient::DoClose(CefRefPtr<CefBrowser> browser) {
   rust_print("DoClose");

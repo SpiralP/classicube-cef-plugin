@@ -9,8 +9,7 @@ class MyClient : public CefClient,
                  public CefDisplayHandler,
                  public CefLifeSpanHandler {
  public:
-  MyClient(OnAfterCreatedCallback on_after_created_callback,
-           OnBeforeCloseCallback on_before_close_callback,
+  MyClient(OnBeforeCloseCallback on_before_close_callback,
            OnPaintCallback on_paint_callback);
 
   // CefClient methods:
@@ -21,14 +20,11 @@ class MyClient : public CefClient,
   void OnTitleChange(CefRefPtr<CefBrowser> browser,
                      const CefString& title) OVERRIDE;
 
-  void OnAfterCreated(CefRefPtr<CefBrowser> browser) OVERRIDE;
-
   bool DoClose(CefRefPtr<CefBrowser> browser) OVERRIDE;
 
   void OnBeforeClose(CefRefPtr<CefBrowser> browser) OVERRIDE;
 
  private:
-  OnAfterCreatedCallback on_after_created_callback;
   OnBeforeCloseCallback on_before_close_callback;
   CefRefPtr<CefRenderHandler> render_handler;
 

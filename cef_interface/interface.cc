@@ -8,12 +8,11 @@
 
 extern "C" RustRefApp cef_interface_create_app(
     OnContextInitializedCallback on_context_initialized_callback,
-    OnAfterCreatedCallback on_after_created_callback,
+
     OnBeforeCloseCallback on_before_close_callback,
     OnPaintCallback on_paint_callback) {
-  CefRefPtr<MyApp> app =
-      new MyApp(on_context_initialized_callback, on_after_created_callback,
-                on_before_close_callback, on_paint_callback);
+  CefRefPtr<MyApp> app = new MyApp(on_context_initialized_callback,
+                                   on_before_close_callback, on_paint_callback);
 
   return cef_interface_add_ref_app(app);
 }
@@ -52,8 +51,9 @@ extern "C" int cef_interface_initialize(MyApp* app_ptr) {
 
 // Browser
 
-extern "C" int cef_interface_create_browser(MyClient* client_ptr,
-                                            const char* startup_url) {
+extern "C" RustRefBrowser cef_interface_create_browser(
+    MyClient* client_ptr,
+    const char* startup_url) {
   // Create the browser window.
   CefWindowInfo windowInfo;
   windowInfo.SetAsWindowless(NULL);
@@ -62,10 +62,10 @@ extern "C" int cef_interface_create_browser(MyClient* client_ptr,
   CefBrowserSettings settings;
   settings.windowless_frame_rate = 30;
 
-  CefBrowserHost::CreateBrowser(windowInfo, client_ptr, url, settings, NULL,
-                                NULL);
+  CefRefPtr<CefBrowser> browser = CefBrowserHost::CreateBrowserSync(
+      windowInfo, client_ptr, url, settings, NULL, NULL);
 
-  return 0;
+  return cef_interface_add_ref_browser(browser.get());
 }
 
 extern "C" int cef_interface_browser_get_identifier(CefBrowser* browser_ptr) {
@@ -98,34 +98,6 @@ extern "C" int cef_interface_browser_close(CefBrowser* browser_ptr) {
 
   return 0;
 }
-
-// extern "C" int cef_free() {
-//   // We must close browser (and wait for it to close) before calling
-//   CefShutdown
-
-//   // TODO move this logic into rust?
-
-//   rust_print("CloseBrowser");
-//   app->client->browser_->GetHost()->CloseBrowser(false);
-
-//   while (app && app->client && app->client->browser_) {
-//     rust_print("waiting");
-
-//     CefDoMessageLoopWork();
-
-//     std::this_thread::sleep_for(std::chrono::milliseconds(24));
-//   }
-//   // rust_print("wait: wait_for_browser_close");
-//   // wait_for_browser_close();
-
-//   // rust_print("wait: CefRunMessageLoop");
-//   // CefRunMessageLoop();
-
-//   rust_print("CefShutdown");
-//   CefShutdown();
-
-//   return 0;
-// }
 
 extern "C" int cef_interface_step() {
   CefDoMessageLoopWork();

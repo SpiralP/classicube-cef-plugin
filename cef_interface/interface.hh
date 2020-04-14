@@ -31,10 +31,6 @@ int cef_interface_release_ref_browser(CefBrowser* browser_ptr);
 /// has been initialized.
 typedef void (*OnContextInitializedCallback)(RustRefClient client);
 
-/// Called after a new browser is created. This callback will be the first
-/// notification that references |browser|.
-typedef void (*OnAfterCreatedCallback)(RustRefBrowser browser);
-
 /// Called just before a browser is destroyed.
 typedef void (*OnBeforeCloseCallback)(RustRefBrowser browser);
 
@@ -47,7 +43,6 @@ typedef void (*OnPaintCallback)(RustRefBrowser browser,
 
 extern "C" RustRefApp cef_interface_create_app(
     OnContextInitializedCallback on_context_initialized_callback,
-    OnAfterCreatedCallback on_after_created_callback,
     OnBeforeCloseCallback on_before_close_callback,
     OnPaintCallback on_paint_callback);
 
@@ -58,8 +53,8 @@ extern "C" int cef_interface_initialize(MyApp* app_ptr);
 
 // Browser
 
-extern "C" int cef_interface_create_browser(MyClient* client_ptr,
-                                            const char* startup_url);
+extern "C" RustRefBrowser cef_interface_create_browser(MyClient* client_ptr,
+                                                       const char* startup_url);
 extern "C" int cef_interface_browser_get_identifier(CefBrowser* browser_ptr);
 extern "C" int cef_interface_browser_load_url(CefBrowser* browser_ptr,
                                               const char* url);

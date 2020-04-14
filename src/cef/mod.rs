@@ -133,36 +133,16 @@ impl Cef {
             });
         }
 
-        extern "C" fn on_after_browser_created(browser: RustRefBrowser) {
-            // on the main thread
-
-            println!(
-                "on_after_browser_created {:?} {:?}",
-                std::thread::current().id(),
-                browser
-            );
-
-            let id = browser.get_identifier();
-            BROWSERS.with(|cell| cell.borrow_mut().insert(id, browser.clone()));
-            CefEntityManager::create_entity(browser);
-
-            AsyncManager::spawn(async move {
-                tokio::time::delay_for(Duration::from_secs(1)).await;
-
-                AsyncManager::spawn_on_main_thread(async move {
-                    command_callback(vec!["here".to_string()]).unwrap();
-                });
-            });
-        }
-
         extern "C" fn on_before_browser_close(browser: RustRefBrowser) {
+            let id = browser.get_identifier();
+
             println!(
-                "on_before_browser_close {:?} {:?}",
+                "on_before_browser_close {} {:?} {:?}",
+                id,
                 std::thread::current().id(),
                 browser
             );
 
-            let id = browser.get_identifier();
             BROWSERS.with(|cell| {
                 cell.borrow_mut()
                     .remove(&id)
@@ -172,7 +152,6 @@ impl Cef {
 
         let ref_app = RustRefApp::create(
             Some(on_context_initialized_callback),
-            Some(on_after_browser_created),
             Some(on_before_browser_close),
             Some(cef_paint_callback),
         );
@@ -182,11 +161,27 @@ impl Cef {
     }
 
     fn on_context_initialized(&mut self, client: RustRefClient) {
-        client
-            .create_browser("https://www.classicube.net/".to_string())
-            .unwrap();
-
         self.client = Some(client);
+    }
+
+    pub fn create_browser(&self, url: String) -> RustRefBrowser {
+        let browser = self.client.as_ref().unwrap().create_browser(url);
+
+        let id = browser.get_identifier();
+        println!("create_browser {}", id);
+
+        BROWSERS.with(|cell| cell.borrow_mut().insert(id, browser.clone()));
+        CefEntityManager::create_entity(browser.clone());
+
+        AsyncManager::spawn(async move {
+            tokio::time::delay_for(Duration::from_millis(250)).await;
+
+            AsyncManager::spawn_on_main_thread(async move {
+                command_callback(vec!["here".to_string(), format!("{}", id)]).unwrap();
+            });
+        });
+
+        browser
     }
 
     /// Called once on our plugin's `free` or on Drop (crashed)

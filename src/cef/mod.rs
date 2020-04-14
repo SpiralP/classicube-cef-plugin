@@ -5,7 +5,7 @@ mod interface;
 
 use self::{
     async_manager::AsyncManager,
-    chat::{command_callback, Chat},
+    chat::Chat,
     entity_manager::{cef_paint_callback, CefEntityManager},
     interface::{RustRefApp, RustRefBrowser, RustRefClient},
 };
@@ -174,20 +174,11 @@ impl Cef {
         BROWSERS.with(|cell| cell.borrow_mut().insert(id, browser.clone()));
         CefEntityManager::create_entity(browser.clone());
 
-        AsyncManager::spawn(async move {
-            tokio::time::delay_for(Duration::from_millis(250)).await;
-
-            AsyncManager::spawn_on_main_thread(async move {
-                command_callback(vec!["here".to_string(), format!("{}", id)]).unwrap();
-            });
-        });
-
         browser
     }
 
     /// Called once on our plugin's `free` or on Drop (crashed)
     pub fn shutdown(&mut self) {
-
         {
             if !BROWSERS.with(|cell| cell.borrow().is_empty()) {
                 println!("shutdown cef browsers");

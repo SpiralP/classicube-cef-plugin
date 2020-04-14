@@ -93,6 +93,7 @@ impl AsyncManager {
         interface::RustRefApp::step().unwrap();
     }
 
+    #[allow(dead_code)]
     pub fn spawn<F>(future: F) -> JoinHandle<F::Output>
     where
         F: Future + Send + 'static,

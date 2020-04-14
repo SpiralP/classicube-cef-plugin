@@ -10,7 +10,7 @@ use crate::{
     error::*,
     helpers::WithInner,
 };
-use classicube_sys::{Entities, OwnedChatCommand, Vec3, ENTITIES_SELF_ID, MATH_DEG2RAD};
+use classicube_sys::{Entities, Entity, OwnedChatCommand, Vec3, ENTITIES_SELF_ID, MATH_DEG2RAD};
 use error_chain::bail;
 use std::{os::raw::c_int, slice};
 
@@ -18,17 +18,17 @@ extern "C" fn c_chat_command_callback(args: *const classicube_sys::String, args_
     let args = unsafe { slice::from_raw_parts(args, args_count as _) };
     let args: Vec<String> = args.iter().map(|cc_string| cc_string.to_string()).collect();
 
-    if let Err(e) = command_callback(args) {
+    let me = unsafe { &*Entities.List[ENTITIES_SELF_ID as usize] };
+
+    if let Err(e) = command_callback(me, args) {
         Chat::print(format!("cef command error: {}", e));
     }
 }
 
-fn with_closest<F, T>(f: F) -> Result<T>
+fn with_closest<F, T>(me: &Entity, f: F) -> Result<T>
 where
     F: FnOnce(c_int, &mut RustRefBrowser, &mut CefEntity) -> Result<T>,
 {
-    let me = unsafe { &*Entities.List[ENTITIES_SELF_ID as usize] };
-
     ENTITIES.with(|entities| {
         let entities = &mut *entities.borrow_mut();
 
@@ -57,25 +57,32 @@ where
     })
 }
 
-pub fn command_callback(args: Vec<String>) -> Result<()> {
+pub fn command_callback(player: &Entity, args: Vec<String>) -> Result<()> {
     let args: Vec<&str> = args.iter().map(|s| s.as_ref()).collect();
     let args: &[&str] = &args;
-    let me = unsafe { &*Entities.List[ENTITIES_SELF_ID as usize] };
 
     // static commands not targetted at a specific entity
     match args {
         ["create"] => {
-            CEF.with_inner_mut(|cef| {
-                cef.create_browser("https://www.classicube.net/".to_string());
-            })
-            .chain_err(|| "CEF not initialized")?;
+            let browser_id = CEF
+                .with_inner_mut(|cef| {
+                    let browser = cef.create_browser("https://www.classicube.net/".to_string());
+                    browser.get_identifier()
+                })
+                .chain_err(|| "CEF not initialized")?;
+
+            command_callback(player, vec!["here".to_string(), format!("{}", browser_id)])?;
         }
 
         ["create", url] => {
-            CEF.with_inner_mut(|cef| {
-                cef.create_browser((*url).to_string());
-            })
-            .chain_err(|| "CEF not initialized")?;
+            let browser_id = CEF
+                .with_inner_mut(|cef| {
+                    let browser = cef.create_browser((*url).to_string());
+                    browser.get_identifier()
+                })
+                .chain_err(|| "CEF not initialized")?;
+
+            command_callback(player, vec!["here".to_string(), format!("{}", browser_id)])?;
         }
 
         _ => {}
@@ -88,17 +95,17 @@ pub fn command_callback(args: Vec<String>) -> Result<()> {
 
             with_browser(id, |id, _browser, entity| {
                 let dir = Vec3::get_dir_vector(
-                    me.Yaw * MATH_DEG2RAD as f32,
-                    me.Pitch * MATH_DEG2RAD as f32,
+                    player.Yaw * MATH_DEG2RAD as f32,
+                    player.Pitch * MATH_DEG2RAD as f32,
                 );
 
                 entity.entity.Position.set(
-                    me.Position.X + dir.X,
-                    me.Position.Y + dir.Y,
-                    me.Position.Z + dir.Z,
+                    player.Position.X + dir.X,
+                    player.Position.Y + dir.Y,
+                    player.Position.Z + dir.Z,
                 );
 
-                entity.entity.RotY = me.RotY;
+                entity.entity.RotY = player.RotY;
 
                 Chat::print(format!(
                     "moved browser {} to {:?}",
@@ -114,17 +121,19 @@ pub fn command_callback(args: Vec<String>) -> Result<()> {
 
     // commands that target a the closest entity/browser
     match args {
-        ["here"] => with_closest(|id, _browser, entity| {
-            let dir =
-                Vec3::get_dir_vector(me.Yaw * MATH_DEG2RAD as f32, me.Pitch * MATH_DEG2RAD as f32);
-
-            entity.entity.Position.set(
-                me.Position.X + dir.X,
-                me.Position.Y + dir.Y,
-                me.Position.Z + dir.Z,
+        ["here"] => with_closest(player, |id, _browser, entity| {
+            let dir = Vec3::get_dir_vector(
+                player.Yaw * MATH_DEG2RAD as f32,
+                player.Pitch * MATH_DEG2RAD as f32,
             );
 
-            entity.entity.RotY = me.RotY;
+            entity.entity.Position.set(
+                player.Position.X + dir.X,
+                player.Position.Y + dir.Y,
+                player.Position.Z + dir.Z,
+            );
+
+            entity.entity.RotY = player.RotY;
 
             Chat::print(format!(
                 "moved browser {} to {:?}",
@@ -134,7 +143,7 @@ pub fn command_callback(args: Vec<String>) -> Result<()> {
             Ok(())
         })?,
 
-        ["at", x, y, z] => with_closest(|id, _browser, entity| {
+        ["at", x, y, z] => with_closest(player, |id, _browser, entity| {
             let x = x.parse()?;
             let y = y.parse()?;
             let z = z.parse()?;
@@ -149,7 +158,7 @@ pub fn command_callback(args: Vec<String>) -> Result<()> {
             Ok(())
         })?,
 
-        ["scale", scale] => with_closest(|id, _browser, entity| {
+        ["scale", scale] => with_closest(player, |id, _browser, entity| {
             let scale = scale.parse()?;
 
             entity.set_scale(scale);
@@ -163,12 +172,14 @@ pub fn command_callback(args: Vec<String>) -> Result<()> {
         })?,
 
         ["load", url] => {
-            let closest_browser = with_closest(|_id, browser, _entity| Ok(browser.clone()))?;
+            let closest_browser =
+                with_closest(player, |_id, browser, _entity| Ok(browser.clone()))?;
             closest_browser.load_url((*url).to_string())?;
         }
 
         ["close"] => {
-            let closest_browser = with_closest(|_id, browser, _entity| Ok(browser.clone()))?;
+            let closest_browser =
+                with_closest(player, |_id, browser, _entity| Ok(browser.clone()))?;
             closest_browser.close()?;
         }
 

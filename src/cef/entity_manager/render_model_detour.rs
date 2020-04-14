@@ -51,7 +51,7 @@ impl RenderModelDetour {
 
     pub fn shutdown(&mut self) {
         unsafe {
-            DETOUR.disable().unwrap();
+            let _ignore_error = DETOUR.disable();
         }
     }
 }

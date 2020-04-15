@@ -195,7 +195,7 @@ dependencies = [
 [[package]]
 name = "classicube-helpers"
 version = "0.1.0"
-source = "git+https://github.com/SpiralP/rust-classicube-helpers.git#8d0fbca7b5b7852fb62f399650d68be0be8c75c1"
+source = "git+https://github.com/SpiralP/rust-classicube-helpers.git#45a2fe2cfbe2769e18aa5e4595e18dc7c956b411"
 dependencies = [
  "classicube-sys",
  "detour",

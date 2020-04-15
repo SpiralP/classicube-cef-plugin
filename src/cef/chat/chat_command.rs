@@ -8,8 +8,8 @@ use crate::{
         CEF,
     },
     error::*,
-    helpers::WithInner,
 };
+use classicube_helpers::with_inner::WithInner;
 use classicube_sys::{Entities, Entity, OwnedChatCommand, Vec3, ENTITIES_SELF_ID, MATH_DEG2RAD};
 use error_chain::bail;
 use std::{os::raw::c_int, slice};

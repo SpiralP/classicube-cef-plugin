@@ -9,7 +9,7 @@ use self::{
     entity_manager::{cef_paint_callback, CefEntityManager},
     interface::{RustRefApp, RustRefBrowser, RustRefClient},
 };
-use crate::helpers::WithInner;
+use classicube_helpers::with_inner::WithInner;
 use std::{cell::RefCell, collections::HashMap, os::raw::c_int, thread, time::Duration};
 
 // Some means we are initialized

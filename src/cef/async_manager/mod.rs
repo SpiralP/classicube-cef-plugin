@@ -1,11 +1,9 @@
-use crate::{cef::interface, helpers::*};
+use crate::cef::interface;
 use async_dispatcher::{Dispatcher, DispatcherHandle, LocalDispatcherHandle};
-use classicube_helpers::tick::TickEventHandler;
-use std::future::Future;
-use tokio::task::JoinHandle;
-
+use classicube_helpers::{tick::TickEventHandler, with_inner::WithInner};
 use lazy_static::lazy_static;
-use std::{cell::RefCell, sync::Mutex, time::Duration};
+use std::{cell::RefCell, future::Future, sync::Mutex, time::Duration};
+use tokio::task::JoinHandle;
 
 thread_local!(
     static ASYNC_DISPATCHER: RefCell<Option<Dispatcher>> = RefCell::new(None);

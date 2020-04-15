@@ -1,11 +1,7 @@
 #![allow(non_snake_case)]
 
 use classicube_sys::*;
-use std::{
-    cell::RefCell,
-    sync::{Mutex, RwLock},
-    thread::LocalKey,
-};
+use std::cell::RefCell;
 
 // Gfx_quadVb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FC4B, 4);
 // Gfx_texVb  = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, 4);
@@ -74,90 +70,4 @@ pub unsafe fn Gfx_Draw2DTexture(tex: &mut Texture, col: PackedCol) {
 pub unsafe fn Texture_RenderShaded(tex: &mut Texture, shadeCol: PackedCol) {
     Gfx_BindTexture(tex.ID);
     Gfx_Draw2DTexture(tex, shadeCol);
-}
-
-pub trait WithInner<O> {
-    fn with_inner<F, T>(&'static self, f: F) -> Option<T>
-    where
-        F: FnOnce(&O) -> T;
-
-    fn with_inner_mut<F, T>(&'static self, f: F) -> Option<T>
-    where
-        F: FnOnce(&mut O) -> T;
-}
-
-impl<O> WithInner<O> for LocalKey<RefCell<Option<O>>> {
-    fn with_inner<F, T>(&'static self, f: F) -> Option<T>
-    where
-        F: FnOnce(&O) -> T,
-    {
-        self.with(|cell| {
-            if let Some(inner) = &*cell.borrow() {
-                Some(f(inner))
-            } else {
-                None
-            }
-        })
-    }
-
-    fn with_inner_mut<F, T>(&'static self, f: F) -> Option<T>
-    where
-        F: FnOnce(&mut O) -> T,
-    {
-        self.with(|cell| {
-            if let Some(inner) = &mut *cell.borrow_mut() {
-                Some(f(inner))
-            } else {
-                None
-            }
-        })
-    }
-}
-
-impl<O> WithInner<O> for Mutex<Option<O>> {
-    fn with_inner<F, T>(&'static self, f: F) -> Option<T>
-    where
-        F: FnOnce(&O) -> T,
-    {
-        if let Some(inner) = &*self.lock().unwrap() {
-            Some(f(inner))
-        } else {
-            None
-        }
-    }
-
-    fn with_inner_mut<F, T>(&'static self, f: F) -> Option<T>
-    where
-        F: FnOnce(&mut O) -> T,
-    {
-        if let Some(inner) = &mut *self.lock().unwrap() {
-            Some(f(inner))
-        } else {
-            None
-        }
-    }
-}
-
-impl<O> WithInner<O> for RwLock<Option<O>> {
-    fn with_inner<F, T>(&'static self, f: F) -> Option<T>
-    where
-        F: FnOnce(&O) -> T,
-    {
-        if let Some(inner) = &*self.read().unwrap() {
-            Some(f(inner))
-        } else {
-            None
-        }
-    }
-
-    fn with_inner_mut<F, T>(&'static self, f: F) -> Option<T>
-    where
-        F: FnOnce(&mut O) -> T,
-    {
-        if let Some(inner) = &mut *self.write().unwrap() {
-            Some(f(inner))
-        } else {
-            None
-        }
-    }
 }

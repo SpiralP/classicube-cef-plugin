@@ -40,7 +40,7 @@ extern "C" int cef_interface_initialize(MyApp* app_ptr) {
   settings.multi_threaded_message_loop = false;
 
   // Specify the path for the sub-process executable.
-  CefString(&settings.browser_subprocess_path).FromASCII("cef/cefsimple.exe");
+  CefString(&settings.browser_subprocess_path).FromASCII("cefsimple.exe");
 
   // Initialize CEF in the main process.
   if (!CefInitialize(main_args, settings, app_ptr, NULL)) {

@@ -10,22 +10,23 @@ struct RustRefApp {
   MyApp* ptr;
 };
 
-RustRefApp cef_interface_add_ref_app(MyApp* app_ptr);
-int cef_interface_release_ref_app(MyApp* app_ptr);
+extern "C" RustRefApp cef_interface_add_ref_app(MyApp* app_ptr);
+extern "C" int cef_interface_release_ref_app(MyApp* app_ptr);
 
 struct RustRefClient {
   MyClient* ptr;
 };
 
-RustRefClient cef_interface_add_ref_client(MyClient* client_ptr);
-int cef_interface_release_ref_client(MyClient* client_ptr);
+extern "C" RustRefClient cef_interface_add_ref_client(MyClient* client_ptr);
+extern "C" int cef_interface_release_ref_client(MyClient* client_ptr);
 
 struct RustRefBrowser {
   CefBrowser* ptr;
 };
 
-RustRefBrowser cef_interface_add_ref_browser(CefBrowser* browser_ptr);
-int cef_interface_release_ref_browser(CefBrowser* browser_ptr);
+extern "C" RustRefBrowser cef_interface_add_ref_browser(
+    CefBrowser* browser_ptr);
+extern "C" int cef_interface_release_ref_browser(CefBrowser* browser_ptr);
 
 /// Called on the browser process UI thread immediately after the CEF context
 /// has been initialized.

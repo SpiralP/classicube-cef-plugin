@@ -109,38 +109,38 @@ extern "C" int cef_interface_shutdown() {
   return 0;
 }
 
-RustRefApp cef_interface_add_ref_app(MyApp* ptr) {
+extern "C" RustRefApp cef_interface_add_ref_app(MyApp* ptr) {
   ptr->AddRef();
 
   RustRefApp r;
   r.ptr = ptr;
   return r;
 }
-int cef_interface_release_ref_app(MyApp* app_ptr) {
+extern "C" int cef_interface_release_ref_app(MyApp* app_ptr) {
   app_ptr->Release();
   return 0;
 }
 
-RustRefClient cef_interface_add_ref_client(MyClient* ptr) {
+extern "C" RustRefClient cef_interface_add_ref_client(MyClient* ptr) {
   ptr->AddRef();
 
   RustRefClient r;
   r.ptr = ptr;
   return r;
 }
-int cef_interface_release_ref_client(MyClient* client_ptr) {
+extern "C" int cef_interface_release_ref_client(MyClient* client_ptr) {
   client_ptr->Release();
   return 0;
 }
 
-RustRefBrowser cef_interface_add_ref_browser(CefBrowser* ptr) {
+extern "C" RustRefBrowser cef_interface_add_ref_browser(CefBrowser* ptr) {
   ptr->AddRef();
 
   RustRefBrowser r;
   r.ptr = ptr;
   return r;
 }
-int cef_interface_release_ref_browser(CefBrowser* browser_ptr) {
+extern "C" int cef_interface_release_ref_browser(CefBrowser* browser_ptr) {
   browser_ptr->Release();
   return 0;
 }

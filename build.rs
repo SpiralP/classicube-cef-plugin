@@ -9,14 +9,11 @@ fn main() {
 
     // this must be linked first!
     // or else we get debug assertion popups about heap corruption/crt memory
+    // also you can't build debug cef without linking this
     if profile == "Debug" {
         // links to ucrtbased.dll
-        println!("cargo:rustc-link-lib=dylib=ucrtd");
+        println!("cargo:rustc-link-lib=static=ucrtd");
     }
-
-    // println!("cargo:rustc-link-lib=rpcrt4");
-    // println!("cargo:rustc-link-lib=comctl32");
-    // println!("cargo:rustc-link-lib=shlwapi");
 
     let out_dir = env::var("OUT_DIR").unwrap();
 
@@ -26,8 +23,8 @@ fn main() {
     );
 
     println!("cargo:rustc-link-lib=dylib=libcef");
-    println!("cargo:rustc-link-lib=static=cef_sandbox");
 
+    println!("cargo:rerun-if-changed=cef_interface/CMakeLists.txt");
     println!("cargo:rerun-if-changed=cef_interface/interface.hh");
     println!("cargo:rerun-if-changed=cef_interface/interface.cc");
     println!("cargo:rerun-if-changed=cef_interface/app.cc");
@@ -38,6 +35,7 @@ fn main() {
     println!("cargo:rerun-if-changed=cef_interface/render_handler.hh");
 
     let cmake_path = cmake::Config::new("cef_interface")
+        .static_crt(true)
         .build_target("cef_interface")
         .profile(profile)
         .build();

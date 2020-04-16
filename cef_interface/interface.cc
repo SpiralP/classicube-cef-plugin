@@ -8,11 +8,12 @@
 
 extern "C" RustRefApp cef_interface_create_app(
     OnContextInitializedCallback on_context_initialized_callback,
-
     OnBeforeCloseCallback on_before_close_callback,
-    OnPaintCallback on_paint_callback) {
-  CefRefPtr<MyApp> app = new MyApp(on_context_initialized_callback,
-                                   on_before_close_callback, on_paint_callback);
+    OnPaintCallback on_paint_callback,
+    OnLoadEndCallback on_load_end_callback) {
+  CefRefPtr<MyApp> app =
+      new MyApp(on_context_initialized_callback, on_before_close_callback,
+                on_paint_callback, on_load_end_callback);
 
   return cef_interface_add_ref_app(app);
 }

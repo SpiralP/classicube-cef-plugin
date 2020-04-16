@@ -9,7 +9,8 @@ class MyApp : public CefApp, public CefBrowserProcessHandler {
  public:
   MyApp(OnContextInitializedCallback on_context_initialized_callback,
         OnBeforeCloseCallback on_before_close_callback,
-        OnPaintCallback on_paint_callback);
+        OnPaintCallback on_paint_callback,
+        OnLoadEndCallback on_load_end_callback);
 
   // CefApp methods:
   CefRefPtr<CefBrowserProcessHandler> GetBrowserProcessHandler() OVERRIDE;

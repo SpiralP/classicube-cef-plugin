@@ -8,6 +8,7 @@ use crate::{
         CEF,
     },
     error::*,
+    players,
 };
 use classicube_helpers::with_inner::WithInner;
 use classicube_sys::{Entities, Entity, OwnedChatCommand, Vec3, ENTITIES_SELF_ID, MATH_DEG2RAD};
@@ -82,6 +83,11 @@ pub fn command_callback(player: &Entity, args: Vec<String>) -> Result<()> {
                 })
                 .chain_err(|| "CEF not initialized")?;
 
+            command_callback(player, vec!["here".to_string(), format!("{}", browser_id)])?;
+        }
+
+        ["play", url] => {
+            let browser_id = players::create(url)?;
             command_callback(player, vec!["here".to_string(), format!("{}", browser_id)])?;
         }
 
@@ -185,15 +191,6 @@ pub fn command_callback(player: &Entity, args: Vec<String>) -> Result<()> {
 
         _ => {}
     }
-
-    // ["play", id] => {
-    //     cef.run_script(format!("player.loadVideoById(\"{}\");", id));
-    // }
-
-    // ["volume", percent] => {
-    //     // 0 to 100
-    //     cef.run_script(format!("player.setVolume({});", percent));
-    // }
 
     Ok(())
 }

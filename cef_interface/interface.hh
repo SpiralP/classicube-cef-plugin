@@ -40,12 +40,16 @@ typedef void (*OnPaintCallback)(RustRefBrowser browser,
                                 int width,
                                 int height);
 
+/// Called when the browser is done loading the MAIN frame.
+typedef void (*OnLoadEndCallback)(RustRefBrowser browser);
+
 // functions to rust
 
 extern "C" RustRefApp cef_interface_create_app(
     OnContextInitializedCallback on_context_initialized_callback,
     OnBeforeCloseCallback on_before_close_callback,
-    OnPaintCallback on_paint_callback);
+    OnPaintCallback on_paint_callback,
+    OnLoadEndCallback on_load_end_callback);
 
 extern "C" int cef_interface_shutdown();
 extern "C" int cef_interface_step();

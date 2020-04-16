@@ -4,10 +4,12 @@
 
 MyApp::MyApp(OnContextInitializedCallback on_context_initialized_callback,
              OnBeforeCloseCallback on_before_close_callback,
-             OnPaintCallback on_paint_callback) {
+             OnPaintCallback on_paint_callback,
+             OnLoadEndCallback on_load_end_callback) {
   this->on_context_initialized_callback = on_context_initialized_callback;
 
-  this->client = new MyClient(on_before_close_callback, on_paint_callback);
+  this->client = new MyClient(on_before_close_callback, on_paint_callback,
+                              on_load_end_callback);
 }
 
 // CefApp methods:

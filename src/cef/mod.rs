@@ -3,12 +3,14 @@ mod chat;
 mod entity_manager;
 mod interface;
 
+pub use self::interface::RustRefBrowser;
 use self::{
     async_manager::AsyncManager,
     chat::Chat,
     entity_manager::{cef_paint_callback, CefEntityManager},
-    interface::{RustRefApp, RustRefBrowser, RustRefClient},
+    interface::{RustRefApp, RustRefClient},
 };
+use crate::players;
 use classicube_helpers::with_inner::WithInner;
 use classicube_sys::{Server, String_AppendConst};
 use log::debug;
@@ -94,39 +96,6 @@ impl Cef {
         debug!("initialize entity_manager");
         self.entity_manager.initialize();
 
-        // self.tokio_runtime.as_mut().unwrap().spawn(async {
-        //     // :(
-        //     tokio::time::delay_for(Duration::from_millis(2000)).await;
-
-        //     loop {
-        //         tokio::time::delay_for(Duration::from_millis(100)).await;
-
-        //         Self::run_on_main_thread(async {
-        //             let me = unsafe { &*Entities.List[ENTITIES_SELF_ID as usize] };
-        //             let player_pos = Vec3 {
-        //                 X: 64.0 - 4.0,
-        //                 Y: 48.0,
-        //                 Z: 64.0,
-        //             };
-
-        //             let percent = (player_pos - me.Position).length_squared() * 0.4;
-        //             let percent = (100.0 - percent).max(0.0).min(100.0);
-
-        //             let code = format!(
-        //                 r#"if (window.player && window.player.setVolume) {{
-        //                     window.player.setVolume({});
-        //                 }}"#,
-        //                 percent
-        //             );
-        //             let c_str = CString::new(code).unwrap();
-        //             unsafe {
-        //                 assert_eq!(crate::bindings::cef_run_script(c_str.as_ptr()), 0);
-        //             }
-        //         })
-        //         .await;
-        //     }
-        // });
-
         // finally initialize cef via our App
 
         extern "C" fn on_context_initialized_callback(client: RustRefClient) {
@@ -164,10 +133,15 @@ impl Cef {
             CefEntityManager::on_browser_close(browser);
         }
 
+        extern "C" fn on_browser_page_loaded(browser: RustRefBrowser) {
+            players::on_browser_page_loaded(browser);
+        }
+
         let ref_app = RustRefApp::create(
             Some(on_context_initialized_callback),
             Some(on_before_browser_close),
             Some(cef_paint_callback),
+            Some(on_browser_page_loaded),
         );
         ref_app.initialize().unwrap();
 
@@ -192,32 +166,29 @@ impl Cef {
 
     /// Called once on our plugin's `free` or on Drop (crashed)
     pub fn shutdown(&mut self) {
+        players::shutdown();
+
         {
             if !BROWSERS.with(|cell| cell.borrow().is_empty()) {
-                debug!("shutdown cef browsers");
+                debug!("shutdown all cef browsers");
 
-                // get first browser in map, calling close on the browser and returning its id
-                while let Some((id, browser)) = BROWSERS.with(|cell| {
+                BROWSERS.with(|cell| {
                     let browsers = &*cell.borrow();
 
-                    if let Some((&id, browser)) = browsers.iter().next() {
-                        Some((id, browser.clone()))
-                    } else {
-                        None
+                    for (id, browser) in browsers {
+                        debug!("shutdown browser {} {:?}", id, browser);
+                        browser.close().unwrap();
                     }
-                }) {
-                    debug!("shutdown browser {} {:?}", id, browser);
-                    browser.close().unwrap();
+                });
 
-                    // keep looping until our id doesn't exist in the map anymore
-                    while BROWSERS.with(|cell| cell.borrow().contains_key(&id)) {
-                        debug!("waiting for browser {}", id);
+                // keep looping until our id doesn't exist in the map anymore
+                while !BROWSERS.with(|cell| cell.borrow().is_empty()) {
+                    debug!("waiting for browsers...");
 
-                        // process cef's event loop
-                        AsyncManager::step();
+                    // process cef's event loop
+                    AsyncManager::step();
 
-                        thread::sleep(Duration::from_millis(64));
-                    }
+                    thread::sleep(Duration::from_millis(64));
                 }
                 debug!("shut down all browsers");
             } else {

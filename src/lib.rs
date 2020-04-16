@@ -2,6 +2,7 @@ mod cef;
 mod error;
 mod helpers;
 mod logger;
+mod players;
 
 use classicube_sys::*;
 use log::debug;

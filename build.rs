@@ -31,8 +31,6 @@ fn main() {
     println!("cargo:rerun-if-changed=cef_interface/app.hh");
     println!("cargo:rerun-if-changed=cef_interface/client.cc");
     println!("cargo:rerun-if-changed=cef_interface/client.hh");
-    println!("cargo:rerun-if-changed=cef_interface/render_handler.cc");
-    println!("cargo:rerun-if-changed=cef_interface/render_handler.hh");
 
     let cmake_path = cmake::Config::new("cef_interface")
         .static_crt(true)

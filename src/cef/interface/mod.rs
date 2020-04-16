@@ -19,12 +19,14 @@ impl RustRefApp {
         on_context_initialized_callback: OnContextInitializedCallback,
         on_before_close_callback: OnBeforeCloseCallback,
         on_paint_callback: OnPaintCallback,
+        on_load_end_callback: OnLoadEndCallback,
     ) -> Self {
         unsafe {
             cef_interface_create_app(
                 on_context_initialized_callback,
                 on_before_close_callback,
                 on_paint_callback,
+                on_load_end_callback,
             )
         }
     }

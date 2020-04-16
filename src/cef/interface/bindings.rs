@@ -6,9 +6,10 @@ include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 
 #[no_mangle]
 pub unsafe extern "C" fn rust_print(c_str: *const ::std::os::raw::c_char) {
+    use log::debug;
     use std::ffi::CStr;
 
     let s = CStr::from_ptr(c_str).to_string_lossy().to_string();
 
-    println!("{}", s);
+    debug!("{}", s);
 }

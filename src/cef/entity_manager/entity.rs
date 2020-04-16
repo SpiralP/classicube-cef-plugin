@@ -51,11 +51,11 @@ impl CefEntity {
     }
 
     unsafe extern "C" fn tick(_entity: *mut Entity, _delta: f64) {
-        // println!("Tick");
+        // debug!("Tick");
     }
 
     unsafe extern "C" fn despawn(_entity: *mut Entity) {
-        // println!("Despawn");
+        // debug!("Despawn");
     }
 
     unsafe extern "C" fn set_location(
@@ -63,11 +63,11 @@ impl CefEntity {
         _update: *mut LocationUpdate,
         _interpolate: cc_bool,
     ) {
-        // println!("SetLocation");
+        // debug!("SetLocation");
     }
 
     unsafe extern "C" fn get_col(_entity: *mut Entity) -> PackedCol {
-        // println!("GetCol");
+        // debug!("GetCol");
 
         PACKEDCOL_WHITE
     }
@@ -75,13 +75,13 @@ impl CefEntity {
     unsafe extern "C" fn render_model(entity: *mut Entity, _delta_time: f64, _t: f32) {
         let entity = &mut *entity;
 
-        // println!("RenderModel");
+        // debug!("RenderModel");
 
         Model_Render(entity.Model, entity);
     }
 
     unsafe extern "C" fn render_name(_entity: *mut Entity) {
-        // println!("RenderName");
+        // debug!("RenderName");
     }
 
     unsafe fn register_entity(&mut self) {

@@ -3,6 +3,7 @@ use classicube_helpers::events::gfx::{ContextLostEventHandler, ContextRecreatedE
 use classicube_sys::{
     OwnedGfxVertexBuffer, VertexFormat__VERTEX_FORMAT_P3FC4B, VertexFormat__VERTEX_FORMAT_P3FT2FC4B,
 };
+use log::debug;
 
 pub struct ContextHandler {
     context_lost_handler: ContextLostEventHandler,
@@ -36,7 +37,7 @@ impl ContextHandler {
 
         // Start calling our CefEntity's draw
         // unsafe {
-        //     println!("enable RenderModel detour");
+        //     debug!("enable RenderModel detour");
         //     self.local_player_render_model_detour.enable().unwrap();
         // }
 
@@ -48,12 +49,12 @@ impl ContextHandler {
 
         // disable detour so we don't call our ModelRender
         // if self.local_player_render_model_detour.is_enabled() {
-        //     println!("disable RenderModel detour");
+        //     debug!("disable RenderModel detour");
         //     unsafe {
         //         self.local_player_render_model_detour.disable().unwrap();
         //     }
         // } else {
-        //     println!("RenderModel detour already disabled?");
+        //     debug!("RenderModel detour already disabled?");
         // }
 
         // delete vertex buffers
@@ -71,13 +72,13 @@ impl ContextHandler {
         Self::context_recreated();
 
         self.context_lost_handler.on(|_| {
-            println!("ContextLost {:?}", std::thread::current().id());
+            debug!("ContextLost {:?}", std::thread::current().id());
 
             Self::context_lost();
         });
 
         self.context_recreated_handler.on(|_| {
-            println!("ContextRecreated {:?}", std::thread::current().id());
+            debug!("ContextRecreated {:?}", std::thread::current().id());
 
             Self::context_recreated();
         });

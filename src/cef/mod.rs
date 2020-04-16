@@ -10,6 +10,7 @@ use self::{
     interface::{RustRefApp, RustRefBrowser, RustRefClient},
 };
 use classicube_helpers::with_inner::WithInner;
+use log::debug;
 use std::{cell::RefCell, collections::HashMap, os::raw::c_int, thread, time::Duration};
 
 // Some means we are initialized
@@ -23,8 +24,6 @@ thread_local!(
 );
 
 pub fn initialize() {
-    Chat::print("cef initialize");
-
     CEF.with(|cell| {
         assert!(cell.borrow().is_none());
 
@@ -34,15 +33,15 @@ pub fn initialize() {
 
 pub fn on_first_context_created() {
     CEF.with_inner_mut(|cef| {
+        debug!("cef initialize");
         cef.initialize();
     })
     .unwrap();
 }
 
 pub fn shutdown() {
-    Chat::print("cef shutdown");
-
     CEF.with_inner_mut(|cef| {
+        debug!("cef shutdown");
         cef.shutdown();
     });
 
@@ -74,11 +73,11 @@ impl Cef {
 
     /// Called once on our plugin's `init`
     pub fn initialize(&mut self) {
-        println!("initialize async_manager");
+        debug!("initialize async_manager");
         self.async_manager.initialize();
-        println!("initialize chat");
+        debug!("initialize chat");
         self.chat.initialize();
-        println!("initialize entity_manager");
+        debug!("initialize entity_manager");
         self.entity_manager.initialize();
 
         // self.tokio_runtime.as_mut().unwrap().spawn(async {
@@ -119,7 +118,7 @@ impl Cef {
         extern "C" fn on_context_initialized_callback(client: RustRefClient) {
             // on the main thread
 
-            println!(
+            debug!(
                 "on_context_initialized_callback {:?} {:?}",
                 std::thread::current().id(),
                 client
@@ -136,7 +135,7 @@ impl Cef {
         extern "C" fn on_before_browser_close(browser: RustRefBrowser) {
             let id = browser.get_identifier();
 
-            println!(
+            debug!(
                 "on_before_browser_close {} {:?} {:?}",
                 id,
                 std::thread::current().id(),
@@ -169,7 +168,7 @@ impl Cef {
         let browser = self.client.as_ref().unwrap().create_browser(url);
 
         let id = browser.get_identifier();
-        println!("create_browser {}", id);
+        debug!("create_browser {}", id);
 
         BROWSERS.with(|cell| cell.borrow_mut().insert(id, browser.clone()));
         CefEntityManager::create_entity(browser.clone());
@@ -181,7 +180,7 @@ impl Cef {
     pub fn shutdown(&mut self) {
         {
             if !BROWSERS.with(|cell| cell.borrow().is_empty()) {
-                println!("shutdown cef browsers");
+                debug!("shutdown cef browsers");
 
                 // get first browser in map, calling close on the browser and returning its id
                 while let Some((id, browser)) = BROWSERS.with(|cell| {
@@ -193,12 +192,12 @@ impl Cef {
                         None
                     }
                 }) {
-                    println!("shutdown browser {} {:?}", id, browser);
+                    debug!("shutdown browser {} {:?}", id, browser);
                     browser.close().unwrap();
 
                     // keep looping until our id doesn't exist in the map anymore
                     while BROWSERS.with(|cell| cell.borrow().contains_key(&id)) {
-                        println!("waiting for browser {}", id);
+                        debug!("waiting for browser {}", id);
 
                         // process cef's event loop
                         AsyncManager::step();
@@ -206,29 +205,29 @@ impl Cef {
                         thread::sleep(Duration::from_millis(64));
                     }
                 }
-                println!("shut down all browsers");
+                debug!("shut down all browsers");
             } else {
-                println!("cef browsers already shutdown?");
+                debug!("cef browsers already shutdown?");
             }
         }
 
         {
             if self.client.is_some() {
-                println!("shutdown cef client");
+                debug!("shutdown cef client");
                 self.client.take();
             } else {
-                println!("cef client already shutdown?");
+                debug!("cef client already shutdown?");
             }
         }
 
         {
             if self.app.is_some() {
-                println!("shutdown cef app");
+                debug!("shutdown cef app");
                 if let Some(app) = self.app.take() {
                     app.shutdown().unwrap();
                 }
             } else {
-                println!("cef app already shutdown?");
+                debug!("cef app already shutdown?");
             }
         }
 
@@ -236,13 +235,13 @@ impl Cef {
         self.chat.shutdown();
         self.async_manager.shutdown();
 
-        println!("shutdown OK");
+        debug!("shutdown OK");
     }
 }
 
 impl Drop for Cef {
     fn drop(&mut self) {
-        println!("DROP SHUTDOWN");
+        debug!("DROP SHUTDOWN");
         self.shutdown();
     }
 }

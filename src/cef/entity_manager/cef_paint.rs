@@ -1,6 +1,7 @@
 use super::ENTITIES;
 use crate::cef::interface::*;
 use classicube_sys::*;
+use log::debug;
 
 // use lazy_static::lazy_static;
 // use std::sync::atomic::{AtomicBool, Ordering};
@@ -21,7 +22,7 @@ pub extern "C" fn cef_paint_callback(
 ) {
     // {
     //     if !CEF_CAN_DRAW.load(Ordering::SeqCst) {
-    //         println!("can't draw!");
+    //         debug!("can't draw!");
     //         return;
     //     }
     // }
@@ -39,7 +40,7 @@ pub extern "C" fn cef_paint_callback(
 
             entity.update_texture(part);
         } else {
-            println!("no entity for browser {}!", id);
+            debug!("no entity for browser {}!", id);
         }
     });
 }

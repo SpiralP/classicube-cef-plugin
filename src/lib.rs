@@ -1,14 +1,18 @@
 mod cef;
 mod error;
 mod helpers;
+mod logger;
 
 use classicube_sys::*;
+use log::debug;
 use std::{cell::Cell, ffi::CString, os::raw::c_int, ptr};
 
 extern "C" fn init() {
     color_backtrace::install_with_settings(
         color_backtrace::Settings::new().verbosity(color_backtrace::Verbosity::Full),
     );
+
+    logger::initialize(true, false);
 
     {
         let append_app_name = CString::new(format!(" +cef{}", env!("CARGO_PKG_VERSION"))).unwrap();
@@ -24,7 +28,7 @@ extern "C" fn init() {
 }
 
 extern "C" fn free() {
-    println!("Free");
+    debug!("Free");
 
     cef::shutdown();
 }
@@ -34,7 +38,7 @@ thread_local!(
 );
 
 extern "C" fn on_new_map_loaded() {
-    println!("OnNewMapLoaded");
+    debug!("OnNewMapLoaded");
 
     CONTEXT_LOADED.with(|cell| {
         if !cell.get() {

@@ -2,6 +2,7 @@ use crate::cef::interface;
 use async_dispatcher::{Dispatcher, DispatcherHandle, LocalDispatcherHandle};
 use classicube_helpers::{tick::TickEventHandler, with_inner::WithInner};
 use lazy_static::lazy_static;
+use log::debug;
 use std::{cell::RefCell, future::Future, sync::Mutex, time::Duration};
 use tokio::task::JoinHandle;
 
@@ -60,24 +61,24 @@ impl AsyncManager {
         {
             let mut option = TOKIO_RUNTIME.lock().unwrap();
             if option.is_some() {
-                println!("shutdown tokio");
+                debug!("shutdown tokio");
                 if let Some(rt) = option.take() {
                     rt.shutdown_timeout(Duration::from_millis(100));
                 }
             } else {
-                println!("tokio already shutdown?");
+                debug!("tokio already shutdown?");
             }
         }
 
         {
             if ASYNC_DISPATCHER.with_inner(|_| ()).is_some() {
-                println!("shutdown async_dispatcher");
+                debug!("shutdown async_dispatcher");
 
                 ASYNC_DISPATCHER_HANDLE.lock().unwrap().take();
                 ASYNC_DISPATCHER_LOCAL_HANDLE.with(|cell| cell.borrow_mut().take());
                 ASYNC_DISPATCHER.with(|cell| cell.borrow_mut().take());
             } else {
-                println!("async_dispatcher already shutdown?");
+                debug!("async_dispatcher already shutdown?");
             }
         }
     }

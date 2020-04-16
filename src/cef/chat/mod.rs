@@ -9,6 +9,7 @@ use classicube_helpers::{
 };
 use classicube_sys::{Chat_Add, Entities, MsgType, MsgType_MSG_TYPE_NORMAL, OwnedString, Server};
 use futures::{future::RemoteHandle, prelude::*};
+use log::info;
 use std::cell::{Cell, RefCell};
 
 thread_local!(
@@ -66,7 +67,10 @@ impl Chat {
         });
     }
 
-    pub fn print<S: Into<Vec<u8>>>(s: S) {
+    pub fn print<S: Into<String>>(s: S) {
+        let s = s.into();
+        info!("{}", s);
+
         let owned_string = OwnedString::new(s);
 
         SIMULATING.with(|a| a.set(true));

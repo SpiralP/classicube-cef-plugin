@@ -17,7 +17,7 @@ impl Player for WebPlayer {
         } else if let Some(this) = Self::from_url(url) {
             Ok(this)
         } else {
-            Err("url didn't match whitelisted domains".into())
+            Err("url didn't BAP".into())
         }
     }
 
@@ -27,23 +27,9 @@ impl Player for WebPlayer {
     }
 }
 
-const WHITELISTED_HOSTS: &[&str] = &[
-    "google.com",
-    "www.google.com",
-    "i.imgur.com",
-    "imgur.com",
-    "github.com",
-    "classicube.net",
-    "www.classicube.net",
-];
-
 impl WebPlayer {
     fn from_url(url: Url) -> Option<Self> {
-        if WHITELISTED_HOSTS.contains(&url.host_str()?) {
-            Some(Self { url })
-        } else {
-            None
-        }
+        Some(Self { url })
     }
 }
 

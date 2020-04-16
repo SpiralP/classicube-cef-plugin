@@ -5,12 +5,10 @@ use crate::{
     cef::{
         entity_manager::{CefEntity, CefEntityManager, ENTITIES},
         interface::RustRefBrowser,
-        CEF,
     },
     error::*,
     players,
 };
-use classicube_helpers::with_inner::WithInner;
 use classicube_sys::{Entities, Entity, OwnedChatCommand, Vec3, ENTITIES_SELF_ID, MATH_DEG2RAD};
 use error_chain::bail;
 use std::{os::raw::c_int, slice};
@@ -65,28 +63,11 @@ pub fn command_callback(player: &Entity, args: Vec<String>) -> Result<()> {
     // static commands not targetted at a specific entity
     match args {
         ["create"] => {
-            let browser_id = CEF
-                .with_inner_mut(|cef| {
-                    let browser = cef.create_browser("https://www.classicube.net/".to_string());
-                    browser.get_identifier()
-                })
-                .chain_err(|| "CEF not initialized")?;
-
+            let browser_id = players::create("https://www.classicube.net/")?;
             command_callback(player, vec!["here".to_string(), format!("{}", browser_id)])?;
         }
 
         ["create", url] => {
-            let browser_id = CEF
-                .with_inner_mut(|cef| {
-                    let browser = cef.create_browser((*url).to_string());
-                    browser.get_identifier()
-                })
-                .chain_err(|| "CEF not initialized")?;
-
-            command_callback(player, vec!["here".to_string(), format!("{}", browser_id)])?;
-        }
-
-        ["play", url] => {
             let browser_id = players::create(url)?;
             command_callback(player, vec!["here".to_string(), format!("{}", browser_id)])?;
         }
@@ -180,7 +161,8 @@ pub fn command_callback(player: &Entity, args: Vec<String>) -> Result<()> {
         ["load", url] => {
             let closest_browser =
                 with_closest(player, |_id, browser, _entity| Ok(browser.clone()))?;
-            closest_browser.load_url((*url).to_string())?;
+
+            players::load(url, closest_browser)?;
         }
 
         ["close"] => {

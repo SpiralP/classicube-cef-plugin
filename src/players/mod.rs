@@ -53,6 +53,21 @@ pub fn create(input: &str) -> Result<c_int> {
     .chain_err(|| "CEF not initialized")?
 }
 
+pub fn load(input: &str, browser: RustRefBrowser) -> Result<c_int> {
+    let mut player = create_player(input)?;
+    let url = player.on_create();
+
+    browser.load_url(url)?;
+    let browser_id = browser.get_identifier();
+
+    PLAYERS.with(move |cell| {
+        let players = &mut *cell.borrow_mut();
+        players.insert(browser_id, (browser, player));
+    });
+
+    Ok(browser_id)
+}
+
 pub fn on_browser_page_loaded(_browser: RustRefBrowser) {
     // let browser_id = browser.get_identifier();
 

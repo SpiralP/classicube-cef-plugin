@@ -172,14 +172,22 @@ impl Cef {
             if !BROWSERS.with(|cell| cell.borrow().is_empty()) {
                 debug!("shutdown all cef browsers");
 
-                BROWSERS.with(|cell| {
-                    let browsers = &*cell.borrow();
+                {
+                    // we can't be inside BROWSERS because BeforeClose is (sometimes) called right away
+                    let browsers: Vec<_> = BROWSERS.with(|cell| {
+                        let browsers = &*cell.borrow();
+
+                        browsers
+                            .iter()
+                            .map(|(id, browser)| (*id, browser.clone()))
+                            .collect()
+                    });
 
                     for (id, browser) in browsers {
                         debug!("shutdown browser {} {:?}", id, browser);
                         browser.close().unwrap();
                     }
-                });
+                }
 
                 // keep looping until our id doesn't exist in the map anymore
                 while !BROWSERS.with(|cell| cell.borrow().is_empty()) {

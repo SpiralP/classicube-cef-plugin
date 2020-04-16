@@ -33,6 +33,8 @@ const WHITELISTED_HOSTS: &[&str] = &[
     "i.imgur.com",
     "imgur.com",
     "github.com",
+    "classicube.net",
+    "www.classicube.net",
 ];
 
 impl WebPlayer {

@@ -10,10 +10,12 @@ use self::{
     interface::{RustRefApp, RustRefBrowser, RustRefClient},
 };
 use classicube_helpers::with_inner::WithInner;
+use classicube_sys::{Server, String_AppendConst};
 use log::debug;
-use std::{cell::RefCell, collections::HashMap, os::raw::c_int, thread, time::Duration};
+use std::{
+    cell::RefCell, collections::HashMap, ffi::CString, os::raw::c_int, thread, time::Duration,
+};
 
-// Some means we are initialized
 thread_local!(
     pub static CEF: RefCell<Option<Cef>> = RefCell::new(None);
 );
@@ -24,6 +26,18 @@ thread_local!(
 );
 
 pub fn initialize() {
+    {
+        let append_app_name = CString::new(format!(" +cef{}", env!("CARGO_PKG_VERSION"))).unwrap();
+
+        let c_str = append_app_name.as_ptr();
+
+        unsafe {
+            String_AppendConst(&mut Server.AppName, c_str);
+        }
+    }
+
+    Chat::print(format!("Cef v{} initializing", env!("CARGO_PKG_VERSION")));
+
     CEF.with(|cell| {
         assert!(cell.borrow().is_none());
 
@@ -236,12 +250,5 @@ impl Cef {
         self.async_manager.shutdown();
 
         debug!("shutdown OK");
-    }
-}
-
-impl Drop for Cef {
-    fn drop(&mut self) {
-        debug!("DROP SHUTDOWN");
-        self.shutdown();
     }
 }

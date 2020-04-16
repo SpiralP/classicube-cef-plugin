@@ -5,7 +5,7 @@ mod logger;
 
 use classicube_sys::*;
 use log::debug;
-use std::{cell::Cell, ffi::CString, os::raw::c_int, ptr};
+use std::{cell::Cell, os::raw::c_int, ptr};
 
 extern "C" fn init() {
     color_backtrace::install_with_settings(
@@ -13,16 +13,6 @@ extern "C" fn init() {
     );
 
     logger::initialize(true, false);
-
-    {
-        let append_app_name = CString::new(format!(" +cef{}", env!("CARGO_PKG_VERSION"))).unwrap();
-
-        let c_str = append_app_name.as_ptr();
-
-        unsafe {
-            String_AppendConst(&mut Server.AppName, c_str);
-        }
-    }
 
     cef::initialize();
 }

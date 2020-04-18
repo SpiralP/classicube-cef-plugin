@@ -3,12 +3,18 @@ mod browser;
 
 pub use self::bindings::{Callbacks, RustRefApp, RustRefBrowser, RustRefClient};
 use crate::{async_manager::AsyncManager, entity_manager::cef_paint_callback};
+use async_std::future;
 use futures::channel::oneshot;
-use log::debug;
+use log::{debug, warn};
 use std::{
     cell::{Cell, RefCell},
     future::Future,
+    time::{Duration, Instant},
 };
+
+// we've set cef to render at 60 fps
+// (1/60)*1000 = 16.6666666667
+const CEF_RATE: Duration = Duration::from_millis(16);
 
 thread_local!(
     pub static CEF: RefCell<Option<Cef>> = RefCell::new(None);
@@ -81,14 +87,15 @@ impl Cef {
 
         AsyncManager::spawn_local_on_main_thread(async move {
             while {
-                let before = std::time::Instant::now();
+                let before = Instant::now();
                 let res = Cef::try_step();
-                debug!("cef step {:?}", std::time::Instant::now() - before);
+                let after = Instant::now();
+                if after - before > Duration::from_millis(100) {
+                    warn!("cef step {:?}", after - before);
+                }
                 res
             } {
-                let never = async_std::future::pending::<()>();
-                let dur = std::time::Duration::from_millis(100); // TODO
-                assert!(async_std::future::timeout(dur, never).await.is_err());
+                let _ = future::timeout(CEF_RATE, future::pending::<()>()).await;
             }
         });
 
@@ -96,12 +103,16 @@ impl Cef {
     }
 
     pub fn shutdown(&self) {
-        debug!("shutting down all browsers");
-        AsyncManager::block_on_local(Self::close_all_browsers());
+        let app = self.app.clone();
 
-        debug!("shutdown cef");
-        self.app.shutdown().unwrap();
-        IS_INITIALIZED.with(|cell| cell.set(false));
+        AsyncManager::spawn_local_on_main_thread(async move {
+            debug!("shutting down all browsers");
+            Self::close_all_browsers().await;
+
+            debug!("shutdown cef");
+            app.shutdown().unwrap();
+            IS_INITIALIZED.with(|cell| cell.set(false));
+        });
     }
 
     fn try_step() -> bool {

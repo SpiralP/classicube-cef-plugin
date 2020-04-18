@@ -1,14 +1,8 @@
 #![allow(clippy::single_match)]
 
 use super::Chat;
-use crate::{
-    cef::RustRefBrowser,
-    entity_manager::{CefEntity, EntityManager},
-    error::*,
-    players,
-};
+use crate::{entity_manager::EntityManager, error::*, players};
 use classicube_sys::{Entities, Entity, OwnedChatCommand, Vec3, ENTITIES_SELF_ID, MATH_DEG2RAD};
-use error_chain::bail;
 use std::{os::raw::c_int, slice};
 
 extern "C" fn c_chat_command_callback(args: *const classicube_sys::String, args_count: c_int) {
@@ -104,11 +98,13 @@ pub fn command_callback(player: &Entity, args: Vec<String>) -> Result<()> {
             Ok(())
         })?,
 
-        // ["load", url] => {
-        //     let closest_browser = with_closest(player, |_entity| Ok(browser.clone()))?;
+        ["load", url] => {
+            let entity_id = EntityManager::with_closest(player.Position, |closest_entity| {
+                Ok(closest_entity.id)
+            })?;
+            players::load(url, entity_id)?;
+        }
 
-        //     players::load(url, closest_browser)?;
-        // }
         ["remove"] => {
             let entity_id = EntityManager::with_closest(player.Position, |closest_entity| {
                 Ok(closest_entity.id)

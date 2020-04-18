@@ -75,7 +75,11 @@ impl AsyncManager {
 
                 ASYNC_DISPATCHER_HANDLE.lock().unwrap().take();
                 ASYNC_DISPATCHER_LOCAL_HANDLE.with(|cell| cell.borrow_mut().take());
-                ASYNC_DISPATCHER.with(|cell| cell.borrow_mut().take());
+                ASYNC_DISPATCHER.with(|cell| {
+                    if let Some(mut async_dispatcher) = cell.borrow_mut().take() {
+                        async_dispatcher.run();
+                    }
+                });
             } else {
                 debug!("async_dispatcher already shutdown?");
             }

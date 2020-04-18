@@ -65,9 +65,12 @@ pub fn create(input: &str) -> Result<usize> {
 
     Ok(entity_id)
 }
-pub fn load(input: &str, browser: RustRefBrowser) -> Result<c_int> {
+
+pub fn load(input: &str, entity_id: usize) -> Result<()> {
     let mut player = create_player(input)?;
     let url = player.on_create();
+
+    let browser = EntityManager::get_browser_by_entity_id(entity_id)?;
 
     browser.load_url(url)?;
     let browser_id = browser.get_identifier();
@@ -77,20 +80,20 @@ pub fn load(input: &str, browser: RustRefBrowser) -> Result<c_int> {
         players.insert(browser_id, (browser, player));
     });
 
-    Ok(browser_id)
+    Ok(())
 }
 
-pub fn on_browser_page_loaded(_browser: RustRefBrowser) {
-    // let browser_id = browser.get_identifier();
+// pub fn on_browser_page_loaded(_browser: RustRefBrowser) {
+//     // let browser_id = browser.get_identifier();
 
-    // PLAYERS.with(|players| {
-    //     let players = &mut *players.borrow_mut();
+//     // PLAYERS.with(|players| {
+//     //     let players = &mut *players.borrow_mut();
 
-    //     if let Some((browser, player)) = players.get_mut(&browser_id) {
-    //         player.on_page_loaded(browser);
-    //     }
-    // });
-}
+//     //     if let Some((browser, player)) = players.get_mut(&browser_id) {
+//     //         player.on_page_loaded(browser);
+//     //     }
+//     // });
+// }
 
 pub fn shutdown() {
     debug!("shutdown players");

@@ -117,6 +117,22 @@ impl EntityManager {
         });
     }
 
+    pub fn get_browser_by_entity_id(entity_id: usize) -> Result<RustRefBrowser> {
+        ENTITIES.with(|entities| {
+            let entities = &*entities.borrow();
+
+            if let Some(entity) = entities.get(&entity_id) {
+                if let Some(browser) = &entity.browser {
+                    Ok(browser.clone())
+                } else {
+                    bail!("no browser for entity {}", entity_id);
+                }
+            } else {
+                bail!("couldn't find entity for entity id {}", entity_id);
+            }
+        })
+    }
+
     pub fn remove_entity(entity_id: usize) {
         let browser = ENTITIES
             .with(|entities| {

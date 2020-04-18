@@ -18,17 +18,17 @@ pub fn initialize() {
 
 pub fn on_first_context_created() {
     PLUGIN
-        .with_inner_mut(|cef| {
+        .with_inner_mut(|plugin| {
             debug!("plugin initialize");
-            cef.initialize();
+            plugin.initialize();
         })
         .unwrap();
 }
 
 pub fn shutdown() {
-    PLUGIN.with_inner_mut(|cef| {
+    PLUGIN.with_inner_mut(|plugin| {
         debug!("plugin shutdown");
-        cef.shutdown();
+        plugin.shutdown();
     });
 
     PLUGIN.with(|cell| {
@@ -76,12 +76,12 @@ impl Plugin {
     /// Called once on our plugin's `Free`
     pub fn shutdown(&mut self) {
         players::shutdown();
-        cef::shutdown();
-
         self.entity_manager.shutdown();
         self.chat.shutdown();
-        self.async_manager.shutdown();
 
+        cef::shutdown();
+
+        self.async_manager.shutdown();
         debug!("shutdown OK");
     }
 }

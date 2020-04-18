@@ -133,10 +133,18 @@ impl YoutubePlayer {
 
         let query: HashMap<_, _> = url.query_pairs().collect();
         let id = query.get("v")?.to_string();
+
+        // checks "t" first then for "time_continue"
         let time = query
             .get("t")
             .and_then(|s| s.parse().ok())
             .map(Duration::from_secs)
+            .or_else(|| {
+                query
+                    .get("time_continue")
+                    .and_then(|s| s.parse().ok())
+                    .map(Duration::from_secs)
+            })
             .unwrap_or_default();
 
         Some(Self::from_id_and_time(id, time)?)
@@ -207,6 +215,7 @@ fn test_youtube() {
             "https://www.youtube.com/watch?v=gQngg8iQipk&feature=youtu.be&t=36",
             "https://www.youtube.com/watch?v=gQngg8iQipk&t=36",
             "https://www.youtube.com/watch?time_continue=36&v=gQngg8iQipk&feature=emb_logo",
+            "https://www.youtube.com/watch?t=36&time_continue=11&v=gQngg8iQipk&feature=emb_logo",
             "https://youtu.be/gQngg8iQipk?t=36",
             "https://www.youtube.com/embed/gQngg8iQipk?autoplay=1&start=36",
             "https://www.youtube.com/embed/gQngg8iQipk?start=36",

@@ -96,7 +96,7 @@ pub async fn close(browser: &RustRefBrowser) {
 
     BROWSERS.with(|cell| {
         let browsers = &mut *cell.borrow_mut();
-        browsers.remove(&id);
+        browsers.remove(&id).unwrap();
     });
 }
 

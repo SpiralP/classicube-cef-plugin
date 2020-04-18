@@ -115,7 +115,12 @@ fn handle_chat_received(message: String, message_type: MsgType) {
                     AsyncManager::run_on_main_thread(async move {
                         // TODO use the higher level Entity from helpers
                         let player = unsafe { &*Entities.List[id as usize] };
-                        let _ignore_error = command_callback(player, split);
+
+                        if let Err(e) = command_callback(player, split) {
+                            if id == ENTITY_SELF_ID {
+                                Chat::print(format!("cef command error: {}", e));
+                            }
+                        }
                     })
                     .await;
                 }

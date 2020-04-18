@@ -4,11 +4,7 @@ use classicube_sys::{
     cc_bool, Bitmap, Entity, EntityVTABLE, Entity_Init, Entity_SetModel, Gfx_UpdateTexturePart,
     LocationUpdate, Model_Render, OwnedGfxTexture, OwnedString, PackedCol, PACKEDCOL_WHITE,
 };
-use std::{
-    mem,
-    os::raw::{c_double, c_float},
-    pin::Pin,
-};
+use std::{mem, pin::Pin};
 
 pub struct CefEntity {
     pub id: usize,

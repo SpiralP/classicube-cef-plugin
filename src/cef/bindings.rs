@@ -92,6 +92,7 @@ impl RustRefBrowser {
         to_result(unsafe { cef_interface_browser_load_url(self.get(), url.as_ptr()) })
     }
 
+    #[allow(dead_code)]
     pub fn execute_javascript(&self, code: String) -> Result<()> {
         let code = CString::new(code).unwrap();
 

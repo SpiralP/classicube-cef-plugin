@@ -1,5 +1,4 @@
 use super::bindings::{RustRefBrowser, RustRefClient};
-use crate::entity_manager::EntityManager;
 use futures::{
     channel::{mpsc, oneshot},
     prelude::*,

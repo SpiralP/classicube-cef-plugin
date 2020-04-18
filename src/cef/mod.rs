@@ -133,6 +133,7 @@ impl Cef {
         browser::close(browser).await
     }
 
+    #[allow(dead_code)]
     pub async fn wait_for_browser_page_load(browser: &RustRefBrowser) {
         browser::wait_for_page_load(browser).await
     }

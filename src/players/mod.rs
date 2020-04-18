@@ -9,10 +9,11 @@ use crate::{
     error::*,
 };
 use classicube_helpers::with_inner::WithInner;
-use log::{debug, warn};
+use log::debug;
 use std::{cell::RefCell, collections::HashMap, os::raw::c_int};
 
 thread_local!(
+    #[allow(clippy::type_complexity)]
     static PLAYERS: RefCell<HashMap<c_int, (RustRefBrowser, Box<dyn Player>)>> =
         RefCell::new(HashMap::new());
 );

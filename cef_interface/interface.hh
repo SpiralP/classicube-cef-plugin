@@ -32,6 +32,9 @@ extern "C" int cef_interface_release_ref_browser(CefBrowser* browser_ptr);
 /// has been initialized.
 typedef void (*OnContextInitializedCallback)(RustRefClient client);
 
+/// Called after a new browser is created.
+typedef void (*OnAfterCreatedCallback)(RustRefBrowser browser);
+
 /// Called just before a browser is destroyed.
 typedef void (*OnBeforeCloseCallback)(RustRefBrowser browser);
 
@@ -43,13 +46,17 @@ typedef void (*OnPaintCallback)(RustRefBrowser browser,
 /// Called when the browser is done loading the MAIN frame.
 typedef void (*OnLoadEndCallback)(RustRefBrowser browser);
 
+struct Callbacks {
+  OnContextInitializedCallback on_context_initialized_callback;
+  OnAfterCreatedCallback on_after_created_callback;
+  OnBeforeCloseCallback on_before_close_callback;
+  OnPaintCallback on_paint_callback;
+  OnLoadEndCallback on_load_end_callback;
+};
+
 // functions to rust
 
-extern "C" RustRefApp cef_interface_create_app(
-    OnContextInitializedCallback on_context_initialized_callback,
-    OnBeforeCloseCallback on_before_close_callback,
-    OnPaintCallback on_paint_callback,
-    OnLoadEndCallback on_load_end_callback);
+extern "C" RustRefApp cef_interface_create_app(Callbacks callbacks);
 
 extern "C" int cef_interface_shutdown();
 extern "C" int cef_interface_step();
@@ -58,8 +65,8 @@ extern "C" int cef_interface_initialize(MyApp* app_ptr);
 
 // Browser
 
-extern "C" RustRefBrowser cef_interface_create_browser(MyClient* client_ptr,
-                                                       const char* startup_url);
+extern "C" int cef_interface_create_browser(MyClient* client_ptr,
+                                            const char* startup_url);
 extern "C" int cef_interface_browser_get_identifier(CefBrowser* browser_ptr);
 extern "C" int cef_interface_browser_load_url(CefBrowser* browser_ptr,
                                               const char* url);

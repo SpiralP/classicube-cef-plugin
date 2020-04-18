@@ -2,6 +2,7 @@
 
 #include <include/cef_client.h>
 #include <include/wrapper/cef_helpers.h>
+
 #include "interface.hh"
 
 class MyClient : public CefClient,
@@ -10,9 +11,7 @@ class MyClient : public CefClient,
                  public CefRenderHandler,
                  public CefLoadHandler {
  public:
-  MyClient(OnBeforeCloseCallback on_before_close_callback,
-           OnPaintCallback on_paint_callback,
-           OnLoadEndCallback on_load_end_callback);
+  MyClient(Callbacks callbacks);
 
   // CefClient methods:
   CefRefPtr<CefDisplayHandler> GetDisplayHandler() OVERRIDE;
@@ -20,15 +19,16 @@ class MyClient : public CefClient,
   CefRefPtr<CefRenderHandler> GetRenderHandler() OVERRIDE;
   CefRefPtr<CefLoadHandler> GetLoadHandler() OVERRIDE;
 
-  // CefDisplayHandler
+  // CefDisplayHandler methods:
   void OnTitleChange(CefRefPtr<CefBrowser> browser,
                      const CefString& title) OVERRIDE;
 
-  // CefLifeSpanHandler
+  // CefLifeSpanHandler methods:
+  void OnAfterCreated(CefRefPtr<CefBrowser> browser) OVERRIDE;
   bool DoClose(CefRefPtr<CefBrowser> browser) OVERRIDE;
   void OnBeforeClose(CefRefPtr<CefBrowser> browser) OVERRIDE;
 
-  // CefRenderHandler
+  // CefRenderHandler methods:
   void GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) OVERRIDE;
   void OnPaint(CefRefPtr<CefBrowser> browser,
                CefRenderHandler::PaintElementType type,
@@ -37,7 +37,7 @@ class MyClient : public CefClient,
                int width,
                int height) OVERRIDE;
 
-  // CefLoadHandler
+  // CefLoadHandler methods:
   void OnLoadEnd(CefRefPtr<CefBrowser> browser,
                  CefRefPtr<CefFrame> frame,
                  int httpStatusCode) OVERRIDE;
@@ -46,7 +46,7 @@ class MyClient : public CefClient,
   OnBeforeCloseCallback on_before_close_callback;
   OnPaintCallback on_paint_callback;
   OnLoadEndCallback on_load_end_callback;
-  // OnLoadErrorCallback on_load_error_callback;
+  OnAfterCreatedCallback on_after_created_callback;
 
   IMPLEMENT_REFCOUNTING(MyClient);
   DISALLOW_COPY_AND_ASSIGN(MyClient);

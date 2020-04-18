@@ -1,7 +1,7 @@
 mod chat_command;
 
 pub use self::chat_command::{command_callback, CefChatCommand};
-use crate::cef::async_manager::AsyncManager;
+use crate::async_manager::AsyncManager;
 use classicube_helpers::{
     entities::ENTITY_SELF_ID,
     events::chat::{ChatReceivedEvent, ChatReceivedEventHandler},

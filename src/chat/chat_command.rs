@@ -2,10 +2,8 @@
 
 use super::Chat;
 use crate::{
-    cef::{
-        entity_manager::{CefEntity, CefEntityManager, ENTITIES},
-        interface::RustRefBrowser,
-    },
+    cef::RustRefBrowser,
+    entity_manager::{CefEntity, EntityManager},
     error::*,
     players,
 };
@@ -22,38 +20,6 @@ extern "C" fn c_chat_command_callback(args: *const classicube_sys::String, args_
     if let Err(e) = command_callback(me, args) {
         Chat::print(format!("cef command error: {}", e));
     }
-}
-
-fn with_closest<F, T>(me: &Entity, f: F) -> Result<T>
-where
-    F: FnOnce(c_int, &mut RustRefBrowser, &mut CefEntity) -> Result<T>,
-{
-    ENTITIES.with(|entities| {
-        let entities = &mut *entities.borrow_mut();
-
-        if let Some((id, browser, entity)) =
-            CefEntityManager::get_closest_mut(me.Position, entities)
-        {
-            f(id, browser, entity)
-        } else {
-            bail!("No browser to control!");
-        }
-    })
-}
-
-fn with_browser<F, T>(id: c_int, f: F) -> Result<T>
-where
-    F: FnOnce(c_int, &mut RustRefBrowser, &mut CefEntity) -> Result<T>,
-{
-    ENTITIES.with(|entities| {
-        let entities = &mut *entities.borrow_mut();
-
-        if let Some((browser, entity)) = entities.get_mut(&id) {
-            f(id, browser, entity)
-        } else {
-            bail!("No browser id {}!", id);
-        }
-    })
 }
 
 pub fn command_callback(player: &Entity, args: Vec<String>) -> Result<()> {
@@ -75,12 +41,12 @@ pub fn command_callback(player: &Entity, args: Vec<String>) -> Result<()> {
         _ => {}
     }
 
-    // commands that target a certain entity/browser
+    // commands that target a certain entity by id
     match args {
-        ["here", id] => {
-            let id: c_int = id.parse()?;
+        ["here", entity_id] => {
+            let entity_id: usize = entity_id.parse()?;
 
-            with_browser(id, |id, _browser, entity| {
+            EntityManager::with_by_entity_id(entity_id, |entity| {
                 let dir = Vec3::get_dir_vector(
                     player.Yaw * MATH_DEG2RAD as f32,
                     player.Pitch * MATH_DEG2RAD as f32,
@@ -94,11 +60,6 @@ pub fn command_callback(player: &Entity, args: Vec<String>) -> Result<()> {
 
                 entity.entity.RotY = player.RotY;
 
-                Chat::print(format!(
-                    "moved browser {} to {:?}",
-                    id, entity.entity.Position
-                ));
-
                 Ok(())
             })?;
         }
@@ -106,9 +67,9 @@ pub fn command_callback(player: &Entity, args: Vec<String>) -> Result<()> {
         _ => {}
     }
 
-    // commands that target a the closest entity/browser
+    // commands that target the closest entity/browser
     match args {
-        ["here"] => with_closest(player, |id, _browser, entity| {
+        ["here"] => EntityManager::with_closest(player.Position, |entity| {
             let dir = Vec3::get_dir_vector(
                 player.Yaw * MATH_DEG2RAD as f32,
                 player.Pitch * MATH_DEG2RAD as f32,
@@ -122,53 +83,37 @@ pub fn command_callback(player: &Entity, args: Vec<String>) -> Result<()> {
 
             entity.entity.RotY = player.RotY;
 
-            Chat::print(format!(
-                "moved browser {} to {:?}",
-                id, entity.entity.Position
-            ));
-
             Ok(())
         })?,
 
-        ["at", x, y, z] => with_closest(player, |id, _browser, entity| {
+        ["at", x, y, z] => EntityManager::with_closest(player.Position, |entity| {
             let x = x.parse()?;
             let y = y.parse()?;
             let z = z.parse()?;
 
             entity.entity.Position.set(x, y, z);
 
-            Chat::print(format!(
-                "moved browser {} to {:?}",
-                id, entity.entity.Position
-            ));
-
             Ok(())
         })?,
 
-        ["scale", scale] => with_closest(player, |id, _browser, entity| {
+        ["scale", scale] => EntityManager::with_closest(player.Position, |entity| {
             let scale = scale.parse()?;
 
             entity.set_scale(scale);
 
-            Chat::print(format!(
-                "scaled browser {} to {:?}",
-                id, entity.entity.ModelScale
-            ));
-
             Ok(())
         })?,
 
-        ["load", url] => {
-            let closest_browser =
-                with_closest(player, |_id, browser, _entity| Ok(browser.clone()))?;
+        // ["load", url] => {
+        //     let closest_browser = with_closest(player, |_entity| Ok(browser.clone()))?;
 
-            players::load(url, closest_browser)?;
-        }
-
-        ["close"] => {
-            let closest_browser =
-                with_closest(player, |_id, browser, _entity| Ok(browser.clone()))?;
-            closest_browser.close()?;
+        //     players::load(url, closest_browser)?;
+        // }
+        ["remove"] => {
+            let entity_id = EntityManager::with_closest(player.Position, |closest_entity| {
+                Ok(closest_entity.id)
+            })?;
+            EntityManager::remove_entity(entity_id);
         }
 
         _ => {}

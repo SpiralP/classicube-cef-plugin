@@ -1,9 +1,22 @@
-mod bindings;
+#![allow(non_upper_case_globals)]
+#![allow(non_camel_case_types)]
+#![allow(non_snake_case)]
 
-use self::bindings::*;
-pub use self::bindings::{RustRefApp, RustRefBrowser, RustRefClient};
+include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
+
 use crate::error::*;
-use std::{ffi::CString, os::raw::c_int};
+use log::debug;
+use std::{
+    ffi::{CStr, CString},
+    os::raw::c_int,
+};
+
+#[no_mangle]
+pub unsafe extern "C" fn rust_print(c_str: *const ::std::os::raw::c_char) {
+    let s = CStr::from_ptr(c_str).to_string_lossy().to_string();
+
+    debug!("{}", s);
+}
 
 fn to_result(n: c_int) -> Result<()> {
     if n == 0 {
@@ -15,20 +28,8 @@ fn to_result(n: c_int) -> Result<()> {
 
 // types to mimic CefRefPtr's Release on drop
 impl RustRefApp {
-    pub fn create(
-        on_context_initialized_callback: OnContextInitializedCallback,
-        on_before_close_callback: OnBeforeCloseCallback,
-        on_paint_callback: OnPaintCallback,
-        on_load_end_callback: OnLoadEndCallback,
-    ) -> Self {
-        unsafe {
-            cef_interface_create_app(
-                on_context_initialized_callback,
-                on_before_close_callback,
-                on_paint_callback,
-                on_load_end_callback,
-            )
-        }
+    pub fn create(callbacks: Callbacks) -> Self {
+        unsafe { cef_interface_create_app(callbacks) }
     }
 
     pub fn initialize(&self) -> Result<()> {
@@ -59,10 +60,10 @@ impl Clone for RustRefApp {
 }
 
 impl RustRefClient {
-    pub fn create_browser(&self, startup_url: String) -> RustRefBrowser {
+    pub fn create_browser(&self, startup_url: String) -> Result<()> {
         let startup_url = CString::new(startup_url).unwrap();
 
-        unsafe { cef_interface_create_browser(self.get(), startup_url.as_ptr()) }
+        to_result(unsafe { cef_interface_create_browser(self.get(), startup_url.as_ptr()) })
     }
 
     fn get(&self) -> *mut MyClient {

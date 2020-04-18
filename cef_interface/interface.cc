@@ -1,19 +1,14 @@
 #include "interface.hh"
-#include "app.hh"
-#include "client.hh"
 
 #include <chrono>    // std::chrono::seconds
 #include <iostream>  // std::cout, std::endl
 #include <thread>    // std::this_thread::sleep_for
 
-extern "C" RustRefApp cef_interface_create_app(
-    OnContextInitializedCallback on_context_initialized_callback,
-    OnBeforeCloseCallback on_before_close_callback,
-    OnPaintCallback on_paint_callback,
-    OnLoadEndCallback on_load_end_callback) {
-  CefRefPtr<MyApp> app =
-      new MyApp(on_context_initialized_callback, on_before_close_callback,
-                on_paint_callback, on_load_end_callback);
+#include "app.hh"
+#include "client.hh"
+
+extern "C" RustRefApp cef_interface_create_app(Callbacks callbacks) {
+  CefRefPtr<MyApp> app = new MyApp(callbacks);
 
   return cef_interface_add_ref_app(app);
 }
@@ -52,9 +47,8 @@ extern "C" int cef_interface_initialize(MyApp* app_ptr) {
 
 // Browser
 
-extern "C" RustRefBrowser cef_interface_create_browser(
-    MyClient* client_ptr,
-    const char* startup_url) {
+extern "C" int cef_interface_create_browser(MyClient* client_ptr,
+                                            const char* startup_url) {
   // Create the browser window.
   CefWindowInfo windowInfo;
   windowInfo.SetAsWindowless(NULL);
@@ -63,10 +57,17 @@ extern "C" RustRefBrowser cef_interface_create_browser(
   CefBrowserSettings settings;
   settings.windowless_frame_rate = 30;
 
-  CefRefPtr<CefBrowser> browser = CefBrowserHost::CreateBrowserSync(
-      windowInfo, client_ptr, url, settings, NULL, NULL);
+  CefRefPtr<CefDictionaryValue> extra_info = CefDictionaryValue::Create();
+  extra_info->SetInt("bap", 23);
 
-  return cef_interface_add_ref_browser(browser.get());
+  bool browser = CefBrowserHost::CreateBrowser(windowInfo, client_ptr, url,
+                                               settings, extra_info, NULL);
+
+  if (!browser) {
+    return -1;
+  }
+
+  return 0;
 }
 
 extern "C" int cef_interface_browser_get_identifier(CefBrowser* browser_ptr) {

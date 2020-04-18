@@ -206,6 +206,7 @@ fn test_youtube() {
         let with_time = [
             "https://www.youtube.com/watch?v=gQngg8iQipk&feature=youtu.be&t=36",
             "https://www.youtube.com/watch?v=gQngg8iQipk&t=36",
+            "https://www.youtube.com/watch?time_continue=36&v=gQngg8iQipk&feature=emb_logo",
             "https://youtu.be/gQngg8iQipk?t=36",
             "https://www.youtube.com/embed/gQngg8iQipk?autoplay=1&start=36",
             "https://www.youtube.com/embed/gQngg8iQipk?start=36",

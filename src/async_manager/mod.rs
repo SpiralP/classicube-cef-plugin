@@ -1,4 +1,3 @@
-use crate::cef::interface;
 use async_dispatcher::{Dispatcher, DispatcherHandle, LocalDispatcherHandle};
 use classicube_helpers::{tick::TickEventHandler, with_inner::WithInner};
 use lazy_static::lazy_static;
@@ -88,8 +87,24 @@ impl AsyncManager {
         ASYNC_DISPATCHER.with_inner_mut(|async_dispatcher| {
             async_dispatcher.run_until_stalled();
         });
+    }
 
-        interface::RustRefApp::step().unwrap();
+    #[allow(dead_code)]
+    pub fn block_on<F>(future: F) -> F::Output
+    where
+        F: Future + Send + 'static,
+        F::Output: Send + 'static,
+    {
+        futures::executor::block_on(future)
+    }
+
+    #[allow(dead_code)]
+    pub fn block_on_local<F>(future: F) -> F::Output
+    where
+        F: Future + 'static,
+        F::Output: 'static,
+    {
+        futures::executor::block_on(future)
     }
 
     #[allow(dead_code)]
@@ -129,7 +144,7 @@ impl AsyncManager {
     }
 
     #[allow(dead_code)]
-    pub fn defer_on_main_thread<F>(f: F)
+    pub fn spawn_local_on_main_thread<F>(f: F)
     where
         F: Future<Output = ()> + 'static,
     {

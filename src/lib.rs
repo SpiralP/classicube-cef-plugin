@@ -1,8 +1,12 @@
+mod async_manager;
 mod cef;
+mod chat;
+mod entity_manager;
 mod error;
 mod helpers;
 mod logger;
 mod players;
+mod plugin;
 
 use classicube_sys::*;
 use log::debug;
@@ -15,13 +19,13 @@ extern "C" fn init() {
 
     logger::initialize(true, false);
 
-    cef::initialize();
+    plugin::initialize();
 }
 
 extern "C" fn free() {
     debug!("Free");
 
-    cef::shutdown();
+    plugin::shutdown();
 }
 
 thread_local!(
@@ -34,7 +38,7 @@ extern "C" fn on_new_map_loaded() {
     CONTEXT_LOADED.with(|cell| {
         if !cell.get() {
             cell.set(true);
-            cef::on_first_context_created();
+            plugin::on_first_context_created();
         }
     });
 }

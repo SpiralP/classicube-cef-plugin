@@ -58,12 +58,12 @@ fn test_web() {
             "file:///ohno.txt",
             "asdf",
             "ftp://google.com/file.txt",
-            "http://virus.com",
+            "data:text/html,<html>ohno</html>",
             "",
         ];
 
         for &url in &bad_urls {
-            assert!(WebPlayer::from_input(url).is_err());
+            assert!(WebPlayer::from_input(url).is_err(), url);
         }
     }
 }

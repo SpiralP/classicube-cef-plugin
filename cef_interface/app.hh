@@ -1,16 +1,13 @@
 #pragma once
 
 #include <include/cef_app.h>
+
 #include "client.hh"
 #include "interface.hh"
 
-// Minimal implementation of CefApp for the browser process.
 class MyApp : public CefApp, public CefBrowserProcessHandler {
  public:
-  MyApp(OnContextInitializedCallback on_context_initialized_callback,
-        OnBeforeCloseCallback on_before_close_callback,
-        OnPaintCallback on_paint_callback,
-        OnLoadEndCallback on_load_end_callback);
+  MyApp(Callbacks callbacks);
 
   // CefApp methods:
   CefRefPtr<CefBrowserProcessHandler> GetBrowserProcessHandler() OVERRIDE;

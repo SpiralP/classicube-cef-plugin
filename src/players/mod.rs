@@ -3,11 +3,13 @@ mod youtube;
 
 use self::{web::WebPlayer, youtube::YoutubePlayer};
 use crate::{
+    async_manager::AsyncManager,
     cef::{RustRefBrowser, CEF},
+    entity_manager::EntityManager,
     error::*,
 };
 use classicube_helpers::with_inner::WithInner;
-use log::debug;
+use log::{debug, warn};
 use std::{cell::RefCell, collections::HashMap, os::raw::c_int};
 
 thread_local!(
@@ -35,24 +37,34 @@ fn create_player(input: &str) -> Result<Box<dyn Player>> {
     Ok(Box::new(WebPlayer::from_input(input)?))
 }
 
-pub fn create(input: &str) -> Result<c_int> {
-    CEF.with_inner_mut(move |cef| {
-        let mut player = create_player(input)?;
-        let url = player.on_create();
+/// Create an entity screen, start rendering a loading screen
+/// while we create a cef browser and wait for it start rendering to it.
+///
+/// returns browser_id
+pub fn create(input: &str) -> Result<usize> {
+    let entity_id = EntityManager::create_entity();
 
-        let browser = cef.create_browser(url);
+    let mut player = create_player(input)?;
+    let url = player.on_create();
+
+    let browser_create_future = CEF
+        .with_inner(|cef| cef.create_browser(url))
+        .chain_err(|| "CEF not initialized")?;
+
+    AsyncManager::spawn_local_on_main_thread(async move {
+        let browser = browser_create_future.await;
+        EntityManager::attach_browser(entity_id, browser.clone());
+
         let browser_id = browser.get_identifier();
 
         PLAYERS.with(move |cell| {
             let players = &mut *cell.borrow_mut();
             players.insert(browser_id, (browser, player));
         });
+    });
 
-        Ok(browser_id)
-    })
-    .chain_err(|| "CEF not initialized")?
+    Ok(entity_id)
 }
-
 pub fn load(input: &str, browser: RustRefBrowser) -> Result<c_int> {
     let mut player = create_player(input)?;
     let url = player.on_create();

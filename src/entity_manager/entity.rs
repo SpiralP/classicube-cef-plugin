@@ -1,21 +1,30 @@
 use super::{TEXTURE_HEIGHT, TEXTURE_WIDTH};
+use crate::cef::RustRefBrowser;
 use classicube_sys::{
     cc_bool, Bitmap, Entity, EntityVTABLE, Entity_Init, Entity_SetModel, Gfx_UpdateTexturePart,
     LocationUpdate, Model_Render, OwnedGfxTexture, OwnedString, PackedCol, PACKEDCOL_WHITE,
 };
-use std::{mem, pin::Pin};
+use std::{
+    mem,
+    os::raw::{c_double, c_float},
+    pin::Pin,
+};
 
 pub struct CefEntity {
+    pub id: usize,
+
     // We don't need to Pin entity because all the ffi operations
     // are temporary, they never store our pointer
     pub entity: Entity,
 
     v_table: Pin<Box<EntityVTABLE>>,
     texture: OwnedGfxTexture,
+
+    pub browser: Option<RustRefBrowser>,
 }
 
 impl CefEntity {
-    pub fn register() -> Self {
+    pub fn register(id: usize) -> Self {
         let entity = unsafe { mem::zeroed() };
 
         let v_table = Box::pin(EntityVTABLE {
@@ -23,7 +32,7 @@ impl CefEntity {
             Despawn: Some(Self::despawn),
             SetLocation: Some(Self::set_location),
             GetCol: Some(Self::get_col),
-            RenderModel: Some(Self::render_model),
+            RenderModel: Some(Self::c_render_model),
             RenderName: Some(Self::render_name),
         });
 
@@ -38,9 +47,11 @@ impl CefEntity {
         let texture = OwnedGfxTexture::create(&mut bmp, true, false);
 
         let mut this = Self {
+            id,
             entity,
             v_table,
             texture,
+            browser: None,
         };
 
         unsafe {
@@ -72,12 +83,8 @@ impl CefEntity {
         PACKEDCOL_WHITE
     }
 
-    unsafe extern "C" fn render_model(entity: *mut Entity, _delta_time: f64, _t: f32) {
-        let entity = &mut *entity;
-
-        // debug!("RenderModel");
-
-        Model_Render(entity.Model, entity);
+    unsafe extern "C" fn c_render_model(_entity: *mut Entity, _delta_time: f64, _t: f32) {
+        // we use the render_model function below
     }
 
     unsafe extern "C" fn render_name(_entity: *mut Entity) {
@@ -113,9 +120,18 @@ impl CefEntity {
         }
     }
 
+    pub fn render_model(&self) {
+        let mut entity = self.entity;
+
+        unsafe {
+            Model_Render(entity.Model, &mut entity);
+        }
+    }
+
     pub fn set_scale(&mut self, scale: f32) {
         let CefEntity { entity, .. } = self;
 
+        // TODO make 1.0 be 1 block wide
         entity.ModelScale.set(scale, scale, 1.0);
     }
 }

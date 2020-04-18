@@ -1,233 +1,211 @@
-mod async_manager;
-mod chat;
-mod entity_manager;
-mod interface;
+mod bindings;
+mod browser;
 
-pub use self::interface::RustRefBrowser;
-use self::{
-    async_manager::AsyncManager,
-    chat::Chat,
-    entity_manager::{cef_paint_callback, CefEntityManager},
-    interface::{RustRefApp, RustRefClient},
-};
-use crate::players;
-use classicube_helpers::with_inner::WithInner;
-use classicube_sys::{Server, String_AppendConst};
+pub use self::bindings::{Callbacks, RustRefApp, RustRefBrowser, RustRefClient};
+use crate::{async_manager::AsyncManager, entity_manager::cef_paint_callback};
+use futures::channel::oneshot;
 use log::debug;
 use std::{
-    cell::RefCell, collections::HashMap, ffi::CString, os::raw::c_int, thread, time::Duration,
+    cell::{Cell, RefCell},
+    future::Future,
 };
 
 thread_local!(
     pub static CEF: RefCell<Option<Cef>> = RefCell::new(None);
 );
 
-// identifier, browser
-thread_local!(
-    static BROWSERS: RefCell<HashMap<c_int, RustRefBrowser>> = RefCell::new(HashMap::new());
-);
-
 pub fn initialize() {
-    {
-        let append_app_name = CString::new(format!(" +cef{}", env!("CARGO_PKG_VERSION"))).unwrap();
-
-        let c_str = append_app_name.as_ptr();
-
-        unsafe {
-            String_AppendConst(&mut Server.AppName, c_str);
-        }
-    }
-
-    Chat::print(format!("Cef v{} initializing", env!("CARGO_PKG_VERSION")));
+    let cef = AsyncManager::block_on_local(Cef::initialize());
 
     CEF.with(|cell| {
-        assert!(cell.borrow().is_none());
+        let global_cef = &mut *cell.borrow_mut();
 
-        *cell.borrow_mut() = Some(Cef::new());
+        *global_cef = Some(cef);
     });
-}
-
-pub fn on_first_context_created() {
-    CEF.with_inner_mut(|cef| {
-        debug!("cef initialize");
-        cef.initialize();
-    })
-    .unwrap();
 }
 
 pub fn shutdown() {
-    CEF.with_inner_mut(|cef| {
-        debug!("cef shutdown");
-        cef.shutdown();
-    });
-
     CEF.with(|cell| {
-        cell.borrow_mut().take().unwrap();
+        let cef = &mut *cell.borrow_mut();
+
+        cef.take().unwrap().shutdown();
     });
 }
 
-pub struct Cef {
-    app: Option<RustRefApp>,
-    client: Option<RustRefClient>,
+thread_local!(
+    static CONTEXT_INITIALIZED_FUTURE: RefCell<Option<oneshot::Sender<RustRefClient>>> =
+        RefCell::new(None);
+);
 
-    async_manager: AsyncManager,
-    chat: Chat,
-    entity_manager: CefEntityManager,
+extern "C" fn on_context_initialized_callback(client: RustRefClient) {
+    debug!("on_context_initialized_callback {:?}", client);
+
+    CONTEXT_INITIALIZED_FUTURE.with(move |cell| {
+        let future = &mut *cell.borrow_mut();
+        let future = future.take().unwrap();
+        future.send(client).unwrap();
+    });
+}
+
+thread_local!(
+    static IS_INITIALIZED: Cell<bool> = Cell::new(false);
+);
+
+pub struct Cef {
+    pub app: RustRefApp,
+    pub client: RustRefClient,
 }
 
 impl Cef {
-    pub fn new() -> Self {
-        Self {
-            app: None,
-            client: None,
+    pub async fn initialize() -> Self {
+        let app = RustRefApp::create(Callbacks {
+            on_context_initialized_callback: Some(on_context_initialized_callback),
+            on_after_created_callback: Some(browser::on_after_created),
+            on_before_close_callback: Some(browser::on_before_close),
+            on_load_end_callback: Some(browser::on_page_loaded),
+            on_paint_callback: Some(cef_paint_callback),
+        });
 
-            async_manager: AsyncManager::new(),
-            chat: Chat::new(),
-            entity_manager: CefEntityManager::new(),
-        }
-    }
+        let (sender, receiver) = oneshot::channel();
+        CONTEXT_INITIALIZED_FUTURE.with(move |cell| {
+            let future = &mut *cell.borrow_mut();
+            assert!(future.is_none());
+            *future = Some(sender);
+        });
 
-    /// Called once on our plugin's `init`
-    pub fn initialize(&mut self) {
-        debug!("initialize async_manager");
-        self.async_manager.initialize();
-        debug!("initialize chat");
-        self.chat.initialize();
-        debug!("initialize entity_manager");
-        self.entity_manager.initialize();
+        app.initialize().unwrap();
 
-        // finally initialize cef via our App
+        let client = receiver.await.unwrap();
 
-        extern "C" fn on_context_initialized_callback(client: RustRefClient) {
-            // on the main thread
+        IS_INITIALIZED.with(|cell| cell.set(true));
 
-            debug!(
-                "on_context_initialized_callback {:?} {:?}",
-                std::thread::current().id(),
-                client
-            );
-
-            // need to defer here because app.initialize() calls context_initialized
-            // right away, and self is still borrowed there
-            AsyncManager::defer_on_main_thread(async move {
-                CEF.with_inner_mut(|cef| cef.on_context_initialized(client))
-                    .unwrap();
-            });
-        }
-
-        extern "C" fn on_before_browser_close(browser: RustRefBrowser) {
-            let id = browser.get_identifier();
-
-            debug!(
-                "on_before_browser_close {} {:?} {:?}",
-                id,
-                std::thread::current().id(),
-                browser
-            );
-
-            BROWSERS.with(|cell| {
-                cell.borrow_mut()
-                    .remove(&id)
-                    .expect("browser already removed from browsers")
-            });
-            CefEntityManager::on_browser_close(browser);
-        }
-
-        extern "C" fn on_browser_page_loaded(browser: RustRefBrowser) {
-            players::on_browser_page_loaded(browser);
-        }
-
-        let ref_app = RustRefApp::create(
-            Some(on_context_initialized_callback),
-            Some(on_before_browser_close),
-            Some(cef_paint_callback),
-            Some(on_browser_page_loaded),
-        );
-        ref_app.initialize().unwrap();
-
-        self.app = Some(ref_app);
-    }
-
-    fn on_context_initialized(&mut self, client: RustRefClient) {
-        self.client = Some(client);
-    }
-
-    pub fn create_browser(&self, url: String) -> RustRefBrowser {
-        let browser = self.client.as_ref().unwrap().create_browser(url);
-
-        let id = browser.get_identifier();
-        debug!("create_browser {}", id);
-
-        BROWSERS.with(|cell| cell.borrow_mut().insert(id, browser.clone()));
-        CefEntityManager::create_entity(browser.clone());
-
-        browser
-    }
-
-    /// Called once on our plugin's `free` or on Drop (crashed)
-    pub fn shutdown(&mut self) {
-        players::shutdown();
-
-        {
-            if !BROWSERS.with(|cell| cell.borrow().is_empty()) {
-                debug!("shutdown all cef browsers");
-
-                {
-                    // we can't be inside BROWSERS because BeforeClose is (sometimes) called right away
-                    let browsers: Vec<_> = BROWSERS.with(|cell| {
-                        let browsers = &*cell.borrow();
-
-                        browsers
-                            .iter()
-                            .map(|(id, browser)| (*id, browser.clone()))
-                            .collect()
-                    });
-
-                    for (id, browser) in browsers {
-                        debug!("shutdown browser {} {:?}", id, browser);
-                        browser.close().unwrap();
-                    }
-                }
-
-                // keep looping until our id doesn't exist in the map anymore
-                while !BROWSERS.with(|cell| cell.borrow().is_empty()) {
-                    debug!("waiting for browsers...");
-
-                    // process cef's event loop
-                    AsyncManager::step();
-
-                    thread::sleep(Duration::from_millis(64));
-                }
-                debug!("shut down all browsers");
-            } else {
-                debug!("cef browsers already shutdown?");
+        AsyncManager::spawn_local_on_main_thread(async move {
+            while {
+                let before = std::time::Instant::now();
+                let res = Cef::try_step();
+                debug!("cef step {:?}", std::time::Instant::now() - before);
+                res
+            } {
+                let never = async_std::future::pending::<()>();
+                let dur = std::time::Duration::from_millis(100); // TODO
+                assert!(async_std::future::timeout(dur, never).await.is_err());
             }
+        });
+
+        Self { app, client }
+    }
+
+    pub fn shutdown(&self) {
+        debug!("shutting down all browsers");
+        AsyncManager::block_on_local(Self::close_all_browsers());
+
+        debug!("shutdown cef");
+        self.app.shutdown().unwrap();
+        IS_INITIALIZED.with(|cell| cell.set(false));
+    }
+
+    fn try_step() -> bool {
+        if IS_INITIALIZED.with(|cell| cell.get()) {
+            RustRefApp::step().unwrap();
+            true
+        } else {
+            false
         }
+    }
 
-        {
-            if self.client.is_some() {
-                debug!("shutdown cef client");
-                self.client.take();
-            } else {
-                debug!("cef client already shutdown?");
-            }
-        }
+    pub fn create_browser(&self, url: String) -> impl Future<Output = RustRefBrowser> {
+        let client = self.client.clone();
+        browser::create(client, url)
+    }
 
-        {
-            if self.app.is_some() {
-                debug!("shutdown cef app");
-                if let Some(app) = self.app.take() {
-                    app.shutdown().unwrap();
-                }
-            } else {
-                debug!("cef app already shutdown?");
-            }
-        }
+    pub async fn close_browser(browser: &RustRefBrowser) {
+        browser::close(browser).await
+    }
 
-        self.entity_manager.shutdown();
-        self.chat.shutdown();
-        self.async_manager.shutdown();
+    pub async fn wait_for_browser_page_load(browser: &RustRefBrowser) {
+        browser::wait_for_page_load(browser).await
+    }
 
-        debug!("shutdown OK");
+    pub async fn close_all_browsers() {
+        browser::close_all().await
     }
 }
+
+// #[test]
+// fn test_cef() {
+//     use crate::cef::AsyncManager;
+
+//     crate::logger::initialize(true, false);
+
+//     unsafe {
+//         extern "C" fn ag(_: *mut classicube_sys::ScheduledTask) {}
+//         classicube_sys::Server.Tick = Some(ag);
+//     }
+
+//     let mut am = AsyncManager::new();
+//     am.initialize();
+
+//     let is_shutdown = std::rc::Rc::new(std::cell::Cell::new(false));
+//     let is_initialized = std::rc::Rc::new(std::cell::Cell::new(false));
+
+//     {
+//         let is_shutdown = is_shutdown.clone();
+//         let is_initialized = is_initialized.clone();
+//         AsyncManager::spawn_local_on_main_thread(async move {
+//             let app = {
+//                 debug!("create");
+//                 let (app, client) = create_app().await;
+//                 is_initialized.set(true);
+
+//                 // {
+//                 //     let is_shutdown = is_shutdown.clone();
+//                 //     AsyncManager::spawn_local_on_main_thread(async move {
+//                 //         while !is_shutdown.get() {
+//                 //             debug!(".");
+//                 //             RustRefApp::step().unwrap();
+//                 //             // tokio::task::yield_now().await;
+//                 //             async_std::task::yield_now().await;
+//                 //         }
+//                 //     });
+//                 // }
+
+//                 debug!("create_browser 1");
+//                 let browser_1 = create_browser(&client, "https://icanhazip.com/".to_string());
+//                 debug!("create_browser 2");
+//                 let browser_2 = create_browser(&client, "https://icanhazip.com/".to_string());
+
+//                 let (browser_1, browser_2) = futures::future::join(browser_1, browser_2).await;
+
+//                 let never = futures::future::pending::<()>();
+//                 let dur = std::time::Duration::from_secs(2);
+//                 assert!(async_std::future::timeout(dur, never).await.is_err());
+
+//                 debug!("browsers close");
+//                 futures::future::join_all(
+//                     [browser_1, browser_2]
+//                         .iter()
+//                         .map(|browser| close_browser(browser)),
+//                 )
+//                 .await;
+//                 // close_browser(&browser_1).await;
+//                 // close_browser(&browser_2).await;
+
+//                 app
+//             };
+
+//             debug!("shutdown");
+//             app.shutdown().unwrap();
+//             is_shutdown.set(true);
+//         });
+//     }
+
+//     while !is_shutdown.get() {
+//         let before = std::time::Instant::now();
+//         AsyncManager::step();
+//         if is_initialized.get() && !is_shutdown.get() {
+//             RustRefApp::step().unwrap();
+//         }
+//         debug!("step {:?}", std::time::Instant::now() - before);
+//         std::thread::sleep(std::time::Duration::from_millis(100));
+//     }
+// }

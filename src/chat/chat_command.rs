@@ -8,6 +8,7 @@ use crate::{
     players, search,
 };
 use classicube_sys::{Entities, Entity, OwnedChatCommand, Vec3, ENTITIES_SELF_ID, MATH_DEG2RAD};
+use log::debug;
 use std::{os::raw::c_int, slice};
 
 extern "C" fn c_chat_command_callback(args: *const classicube_sys::String, args_count: c_int) {
@@ -39,6 +40,7 @@ fn move_entity(entity: &mut CefEntity, player: &Entity) {
 }
 
 pub async fn command_callback(player: &Entity, args: Vec<String>, is_self: bool) -> Result<()> {
+    debug!("command_callback {:?}", args);
     let args: Vec<&str> = args.iter().map(|s| s.as_ref()).collect();
     let args: &[&str] = &args;
 
@@ -120,8 +122,10 @@ pub async fn command_callback(player: &Entity, args: Vec<String>, is_self: bool)
             EntityManager::remove_entity(entity_id);
         }
 
-        ["search", input] => {
+        ["search", ..] => {
             if is_self {
+                let input: Vec<_> = args.iter().skip(1).copied().collect();
+                let input = input.join(" ");
                 let input = (*input).to_string();
                 let id = search::youtube::search(&input).await?;
 

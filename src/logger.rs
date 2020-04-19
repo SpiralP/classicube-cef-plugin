@@ -1,26 +1,20 @@
-use std::sync::Once;
+use simplelog::*;
+use std::{fs::File, sync::Once};
 
-#[inline]
-pub fn initialize(debug: bool, other_crates: bool) {
+pub fn initialize(debug: bool) {
     static START: Once = Once::new();
 
     START.call_once(move || {
-        let my_crate_name = &env!("CARGO_PKG_NAME").replace("-", "_");
-        env_logger::Builder::from_default_env()
-            .format_timestamp(None)
-            .format_module_path(false)
-            .filter(
-                if other_crates {
-                    None
-                } else {
-                    Some(my_crate_name)
-                },
-                if debug {
-                    log::LevelFilter::Debug
-                } else {
-                    log::LevelFilter::Info
-                },
-            )
-            .init();
+        let level = if debug {
+            LevelFilter::Debug
+        } else {
+            LevelFilter::Info
+        };
+
+        CombinedLogger::init(vec![
+            TermLogger::new(level, Config::default(), TerminalMode::Mixed).unwrap(),
+            WriteLogger::new(level, Config::default(), File::create("cef.log").unwrap()),
+        ])
+        .unwrap();
     });
 }

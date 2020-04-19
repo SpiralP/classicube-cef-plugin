@@ -6,7 +6,6 @@ use classicube_sys::{Chat_AddOf, MsgType_MSG_TYPE_NORMAL, ENTITIES_SELF_ID};
 use log::debug;
 use std::{
     cell::{Cell, RefCell},
-    collections::HashMap,
     time::Duration,
 };
 
@@ -199,26 +198,4 @@ fn process_clients_response(messages: Vec<String>) {
 
         Chat::print(format!("Other players with cef: {}", names.join(", ")));
     }
-}
-
-#[test]
-fn test_clients() {
-    crate::logger::initialize(true, false);
-
-    process_clients_response(vec![
-        "&7  ClassiCube 1.1.3 +cef0.3.1+cs1.0.2 + Ponies v2.1: &f� Mew".to_string(),
-        "&7  ClassiCube 1.1.3: &f� saiko, \n doberman411, Fist,".to_string(),
-        "> &fLemonLeman, � che, � xenon, Guzz".to_string(),
-        "&7  ClassiCube 1.1.3 + Ponies v2.1: &f\u{2} EternalEpure, SpaceDot".to_string(),
-        "&7  ClassiCube web client: &f� donlon, � blockmaster, � Lab".to_string(),
-        "&7  ClassiCube 1.1.3 +cef0.3.1 + More Models v1.2.3 + Ponies v2.1: &f�".to_string(),
-        "> &fZingan".to_string(),
-        "&7  ClassiCube 1.1.3 + More Models v1.2.4: &fToon, \n vibe".to_string(),
-        "&7  ClassiCube 1.1.3 +cef0.2.0 + More Models v1.2.4 + Ponies".to_string(),
-        "> &7v2.1: &f� Goodly".to_string(),
-        "&7  ClassiCube 1.1.3 + More Models v1.2.4 + Ponies v2.1:".to_string(),
-        "> &fiamreallycube, � 123DontMessWitMe".to_string(),
-        "&7  ClassiCube 1.1.2: &feriodan".to_string(),
-        "&7  ClassiCube 1.1.3 +cef0.3.1: &fSpiralP".to_string(),
-    ])
 }

@@ -186,6 +186,7 @@ fn handle_chat_received(message: String, message_type: MsgType) {
     }
 }
 
+#[allow(non_snake_case)]
 pub struct PlayerSnapshot {
     pub Position: Vec3,
     pub Pitch: f32,

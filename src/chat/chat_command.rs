@@ -8,7 +8,7 @@ use crate::{
     error::*,
     players, search,
 };
-use classicube_sys::{Entities, Entity, OwnedChatCommand, Vec3, ENTITIES_SELF_ID, MATH_DEG2RAD};
+use classicube_sys::{Entities, OwnedChatCommand, Vec3, ENTITIES_SELF_ID, MATH_DEG2RAD};
 use log::debug;
 use std::{os::raw::c_int, slice};
 

@@ -73,7 +73,7 @@ jobs:
           echo "##[add-path]$HOME\scoop\shims"
           echo "##[add-path]C:\ProgramData\scoop\shims"
           scoop install aria2
-          scoop install llvm
+          scoop install --arch ${{ matrix.config.bits }}bit llvm
           echo "::set-env name=LIBCLANG_PATH::$HOME\scoop\apps\llvm\current\bin"
           aria2c 'http://opensource.spotify.com/cefbuilds/cef_binary_81.2.17%2Bgb382c62%2Bchromium-81.0.4044.113_windows${{ matrix.config.bits }}.tar.bz2' -o cef_binary.tar.bz2
           7z x -y 'cef_binary.tar.bz2'
@@ -87,7 +87,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           target: ${{ matrix.config.arch }}-pc-windows-msvc
-          toolchain: nightly
+          toolchain: nightly-${{ matrix.config.arch }}-pc-windows-msvc
           override: true
 
       - name: Build

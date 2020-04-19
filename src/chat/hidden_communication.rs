@@ -2,7 +2,7 @@ use super::Chat;
 use crate::{async_manager::AsyncManager, chat::TAB_LIST, plugin::APP_NAME};
 use async_std::future;
 use classicube_helpers::{detour::static_detour, tab_list::remove_color};
-use classicube_sys::{Chat_AddOf, MsgType_MSG_TYPE_NORMAL, ENTITIES_SELF_ID};
+use classicube_sys::{Chat_AddOf, MsgType_MSG_TYPE_NORMAL, Server, ENTITIES_SELF_ID};
 use log::debug;
 use std::{
     cell::{Cell, RefCell},
@@ -30,6 +30,10 @@ fn chat_add_hook(text: *const classicube_sys::String, message_type: ::std::os::r
 pub fn initialize() {
     debug!("initialize hidden_communication");
 
+    if unsafe { Server.IsSinglePlayer } != 0 {
+        return;
+    }
+
     unsafe {
         DETOUR.initialize(Chat_AddOf, chat_add_hook).unwrap();
         DETOUR.enable().unwrap();
@@ -50,7 +54,7 @@ pub fn shutdown() {
     debug!("shutdown hidden_communication");
 
     unsafe {
-        DETOUR.disable().unwrap();
+        let _ignore_error = DETOUR.disable();
     }
 }
 

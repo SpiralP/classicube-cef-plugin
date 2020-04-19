@@ -11,10 +11,21 @@ pub fn initialize(debug: bool) {
             LevelFilter::Info
         };
 
-        CombinedLogger::init(vec![
-            TermLogger::new(level, Config::default(), TerminalMode::Mixed).unwrap(),
-            WriteLogger::new(level, Config::default(), File::create("cef.log").unwrap()),
-        ])
-        .unwrap();
+        let my_crate_name = env!("CARGO_PKG_NAME").replace("-", "_");
+
+        let config = ConfigBuilder::new().add_filter_allow(my_crate_name).build();
+
+        let mut loggers: Vec<Box<dyn SharedLogger>> = Vec::with_capacity(2);
+        loggers.push(WriteLogger::new(
+            level,
+            config.clone(),
+            File::create("cef.log").unwrap(),
+        ));
+
+        if let Some(term_logger) = TermLogger::new(level, config, TerminalMode::Mixed) {
+            loggers.push(term_logger);
+        }
+
+        CombinedLogger::init(loggers).unwrap();
     });
 }

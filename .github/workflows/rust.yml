@@ -3,14 +3,14 @@ on: [push]
 
 jobs:
   buildForSomePlatforms:
-    name: Build Windows ${{ matrix.arch }}
+    name: Build Windows ${{ matrix.config.arch }}
     runs-on: windows-latest
     strategy:
       fail-fast: false
       matrix:
-        arch:
-          - x86_64
-          - i686
+        config:
+          - { arch: x86_64, bits: 64 }
+          - { arch: i686, bits: 32 }
 
     steps:
       - uses: actions/checkout@v2
@@ -21,25 +21,25 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/') != true
         with:
           path: ~/.cargo/registry
-          key: ${{ runner.os }}-${{ matrix.arch }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-${{ matrix.config.arch }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-${{ matrix.arch }}-cargo-registry-
+            ${{ runner.os }}-${{ matrix.config.arch }}-cargo-registry-
       - name: Cache cargo index
         uses: actions/cache@v1
         if: startsWith(github.ref, 'refs/tags/') != true
         with:
           path: ~/.cargo/git
-          key: ${{ runner.os }}-${{ matrix.arch }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-${{ matrix.config.arch }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-${{ matrix.arch }}-cargo-index-
+            ${{ runner.os }}-${{ matrix.config.arch }}-cargo-index-
       - name: Cache cargo build
         uses: actions/cache@v1
         if: startsWith(github.ref, 'refs/tags/') != true
         with:
           path: target
-          key: ${{ runner.os }}-${{ matrix.arch }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-${{ matrix.config.arch }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-${{ matrix.arch }}-cargo-build-target-
+            ${{ runner.os }}-${{ matrix.config.arch }}-cargo-build-target-
 
       # Cache for releases
       - name: Cache cargo registry
@@ -47,25 +47,25 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         with:
           path: ~/.cargo/registry
-          key: ${{ runner.os }}-${{ matrix.arch }}-release-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-${{ matrix.config.arch }}-release-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-${{ matrix.arch }}-release-cargo-registry-
+            ${{ runner.os }}-${{ matrix.config.arch }}-release-cargo-registry-
       - name: Cache cargo index
         uses: actions/cache@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
           path: ~/.cargo/git
-          key: ${{ runner.os }}-${{ matrix.arch }}-release-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-${{ matrix.config.arch }}-release-cargo-index-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-${{ matrix.arch }}-release-cargo-index-
+            ${{ runner.os }}-${{ matrix.config.arch }}-release-cargo-index-
       - name: Cache cargo build
         uses: actions/cache@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
           path: target
-          key: ${{ runner.os }}-${{ matrix.arch }}-release-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-${{ matrix.config.arch }}-release-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-${{ matrix.arch }}-release-cargo-build-target-
+            ${{ runner.os }}-${{ matrix.config.arch }}-release-cargo-build-target-
 
       - name: Install deps
         run: |
@@ -75,7 +75,7 @@ jobs:
           scoop install aria2
           scoop install llvm
           echo "::set-env name=LIBCLANG_PATH::$HOME\scoop\apps\llvm\current\bin"
-          aria2c 'http://opensource.spotify.com/cefbuilds/cef_binary_81.2.16%2Bgdacda4f%2Bchromium-81.0.4044.92_windows${{ matrix.arch }}.tar.bz2' -o cef_binary.tar.bz2
+          aria2c 'http://opensource.spotify.com/cefbuilds/cef_binary_81.2.16%2Bgdacda4f%2Bchromium-81.0.4044.92_windows${{ matrix.config.bits }}.tar.bz2' -o cef_binary.tar.bz2
           7z x -y 'cef_binary.tar.bz2'
           Remove-Item 'cef_binary.tar.bz2'
           7z x -y 'cef_binary.tar'
@@ -86,7 +86,7 @@ jobs:
       - name: Install nightly
         uses: actions-rs/toolchain@v1
         with:
-          target: ${{ matrix.arch }}-pc-windows-msvc
+          target: ${{ matrix.config.arch }}-pc-windows-msvc
           toolchain: nightly
           override: true
 
@@ -94,14 +94,14 @@ jobs:
         uses: actions-rs/cargo@v1
         if: startsWith(github.ref, 'refs/tags/') != true
         with:
-          target: ${{ matrix.arch }}-pc-windows-msvc
+          target: ${{ matrix.config.arch }}-pc-windows-msvc
           command: build
 
       - name: Test
         uses: actions-rs/cargo@v1
         if: startsWith(github.ref, 'refs/tags/') != true
         with:
-          target: ${{ matrix.arch }}-pc-windows-msvc
+          target: ${{ matrix.config.arch }}-pc-windows-msvc
           command: test
           args: -- --nocapture
 
@@ -109,11 +109,11 @@ jobs:
         uses: actions-rs/cargo@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          target: ${{ matrix.arch }}-pc-windows-msvc
+          target: ${{ matrix.config.arch }}-pc-windows-msvc
           command: build
           args: --release
 
-      - run: Rename-Item -Path "target\release\classicube_cef_plugin.dll" -NewName "classicube_cef_windows_${{ matrix.arch }}.dll"
+      - run: Rename-Item -Path "target\release\classicube_cef_plugin.dll" -NewName "classicube_cef_windows_${{ matrix.config.arch }}.dll"
         if: startsWith(github.ref, 'refs/tags/')
 
       - name: Upload Release
@@ -121,7 +121,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            target/release/classicube_cef_windows_${{ matrix.arch }}.dll
+            target/release/classicube_cef_windows_${{ matrix.config.arch }}.dll
             target/release/build/classicube-cef-plugin-*/out/cefsimple.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

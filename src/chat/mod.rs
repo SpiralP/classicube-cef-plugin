@@ -77,6 +77,10 @@ impl Chat {
         hidden_communication::initialize();
     }
 
+    pub fn on_new_map_loaded(&mut self) {
+        hidden_communication::on_new_map_loaded();
+    }
+
     pub fn shutdown(&mut self) {
         hidden_communication::shutdown();
 

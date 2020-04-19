@@ -25,6 +25,15 @@ pub fn on_first_context_created() {
         .unwrap();
 }
 
+pub fn on_new_map_loaded() {
+    PLUGIN
+        .with_inner_mut(|plugin| {
+            debug!("plugin on_new_map_loaded");
+            plugin.on_new_map_loaded();
+        })
+        .unwrap();
+}
+
 pub fn shutdown() {
     PLUGIN.with_inner_mut(|plugin| {
         debug!("plugin shutdown");
@@ -73,6 +82,13 @@ impl Plugin {
 
         debug!("initialize cef");
         cef::initialize();
+    }
+
+    pub fn on_new_map_loaded(&mut self) {
+        debug!("on_new_map_loaded chat");
+        self.chat.on_new_map_loaded();
+        debug!("on_new_map_loaded entity_manager");
+        self.entity_manager.on_new_map_loaded();
     }
 
     /// Called once on our plugin's `Free`

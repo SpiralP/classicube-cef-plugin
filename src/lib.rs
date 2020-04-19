@@ -40,6 +40,8 @@ extern "C" fn on_new_map_loaded() {
         if !cell.get() {
             cell.set(true);
             plugin::on_first_context_created();
+        } else {
+            plugin::on_new_map_loaded();
         }
     });
 }

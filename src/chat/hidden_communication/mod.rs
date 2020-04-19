@@ -35,6 +35,11 @@ pub fn initialize() {
     clients::query_clients();
 }
 
+pub fn on_new_map_loaded() {
+    // second etc map change
+    clients::query_clients();
+}
+
 pub fn shutdown() {
     debug!("shutdown hidden_communication");
 

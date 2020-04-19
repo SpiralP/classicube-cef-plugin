@@ -10,6 +10,7 @@ use classicube_sys::ENTITIES_SELF_ID;
 use log::debug;
 use std::{
     cell::{Cell, RefCell},
+    sync::Once,
     time::Duration,
 };
 
@@ -174,7 +175,10 @@ fn process_clients_response(messages: Vec<String>) {
             })
             .collect();
 
-        Chat::print(format!("Other players with cef: {}", names.join(", ")));
+        static ONCE: Once = Once::new();
+        ONCE.call_once(move || {
+            Chat::print(format!("Other players with cef: {}", names.join(", ")));
+        });
 
         start_whispering(player_ids_with_cef);
     }

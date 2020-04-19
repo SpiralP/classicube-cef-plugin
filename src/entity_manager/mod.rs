@@ -65,6 +65,20 @@ impl EntityManager {
         self.model = Some(CefModel::register());
     }
 
+    pub fn on_new_map_loaded(&mut self) {
+        // remove all entities
+
+        let ids: Vec<usize> = ENTITIES.with(|entities| {
+            let entities = &*entities.borrow();
+
+            entities.keys().copied().collect()
+        });
+
+        for id in &ids {
+            Self::remove_entity(*id);
+        }
+    }
+
     pub fn shutdown(&mut self) {
         self.context_handler.shutdown();
         self.render_model_detour.shutdown();

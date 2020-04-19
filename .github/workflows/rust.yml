@@ -116,13 +116,16 @@ jobs:
       - run: Rename-Item -Path "target\release\classicube_cef_plugin.dll" -NewName "classicube_cef_windows_${{ matrix.config.arch }}.dll"
         if: startsWith(github.ref, 'refs/tags/')
 
+      - run: Get-ChildItem "target\release\build\classicube-cef-plugin-*\out\cefsimple.exe" | Rename-Item -NewName "cefsimple-${{ matrix.config.arch }}.exe"
+        if: startsWith(github.ref, 'refs/tags/')
+
       - name: Upload Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
             target/release/classicube_cef_windows_${{ matrix.config.arch }}.dll
-            target/release/build/classicube-cef-plugin-*/out/cefsimple.exe
+            target/release/build/classicube-cef-plugin-*/out/cefsimple-${{ matrix.config.arch }}.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 #

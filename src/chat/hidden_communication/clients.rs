@@ -1,43 +1,24 @@
-use super::Chat;
-use crate::{async_manager::AsyncManager, chat::TAB_LIST, plugin::APP_NAME};
+use crate::{
+    async_manager::AsyncManager,
+    chat::{hidden_communication::whispers::start_whispering, Chat, TAB_LIST},
+    helpers::ThreadLocalGetSet,
+    plugin::APP_NAME,
+};
 use async_std::future;
-use classicube_helpers::{detour::static_detour, tab_list::remove_color};
-use classicube_sys::{Chat_AddOf, MsgType_MSG_TYPE_NORMAL, Server, ENTITIES_SELF_ID};
+use classicube_helpers::tab_list::remove_color;
+use classicube_sys::ENTITIES_SELF_ID;
 use log::debug;
 use std::{
     cell::{Cell, RefCell},
     time::Duration,
 };
 
-static_detour! {
-    static DETOUR: unsafe extern "C" fn(*const  classicube_sys:: String, ::std::os::raw::c_int);
-}
-
 thread_local!(
     static SIMULATING: Cell<bool> = Cell::new(false);
 );
 
-fn chat_add_hook(text: *const classicube_sys::String, message_type: ::std::os::raw::c_int) {
-    if message_type == MsgType_MSG_TYPE_NORMAL
-        && handle_chat_message(unsafe { (*text).to_string() })
-    {
-        return;
-    }
-
-    unsafe { DETOUR.call(text, message_type) }
-}
-
-pub fn initialize() {
-    debug!("initialize hidden_communication");
-
-    if unsafe { Server.IsSinglePlayer } != 0 {
-        return;
-    }
-
-    unsafe {
-        DETOUR.initialize(Chat_AddOf, chat_add_hook).unwrap();
-        DETOUR.enable().unwrap();
-    }
+pub fn query_clients() {
+    debug!("querying /clients");
 
     SIMULATING.with(|a| a.set(true));
     Chat::send("/clients");
@@ -50,14 +31,6 @@ pub fn initialize() {
     // > &7v2.1: &f� Goodly
 }
 
-pub fn shutdown() {
-    debug!("shutdown hidden_communication");
-
-    unsafe {
-        let _ignore_error = DETOUR.disable();
-    }
-}
-
 thread_local!(
     static LISTENING: Cell<bool> = Cell::new(false);
 );
@@ -66,23 +39,24 @@ thread_local!(
     static MESSAGES: RefCell<Vec<String>> = RefCell::new(Vec::new());
 );
 
+// TODO async would be cool!
 #[must_use]
-fn handle_chat_message(message: String) -> bool {
-    if !SIMULATING.with(|a| a.get()) {
+pub fn handle_chat_message(message: &str) -> bool {
+    if !SIMULATING.get() {
         return false;
     }
 
     if message == "&7Players using:" {
-        LISTENING.with(|cell| cell.set(true));
+        LISTENING.set(true);
 
         // give it a couple seconds before stop listening
         AsyncManager::spawn_local_on_main_thread(async {
             let _ = future::timeout(Duration::from_secs(2), future::pending::<()>()).await;
 
-            if LISTENING.with(|cell| cell.get()) {
+            if LISTENING.get() {
                 debug!("stopping because of timer");
-                LISTENING.with(|cell| cell.set(false));
-                SIMULATING.with(|a| a.set(false));
+                LISTENING.set(false);
+                SIMULATING.set(false);
 
                 let messages = MESSAGES.with(|cell| {
                     let messages = &mut *cell.borrow_mut();
@@ -95,7 +69,7 @@ fn handle_chat_message(message: String) -> bool {
         return true;
     }
 
-    if !LISTENING.with(|cell| cell.get()) {
+    if !LISTENING.get() {
         return false;
     }
 
@@ -111,8 +85,8 @@ fn handle_chat_message(message: String) -> bool {
         return true;
     } else {
         debug!("stopping because of {:?}", message);
-        LISTENING.with(|cell| cell.set(false));
-        SIMULATING.with(|a| a.set(false));
+        LISTENING.set(false);
+        SIMULATING.set(false);
 
         let messages = MESSAGES.with(|cell| {
             let messages = &mut *cell.borrow_mut();
@@ -201,5 +175,7 @@ fn process_clients_response(messages: Vec<String>) {
             .collect();
 
         Chat::print(format!("Other players with cef: {}", names.join(", ")));
+
+        start_whispering(player_ids_with_cef);
     }
 }

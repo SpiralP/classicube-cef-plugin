@@ -106,7 +106,10 @@ impl Chat {
         SIMULATING.with(|a| a.set(false));
     }
 
-    pub fn send<S: Into<Vec<u8>>>(s: S) {
+    pub fn send<S: Into<String>>(s: S) {
+        let s = s.into();
+        info!("{}", s);
+
         let owned_string = OwnedString::new(s);
 
         unsafe {

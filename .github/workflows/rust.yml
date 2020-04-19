@@ -32,11 +32,13 @@ jobs:
 
       - name: Build
         uses: actions-rs/cargo@v1
+        if: startsWith(github.ref, 'refs/tags/') != true
         with:
           command: build
 
       - name: Test
         uses: actions-rs/cargo@v1
+        if: startsWith(github.ref, 'refs/tags/') != true
         with:
           command: test
           args: -- --nocapture

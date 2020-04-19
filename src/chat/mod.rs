@@ -2,15 +2,21 @@ mod chat_command;
 
 pub use self::chat_command::{command_callback, CefChatCommand};
 use crate::async_manager::AsyncManager;
+use async_std::future;
 use classicube_helpers::{
     entities::ENTITY_SELF_ID,
     events::chat::{ChatReceivedEvent, ChatReceivedEventHandler},
     tab_list::TabList,
 };
-use classicube_sys::{Chat_Add, Entities, MsgType, MsgType_MSG_TYPE_NORMAL, OwnedString, Server};
+use classicube_sys::{
+    Chat_Add, Chat_Send, Entities, MsgType, MsgType_MSG_TYPE_NORMAL, OwnedString, Server,
+};
 use futures::{future::RemoteHandle, prelude::*};
 use log::info;
-use std::cell::{Cell, RefCell};
+use std::{
+    cell::{Cell, RefCell},
+    time::Duration,
+};
 
 thread_local!(
     static LAST_CHAT: RefCell<Option<String>> = RefCell::new(None);
@@ -79,6 +85,14 @@ impl Chat {
         }
         SIMULATING.with(|a| a.set(false));
     }
+
+    pub fn send<S: Into<Vec<u8>>>(s: S) {
+        let owned_string = OwnedString::new(s);
+
+        unsafe {
+            Chat_Send(owned_string.as_cc_string(), 0);
+        }
+    }
 }
 
 fn handle_chat_received(message: String, message_type: MsgType) {
@@ -110,25 +124,24 @@ fn handle_chat_received(message: String, message_type: MsgType) {
 
             FUTURE_HANDLE.with(|cell| {
                 let (remote, remote_handle) = async move {
-                    tokio::time::delay_for(std::time::Duration::from_millis(256)).await;
+                    let _ =
+                        future::timeout(Duration::from_millis(256), future::pending::<()>()).await;
 
-                    AsyncManager::run_on_main_thread(async move {
-                        // TODO use the higher level Entity from helpers
-                        let player = unsafe { &*Entities.List[id as usize] };
+                    // TODO use the higher level Entity from helpers
+                    let player = unsafe { &*Entities.List[id as usize] };
+                    let is_self = id == ENTITY_SELF_ID;
 
-                        if let Err(e) = command_callback(player, split) {
-                            if id == ENTITY_SELF_ID {
-                                Chat::print(format!("cef command error: {}", e));
-                            }
+                    if let Err(e) = command_callback(player, split, is_self).await {
+                        if is_self {
+                            Chat::print(format!("cef command error: {}", e));
                         }
-                    })
-                    .await;
+                    }
                 }
                 .remote_handle();
 
                 cell.set(Some(remote_handle));
 
-                AsyncManager::spawn(remote);
+                AsyncManager::spawn_local_on_main_thread(remote);
             });
         }
     }

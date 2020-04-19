@@ -1,7 +1,7 @@
 mod web;
 mod youtube;
 
-use self::{web::WebPlayer, youtube::YoutubePlayer};
+pub use self::{web::WebPlayer, youtube::YoutubePlayer};
 use crate::{
     async_manager::AsyncManager,
     cef::{RustRefBrowser, CEF},
@@ -67,7 +67,7 @@ pub fn create(input: &str) -> Result<usize> {
     Ok(entity_id)
 }
 
-pub fn load(input: &str, entity_id: usize) -> Result<()> {
+pub fn play(input: &str, entity_id: usize) -> Result<()> {
     let mut player = create_player(input)?;
     let url = player.on_create();
 

@@ -7,6 +7,7 @@ mod helpers;
 mod logger;
 mod players;
 mod plugin;
+mod search;
 
 use classicube_sys::*;
 use log::debug;

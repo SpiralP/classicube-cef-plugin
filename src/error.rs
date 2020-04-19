@@ -7,6 +7,11 @@ error_chain! {
         ParseFloatError(::std::num::ParseFloatError);
         ParseIntError(::std::num::ParseIntError);
         Url(url::ParseError);
+        Tokio(tokio::task::JoinError);
+    }
+
+    links {
+        Invidious(invidious::Error, invidious::ErrorKind);
     }
 
     errors {

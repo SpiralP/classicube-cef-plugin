@@ -106,7 +106,7 @@ impl Player for YoutubePlayer {
 }
 
 impl YoutubePlayer {
-    fn from_id(id: String) -> Option<Self> {
+    pub fn from_id(id: String) -> Option<Self> {
         let regex = Regex::new(r"^[A-Za-z0-9_\-]{11}$").ok()?;
         if !regex.is_match(&id) {
             return None;
@@ -118,14 +118,14 @@ impl YoutubePlayer {
         })
     }
 
-    fn from_id_and_time(id: String, time: Duration) -> Option<Self> {
+    pub fn from_id_and_time(id: String, time: Duration) -> Option<Self> {
         let mut this = Self::from_id(id)?;
         this.time = time;
 
         Some(this)
     }
 
-    fn from_normal(url: &Url) -> Option<Self> {
+    pub fn from_normal(url: &Url) -> Option<Self> {
         let host_str = url.host_str()?;
         if host_str != "youtube.com" && host_str != "www.youtube.com" {
             return None;
@@ -150,7 +150,7 @@ impl YoutubePlayer {
         Some(Self::from_id_and_time(id, time)?)
     }
 
-    fn from_short(url: &Url) -> Option<Self> {
+    pub fn from_short(url: &Url) -> Option<Self> {
         let host_str = url.host_str()?;
         if host_str != "youtu.be" {
             return None;
@@ -168,7 +168,7 @@ impl YoutubePlayer {
         Some(Self::from_id_and_time(id, time)?)
     }
 
-    fn from_embed(url: &Url) -> Option<Self> {
+    pub fn from_embed(url: &Url) -> Option<Self> {
         let host_str = url.host_str()?;
         if host_str != "youtube.com" && host_str != "www.youtube.com" {
             return None;

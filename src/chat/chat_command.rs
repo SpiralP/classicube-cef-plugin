@@ -1,7 +1,12 @@
 #![allow(clippy::single_match)]
 
 use super::Chat;
-use crate::{entity_manager::EntityManager, error::*, players};
+use crate::{
+    async_manager::AsyncManager,
+    entity_manager::{CefEntity, EntityManager},
+    error::*,
+    players, search,
+};
 use classicube_sys::{Entities, Entity, OwnedChatCommand, Vec3, ENTITIES_SELF_ID, MATH_DEG2RAD};
 use std::{os::raw::c_int, slice};
 
@@ -11,25 +16,50 @@ extern "C" fn c_chat_command_callback(args: *const classicube_sys::String, args_
 
     let me = unsafe { &*Entities.List[ENTITIES_SELF_ID as usize] };
 
-    if let Err(e) = command_callback(me, args) {
-        Chat::print(format!("cef command error: {}", e));
-    }
+    AsyncManager::spawn_local_on_main_thread(async move {
+        if let Err(e) = command_callback(me, args, true).await {
+            Chat::print(format!("cef command error: {}", e));
+        }
+    });
 }
 
-pub fn command_callback(player: &Entity, args: Vec<String>) -> Result<()> {
+fn move_entity(entity: &mut CefEntity, player: &Entity) {
+    let dir = Vec3::get_dir_vector(
+        player.Yaw * MATH_DEG2RAD as f32,
+        player.Pitch * MATH_DEG2RAD as f32,
+    );
+
+    entity.entity.Position.set(
+        player.Position.X + dir.X,
+        player.Position.Y + dir.Y,
+        player.Position.Z + dir.Z,
+    );
+
+    entity.entity.RotY = player.RotY;
+}
+
+pub async fn command_callback(player: &Entity, args: Vec<String>, is_self: bool) -> Result<()> {
     let args: Vec<&str> = args.iter().map(|s| s.as_ref()).collect();
     let args: &[&str] = &args;
 
     // static commands not targetted at a specific entity
     match args {
         ["create"] => {
-            let browser_id = players::create("https://www.classicube.net/")?;
-            command_callback(player, vec!["here".to_string(), format!("{}", browser_id)])?;
+            let entity_id = players::create("https://www.classicube.net/")?;
+            EntityManager::with_by_entity_id(entity_id, |entity| {
+                move_entity(entity, player);
+
+                Ok(())
+            })?;
         }
 
         ["create", url] => {
-            let browser_id = players::create(url)?;
-            command_callback(player, vec!["here".to_string(), format!("{}", browser_id)])?;
+            let entity_id = players::create(url)?;
+            EntityManager::with_by_entity_id(entity_id, |entity| {
+                move_entity(entity, player);
+
+                Ok(())
+            })?;
         }
 
         _ => {}
@@ -41,18 +71,7 @@ pub fn command_callback(player: &Entity, args: Vec<String>) -> Result<()> {
             let entity_id: usize = entity_id.parse()?;
 
             EntityManager::with_by_entity_id(entity_id, |entity| {
-                let dir = Vec3::get_dir_vector(
-                    player.Yaw * MATH_DEG2RAD as f32,
-                    player.Pitch * MATH_DEG2RAD as f32,
-                );
-
-                entity.entity.Position.set(
-                    player.Position.X + dir.X,
-                    player.Position.Y + dir.Y,
-                    player.Position.Z + dir.Z,
-                );
-
-                entity.entity.RotY = player.RotY;
+                move_entity(entity, player);
 
                 Ok(())
             })?;
@@ -64,18 +83,7 @@ pub fn command_callback(player: &Entity, args: Vec<String>) -> Result<()> {
     // commands that target the closest entity/browser
     match args {
         ["here"] => EntityManager::with_closest(player.Position, |entity| {
-            let dir = Vec3::get_dir_vector(
-                player.Yaw * MATH_DEG2RAD as f32,
-                player.Pitch * MATH_DEG2RAD as f32,
-            );
-
-            entity.entity.Position.set(
-                player.Position.X + dir.X,
-                player.Position.Y + dir.Y,
-                player.Position.Z + dir.Z,
-            );
-
-            entity.entity.RotY = player.RotY;
+            move_entity(entity, player);
 
             Ok(())
         })?,
@@ -98,11 +106,11 @@ pub fn command_callback(player: &Entity, args: Vec<String>) -> Result<()> {
             Ok(())
         })?,
 
-        ["load", url] => {
+        ["play", url] => {
             let entity_id = EntityManager::with_closest(player.Position, |closest_entity| {
                 Ok(closest_entity.id)
             })?;
-            players::load(url, entity_id)?;
+            players::play(url, entity_id)?;
         }
 
         ["remove"] => {
@@ -110,6 +118,15 @@ pub fn command_callback(player: &Entity, args: Vec<String>) -> Result<()> {
                 Ok(closest_entity.id)
             })?;
             EntityManager::remove_entity(entity_id);
+        }
+
+        ["search", input] => {
+            if is_self {
+                let input = (*input).to_string();
+                let id = search::youtube::search(&input).await?;
+
+                Chat::send(format!("cef play {}", id));
+            }
         }
 
         _ => {}

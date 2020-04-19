@@ -8,27 +8,57 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      # Cache for normal pushes
       - name: Cache cargo registry
         uses: actions/cache@v1
+        if: startsWith(github.ref, 'refs/tags/') != true
         with:
           path: ~/.cargo/registry
-          key: ${{ runner.os }}-${{ github.ref }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-${{ github.ref }}-cargo-registry-
+            ${{ runner.os }}-cargo-registry-
       - name: Cache cargo index
         uses: actions/cache@v1
+        if: startsWith(github.ref, 'refs/tags/') != true
         with:
           path: ~/.cargo/git
-          key: ${{ runner.os }}-${{ github.ref }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-${{ github.ref }}-cargo-index-
+            ${{ runner.os }}-cargo-index-
       - name: Cache cargo build
         uses: actions/cache@v1
+        if: startsWith(github.ref, 'refs/tags/') != true
         with:
           path: target
-          key: ${{ runner.os }}-${{ github.ref }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-${{ github.ref }}-cargo-build-target-
+            ${{ runner.os }}-cargo-build-target-
+
+      # Cache for releases
+      - name: Cache cargo registry
+        uses: actions/cache@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-release-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-release-cargo-registry-
+      - name: Cache cargo index
+        uses: actions/cache@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-release-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-release-cargo-index-
+      - name: Cache cargo build
+        uses: actions/cache@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          path: target
+          key: ${{ runner.os }}-release-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-release-cargo-build-target-
 
       - name: Install deps
         run: |

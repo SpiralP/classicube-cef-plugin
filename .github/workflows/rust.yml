@@ -2,8 +2,15 @@ name: Rust
 on: [push]
 
 jobs:
-  windows:
+  buildForSomePlatforms:
+    name: Build Windows ${{ matrix.arch }}
     runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch:
+          - x86_64
+          - i686
 
     steps:
       - uses: actions/checkout@v2
@@ -14,25 +21,25 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/') != true
         with:
           path: ~/.cargo/registry
-          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-${{ matrix.arch }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-cargo-registry-
+            ${{ runner.os }}-${{ matrix.arch }}-cargo-registry-
       - name: Cache cargo index
         uses: actions/cache@v1
         if: startsWith(github.ref, 'refs/tags/') != true
         with:
           path: ~/.cargo/git
-          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-${{ matrix.arch }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-cargo-index-
+            ${{ runner.os }}-${{ matrix.arch }}-cargo-index-
       - name: Cache cargo build
         uses: actions/cache@v1
         if: startsWith(github.ref, 'refs/tags/') != true
         with:
           path: target
-          key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-${{ matrix.arch }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-cargo-build-target-
+            ${{ runner.os }}-${{ matrix.arch }}-cargo-build-target-
 
       # Cache for releases
       - name: Cache cargo registry
@@ -40,25 +47,25 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         with:
           path: ~/.cargo/registry
-          key: ${{ runner.os }}-release-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-${{ matrix.arch }}-release-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-release-cargo-registry-
+            ${{ runner.os }}-${{ matrix.arch }}-release-cargo-registry-
       - name: Cache cargo index
         uses: actions/cache@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
           path: ~/.cargo/git
-          key: ${{ runner.os }}-release-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-${{ matrix.arch }}-release-cargo-index-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-release-cargo-index-
+            ${{ runner.os }}-${{ matrix.arch }}-release-cargo-index-
       - name: Cache cargo build
         uses: actions/cache@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
           path: target
-          key: ${{ runner.os }}-release-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-${{ matrix.arch }}-release-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-release-cargo-build-target-
+            ${{ runner.os }}-${{ matrix.arch }}-release-cargo-build-target-
 
       - name: Install deps
         run: |
@@ -68,7 +75,7 @@ jobs:
           scoop install aria2
           scoop install llvm
           echo "::set-env name=LIBCLANG_PATH::$HOME\scoop\apps\llvm\current\bin"
-          aria2c 'http://opensource.spotify.com/cefbuilds/cef_binary_81.2.16%2Bgdacda4f%2Bchromium-81.0.4044.92_windows64.tar.bz2' -o cef_binary.tar.bz2
+          aria2c 'http://opensource.spotify.com/cefbuilds/cef_binary_81.2.16%2Bgdacda4f%2Bchromium-81.0.4044.92_windows${{ matrix.arch }}.tar.bz2' -o cef_binary.tar.bz2
           7z x -y 'cef_binary.tar.bz2'
           Remove-Item 'cef_binary.tar.bz2'
           7z x -y 'cef_binary.tar'
@@ -79,6 +86,7 @@ jobs:
       - name: Install nightly
         uses: actions-rs/toolchain@v1
         with:
+          target: ${{ matrix.arch }}-pc-windows-msvc
           toolchain: nightly
           override: true
 
@@ -86,12 +94,14 @@ jobs:
         uses: actions-rs/cargo@v1
         if: startsWith(github.ref, 'refs/tags/') != true
         with:
+          target: ${{ matrix.arch }}-pc-windows-msvc
           command: build
 
       - name: Test
         uses: actions-rs/cargo@v1
         if: startsWith(github.ref, 'refs/tags/') != true
         with:
+          target: ${{ matrix.arch }}-pc-windows-msvc
           command: test
           args: -- --nocapture
 
@@ -99,10 +109,11 @@ jobs:
         uses: actions-rs/cargo@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
+          target: ${{ matrix.arch }}-pc-windows-msvc
           command: build
           args: --release
 
-      - run: Rename-Item -Path "target\release\classicube_cef_plugin.dll" -NewName "classicube_cef_windows_amd64.dll"
+      - run: Rename-Item -Path "target\release\classicube_cef_plugin.dll" -NewName "classicube_cef_windows_${{ matrix.arch }}.dll"
         if: startsWith(github.ref, 'refs/tags/')
 
       - name: Upload Release
@@ -110,7 +121,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            target/release/classicube_cef_windows_amd64.dll
+            target/release/classicube_cef_windows_${{ matrix.arch }}.dll
             target/release/build/classicube-cef-plugin-*/out/cefsimple.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

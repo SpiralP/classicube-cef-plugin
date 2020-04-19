@@ -3,6 +3,7 @@
 use super::Chat;
 use crate::{
     async_manager::AsyncManager,
+    chat::PlayerSnapshot,
     entity_manager::{CefEntity, EntityManager},
     error::*,
     players, search,
@@ -17,14 +18,23 @@ extern "C" fn c_chat_command_callback(args: *const classicube_sys::String, args_
 
     let me = unsafe { &*Entities.List[ENTITIES_SELF_ID as usize] };
 
+    let player_snapshot = PlayerSnapshot {
+        Position: me.Position,
+        Pitch: me.Pitch,
+        Yaw: me.Yaw,
+        RotX: me.RotX,
+        RotY: me.RotY,
+        RotZ: me.RotZ,
+    };
+
     AsyncManager::spawn_local_on_main_thread(async move {
-        if let Err(e) = command_callback(me, args, true).await {
+        if let Err(e) = command_callback(&player_snapshot, args, true).await {
             Chat::print(format!("cef command error: {}", e));
         }
     });
 }
 
-fn move_entity(entity: &mut CefEntity, player: &Entity) {
+fn move_entity(entity: &mut CefEntity, player: &PlayerSnapshot) {
     let dir = Vec3::get_dir_vector(
         player.Yaw * MATH_DEG2RAD as f32,
         player.Pitch * MATH_DEG2RAD as f32,
@@ -36,10 +46,15 @@ fn move_entity(entity: &mut CefEntity, player: &Entity) {
         player.Position.Z + dir.Z,
     );
 
+    // TODO why RotY? we use Yaw above?
     entity.entity.RotY = player.RotY;
 }
 
-pub async fn command_callback(player: &Entity, args: Vec<String>, is_self: bool) -> Result<()> {
+pub async fn command_callback(
+    player: &PlayerSnapshot,
+    args: Vec<String>,
+    is_self: bool,
+) -> Result<()> {
     debug!("command_callback {:?}", args);
     let args: Vec<&str> = args.iter().map(|s| s.as_ref()).collect();
     let args: &[&str] = &args;

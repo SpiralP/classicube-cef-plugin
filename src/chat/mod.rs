@@ -1,15 +1,16 @@
 mod chat_command;
+mod hidden_communication;
 
 pub use self::chat_command::{command_callback, CefChatCommand};
 use crate::async_manager::AsyncManager;
 use async_std::future;
 use classicube_helpers::{
-    entities::ENTITY_SELF_ID,
+    entities::{Entities, ENTITY_SELF_ID},
     events::chat::{ChatReceivedEvent, ChatReceivedEventHandler},
-    tab_list::TabList,
+    tab_list::{remove_color, TabList},
 };
 use classicube_sys::{
-    Chat_Add, Chat_Send, Entities, MsgType, MsgType_MSG_TYPE_NORMAL, OwnedString, Server,
+    Chat_Add, Chat_Send, MsgType, MsgType_MSG_TYPE_NORMAL, OwnedString, Server, Vec3,
 };
 use futures::{future::RemoteHandle, prelude::*};
 use log::info;
@@ -28,6 +29,10 @@ thread_local!(
 
 thread_local!(
     static TAB_LIST: RefCell<Option<TabList>> = RefCell::new(None);
+);
+
+thread_local!(
+    static ENTITIES: RefCell<Option<Entities>> = RefCell::new(None);
 );
 
 thread_local!(
@@ -63,14 +68,29 @@ impl Chat {
             let tab_list = &mut *cell.borrow_mut();
             *tab_list = Some(TabList::new());
         });
+
+        ENTITIES.with(|cell| {
+            let tab_list = &mut *cell.borrow_mut();
+            *tab_list = Some(Entities::new());
+        });
+
+        hidden_communication::initialize();
     }
 
     pub fn shutdown(&mut self) {
-        self.chat_command.shutdown();
+        hidden_communication::shutdown();
+
+        ENTITIES.with(|cell| {
+            let entities = &mut *cell.borrow_mut();
+            entities.take();
+        });
+
         TAB_LIST.with(|cell| {
             let tab_list = &mut *cell.borrow_mut();
             tab_list.take();
         });
+
+        self.chat_command.shutdown();
     }
 
     pub fn print<S: Into<String>>(s: S) {
@@ -122,29 +142,57 @@ fn handle_chat_received(message: String, message_type: MsgType) {
             // remove "cef"
             split.remove(0);
 
-            FUTURE_HANDLE.with(|cell| {
-                let (remote, remote_handle) = async move {
-                    let _ =
-                        future::timeout(Duration::from_millis(256), future::pending::<()>()).await;
+            let player_snapshot = ENTITIES.with(|cell| {
+                let entities = &*cell.borrow();
+                let entities = entities.as_ref().unwrap();
+                entities.get(id).map(|entity| {
+                    let position = entity.get_position();
+                    let head = entity.get_head();
+                    let rot = entity.get_rot();
+                    PlayerSnapshot {
+                        Position: position,
+                        Pitch: head[0],
+                        Yaw: head[1],
+                        RotX: rot[0],
+                        RotY: rot[1],
+                        RotZ: rot[2],
+                    }
+                })
+            });
 
-                    // TODO use the higher level Entity from helpers
-                    let player = unsafe { &*Entities.List[id as usize] };
-                    let is_self = id == ENTITY_SELF_ID;
+            if let Some(player_snapshot) = player_snapshot {
+                FUTURE_HANDLE.with(|cell| {
+                    let (remote, remote_handle) = async move {
+                        let _ =
+                            future::timeout(Duration::from_millis(256), future::pending::<()>())
+                                .await;
 
-                    if let Err(e) = command_callback(player, split, is_self).await {
-                        if is_self {
-                            Chat::print(format!("cef command error: {}", e));
+                        let is_self = id == ENTITY_SELF_ID;
+
+                        if let Err(e) = command_callback(&player_snapshot, split, is_self).await {
+                            if is_self {
+                                Chat::print(format!("cef command error: {}", e));
+                            }
                         }
                     }
-                }
-                .remote_handle();
+                    .remote_handle();
 
-                cell.set(Some(remote_handle));
+                    cell.set(Some(remote_handle));
 
-                AsyncManager::spawn_local_on_main_thread(remote);
-            });
+                    AsyncManager::spawn_local_on_main_thread(remote);
+                });
+            }
         }
     }
+}
+
+pub struct PlayerSnapshot {
+    pub Position: Vec3,
+    pub Pitch: f32,
+    pub Yaw: f32,
+    pub RotX: f32,
+    pub RotY: f32,
+    pub RotZ: f32,
 }
 
 fn find_player_from_message(mut full_msg: String) -> Option<(u8, String, String)> {
@@ -198,31 +246,11 @@ fn find_player_from_message(mut full_msg: String) -> Option<(u8, String, String)
                 tab_list
                     .as_ref()
                     .unwrap()
-                    .find_entry_by_nick_name(full_nick)
+                    .find_entry_by_nick_name(&full_nick)
                     .map(|entry| (entry.get_id(), entry.get_real_name().unwrap(), said_text))
             })
         } else {
             None
         }
     })
-}
-
-fn remove_color<T: AsRef<str>>(text: T) -> String {
-    let mut found_ampersand = false;
-
-    text.as_ref()
-        .chars()
-        .filter(|&c| {
-            if c == '&' {
-                // we remove all amps but they're kept in chat if repeated
-                found_ampersand = true;
-                false
-            } else if found_ampersand {
-                found_ampersand = false;
-                false
-            } else {
-                true
-            }
-        })
-        .collect()
 }

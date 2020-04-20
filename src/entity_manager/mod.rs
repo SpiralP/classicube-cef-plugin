@@ -148,31 +148,31 @@ impl EntityManager {
     }
 
     pub fn remove_entity(entity_id: usize) {
-        let browser = ENTITIES
-            .with(|entities| {
-                let entities = &mut *entities.borrow_mut();
+        let maybe_browser = ENTITIES.with(|entities| {
+            let entities = &mut *entities.borrow_mut();
 
-                if let Some(mut entity) = entities.remove(&entity_id) {
-                    if let Some(browser) = entity.browser.take() {
-                        Some(browser)
-                    } else {
-                        None
-                    }
+            if let Some(mut entity) = entities.remove(&entity_id) {
+                if let Some(browser) = entity.browser.take() {
+                    Some(browser)
                 } else {
-                    warn!(
-                        "remove_entity: couldn't find entity for entity id {}",
-                        entity_id
-                    );
                     None
                 }
-            })
-            .unwrap();
-
-        EntityManager::on_browser_close(&browser);
-
-        AsyncManager::spawn_local_on_main_thread(async move {
-            Cef::close_browser(&browser).await;
+            } else {
+                warn!(
+                    "remove_entity: couldn't find entity for entity id {}",
+                    entity_id
+                );
+                None
+            }
         });
+
+        if let Some(browser) = maybe_browser {
+            EntityManager::on_browser_close(&browser);
+
+            AsyncManager::spawn_local_on_main_thread(async move {
+                Cef::close_browser(&browser).await;
+            });
+        }
     }
 
     fn on_browser_close(browser: &RustRefBrowser) {

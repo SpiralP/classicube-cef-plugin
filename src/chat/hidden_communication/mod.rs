@@ -4,13 +4,14 @@ mod whispers;
 use classicube_helpers::detour::static_detour;
 use classicube_sys::{Chat_AddOf, MsgType_MSG_TYPE_NORMAL, Server};
 use log::debug;
+use std::os::raw::c_int;
 
 static_detour! {
-    static DETOUR: unsafe extern "C" fn(*const  classicube_sys:: String, ::std::os::raw::c_int);
+    static DETOUR: unsafe extern "C" fn(*const  classicube_sys:: String, c_int);
 }
 
-fn chat_add_hook(text: *const classicube_sys::String, message_type: ::std::os::raw::c_int) {
-    if message_type == MsgType_MSG_TYPE_NORMAL
+fn chat_add_hook(text: *const classicube_sys::String, message_type: c_int) {
+    if message_type == MsgType_MSG_TYPE_NORMAL as c_int
         && handle_chat_message(unsafe { (*text).to_string() })
     {
         return;

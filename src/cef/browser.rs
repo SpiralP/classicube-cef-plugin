@@ -165,7 +165,7 @@ pub async fn close_all() {
         })
         .collect();
 
-    while let Some(_) = ag.next().await {}
+    while ag.next().await.is_some() {}
 
     debug!("finished shutting down all browsers");
 }

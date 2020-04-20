@@ -1,5 +1,11 @@
 use std::{env, fs, path::Path};
 
+#[cfg(windows)]
+const CEF_SIMPLE_NAME: &str = "cefsimple.exe";
+
+#[cfg(not(windows))]
+const CEF_SIMPLE_NAME: &str = "cefsimple";
+
 fn main() {
     let profile = if cfg!(debug_assertions) {
         "Debug"
@@ -7,22 +13,25 @@ fn main() {
         "Release"
     };
 
-    // this must be linked first!
-    // or else we get debug assertion popups about heap corruption/crt memory
-    // also you can't build debug cef without linking this
-    if profile == "Debug" {
-        // links to ucrtbased.dll
-        println!("cargo:rustc-link-lib=static=ucrtd");
+    #[cfg(windows)]
+    {
+        // this must be linked first!
+        // or else we get debug assertion popups about heap corruption/crt memory
+        // also you can't build debug cef without linking this
+        if profile == "Debug" {
+            // links to ucrtbased.dll
+            println!("cargo:rustc-link-lib=static=ucrtd");
+        }
+    }
+
+    #[cfg(unix)]
+    {
+        // fixes undefined reference to `std::ios_base::Init::Init()'
+        // only errored on test
+        println!("cargo:rustc-link-lib=static=stdc++");
     }
 
     let out_dir = env::var("OUT_DIR").unwrap();
-
-    println!(
-        "cargo:rustc-link-search=native=cef_interface/cef_binary/{}",
-        profile
-    );
-
-    println!("cargo:rustc-link-lib=dylib=libcef");
 
     println!("cargo:rerun-if-changed=cef_interface/CMakeLists.txt");
     println!("cargo:rerun-if-changed=cef_interface/interface.hh");
@@ -36,9 +45,14 @@ fn main() {
         .static_crt(true)
         .build_target("cef_interface")
         .profile(profile)
+        .define("USE_SANDBOX", "OFF")
         .build();
 
     // link to libcef_dll_wrapper
+    println!(
+        "cargo:rustc-link-search=native={}",
+        cmake_path.join("build/libcef_dll_wrapper").display()
+    );
     println!(
         "cargo:rustc-link-search=native={}",
         cmake_path
@@ -46,21 +60,42 @@ fn main() {
             .join(profile)
             .display()
     );
+
+    #[cfg(windows)]
     println!("cargo:rustc-link-lib=static=libcef_dll_wrapper");
 
+    #[cfg(not(windows))]
+    println!("cargo:rustc-link-lib=static=cef_dll_wrapper");
+
     // link to cef_interface
+    println!(
+        "cargo:rustc-link-search=native={}",
+        cmake_path.join("build/").display()
+    );
     println!(
         "cargo:rustc-link-search=native={}",
         cmake_path.join("build/").join(profile).display()
     );
     println!("cargo:rustc-link-lib=static=cef_interface");
 
+    // link to libcef
+    println!(
+        "cargo:rustc-link-search=native=cef_interface/cef_binary/{}",
+        profile
+    );
+
+    #[cfg(windows)]
+    println!("cargo:rustc-link-lib=dylib=libcef");
+
+    #[cfg(not(windows))]
+    println!("cargo:rustc-link-lib=dylib=cef");
+
     fs::copy(
         cmake_path
             .join("build/cef_binary/tests/cefsimple")
             .join(profile)
-            .join("cefsimple.exe"),
-        Path::new(&out_dir).join("cefsimple.exe"),
+            .join(CEF_SIMPLE_NAME),
+        Path::new(&out_dir).join(CEF_SIMPLE_NAME),
     )
     .unwrap();
 
@@ -74,9 +109,12 @@ fn main() {
         .clang_arg("-xc++")
         // The input header we would like to generate
         // bindings for.
-        .header_contents("bindgen.hpp", r#"
+        .header_contents(
+            "bindgen.hpp",
+            r#"
             #include "interface.hh"
-        "#)
+        "#,
+        )
         // Tell cargo to invalidate the built crate whenever any of the
         // included header files changed.
         .parse_callbacks(Box::new(bindgen::CargoCallbacks))

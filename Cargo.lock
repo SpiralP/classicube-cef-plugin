@@ -319,7 +319,7 @@ dependencies = [
 
 [[package]]
 name = "classicube-cef-plugin"
-version = "0.3.7"
+version = "0.3.8"
 dependencies = [
  "async-dispatcher",
  "async-std",
@@ -343,7 +343,7 @@ dependencies = [
 [[package]]
 name = "classicube-helpers"
 version = "0.1.0"
-source = "git+https://github.com/SpiralP/rust-classicube-helpers.git#ab040c4f1f76b27447613586829ceea774b084fd"
+source = "git+https://github.com/SpiralP/rust-classicube-helpers.git#47c670c73af2f2aac36d1834a6ce1e6f9a46aa72"
 dependencies = [
  "classicube-sys",
  "detour",
@@ -1997,12 +1997,11 @@ dependencies = [
 
 [[package]]
 name = "time"
-version = "0.1.42"
+version = "0.1.43"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "db8dcfca086c1143c9270ac42a2bbd8a7ee477b78ac8e45b19abfb0cbede4b6f"
+checksum = "ca8a50ef2360fbd1eeb0ecd46795a87a19024eb4b53c5dc916ca1fd95fe62438"
 dependencies = [
  "libc",
- "redox_syscall",
  "winapi 0.3.8",
 ]
 

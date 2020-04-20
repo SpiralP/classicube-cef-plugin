@@ -35,8 +35,15 @@ extern "C" int cef_interface_initialize(MyApp* app_ptr) {
   // so that it can paint
   settings.multi_threaded_message_loop = false;
 
+#if defined(WIN32) || defined(_WIN32) || \
+    defined(__WIN32) && !defined(__CYGWIN__)
+  const char* cef_simple_name = "cefsimple.exe";
+#else
+  const char* cef_simple_name = "cefsimple";
+#endif
+
   // Specify the path for the sub-process executable.
-  CefString(&settings.browser_subprocess_path).FromASCII("cefsimple.exe");
+  CefString(&settings.browser_subprocess_path).FromASCII(cef_simple_name);
 
   // Initialize CEF in the main process.
   if (!CefInitialize(main_args, settings, app_ptr, NULL)) {
@@ -51,7 +58,7 @@ extern "C" int cef_interface_create_browser(MyClient* client_ptr,
                                             const char* startup_url) {
   // Create the browser window.
   CefWindowInfo windowInfo;
-  windowInfo.SetAsWindowless(NULL);
+  windowInfo.SetAsWindowless(0);
 
   const CefString& url = startup_url;
   CefBrowserSettings settings;

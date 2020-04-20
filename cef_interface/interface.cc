@@ -7,6 +7,42 @@
 #include "app.hh"
 #include "client.hh"
 
+extern "C" RustRefApp cef_interface_add_ref_app(MyApp* ptr) {
+  ptr->AddRef();
+
+  RustRefApp r;
+  r.ptr = ptr;
+  return r;
+}
+extern "C" int cef_interface_release_ref_app(MyApp* app_ptr) {
+  app_ptr->Release();
+  return 0;
+}
+
+extern "C" RustRefClient cef_interface_add_ref_client(MyClient* ptr) {
+  ptr->AddRef();
+
+  RustRefClient r;
+  r.ptr = ptr;
+  return r;
+}
+extern "C" int cef_interface_release_ref_client(MyClient* client_ptr) {
+  client_ptr->Release();
+  return 0;
+}
+
+extern "C" RustRefBrowser cef_interface_add_ref_browser(CefBrowser* ptr) {
+  ptr->AddRef();
+
+  RustRefBrowser r;
+  r.ptr = ptr;
+  return r;
+}
+extern "C" int cef_interface_release_ref_browser(CefBrowser* browser_ptr) {
+  browser_ptr->Release();
+  return 0;
+}
+
 extern "C" RustRefApp cef_interface_create_app(Callbacks callbacks) {
   CefRefPtr<MyApp> app = new MyApp(callbacks);
 
@@ -99,6 +135,24 @@ extern "C" int cef_interface_browser_execute_javascript(CefBrowser* browser_ptr,
   return 0;
 }
 
+extern "C" int cef_interface_browser_click(CefBrowser* browser_ptr,
+                                           int x,
+                                           int y) {
+  auto browser_host = browser_ptr->GetHost();
+
+  CefMouseEvent event = CefMouseEvent();
+  event.x = x;
+  event.y = y;
+
+  browser_host->SendMouseClickEvent(
+      event, CefBrowserHost::MouseButtonType::MBT_LEFT, false, 1);
+
+  browser_host->SendMouseClickEvent(
+      event, CefBrowserHost::MouseButtonType::MBT_LEFT, true, 1);
+
+  return 0;
+}
+
 extern "C" int cef_interface_browser_close(CefBrowser* browser_ptr) {
   auto browser_host = browser_ptr->GetHost();
 
@@ -115,41 +169,5 @@ extern "C" int cef_interface_step() {
 
 extern "C" int cef_interface_shutdown() {
   CefShutdown();
-  return 0;
-}
-
-extern "C" RustRefApp cef_interface_add_ref_app(MyApp* ptr) {
-  ptr->AddRef();
-
-  RustRefApp r;
-  r.ptr = ptr;
-  return r;
-}
-extern "C" int cef_interface_release_ref_app(MyApp* app_ptr) {
-  app_ptr->Release();
-  return 0;
-}
-
-extern "C" RustRefClient cef_interface_add_ref_client(MyClient* ptr) {
-  ptr->AddRef();
-
-  RustRefClient r;
-  r.ptr = ptr;
-  return r;
-}
-extern "C" int cef_interface_release_ref_client(MyClient* client_ptr) {
-  client_ptr->Release();
-  return 0;
-}
-
-extern "C" RustRefBrowser cef_interface_add_ref_browser(CefBrowser* ptr) {
-  ptr->AddRef();
-
-  RustRefBrowser r;
-  r.ptr = ptr;
-  return r;
-}
-extern "C" int cef_interface_release_ref_browser(CefBrowser* browser_ptr) {
-  browser_ptr->Release();
   return 0;
 }

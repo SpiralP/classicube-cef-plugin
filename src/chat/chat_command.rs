@@ -99,7 +99,7 @@ pub async fn command_callback(
 
     // commands that target the closest entity/browser
     match args {
-        ["here"] => EntityManager::with_closest(player.Position, |entity| {
+        ["here"] | ["move"] => EntityManager::with_closest(player.Position, |entity| {
             move_entity(entity, player);
 
             Ok(())
@@ -123,14 +123,14 @@ pub async fn command_callback(
             Ok(())
         })?,
 
-        ["play", url] => {
+        ["load", url] | ["play", url] => {
             let entity_id = EntityManager::with_closest(player.Position, |closest_entity| {
                 Ok(closest_entity.id)
             })?;
             players::play(url, entity_id)?;
         }
 
-        ["remove"] => {
+        ["close"] | ["remove"] => {
             let entity_id = EntityManager::with_closest(player.Position, |closest_entity| {
                 Ok(closest_entity.id)
             })?;
@@ -146,6 +146,18 @@ pub async fn command_callback(
 
                 Chat::send(format!("cef play {}", id));
             }
+        }
+
+        ["click", x, y] => {
+            let x: c_int = x.parse()?;
+            let y: c_int = y.parse()?;
+
+            let entity_id = EntityManager::with_closest(player.Position, |closest_entity| {
+                Ok(closest_entity.id)
+            })?;
+
+            let browser = EntityManager::get_browser_by_entity_id(entity_id)?;
+            browser.click(x, y)?;
         }
 
         _ => {}

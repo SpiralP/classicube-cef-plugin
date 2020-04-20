@@ -72,6 +72,9 @@ extern "C" int cef_interface_browser_load_url(CefBrowser* browser_ptr,
                                               const char* url);
 extern "C" int cef_interface_browser_execute_javascript(CefBrowser* browser_ptr,
                                                         const char* code);
+extern "C" int cef_interface_browser_click(CefBrowser* browser_ptr,
+                                           int x,
+                                           int y);
 
 /// Tell browser to close, OnBeforeClose will be called soon?
 extern "C" int cef_interface_browser_close(CefBrowser* browser_ptr);

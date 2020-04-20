@@ -10,7 +10,7 @@ use crate::{
 };
 use classicube_helpers::with_inner::WithInner;
 use log::debug;
-use std::{cell::RefCell, collections::HashMap, os::raw::c_int};
+use std::{any::Any, cell::RefCell, collections::HashMap, os::raw::c_int};
 
 thread_local!(
     #[allow(clippy::type_complexity)]
@@ -18,7 +18,7 @@ thread_local!(
         RefCell::new(HashMap::new());
 );
 
-pub trait Player {
+pub trait Player: Any {
     fn from_input(input: &str) -> Result<Self>
     where
         Self: Sized;
@@ -31,11 +31,47 @@ pub trait Player {
 }
 
 fn create_player(input: &str) -> Result<Box<dyn Player>> {
-    if let Ok(player) = YoutubePlayer::from_input(input) {
-        return Ok(Box::new(player));
+    match YoutubePlayer::from_input(input) {
+        Ok(player) => Ok(Box::new(player)),
+        Err(_) => match WebPlayer::from_input(input) {
+            Ok(player) => Ok(Box::new(player)),
+
+            Err(e) => {
+                if !input.starts_with("http") {
+                    // if it didn't start with http, try again with https:// in front
+                    create_player(&format!("https://{}", input))
+                } else {
+                    bail!("no player matched for input: {}", e);
+                }
+            }
+        },
+    }
+}
+
+#[test]
+fn test_create_player() {
+    use std::any::TypeId;
+
+    let good_web = [
+        "https://www.classicube.net/",
+        "www.classicube.net/",
+        "https://youtube.com/",
+    ];
+
+    for url in &good_web {
+        let player: Box<dyn Player> = create_player(url).unwrap();
+        assert_eq!((*player).type_id(), TypeId::of::<WebPlayer>());
     }
 
-    Ok(Box::new(WebPlayer::from_input(input)?))
+    let good_youtube = [
+        "https://www.youtube.com/watch?v=9pkD2czKTjE",
+        "www.youtube.com/watch?v=9pkD2czKTjE",
+    ];
+
+    for url in &good_youtube {
+        let player: Box<dyn Player> = create_player(url).unwrap();
+        assert_eq!((*player).type_id(), TypeId::of::<YoutubePlayer>());
+    }
 }
 
 /// Create an entity screen, start rendering a loading screen

@@ -171,6 +171,11 @@ extern "C" int cef_interface_browser_send_text(CefBrowser* browser_ptr,
   return 0;
 }
 
+extern "C" int cef_interface_browser_reload(CefBrowser* browser_ptr) {
+  browser_ptr->Reload();
+  return 0;
+}
+
 extern "C" int cef_interface_browser_close(CefBrowser* browser_ptr) {
   auto browser_host = browser_ptr->GetHost();
 

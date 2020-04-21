@@ -108,6 +108,10 @@ impl RustRefBrowser {
         to_result(unsafe { cef_interface_browser_send_text(self.get(), text.as_ptr()) })
     }
 
+    pub fn reload(&self) -> Result<()> {
+        to_result(unsafe { cef_interface_browser_reload(self.get()) })
+    }
+
     pub fn close(&self) -> Result<()> {
         to_result(unsafe { cef_interface_browser_close(self.get()) })
     }

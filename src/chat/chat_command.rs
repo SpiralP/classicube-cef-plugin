@@ -158,6 +158,14 @@ pub async fn command_callback(
             EntityManager::remove_entity(entity_id);
         }
 
+        ["refresh"] | ["reload"] => {
+            let entity_id = EntityManager::with_closest(player.eye_position, |closest_entity| {
+                Ok(closest_entity.id)
+            })?;
+            let browser = EntityManager::get_browser_by_entity_id(entity_id)?;
+            browser.reload()?;
+        }
+
         ["click"] => {
             let (entity_id, entity_pos, [entity_pitch, entity_yaw], entity_scale) =
                 EntityManager::with_closest(player.eye_position, |closest_entity| {

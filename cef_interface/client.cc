@@ -20,6 +20,9 @@ CefRefPtr<CefRenderHandler> MyClient::GetRenderHandler() {
 CefRefPtr<CefLoadHandler> MyClient::GetLoadHandler() {
   return this;
 }
+CefRefPtr<CefRequestHandler> MyClient::GetRequestHandler() {
+  return this;
+}
 
 // CefDisplayHandler methods:
 void MyClient::OnTitleChange(CefRefPtr<CefBrowser> browser,
@@ -81,4 +84,39 @@ void MyClient::OnLoadEnd(CefRefPtr<CefBrowser> browser,
       on_load_end_callback(cef_interface_add_ref_browser(browser.get()));
     }
   }
+}
+
+// CefRequestHandler methods:
+CefRefPtr<CefResourceRequestHandler> MyClient::GetResourceRequestHandler(
+    CefRefPtr<CefBrowser> browser,
+    CefRefPtr<CefFrame> frame,
+    CefRefPtr<CefRequest> request,
+    bool is_navigation,
+    bool is_download,
+    const CefString& request_initiator,
+    bool& disable_default_handling) {
+  return this;
+}
+
+// CefResourceRequestHandler methods:
+CefResourceRequestHandler::ReturnValue MyClient::OnBeforeResourceLoad(
+    CefRefPtr<CefBrowser> browser,
+    CefRefPtr<CefFrame> frame,
+    CefRefPtr<CefRequest> request,
+    CefRefPtr<CefRequestCallback> callback) {
+  // fix for some embedded youtube videos giving "video unavailable"
+  // something to do with referrer not being set from our data: url
+  auto referrer_url = request->GetReferrerURL();
+  if (!referrer_url.c_str()) {
+    std::string url = request->GetURL();
+    auto main_url = frame->GetURL();
+
+    if (main_url == "" && url.rfind("https://www.youtube.com/embed/", 0) == 0) {
+      auto new_referrer_url = L"https://www.youtube.com/";
+      request->SetReferrer(new_referrer_url,
+                           CefRequest::ReferrerPolicy::REFERRER_POLICY_DEFAULT);
+    }
+  }
+
+  return CefResourceRequestHandler::ReturnValue::RV_CONTINUE;
 }

@@ -1,5 +1,7 @@
 #include "interface.hh"
 
+#include <include/cef_origin_whitelist.h>
+
 #include <chrono>    // std::chrono::seconds
 #include <iostream>  // std::cout, std::endl
 #include <thread>    // std::this_thread::sleep_for
@@ -119,7 +121,9 @@ extern "C" int cef_interface_browser_get_identifier(CefBrowser* browser_ptr) {
 
 extern "C" int cef_interface_browser_load_url(CefBrowser* browser_ptr,
                                               const char* url) {
-  browser_ptr->GetMainFrame()->LoadURL(url);
+  auto frame = browser_ptr->GetMainFrame();
+  frame->LoadURL(url);
+
   return 0;
 }
 

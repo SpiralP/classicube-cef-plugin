@@ -9,7 +9,9 @@ class MyClient : public CefClient,
                  public CefDisplayHandler,
                  public CefLifeSpanHandler,
                  public CefRenderHandler,
-                 public CefLoadHandler {
+                 public CefLoadHandler,
+                 public CefRequestHandler,
+                 public CefResourceRequestHandler {
  public:
   MyClient(Callbacks callbacks);
 
@@ -18,6 +20,7 @@ class MyClient : public CefClient,
   CefRefPtr<CefLifeSpanHandler> GetLifeSpanHandler() OVERRIDE;
   CefRefPtr<CefRenderHandler> GetRenderHandler() OVERRIDE;
   CefRefPtr<CefLoadHandler> GetLoadHandler() OVERRIDE;
+  CefRefPtr<CefRequestHandler> GetRequestHandler() OVERRIDE;
 
   // CefDisplayHandler methods:
   void OnTitleChange(CefRefPtr<CefBrowser> browser,
@@ -41,6 +44,23 @@ class MyClient : public CefClient,
   void OnLoadEnd(CefRefPtr<CefBrowser> browser,
                  CefRefPtr<CefFrame> frame,
                  int httpStatusCode) OVERRIDE;
+
+  // CefRequestHandler methods:
+  CefRefPtr<CefResourceRequestHandler> GetResourceRequestHandler(
+      CefRefPtr<CefBrowser> browser,
+      CefRefPtr<CefFrame> frame,
+      CefRefPtr<CefRequest> request,
+      bool is_navigation,
+      bool is_download,
+      const CefString& request_initiator,
+      bool& disable_default_handling) OVERRIDE;
+
+  // CefResourceRequestHandler methods:
+  CefResourceRequestHandler::ReturnValue OnBeforeResourceLoad(
+      CefRefPtr<CefBrowser> browser,
+      CefRefPtr<CefFrame> frame,
+      CefRefPtr<CefRequest> request,
+      CefRefPtr<CefRequestCallback> callback) OVERRIDE;
 
  private:
   OnBeforeCloseCallback on_before_close_callback;

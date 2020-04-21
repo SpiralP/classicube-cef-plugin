@@ -3,12 +3,12 @@
 use super::Chat;
 use crate::{
     async_manager::AsyncManager,
-    chat::PlayerSnapshot,
-    entity_manager::{CefEntity, EntityManager},
+    chat::{PlayerSnapshot, ENTITIES},
+    entity_manager::{CefEntity, EntityManager, CEF_HEIGHT, CEF_WIDTH},
     error::*,
     players, search,
 };
-use classicube_sys::{Entities, OwnedChatCommand, Vec3, ENTITIES_SELF_ID, MATH_DEG2RAD};
+use classicube_sys::{OwnedChatCommand, Vec3, ENTITIES_SELF_ID};
 use log::debug;
 use std::{os::raw::c_int, slice};
 
@@ -16,16 +16,27 @@ extern "C" fn c_chat_command_callback(args: *const classicube_sys::String, args_
     let args = unsafe { slice::from_raw_parts(args, args_count as _) };
     let args: Vec<String> = args.iter().map(|cc_string| cc_string.to_string()).collect();
 
-    let me = unsafe { &*Entities.List[ENTITIES_SELF_ID as usize] };
-
-    let player_snapshot = PlayerSnapshot {
-        Position: me.Position,
-        Pitch: me.Pitch,
-        Yaw: me.Yaw,
-        RotX: me.RotX,
-        RotY: me.RotY,
-        RotZ: me.RotZ,
-    };
+    let player_snapshot = ENTITIES
+        .with(|cell| {
+            let entities = &*cell.borrow();
+            let entities = entities.as_ref().unwrap();
+            entities.get(ENTITIES_SELF_ID as _).map(|entity| {
+                let position = entity.get_position();
+                let eye_position = entity.get_eye_position();
+                let head = entity.get_head();
+                let rot = entity.get_rot();
+                PlayerSnapshot {
+                    Position: position,
+                    eye_position,
+                    Pitch: head[0],
+                    Yaw: head[1],
+                    RotX: rot[0],
+                    RotY: rot[1],
+                    RotZ: rot[2],
+                }
+            })
+        })
+        .unwrap();
 
     AsyncManager::spawn_local_on_main_thread(async move {
         if let Err(e) = command_callback(&player_snapshot, args, true).await {
@@ -35,19 +46,17 @@ extern "C" fn c_chat_command_callback(args: *const classicube_sys::String, args_
 }
 
 fn move_entity(entity: &mut CefEntity, player: &PlayerSnapshot) {
-    let dir = Vec3::get_dir_vector(
-        player.Yaw * MATH_DEG2RAD as f32,
-        player.Pitch * MATH_DEG2RAD as f32,
-    );
+    let dir = Vec3::get_dir_vector(player.Yaw.to_radians(), player.Pitch.to_radians());
 
     entity.entity.Position.set(
-        player.Position.X + dir.X,
-        player.Position.Y + dir.Y,
-        player.Position.Z + dir.Z,
+        player.eye_position.X + dir.X,
+        player.eye_position.Y + dir.Y,
+        player.eye_position.Z + dir.Z,
     );
 
-    // TODO why RotY? we use Yaw above?
-    entity.entity.RotY = player.RotY;
+    // turn it to face the player
+    entity.entity.RotY = player.Yaw + 180f32;
+    entity.entity.RotX = 360f32 - player.Pitch;
 }
 
 pub async fn command_callback(
@@ -66,6 +75,7 @@ pub async fn command_callback(
             EntityManager::with_by_entity_id(entity_id, |entity| {
                 move_entity(entity, player);
 
+                entity.entity.RotY = 180f32;
                 Ok(())
             })?;
         }
@@ -77,6 +87,17 @@ pub async fn command_callback(
 
                 Ok(())
             })?;
+        }
+
+        ["search", ..] => {
+            if is_self {
+                let input: Vec<_> = args.iter().skip(1).copied().collect();
+                let input = input.join(" ");
+                let input = (*input).to_string();
+                let id = search::youtube::search(&input).await?;
+
+                Chat::send(format!("cef play {}", id));
+            }
         }
 
         _ => {}
@@ -99,13 +120,13 @@ pub async fn command_callback(
 
     // commands that target the closest entity/browser
     match args {
-        ["here"] | ["move"] => EntityManager::with_closest(player.Position, |entity| {
+        ["here"] | ["move"] => EntityManager::with_closest(player.eye_position, |entity| {
             move_entity(entity, player);
 
             Ok(())
         })?,
 
-        ["at", x, y, z] => EntityManager::with_closest(player.Position, |entity| {
+        ["at", x, y, z] => EntityManager::with_closest(player.eye_position, |entity| {
             let x = x.parse()?;
             let y = y.parse()?;
             let z = z.parse()?;
@@ -115,7 +136,7 @@ pub async fn command_callback(
             Ok(())
         })?,
 
-        ["scale", scale] => EntityManager::with_closest(player.Position, |entity| {
+        ["scale", scale] => EntityManager::with_closest(player.eye_position, |entity| {
             let scale = scale.parse()?;
 
             entity.set_scale(scale);
@@ -124,40 +145,128 @@ pub async fn command_callback(
         })?,
 
         ["load", url] | ["play", url] => {
-            let entity_id = EntityManager::with_closest(player.Position, |closest_entity| {
+            let entity_id = EntityManager::with_closest(player.eye_position, |closest_entity| {
                 Ok(closest_entity.id)
             })?;
             players::play(url, entity_id)?;
         }
 
         ["close"] | ["remove"] => {
-            let entity_id = EntityManager::with_closest(player.Position, |closest_entity| {
+            let entity_id = EntityManager::with_closest(player.eye_position, |closest_entity| {
                 Ok(closest_entity.id)
             })?;
             EntityManager::remove_entity(entity_id);
         }
 
-        ["search", ..] => {
-            if is_self {
-                let input: Vec<_> = args.iter().skip(1).copied().collect();
-                let input = input.join(" ");
-                let input = (*input).to_string();
-                let id = search::youtube::search(&input).await?;
+        ["click"] => {
+            let (entity_id, entity_pos, [entity_pitch, entity_yaw], entity_scale) =
+                EntityManager::with_closest(player.eye_position, |closest_entity| {
+                    Ok((
+                        closest_entity.id,
+                        closest_entity.entity.Position,
+                        [closest_entity.entity.RotX, closest_entity.entity.RotY],
+                        closest_entity.entity.ModelScale,
+                    ))
+                })?;
 
-                Chat::send(format!("cef play {}", id));
+            use nalgebra::*;
+            use ncollide3d::{query::*, shape::*};
+
+            fn intersect(
+                eye_pos: Point3<f32>,
+                [aim_pitch, aim_yaw]: [f32; 2],
+                screen_pos: Point3<f32>,
+                [screen_pitch, screen_yaw]: [f32; 2],
+            ) -> Option<(Ray<f32>, RayIntersection<f32>)> {
+                // when angles 0 0, aiming towards -z
+                let normal = -Vector3::<f32>::z_axis();
+
+                let aim_dir = Rotation3::from_euler_angles(
+                    -aim_pitch.to_radians(),
+                    -aim_yaw.to_radians(),
+                    0.0,
+                )
+                .transform_vector(&normal);
+
+                // positive pitch is clockwise on the -x axis
+                // positive yaw is clockwise on the -y axis
+                let rot = UnitQuaternion::from_euler_angles(
+                    -screen_pitch.to_radians(),
+                    -screen_yaw.to_radians(),
+                    0.0,
+                );
+                let iso = Isometry3::from_parts(screen_pos.coords.into(), rot);
+
+                let ray = Ray::new(eye_pos, aim_dir);
+                let plane = Plane::new(normal);
+                if let Some(intersection) = plane.toi_and_normal_with_ray(&iso, &ray, 10.0, true) {
+                    if intersection.toi == 0.0 {
+                        // 0 if aiming from wrong side
+                        None
+                    } else {
+                        Some((ray, intersection))
+                    }
+                } else {
+                    None
+                }
             }
+
+            fn vec3_to_vector3(v: &Vec3) -> Vector3<f32> {
+                Vector3::new(v.X, v.Y, v.Z)
+            }
+
+            let eye_pos = vec3_to_vector3(&player.eye_position);
+            let screen_pos = vec3_to_vector3(&entity_pos);
+
+            if let Some((ray, intersection)) = intersect(
+                eye_pos.into(),
+                [player.Pitch, player.Yaw],
+                screen_pos.into(),
+                [entity_pitch, entity_yaw],
+            ) {
+                let intersection_point = ray.point_at(intersection.toi).coords;
+                log::warn!("normal {}", intersection.normal);
+
+                let scale = Vector3::new(entity_scale.X * 16.0, entity_scale.Y * 9.0, 1.0);
+                let scaled_point = (intersection_point - screen_pos).component_div(&scale);
+
+                let (x, y) = (0.5 + scaled_point.x, 1.0 - scaled_point.y);
+                if x < 0.0 || x > 1.0 || y < 0.0 || y > 1.0 {
+                    return Err("not looking at a screen".into());
+                }
+                debug!("{} {}", x, y);
+
+                let (x, y) = (x * CEF_WIDTH as f32, y * CEF_HEIGHT as f32);
+                debug!("{} {}", x, y);
+
+                let browser = EntityManager::get_browser_by_entity_id(entity_id)?;
+                browser.send_click(x as _, y as _)?;
+            }
+        }
+
+        ["type", ..] => {
+            let text: Vec<_> = args.iter().skip(1).copied().collect();
+            let text = text.join(" ");
+            let text = (*text).to_string();
+
+            let entity_id = EntityManager::with_closest(player.eye_position, |closest_entity| {
+                Ok(closest_entity.id)
+            })?;
+
+            let browser = EntityManager::get_browser_by_entity_id(entity_id)?;
+            browser.send_text(text)?;
         }
 
         ["click", x, y] => {
             let x: c_int = x.parse()?;
             let y: c_int = y.parse()?;
 
-            let entity_id = EntityManager::with_closest(player.Position, |closest_entity| {
+            let entity_id = EntityManager::with_closest(player.eye_position, |closest_entity| {
                 Ok(closest_entity.id)
             })?;
 
             let browser = EntityManager::get_browser_by_entity_id(entity_id)?;
-            browser.click(x, y)?;
+            browser.send_click(x, y)?;
         }
 
         _ => {}

@@ -1,7 +1,7 @@
 use simplelog::*;
 use std::{fs::File, sync::Once};
 
-pub fn initialize(debug: bool) {
+pub fn initialize(debug: bool, other_crates: bool) {
     static START: Once = Once::new();
 
     START.call_once(move || {
@@ -22,15 +22,16 @@ pub fn initialize(debug: bool) {
             File::create("cef.log").unwrap(),
         ));
 
-        if let Some(term_logger) = TermLogger::new(
-            level,
-            ConfigBuilder::new()
-                .add_filter_allow(my_crate_name)
-                .set_target_level(LevelFilter::Trace)
-                .set_thread_level(LevelFilter::Trace)
-                .build(),
-            TerminalMode::Mixed,
-        ) {
+        let mut config = ConfigBuilder::new();
+
+        config.set_target_level(LevelFilter::Trace);
+        config.set_thread_level(LevelFilter::Trace);
+
+        if !other_crates {
+            config.add_filter_allow(my_crate_name);
+        }
+
+        if let Some(term_logger) = TermLogger::new(level, config.build(), TerminalMode::Mixed) {
             loggers.push(term_logger);
         }
 

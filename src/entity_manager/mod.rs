@@ -14,7 +14,7 @@ use crate::{
     error::*,
 };
 use classicube_sys::Vec3;
-use log::warn;
+use log::{debug, warn};
 use std::{
     cell::{Cell, RefCell},
     collections::HashMap,
@@ -106,6 +106,8 @@ impl EntityManager {
             entity.set_scale(0.25);
 
             entities.insert(entity_id, entity);
+
+            debug!("entity created {}", entity_id);
 
             entity_id
         })

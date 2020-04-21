@@ -18,7 +18,7 @@ extern "C" fn init() {
         color_backtrace::Settings::new().verbosity(color_backtrace::Verbosity::Full),
     );
 
-    logger::initialize(true);
+    logger::initialize(true, false);
 
     plugin::initialize();
 }

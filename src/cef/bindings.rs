@@ -99,8 +99,13 @@ impl RustRefBrowser {
         to_result(unsafe { cef_interface_browser_execute_javascript(self.get(), code.as_ptr()) })
     }
 
-    pub fn click(&self, x: c_int, y: c_int) -> Result<()> {
-        to_result(unsafe { cef_interface_browser_click(self.get(), x, y) })
+    pub fn send_click(&self, x: c_int, y: c_int) -> Result<()> {
+        to_result(unsafe { cef_interface_browser_send_click(self.get(), x, y) })
+    }
+
+    pub fn send_text(&self, text: String) -> Result<()> {
+        let text = CString::new(text).unwrap();
+        to_result(unsafe { cef_interface_browser_send_text(self.get(), text.as_ptr()) })
     }
 
     pub fn close(&self) -> Result<()> {

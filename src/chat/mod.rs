@@ -130,7 +130,7 @@ fn handle_chat_received(message: String, message_type: MsgType) {
         return;
     }
 
-    if let Some((id, _name, message)) = find_player_from_message(message) {
+    if let Some((id, _name, message)) = find_player_from_message(message.clone()) {
         // let name: String = remove_color(name).trim().to_string();
 
         // don't remove colors because & might be part of url!
@@ -154,10 +154,12 @@ fn handle_chat_received(message: String, message_type: MsgType) {
                 let entities = entities.as_ref().unwrap();
                 entities.get(id).map(|entity| {
                     let position = entity.get_position();
+                    let eye_position = entity.get_eye_position();
                     let head = entity.get_head();
                     let rot = entity.get_rot();
                     PlayerSnapshot {
                         Position: position,
+                        eye_position,
                         Pitch: head[0],
                         Yaw: head[1],
                         RotX: rot[0],
@@ -170,9 +172,13 @@ fn handle_chat_received(message: String, message_type: MsgType) {
             if let Some(player_snapshot) = player_snapshot {
                 FUTURE_HANDLE.with(|cell| {
                     let (remote, remote_handle) = async move {
-                        let _ =
-                            future::timeout(Duration::from_millis(256), future::pending::<()>())
-                                .await;
+                        if unsafe { Server.IsSinglePlayer } == 0 {
+                            let _ = future::timeout(
+                                Duration::from_millis(256),
+                                future::pending::<()>(),
+                            )
+                            .await;
+                        }
 
                         let is_self = id == ENTITY_SELF_ID;
 
@@ -190,12 +196,15 @@ fn handle_chat_received(message: String, message_type: MsgType) {
                 });
             }
         }
+    } else if message.contains(": ") {
+        log::warn!("couldn't match player for {:?}", message);
     }
 }
 
 #[allow(non_snake_case)]
 pub struct PlayerSnapshot {
     pub Position: Vec3,
+    pub eye_position: Vec3,
     pub Pitch: f32,
     pub Yaw: f32,
     pub RotX: f32,

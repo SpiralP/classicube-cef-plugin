@@ -102,7 +102,7 @@ impl CefEntity {
 
         entity.VTABLE = v_table.as_mut().get_unchecked_mut();
         entity.Velocity.set(0.0, 0.0, 0.0);
-        entity.RotX = 180.0;
+        entity.RotZ = 180.0;
         entity.TextureId = texture.resource_id;
 
         entity.Position.set(0.0, 0.0, 0.0);

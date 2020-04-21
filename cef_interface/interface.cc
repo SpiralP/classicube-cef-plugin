@@ -135,9 +135,9 @@ extern "C" int cef_interface_browser_execute_javascript(CefBrowser* browser_ptr,
   return 0;
 }
 
-extern "C" int cef_interface_browser_click(CefBrowser* browser_ptr,
-                                           int x,
-                                           int y) {
+extern "C" int cef_interface_browser_send_click(CefBrowser* browser_ptr,
+                                                int x,
+                                                int y) {
   auto browser_host = browser_ptr->GetHost();
 
   CefMouseEvent event = CefMouseEvent();
@@ -149,6 +149,24 @@ extern "C" int cef_interface_browser_click(CefBrowser* browser_ptr,
 
   browser_host->SendMouseClickEvent(
       event, CefBrowserHost::MouseButtonType::MBT_LEFT, true, 1);
+
+  return 0;
+}
+
+extern "C" int cef_interface_browser_send_text(CefBrowser* browser_ptr,
+                                               const char* text) {
+  auto browser_host = browser_ptr->GetHost();
+
+  for (const char* c = text; *c; ++c) {
+    CefKeyEvent event = CefKeyEvent();
+    event.type = KEYEVENT_CHAR;
+    event.character = *c;
+    event.unmodified_character = *c;
+    event.windows_key_code = *c;
+    event.native_key_code = *c;
+
+    browser_host->SendKeyEvent(event);
+  }
 
   return 0;
 }

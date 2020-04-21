@@ -148,13 +148,15 @@ fn process_clients_response(messages: Vec<String>) {
             TAB_LIST.with(|cell| {
                 let tab_list = &*cell.borrow();
                 let tab_list = tab_list.as_ref().unwrap();
-                let id = tab_list.find_entry_by_nick_name(&name).unwrap().get_id();
 
-                if id == ENTITIES_SELF_ID as u8 {
-                    None
-                } else {
-                    Some(id)
-                }
+                tab_list.find_entry_by_nick_name(&name).and_then(|entry| {
+                    let id = entry.get_id();
+                    if id == ENTITIES_SELF_ID as u8 {
+                        None
+                    } else {
+                        Some(id)
+                    }
+                })
             })
         })
         .collect();

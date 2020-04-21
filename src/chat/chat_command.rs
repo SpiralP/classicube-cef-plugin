@@ -75,7 +75,6 @@ pub async fn command_callback(
             EntityManager::with_by_entity_id(entity_id, |entity| {
                 move_entity(entity, player);
 
-                entity.entity.RotY = 180f32;
                 Ok(())
             })?;
         }
@@ -233,7 +232,6 @@ pub async fn command_callback(
                 [entity_pitch, entity_yaw],
             ) {
                 let intersection_point = ray.point_at(intersection.toi).coords;
-                log::warn!("normal {}", intersection.normal);
 
                 let scale = Vector3::new(entity_scale.X * 16.0, entity_scale.Y * 9.0, 1.0);
                 let scaled_point = (intersection_point - screen_pos).component_div(&scale);

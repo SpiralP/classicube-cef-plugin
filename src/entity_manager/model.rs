@@ -1,4 +1,4 @@
-use super::{CEF_HEIGHT, CEF_WIDTH, TEXTURE_HEIGHT, TEXTURE_WIDTH};
+use super::{CEF_HEIGHT, CEF_WIDTH, MODEL_HEIGHT, MODEL_WIDTH, TEXTURE_HEIGHT, TEXTURE_WIDTH};
 use crate::helpers::*;
 use classicube_sys::{
     Bitmap, Entity, Model, ModelTex, ModelVertex, Model_Init, Model_Register, OwnedGfxTexture,
@@ -91,8 +91,8 @@ impl CefModel {
             // TODO have these be dynamic, they're block sizes
             // and use a pixels per block for resolution
             // ACTUALLY let's try using ModelScale on Entity and keep this 16:9 like the CEF resolution is
-            Width: 16,
-            Height: 9,
+            Width: MODEL_WIDTH as _,
+            Height: MODEL_HEIGHT as _,
             uv: TextureRec {
                 U1: 0.0,
                 V1: 0.0,

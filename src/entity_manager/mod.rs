@@ -27,6 +27,9 @@ pub const CEF_HEIGHT: u32 = 1080;
 pub const TEXTURE_WIDTH: usize = 2048;
 pub const TEXTURE_HEIGHT: usize = 2048;
 
+pub const MODEL_WIDTH: u8 = 16;
+pub const MODEL_HEIGHT: u8 = 9;
+
 thread_local!(
     static ENTITY_ID: Cell<usize> = Cell::new(0);
 );

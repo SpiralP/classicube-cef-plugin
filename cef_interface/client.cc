@@ -5,6 +5,7 @@ MyClient::MyClient(Callbacks callbacks) {
   this->on_paint_callback = callbacks.on_paint_callback;
   this->on_load_end_callback = callbacks.on_load_end_callback;
   this->on_after_created_callback = callbacks.on_after_created_callback;
+  this->on_title_change_callback = callbacks.on_title_change_callback;
 }
 
 // CefClient methods:
@@ -26,12 +27,16 @@ CefRefPtr<CefRequestHandler> MyClient::GetRequestHandler() {
 
 // CefDisplayHandler methods:
 void MyClient::OnTitleChange(CefRefPtr<CefBrowser> browser,
-                             const CefString& title) {}
+                             const CefString& title) {
+  if (on_title_change_callback) {
+    auto title_utf8 = title.ToString();
+    on_title_change_callback(cef_interface_add_ref_browser(browser.get()),
+                             title_utf8.c_str());
+  }
+}
 
 // CefLifeSpanHandler methods:
 void MyClient::OnBeforeClose(CefRefPtr<CefBrowser> browser) {
-  CEF_REQUIRE_UI_THREAD();
-
   if (on_before_close_callback) {
     on_before_close_callback(cef_interface_add_ref_browser(browser.get()));
   }
@@ -46,12 +51,6 @@ void MyClient::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
 bool MyClient::DoClose(CefRefPtr<CefBrowser> browser) {
   rust_print("DoClose");
 
-  // Must be executed on the UI thread.
-  CEF_REQUIRE_UI_THREAD();
-
-  // force close?
-  // Allow the close. For windowed browsers this will result in the OS close
-  // event being sent.
   return false;
 }
 

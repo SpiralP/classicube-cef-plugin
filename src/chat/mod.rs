@@ -3,7 +3,6 @@ mod hidden_communication;
 
 pub use self::chat_command::{command_callback, CefChatCommand};
 use crate::async_manager::AsyncManager;
-use async_std::future;
 use classicube_helpers::{
     entities::{Entities, ENTITY_SELF_ID},
     events::chat::{ChatReceivedEvent, ChatReceivedEventHandler},
@@ -84,7 +83,7 @@ impl Chat {
                 Chat::send("/client cef create");
 
                 // loop {
-                //     let _ = future::timeout(Duration::from_millis(300), future::pending::<()>()).await;
+                //     AsyncManager::sleep(Duration::from_millis(300)).await;
                 //     Chat::send("/client cef click");
                 // }
             });

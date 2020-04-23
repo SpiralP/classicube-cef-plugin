@@ -2,88 +2,109 @@ mod bindings;
 mod browser;
 
 pub use self::bindings::{Callbacks, RustRefApp, RustRefBrowser, RustRefClient};
+use self::browser::BROWSERS;
 use crate::{async_manager::AsyncManager, entity_manager::cef_paint_callback};
-use async_std::future;
-use futures::channel::oneshot;
+use classicube_helpers::{shared::FutureShared, CellGetSet, OptionWithInner};
+use futures::stream::{FuturesUnordered, StreamExt};
 use log::{debug, warn};
 use std::{
     cell::{Cell, RefCell},
-    future::Future,
+    collections::HashMap,
+    os::raw::c_int,
     time::{Duration, Instant},
 };
-
-// we've set cef to render at 60 fps
-// (1/60)*1000 = 16.6666666667
-const CEF_RATE: Duration = Duration::from_millis(16);
+use tokio::sync::broadcast;
 
 thread_local!(
-    pub static CEF: RefCell<Option<Cef>> = RefCell::new(None);
+    static CEF: FutureShared<Option<Cef>> = FutureShared::new(None);
 );
 
 pub fn initialize() {
-    let cef = AsyncManager::block_on_local(Cef::initialize());
+    AsyncManager::block_on_local(async {
+        let cef = Cef::initialize().await;
 
-    CEF.with(|cell| {
-        let global_cef = &mut *cell.borrow_mut();
+        let mut mutex = CEF.with(|mutex| mutex.clone());
 
+        let mut global_cef = mutex.lock().await;
         *global_cef = Some(cef);
     });
 }
 
 pub fn shutdown() {
-    CEF.with(|cell| {
-        let cef = &mut *cell.borrow_mut();
+    AsyncManager::block_on_local(async move {
+        let mut mutex = CEF.with(|mutex| mutex.clone());
 
-        cef.take().unwrap().shutdown();
+        let mut global_cef = mutex.lock().await;
+        global_cef.take().unwrap().shutdown().await;
     });
+}
+
+// we've set cef to render at 60 fps
+// (1/60)*1000 = 16.6666666667
+const CEF_RATE: Duration = Duration::from_millis(16);
+
+#[derive(Clone)]
+pub enum CefEvent {
+    ContextInitialized(RustRefClient),
+    BrowserCreated(RustRefBrowser),
+    BrowserPageLoaded(RustRefBrowser),
+    BrowserTitleChange(RustRefBrowser, String),
+    BrowserClosed(RustRefBrowser),
 }
 
 thread_local!(
-    static CONTEXT_INITIALIZED_FUTURE: RefCell<Option<oneshot::Sender<RustRefClient>>> =
-        RefCell::new(None);
+    static EVENT_QUEUE: RefCell<Option<broadcast::Sender<CefEvent>>> = RefCell::new(None);
 );
-
-extern "C" fn on_context_initialized_callback(client: RustRefClient) {
-    debug!("on_context_initialized_callback {:?}", client);
-
-    CONTEXT_INITIALIZED_FUTURE.with(move |cell| {
-        let future = &mut *cell.borrow_mut();
-        let future = future.take().unwrap();
-        future.send(client).unwrap();
-    });
-}
 
 thread_local!(
     static IS_INITIALIZED: Cell<bool> = Cell::new(false);
 );
 
+extern "C" fn on_context_initialized_callback(client: RustRefClient) {
+    debug!("on_context_initialized_callback {:?}", client);
+
+    EVENT_QUEUE
+        .with_inner_mut(move |event_queue| {
+            let _ignore_error = event_queue.send(CefEvent::ContextInitialized(client));
+        })
+        .unwrap();
+}
+
 pub struct Cef {
     pub app: RustRefApp,
     pub client: RustRefClient,
+
+    _event_receiver: broadcast::Receiver<CefEvent>,
+    create_browser_mutex: FutureShared<()>,
 }
 
 impl Cef {
     pub async fn initialize() -> Self {
+        let (event_sender, mut event_receiver) = broadcast::channel(32);
+
+        EVENT_QUEUE.with(move |cell| {
+            let event_queue = &mut *cell.borrow_mut();
+            *event_queue = Some(event_sender);
+        });
+
         let app = RustRefApp::create(Callbacks {
             on_context_initialized_callback: Some(on_context_initialized_callback),
             on_after_created_callback: Some(browser::on_after_created),
             on_before_close_callback: Some(browser::on_before_close),
             on_load_end_callback: Some(browser::on_page_loaded),
+            on_title_change_callback: Some(browser::on_title_change),
             on_paint_callback: Some(cef_paint_callback),
-        });
-
-        let (sender, receiver) = oneshot::channel();
-        CONTEXT_INITIALIZED_FUTURE.with(move |cell| {
-            let future = &mut *cell.borrow_mut();
-            assert!(future.is_none());
-            *future = Some(sender);
         });
 
         app.initialize().unwrap();
 
-        let client = receiver.await.unwrap();
+        let client = loop {
+            if let CefEvent::ContextInitialized(client) = event_receiver.recv().await.unwrap() {
+                break client;
+            }
+        };
 
-        IS_INITIALIZED.with(|cell| cell.set(true));
+        IS_INITIALIZED.set(true);
 
         AsyncManager::spawn_local_on_main_thread(async move {
             while {
@@ -95,14 +116,19 @@ impl Cef {
                 }
                 res
             } {
-                let _ = future::timeout(CEF_RATE, future::pending::<()>()).await;
+                AsyncManager::sleep(CEF_RATE).await;
             }
         });
 
-        Self { app, client }
+        Self {
+            app,
+            client,
+            _event_receiver: event_receiver,
+            create_browser_mutex: FutureShared::new(()),
+        }
     }
 
-    pub fn shutdown(&self) {
+    pub async fn shutdown(&self) {
         let app = self.app.clone();
 
         AsyncManager::spawn_local_on_main_thread(async move {
@@ -111,12 +137,12 @@ impl Cef {
 
             debug!("shutdown cef");
             app.shutdown().unwrap();
-            IS_INITIALIZED.with(|cell| cell.set(false));
+            IS_INITIALIZED.set(false);
         });
     }
 
     fn try_step() -> bool {
-        if IS_INITIALIZED.with(|cell| cell.get()) {
+        if IS_INITIALIZED.get() {
             RustRefApp::step().unwrap();
             true
         } else {
@@ -124,22 +150,74 @@ impl Cef {
         }
     }
 
-    pub fn create_browser(&self, url: String) -> impl Future<Output = RustRefBrowser> {
-        let client = self.client.clone();
-        browser::create(client, url)
+    pub async fn create_browser(url: String) -> RustRefBrowser {
+        let (mut create_browser_mutex, client, mut event_receiver) = {
+            let mut mutex = CEF.with(|mutex| mutex.clone());
+            let maybe_cef = mutex.lock().await;
+            let cef = maybe_cef.as_ref().unwrap();
+
+            let create_browser_mutex = cef.create_browser_mutex.clone();
+            let client = cef.client.clone();
+            let event_receiver = EVENT_QUEUE
+                .with_inner(|event_queue| event_queue.subscribe())
+                .unwrap();
+
+            (create_browser_mutex, client, event_receiver)
+        };
+
+        // Since we can't distinguish which browser was created if multiple
+        // create at the same time, we only allow 1 to be in the "creating"
+        // state at a time.
+        let _ = create_browser_mutex.lock().await;
+
+        client.create_browser(url).unwrap();
+
+        loop {
+            if let CefEvent::BrowserCreated(browser) = event_receiver.recv().await.unwrap() {
+                break browser;
+            }
+        }
     }
 
     pub async fn close_browser(browser: &RustRefBrowser) {
-        browser::close(browser).await
-    }
+        let mut event_receiver = EVENT_QUEUE
+            .with_inner(|event_queue| event_queue.subscribe())
+            .unwrap();
 
-    #[allow(dead_code)]
-    pub async fn wait_for_browser_page_load(browser: &RustRefBrowser) {
-        browser::wait_for_page_load(browser).await
+        let id = browser.get_identifier();
+
+        browser.close().unwrap();
+
+        loop {
+            if let CefEvent::BrowserClosed(browser) = event_receiver.recv().await.unwrap() {
+                if browser.get_identifier() == id {
+                    break;
+                }
+            }
+        }
     }
 
     pub async fn close_all_browsers() {
-        browser::close_all().await
+        // must clone here or we will recurse into `close` and borrow multiple times
+        let browsers: HashMap<c_int, RustRefBrowser> = BROWSERS.with(|cell| {
+            let browsers = &mut *cell.borrow_mut();
+            browsers.drain().collect()
+        });
+
+        let mut ids: FuturesUnordered<_> = browsers
+            .iter()
+            .map(|(id, browser)| async move {
+                debug!("closing browser {}", id);
+                Self::close_browser(browser).await;
+                id
+            })
+            .collect();
+
+        while let Some(id) = ids.next().await {
+            debug!("browser {} closed", id);
+        }
+
+        debug!("finished shutting down all browsers");
     }
 }
 

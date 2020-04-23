@@ -46,12 +46,17 @@ typedef void (*OnPaintCallback)(RustRefBrowser browser,
 /// Called when the browser is done loading the MAIN frame.
 typedef void (*OnLoadEndCallback)(RustRefBrowser browser);
 
+/// Called when the page title changes.
+typedef void (*OnTitleChangeCallback)(RustRefBrowser browser,
+                                      const char* title);
+
 struct Callbacks {
   OnContextInitializedCallback on_context_initialized_callback;
   OnAfterCreatedCallback on_after_created_callback;
   OnBeforeCloseCallback on_before_close_callback;
   OnPaintCallback on_paint_callback;
   OnLoadEndCallback on_load_end_callback;
+  OnTitleChangeCallback on_title_change_callback;
 };
 
 // functions to rust

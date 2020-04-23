@@ -80,6 +80,7 @@ class MyClient : public CefClient,
   OnPaintCallback on_paint_callback;
   OnLoadEndCallback on_load_end_callback;
   OnAfterCreatedCallback on_after_created_callback;
+  OnTitleChangeCallback on_title_change_callback;
 
   IMPLEMENT_REFCOUNTING(MyClient);
   DISALLOW_COPY_AND_ASSIGN(MyClient);

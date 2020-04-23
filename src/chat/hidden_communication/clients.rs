@@ -1,11 +1,9 @@
 use crate::{
     async_manager::AsyncManager,
     chat::{hidden_communication::whispers::start_whispering, Chat, TAB_LIST},
-    helpers::ThreadLocalGetSet,
     plugin::APP_NAME,
 };
-use async_std::future;
-use classicube_helpers::tab_list::remove_color;
+use classicube_helpers::{tab_list::remove_color, CellGetSet};
 use classicube_sys::ENTITIES_SELF_ID;
 use log::debug;
 use std::{

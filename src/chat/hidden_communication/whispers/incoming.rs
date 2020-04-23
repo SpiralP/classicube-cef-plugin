@@ -1,7 +1,7 @@
 use crate::{
     chat::{Chat, ENTITIES, TAB_LIST},
-    helpers::ThreadLocalGetSet,
 };
+use classicube_helpers::CellGetSet;
 use log::debug;
 use std::cell::Cell;
 

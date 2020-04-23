@@ -355,10 +355,11 @@ dependencies = [
 [[package]]
 name = "classicube-helpers"
 version = "0.1.0"
-source = "git+https://github.com/SpiralP/rust-classicube-helpers.git#2bc52354f013b41e9ee0d5631900d17c0570f2de"
+source = "git+https://github.com/SpiralP/rust-classicube-helpers.git#79bcce47eff2290178b56537ebbb93a474f945ce"
 dependencies = [
  "classicube-sys",
  "detour",
+ "futures",
  "log",
  "paste",
 ]
@@ -1887,9 +1888,9 @@ checksum = "08d43f7aa6b08d49f382cde6a7982047c3426db949b1424bc4b7ec9ae12c6ce2"
 
 [[package]]
 name = "ryu"
-version = "1.0.3"
+version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "535622e6be132bccd223f4bb2b8ac8d53cda3c7a6394944d3b2b33fb974f9d76"
+checksum = "ed3d612bc64430efeb3f7ee6ef26d590dce0c43249217bddc62112540c7941e1"
 
 [[package]]
 name = "schannel"

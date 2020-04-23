@@ -71,23 +71,3 @@ pub unsafe fn Texture_RenderShaded(tex: &mut Texture, shadeCol: PackedCol) {
     Gfx_BindTexture(tex.ID);
     Gfx_Draw2DTexture(tex, shadeCol);
 }
-
-use std::{cell::Cell, thread::LocalKey};
-
-pub trait ThreadLocalGetSet<T> {
-    fn get(&'static self) -> T;
-    fn set(&'static self, value: T);
-}
-
-impl<T> ThreadLocalGetSet<T> for LocalKey<Cell<T>>
-where
-    T: Copy,
-{
-    fn get(&'static self) -> T {
-        self.with(|cell| cell.get())
-    }
-
-    fn set(&'static self, value: T) {
-        self.with(|cell| cell.set(value))
-    }
-}

@@ -1,5 +1,5 @@
-use crate::{async_manager::AsyncManager, chat::Chat, helpers::ThreadLocalGetSet};
-use async_std::future;
+use crate::{async_manager::AsyncManager, chat::Chat};
+use classicube_helpers::CellGetSet;
 use log::debug;
 use std::{cell::Cell, time::Duration};
 

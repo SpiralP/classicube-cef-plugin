@@ -1,5 +1,5 @@
 use crate::{async_manager::AsyncManager, cef, chat::Chat, entity_manager::EntityManager, players};
-use classicube_helpers::with_inner::WithInner;
+use classicube_helpers::OptionWithInner;
 use classicube_sys::{Server, String_AppendConst};
 use log::debug;
 use std::{cell::RefCell, ffi::CString};

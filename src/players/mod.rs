@@ -4,11 +4,10 @@ mod youtube;
 pub use self::{web::WebPlayer, youtube::YoutubePlayer};
 use crate::{
     async_manager::AsyncManager,
-    cef::{RustRefBrowser, CEF},
+    cef::{Cef, RustRefBrowser},
     entity_manager::EntityManager,
     error::*,
 };
-use classicube_helpers::with_inner::WithInner;
 use log::debug;
 use std::{any::Any, cell::RefCell, collections::HashMap, os::raw::c_int};
 
@@ -84,12 +83,9 @@ pub fn create(input: &str) -> Result<usize> {
     let mut player = create_player(input)?;
     let url = player.on_create();
 
-    let browser_create_future = CEF
-        .with_inner(|cef| cef.create_browser(url))
-        .chain_err(|| "CEF not initialized")?;
-
     AsyncManager::spawn_local_on_main_thread(async move {
-        let browser = browser_create_future.await;
+        let browser = Cef::create_browser(url).await;
+
         EntityManager::attach_browser(entity_id, browser.clone());
 
         let browser_id = browser.get_identifier();

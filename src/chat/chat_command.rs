@@ -4,7 +4,7 @@ use super::Chat;
 use crate::{
     async_manager::AsyncManager,
     chat::{PlayerSnapshot, ENTITIES},
-    entity_manager::{CefEntity, EntityManager, CEF_HEIGHT, CEF_WIDTH},
+    entity_manager::{CefEntity, EntityManager, CEF_HEIGHT, CEF_WIDTH, MODEL_HEIGHT, MODEL_WIDTH},
     error::*,
     players, search,
 };
@@ -184,7 +184,7 @@ pub async fn command_callback(
                 [aim_pitch, aim_yaw]: [f32; 2],
                 screen_pos: Point3<f32>,
                 [screen_pitch, screen_yaw]: [f32; 2],
-            ) -> Option<(Ray<f32>, RayIntersection<f32>)> {
+            ) -> Option<(Ray<f32>, Plane<f32>, RayIntersection<f32>)> {
                 // when angles 0 0, aiming towards -z
                 let normal = -Vector3::<f32>::z_axis();
 
@@ -211,7 +211,7 @@ pub async fn command_callback(
                         // 0 if aiming from wrong side
                         None
                     } else {
-                        Some((ray, intersection))
+                        Some((ray, plane, intersection))
                     }
                 } else {
                     None
@@ -225,7 +225,7 @@ pub async fn command_callback(
             let eye_pos = vec3_to_vector3(&player.eye_position);
             let screen_pos = vec3_to_vector3(&entity_pos);
 
-            if let Some((ray, intersection)) = intersect(
+            if let Some((ray, _plane, intersection)) = intersect(
                 eye_pos.into(),
                 [player.Pitch, player.Yaw],
                 screen_pos.into(),
@@ -233,17 +233,35 @@ pub async fn command_callback(
             ) {
                 let intersection_point = ray.point_at(intersection.toi).coords;
 
-                let scale = Vector3::new(entity_scale.X * 16.0, entity_scale.Y * 9.0, 1.0);
-                let scaled_point = (intersection_point - screen_pos).component_div(&scale);
+                let forward = intersection.normal;
 
-                let (x, y) = (0.5 + scaled_point.x, 1.0 - scaled_point.y);
+                let tmp = Vector3::y();
+                let right = Vector3::cross(&forward, &tmp);
+                let right = right.normalize();
+                let up = Vector3::cross(&right, &forward);
+                let up = up.normalize();
+
+                let right = -right;
+                // log::info!("up {}", up);
+                // log::info!("right {}", right);
+
+                let width = entity_scale.X * MODEL_WIDTH as f32;
+                let height = entity_scale.Y * MODEL_HEIGHT as f32;
+
+                let top_left = screen_pos - 0.5 * right * width + up * height;
+                // log::info!("top_left {}", top_left);
+
+                let diff = intersection_point - top_left;
+                let x = diff.dot(&right) / width;
+                let y = -(diff.dot(&up) / height);
+
+                // debug!("{} {}", x, y);
                 if x < 0.0 || x > 1.0 || y < 0.0 || y > 1.0 {
                     return Err("not looking at a screen".into());
                 }
-                debug!("{} {}", x, y);
 
                 let (x, y) = (x * CEF_WIDTH as f32, y * CEF_HEIGHT as f32);
-                debug!("{} {}", x, y);
+                // debug!("{} {}", x, y);
 
                 let browser = EntityManager::get_browser_by_entity_id(entity_id)?;
                 browser.send_click(x as _, y as _)?;

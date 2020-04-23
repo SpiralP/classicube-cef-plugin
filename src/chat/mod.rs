@@ -75,6 +75,22 @@ impl Chat {
         });
 
         hidden_communication::initialize();
+
+        #[cfg(debug_assertions)]
+        AsyncManager::spawn_local_on_main_thread(async {
+            let _ = async_std::future::timeout(
+                Duration::from_millis(300),
+                async_std::future::pending::<()>(),
+            )
+            .await;
+
+            Chat::send("/client cef create");
+
+            // loop {
+            //     let _ = future::timeout(Duration::from_millis(300), future::pending::<()>()).await;
+            //     Chat::send("/client cef click");
+            // }
+        });
     }
 
     pub fn on_new_map_loaded(&mut self) {

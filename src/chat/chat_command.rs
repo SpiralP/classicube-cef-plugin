@@ -135,6 +135,18 @@ pub async fn command_callback(
             Ok(())
         })?,
 
+        ["angles", pitch, yaw] | ["angle", pitch, yaw] => {
+            EntityManager::with_closest(player.eye_position, |entity| {
+                let pitch = pitch.parse()?;
+                let yaw = yaw.parse()?;
+
+                entity.entity.RotX = pitch;
+                entity.entity.RotY = yaw;
+
+                Ok(())
+            })?
+        }
+
         ["scale", scale] => EntityManager::with_closest(player.eye_position, |entity| {
             let scale = scale.parse()?;
 
@@ -150,7 +162,7 @@ pub async fn command_callback(
             players::play(url, entity_id)?;
         }
 
-        ["close"] | ["remove"] => {
+        ["close"] | ["remove"] | ["stop"] => {
             let entity_id = EntityManager::with_closest(player.eye_position, |closest_entity| {
                 Ok(closest_entity.id)
             })?;

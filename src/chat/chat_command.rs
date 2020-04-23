@@ -166,7 +166,10 @@ pub async fn command_callback(
             let entity_id = EntityManager::with_closest(player.eye_position, |closest_entity| {
                 Ok(closest_entity.id)
             })?;
-            EntityManager::remove_entity(entity_id);
+
+            AsyncManager::spawn_local_on_main_thread(async move {
+                EntityManager::remove_entity(entity_id).await;
+            });
         }
 
         ["refresh"] | ["reload"] => {

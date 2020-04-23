@@ -31,14 +31,12 @@ pub fn initialize() {
         DETOUR.initialize(Chat_AddOf, chat_add_hook).unwrap();
         DETOUR.enable().unwrap();
     }
-
-    // first map change, query
-    clients::query_clients();
 }
 
 pub fn on_new_map_loaded() {
-    // second etc map change
-    clients::query_clients();
+    if unsafe { Server.IsSinglePlayer } == 0 {
+        clients::query_clients();
+    }
 }
 
 pub fn shutdown() {

@@ -19,7 +19,7 @@ impl ContextHandler {
     }
 
     fn context_recreated() {
-        // create texture, vertex buffers, enable detour
+        // create texture, vertex buffers
 
         QUAD_VB.with(|cell| {
             *cell.borrow_mut() = Some(OwnedGfxVertexBuffer::create(
@@ -34,29 +34,9 @@ impl ContextHandler {
                 4,
             ));
         });
-
-        // Start calling our CefEntity's draw
-        // unsafe {
-        //     debug!("enable RenderModel detour");
-        //     self.local_player_render_model_detour.enable().unwrap();
-        // }
-
-        // CEF_CAN_DRAW.store(true, Ordering::SeqCst);
     }
 
     fn context_lost() {
-        // CEF_CAN_DRAW.store(false, Ordering::SeqCst);
-
-        // disable detour so we don't call our ModelRender
-        // if self.local_player_render_model_detour.is_enabled() {
-        //     debug!("disable RenderModel detour");
-        //     unsafe {
-        //         self.local_player_render_model_detour.disable().unwrap();
-        //     }
-        // } else {
-        //     debug!("RenderModel detour already disabled?");
-        // }
-
         // delete vertex buffers
         QUAD_VB.with(|cell| {
             cell.borrow_mut().take();

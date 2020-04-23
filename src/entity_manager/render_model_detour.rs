@@ -36,7 +36,6 @@ impl RenderModelDetour {
             let target = v_table.RenderModel.unwrap();
 
             DETOUR.initialize(target, hook).unwrap();
-
             DETOUR.enable().unwrap();
         }
     }

@@ -15,30 +15,6 @@ use std::{
 };
 use tokio::sync::broadcast;
 
-thread_local!(
-    static CEF: FutureShared<Option<Cef>> = FutureShared::new(None);
-);
-
-pub fn initialize() {
-    AsyncManager::block_on_local(async {
-        let cef = Cef::initialize().await;
-
-        let mut mutex = CEF.with(|mutex| mutex.clone());
-
-        let mut global_cef = mutex.lock().await;
-        *global_cef = Some(cef);
-    });
-}
-
-pub fn shutdown() {
-    AsyncManager::block_on_local(async move {
-        let mut mutex = CEF.with(|mutex| mutex.clone());
-
-        let mut global_cef = mutex.lock().await;
-        global_cef.take().unwrap().shutdown().await;
-    });
-}
-
 // we've set cef to render at 60 fps
 // (1/60)*1000 = 16.6666666667
 const CEF_RATE: Duration = Duration::from_millis(16);
@@ -51,6 +27,10 @@ pub enum CefEvent {
     BrowserTitleChange(RustRefBrowser, String),
     BrowserClosed(RustRefBrowser),
 }
+
+thread_local!(
+    static CEF: FutureShared<Option<Cef>> = FutureShared::new(None);
+);
 
 thread_local!(
     static EVENT_QUEUE: RefCell<Option<broadcast::Sender<CefEvent>>> = RefCell::new(None);
@@ -79,7 +59,9 @@ pub struct Cef {
 }
 
 impl Cef {
-    pub async fn initialize() -> Self {
+    pub async fn initialize() {
+        debug!("initialize cef");
+
         let (event_sender, mut event_receiver) = broadcast::channel(32);
 
         EVENT_QUEUE.with(move |cell| {
@@ -120,24 +102,37 @@ impl Cef {
             }
         });
 
-        Self {
+        let cef = Self {
             app,
             client,
             _event_receiver: event_receiver,
             create_browser_mutex: FutureShared::new(()),
-        }
+        };
+
+        let mut mutex = CEF.with(|mutex| mutex.clone());
+        let mut global_cef = mutex.lock().await;
+        *global_cef = Some(cef);
     }
 
-    pub async fn shutdown(&self) {
-        let app = self.app.clone();
+    pub async fn shutdown() {
+        let app = {
+            let mut mutex = CEF.with(|mutex| mutex.clone());
+            let mut global_cef = mutex.lock().await;
+            let cef = global_cef.take().unwrap();
 
-        AsyncManager::spawn_local_on_main_thread(async move {
             debug!("shutting down all browsers");
             Self::close_all_browsers().await;
 
-            debug!("shutdown cef");
-            app.shutdown().unwrap();
-            IS_INITIALIZED.set(false);
+            cef.app
+        };
+
+        debug!("shutdown cef");
+        app.shutdown().unwrap();
+        IS_INITIALIZED.set(false);
+
+        EVENT_QUEUE.with(|cell| {
+            let event_queue = &mut *cell.borrow_mut();
+            event_queue.take().unwrap();
         });
     }
 
@@ -150,6 +145,12 @@ impl Cef {
         }
     }
 
+    pub fn create_event_listener() -> broadcast::Receiver<CefEvent> {
+        EVENT_QUEUE
+            .with_inner(|event_queue| event_queue.subscribe())
+            .unwrap()
+    }
+
     pub async fn create_browser(url: String) -> RustRefBrowser {
         let (mut create_browser_mutex, client, mut event_receiver) = {
             let mut mutex = CEF.with(|mutex| mutex.clone());
@@ -158,9 +159,7 @@ impl Cef {
 
             let create_browser_mutex = cef.create_browser_mutex.clone();
             let client = cef.client.clone();
-            let event_receiver = EVENT_QUEUE
-                .with_inner(|event_queue| event_queue.subscribe())
-                .unwrap();
+            let event_receiver = Self::create_event_listener();
 
             (create_browser_mutex, client, event_receiver)
         };
@@ -180,9 +179,7 @@ impl Cef {
     }
 
     pub async fn close_browser(browser: &RustRefBrowser) {
-        let mut event_receiver = EVENT_QUEUE
-            .with_inner(|event_queue| event_queue.subscribe())
-            .unwrap();
+        let mut event_receiver = Self::create_event_listener();
 
         let id = browser.get_identifier();
 

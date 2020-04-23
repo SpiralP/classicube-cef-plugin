@@ -9,6 +9,7 @@ mod players;
 mod plugin;
 mod search;
 
+use self::plugin::Plugin;
 use classicube_sys::*;
 use log::debug;
 use std::{cell::Cell, os::raw::c_int, ptr};
@@ -20,13 +21,15 @@ extern "C" fn init() {
 
     logger::initialize(true, false);
 
-    plugin::initialize();
+    Plugin::initialize();
 }
 
 extern "C" fn free() {
     debug!("Free");
 
-    plugin::shutdown();
+    Plugin::shutdown();
+
+    debug!("shutdown OK");
 }
 
 thread_local!(
@@ -34,16 +37,7 @@ thread_local!(
 );
 
 extern "C" fn on_new_map_loaded() {
-    debug!("OnNewMapLoaded");
-
-    CONTEXT_LOADED.with(|cell| {
-        if !cell.get() {
-            cell.set(true);
-            plugin::on_first_context_created();
-        } else {
-            plugin::on_new_map_loaded();
-        }
-    });
+    Plugin::on_new_map_loaded();
 }
 
 #[no_mangle]

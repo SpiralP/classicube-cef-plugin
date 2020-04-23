@@ -14,6 +14,7 @@ use crate::{
     error::*,
 };
 use classicube_sys::Vec3;
+use futures::stream::{FuturesUnordered, StreamExt};
 use log::{debug, warn};
 use std::{
     cell::{Cell, RefCell},
@@ -63,33 +64,30 @@ impl EntityManager {
     }
 
     pub fn initialize(&mut self) {
+        debug!("initialize entity_manager");
+
         self.context_handler.initialize();
         self.render_model_detour.initialize();
         self.model = Some(CefModel::register());
     }
 
     pub fn on_new_map_loaded(&mut self) {
-        // remove all entities
+        debug!("on_new_map_loaded entity_manager");
 
-        let ids: Vec<usize> = ENTITIES.with(|entities| {
-            let entities = &*entities.borrow();
-
-            entities.keys().copied().collect()
+        AsyncManager::block_on_local(async {
+            Self::remove_all_entities().await;
         });
-
-        for id in &ids {
-            Self::remove_entity(*id);
-        }
     }
 
     pub fn shutdown(&mut self) {
+        debug!("shutdown entity_manager");
+
         self.context_handler.shutdown();
         self.render_model_detour.shutdown();
         self.model.take();
-        ENTITIES.with(|entities| {
-            let entities = &mut *entities.borrow_mut();
 
-            entities.clear();
+        AsyncManager::block_on_local(async {
+            Self::remove_all_entities().await;
         });
     }
 
@@ -152,7 +150,7 @@ impl EntityManager {
         })
     }
 
-    pub fn remove_entity(entity_id: usize) {
+    pub async fn remove_entity(entity_id: usize) {
         let maybe_browser = ENTITIES.with(|entities| {
             let entities = &mut *entities.borrow_mut();
 
@@ -174,9 +172,33 @@ impl EntityManager {
         if let Some(browser) = maybe_browser {
             EntityManager::on_browser_close(&browser);
 
-            AsyncManager::spawn_local_on_main_thread(async move {
-                Cef::close_browser(&browser).await;
-            });
+            debug!(
+                "entity_manager closing browser {}",
+                browser.get_identifier()
+            );
+            Cef::close_browser(&browser).await;
+        }
+    }
+
+    pub async fn remove_all_entities() {
+        // don't drain here because we remove them in remove_entity()
+        let entity_ids: Vec<usize> = ENTITIES.with(|entities| {
+            let entities = &*entities.borrow();
+
+            entities.keys().copied().collect()
+        });
+
+        let mut entity_ids: FuturesUnordered<_> = entity_ids
+            .iter()
+            .map(|entity_id| async move {
+                debug!("entity_manager remove entity {}", entity_id);
+                Self::remove_entity(*entity_id).await;
+                entity_id
+            })
+            .collect();
+
+        while let Some(entity_id) = entity_ids.next().await {
+            debug!("entity_manager entity {} removed", entity_id);
         }
     }
 

@@ -12,7 +12,7 @@ use classicube_sys::{
     Chat_Add, Chat_Send, MsgType, MsgType_MSG_TYPE_NORMAL, OwnedString, Server, Vec3,
 };
 use futures::{future::RemoteHandle, prelude::*};
-use log::info;
+use log::{debug, info};
 use std::{
     cell::{Cell, RefCell},
     time::Duration,
@@ -52,6 +52,8 @@ impl Chat {
     }
 
     pub fn initialize(&mut self) {
+        debug!("initialize chat");
+
         self.chat_command.initialize();
 
         self.chat_received.on(
@@ -74,6 +76,12 @@ impl Chat {
         });
 
         hidden_communication::initialize();
+    }
+
+    pub fn on_new_map_loaded(&mut self) {
+        debug!("on_new_map_loaded chat");
+
+        hidden_communication::on_new_map_loaded();
 
         #[cfg(debug_assertions)]
         if unsafe { Server.IsSinglePlayer } != 0 {
@@ -88,10 +96,6 @@ impl Chat {
                 // }
             });
         }
-    }
-
-    pub fn on_new_map_loaded(&mut self) {
-        hidden_communication::on_new_map_loaded();
     }
 
     pub fn shutdown(&mut self) {

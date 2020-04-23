@@ -1,4 +1,6 @@
-use crate::{async_manager::AsyncManager, cef, chat::Chat, entity_manager::EntityManager, players};
+use crate::{
+    async_manager::AsyncManager, cef::Cef, chat::Chat, entity_manager::EntityManager, players,
+};
 use classicube_helpers::OptionWithInner;
 use classicube_sys::{Server, String_AppendConst};
 use log::debug;
@@ -8,98 +10,90 @@ thread_local!(
     static PLUGIN: RefCell<Option<Plugin>> = RefCell::new(None);
 );
 
-pub fn initialize() {
-    PLUGIN.with(|cell| {
-        assert!(cell.borrow().is_none());
-
-        *cell.borrow_mut() = Some(Plugin::new());
-    });
-}
-
-pub fn on_first_context_created() {
-    PLUGIN
-        .with_inner_mut(|plugin| {
-            debug!("plugin initialize");
-            plugin.initialize();
-        })
-        .unwrap();
-}
-
-pub fn on_new_map_loaded() {
-    PLUGIN
-        .with_inner_mut(|plugin| {
-            debug!("plugin on_new_map_loaded");
-            plugin.on_new_map_loaded();
-        })
-        .unwrap();
-}
-
-pub fn shutdown() {
-    PLUGIN.with_inner_mut(|plugin| {
-        debug!("plugin shutdown");
-        plugin.shutdown();
-    });
-
-    PLUGIN.with(|cell| {
-        cell.borrow_mut().take().unwrap();
-    });
-}
-
 pub struct Plugin {
     async_manager: AsyncManager,
     chat: Chat,
     entity_manager: EntityManager,
+    context_initialized: bool,
 }
 
 pub const APP_NAME: &str = concat!("cef", env!("CARGO_PKG_VERSION"));
 
 impl Plugin {
     /// Called once on our plugin's `Init`
-    pub fn new() -> Self {
-        Chat::print(format!("Cef v{} initializing", env!("CARGO_PKG_VERSION")));
+    pub fn initialize() {
+        debug!("plugin initialize");
 
-        let append_app_name = CString::new(format!(" +{}", APP_NAME)).unwrap();
-        let c_str = append_app_name.as_ptr();
-        unsafe {
-            String_AppendConst(&mut Server.AppName, c_str);
-        }
+        PLUGIN.with(|cell| {
+            assert!(cell.borrow().is_none());
 
-        Self {
-            async_manager: AsyncManager::new(),
-            chat: Chat::new(),
-            entity_manager: EntityManager::new(),
-        }
+            Chat::print(format!("Cef v{} initializing", env!("CARGO_PKG_VERSION")));
+
+            let append_app_name = CString::new(format!(" +{}", APP_NAME)).unwrap();
+            let c_str = append_app_name.as_ptr();
+            unsafe {
+                String_AppendConst(&mut Server.AppName, c_str);
+            }
+
+            let mut async_manager = AsyncManager::new();
+            let mut chat = Chat::new();
+
+            async_manager.initialize();
+            chat.initialize();
+
+            let plugin = Self {
+                async_manager,
+                chat,
+                entity_manager: EntityManager::new(),
+                context_initialized: false,
+            };
+            *cell.borrow_mut() = Some(plugin);
+        });
     }
 
-    /// Called once on our plugin's `OnNewMapLoaded`
-    pub fn initialize(&mut self) {
-        debug!("initialize async_manager");
-        self.async_manager.initialize();
-        debug!("initialize chat");
-        self.chat.initialize();
-        debug!("initialize entity_manager");
-        self.entity_manager.initialize();
+    /// Called every time when our plugin's `OnNewMapLoaded` is called
+    ///
+    /// Rendering context is set up by now.
+    pub fn on_new_map_loaded() {
+        debug!("plugin on_new_map_loaded");
 
-        debug!("initialize cef");
-        cef::initialize();
-    }
+        PLUGIN
+            .with_inner_mut(|plugin| {
+                if !plugin.context_initialized {
+                    plugin.entity_manager.initialize();
 
-    pub fn on_new_map_loaded(&mut self) {
-        debug!("on_new_map_loaded chat");
-        self.chat.on_new_map_loaded();
-        debug!("on_new_map_loaded entity_manager");
-        self.entity_manager.on_new_map_loaded();
+                    AsyncManager::spawn_local_on_main_thread(async {
+                        Cef::initialize().await;
+                    });
+
+                    plugin.context_initialized = true;
+                }
+
+                plugin.entity_manager.on_new_map_loaded();
+
+                plugin.chat.on_new_map_loaded();
+            })
+            .unwrap();
     }
 
     /// Called once on our plugin's `Free`
-    pub fn shutdown(&mut self) {
-        players::shutdown();
-        self.entity_manager.shutdown();
-        self.chat.shutdown();
+    pub fn shutdown() {
+        debug!("plugin shutdown");
 
-        cef::shutdown();
+        PLUGIN.with(|cell| {
+            let plugin = &mut *cell.borrow_mut();
+            let mut plugin = plugin.take().unwrap();
 
-        self.async_manager.shutdown();
-        debug!("shutdown OK");
+            players::shutdown();
+            plugin.entity_manager.shutdown();
+            plugin.chat.shutdown();
+
+            AsyncManager::spawn_local_on_main_thread(async {
+                Cef::shutdown().await;
+            });
+
+            // this will run all remaining tasks to completion
+            plugin.async_manager.shutdown();
+        });
     }
 }

@@ -32,14 +32,6 @@ jobs:
           key: ${{ runner.os }}-${{ matrix.config.arch }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-${{ matrix.config.arch }}-cargo-index-
-      - name: Cache cargo build
-        uses: actions/cache@v1
-        if: startsWith(github.ref, 'refs/tags/') != true
-        with:
-          path: target
-          key: ${{ runner.os }}-${{ matrix.config.arch }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ matrix.config.arch }}-cargo-build-target-
 
       # Cache for releases
       - name: Cache cargo registry
@@ -58,14 +50,6 @@ jobs:
           key: ${{ runner.os }}-${{ matrix.config.arch }}-release-cargo-index-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-${{ matrix.config.arch }}-release-cargo-index-
-      - name: Cache cargo build
-        uses: actions/cache@v1
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          path: target
-          key: ${{ runner.os }}-${{ matrix.config.arch }}-release-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ matrix.config.arch }}-release-cargo-build-target-
 
       - name: Install deps
         run: |
@@ -128,96 +112,3 @@ jobs:
             target/release/build/classicube-cef-plugin-*/out/cefsimple-${{ matrix.config.arch }}.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#
-#  linux:
-#    runs-on: ubuntu-latest
-#
-#    steps:
-#      - uses: actions/checkout@v2
-#
-#      - name: Install deps
-#        run: |
-#          sudo apt-get -y update
-#          sudo apt-get -y install clang llvm
-#          sudo apt-get -y install libglib2.0-dev libcairo2-dev libpango1.0-dev libatk1.0-dev libgdk-pixbuf2.0-dev libgtk-3-dev
-#
-#      - name: Install nightly
-#        uses: actions-rs/toolchain@v1
-#        with:
-#          toolchain: nightly
-#          override: true
-#
-#      - name: Build
-#        uses: actions-rs/cargo@v1
-#        with:
-#          command: build
-#
-#      - name: Test
-#        uses: actions-rs/cargo@v1
-#        with:
-#          command: test
-#          args: -- --nocapture
-#
-#      - name: Build Release
-#        uses: actions-rs/cargo@v1
-#        if: startsWith(github.ref, 'refs/tags/')
-#        with:
-#          command: build
-#          args: --release
-#
-#      - run: mv target/release/libclassicube_cef_plugin.so target/release/classicube_cef_linux_amd64.so
-#        if: startsWith(github.ref, 'refs/tags/')
-#
-#      - name: Upload Release
-#        uses: softprops/action-gh-release@v1
-#        if: startsWith(github.ref, 'refs/tags/')
-#        with:
-#          files: target/release/classicube_cef_linux_amd64.so
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#
-#  mac:
-#    runs-on: macOS-latest
-#
-#    steps:
-#      - uses: actions/checkout@v2
-#
-#      - name: Install deps
-#        run: |
-#          brew install llvm
-#          echo "##[add-path]/usr/local/opt/llvm/bin"
-#
-#      - name: Install nightly
-#        uses: actions-rs/toolchain@v1
-#        with:
-#          toolchain: nightly
-#          override: true
-#
-#      - name: Build
-#        uses: actions-rs/cargo@v1
-#        with:
-#          command: build
-#
-#      - name: Test
-#        uses: actions-rs/cargo@v1
-#        with:
-#          command: test
-#          args: -- --nocapture
-#
-#      - name: Build Release
-#        uses: actions-rs/cargo@v1
-#        if: startsWith(github.ref, 'refs/tags/')
-#        with:
-#          command: build
-#          args: --release
-#
-#      - run: mv target/release/libclassicube_cef_plugin.dylib target/release/classicube_cef_macos_amd64.dylib
-#        if: startsWith(github.ref, 'refs/tags/')
-#
-#      - name: Upload Release
-#        uses: softprops/action-gh-release@v1
-#        if: startsWith(github.ref, 'refs/tags/')
-#        with:
-#          files: target/release/classicube_cef_macos_amd64.dylib
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -77,20 +77,18 @@ impl Chat {
         hidden_communication::initialize();
 
         #[cfg(debug_assertions)]
-        AsyncManager::spawn_local_on_main_thread(async {
-            let _ = async_std::future::timeout(
-                Duration::from_millis(300),
-                async_std::future::pending::<()>(),
-            )
-            .await;
+        if unsafe { Server.IsSinglePlayer } != 0 {
+            AsyncManager::spawn_local_on_main_thread(async {
+                AsyncManager::sleep(Duration::from_millis(300)).await;
 
-            Chat::send("/client cef create");
+                Chat::send("/client cef create");
 
-            // loop {
-            //     let _ = future::timeout(Duration::from_millis(300), future::pending::<()>()).await;
-            //     Chat::send("/client cef click");
-            // }
-        });
+                // loop {
+                //     let _ = future::timeout(Duration::from_millis(300), future::pending::<()>()).await;
+                //     Chat::send("/client cef click");
+                // }
+            });
+        }
     }
 
     pub fn on_new_map_loaded(&mut self) {
@@ -189,11 +187,7 @@ fn handle_chat_received(message: String, message_type: MsgType) {
                 FUTURE_HANDLE.with(|cell| {
                     let (remote, remote_handle) = async move {
                         if unsafe { Server.IsSinglePlayer } == 0 {
-                            let _ = future::timeout(
-                                Duration::from_millis(256),
-                                future::pending::<()>(),
-                            )
-                            .await;
+                            AsyncManager::sleep(Duration::from_millis(256)).await;
                         }
 
                         let is_self = id == ENTITY_SELF_ID;

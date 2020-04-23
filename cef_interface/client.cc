@@ -29,6 +29,14 @@ void MyClient::OnTitleChange(CefRefPtr<CefBrowser> browser,
                              const CefString& title) {}
 
 // CefLifeSpanHandler methods:
+void MyClient::OnBeforeClose(CefRefPtr<CefBrowser> browser) {
+  CEF_REQUIRE_UI_THREAD();
+
+  if (on_before_close_callback) {
+    on_before_close_callback(cef_interface_add_ref_browser(browser.get()));
+  }
+}
+
 void MyClient::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
   if (on_after_created_callback) {
     on_after_created_callback(cef_interface_add_ref_browser(browser.get()));
@@ -47,12 +55,25 @@ bool MyClient::DoClose(CefRefPtr<CefBrowser> browser) {
   return false;
 }
 
-void MyClient::OnBeforeClose(CefRefPtr<CefBrowser> browser) {
-  CEF_REQUIRE_UI_THREAD();
+bool MyClient::OnBeforePopup(
+    CefRefPtr<CefBrowser> browser,
+    CefRefPtr<CefFrame> frame,
+    const CefString& target_url,
+    const CefString& target_frame_name,
+    CefLifeSpanHandler::WindowOpenDisposition target_disposition,
+    bool user_gesture,
+    const CefPopupFeatures& popupFeatures,
+    CefWindowInfo& windowInfo,
+    CefRefPtr<CefClient>& client,
+    CefBrowserSettings& settings,
+    CefRefPtr<CefDictionaryValue>& extra_info,
+    bool* no_javascript_access) {
+  rust_print("popup detected");
 
-  if (on_before_close_callback) {
-    on_before_close_callback(cef_interface_add_ref_browser(browser.get()));
-  }
+  frame->LoadURL(target_url);
+
+  // block the popup
+  return true;
 }
 
 // CefRenderHandler methods:

@@ -29,7 +29,7 @@ pub fn handle_chat_message(message: &str) -> bool {
 
             // give it a couple seconds before stop listening
             AsyncManager::spawn_local_on_main_thread(async {
-                let _ = future::timeout(Duration::from_secs(2), future::pending::<()>()).await;
+                AsyncManager::sleep(Duration::from_secs(2)).await;
 
                 if LISTENING.get() {
                     debug!("stopping because of timer");

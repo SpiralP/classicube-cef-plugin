@@ -95,6 +95,11 @@ impl AsyncManager {
     }
 
     #[allow(dead_code)]
+    pub async fn sleep(duration: Duration) {
+        let _ = async_std::future::timeout(duration, async_std::future::pending::<()>()).await;
+    }
+
+    #[allow(dead_code)]
     pub fn block_on<F>(future: F) -> F::Output
     where
         F: Future + Send + 'static,

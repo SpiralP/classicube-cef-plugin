@@ -1,6 +1,8 @@
 mod clients;
+mod encoding;
 mod whispers;
 
+pub use self::encoding::LightEntity;
 use super::SIMULATING;
 use crate::async_manager::AsyncManager;
 use classicube_helpers::{detour::static_detour, CellGetSet};

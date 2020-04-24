@@ -16,7 +16,7 @@ fn hook(local_player_entity: *mut Entity, delta: c_double, t: c_float) {
     ENTITIES.with(|entities| {
         let entities = &mut *entities.borrow_mut();
 
-        for entity in entities.values() {
+        for entity in entities.values_mut() {
             entity.render_model();
         }
     });

@@ -70,8 +70,8 @@ pub async fn query_whisper(real_name: String) -> Result<()> {
     .chain_err(|| "never found response to my whisper")??;
 
     let message = encoding::decode(full_message_encoded)?;
-
     debug!("decoded {:#?}", message);
+    encoding::received_message(message)?;
 
     Ok(())
 }

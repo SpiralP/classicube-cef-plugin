@@ -4,7 +4,7 @@ use log::debug;
 use serde::{Deserialize, Serialize};
 use url::Url;
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct WebPlayer {
     url: String,
 }

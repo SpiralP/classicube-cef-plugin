@@ -6,7 +6,7 @@ use crate::{
     chat::{PlayerSnapshot, ENTITIES},
     entity_manager::{CefEntity, EntityManager, CEF_HEIGHT, CEF_WIDTH, MODEL_HEIGHT, MODEL_WIDTH},
     error::*,
-    players, search,
+    search,
 };
 use classicube_sys::{OwnedChatCommand, Vec3, ENTITIES_SELF_ID};
 use log::debug;
@@ -71,7 +71,7 @@ pub async fn command_callback(
     // static commands not targetted at a specific entity
     match args {
         ["create"] => {
-            let entity_id = players::create("https://www.classicube.net/")?;
+            let entity_id = EntityManager::create_entity("https://www.classicube.net/")?;
             EntityManager::with_by_entity_id(entity_id, |entity| {
                 move_entity(entity, player);
 
@@ -80,7 +80,7 @@ pub async fn command_callback(
         }
 
         ["create", url] => {
-            let entity_id = players::create(url)?;
+            let entity_id = EntityManager::create_entity(url)?;
             EntityManager::with_by_entity_id(entity_id, |entity| {
                 move_entity(entity, player);
 
@@ -159,7 +159,7 @@ pub async fn command_callback(
             let entity_id = EntityManager::with_closest(player.eye_position, |closest_entity| {
                 Ok(closest_entity.id)
             })?;
-            players::play(url, entity_id)?;
+            EntityManager::entity_play(url, entity_id)?;
         }
 
         ["close"] | ["remove"] | ["stop"] | ["clear"] => {

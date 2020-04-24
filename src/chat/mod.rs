@@ -1,5 +1,5 @@
 mod chat_command;
-mod hidden_communication;
+pub mod hidden_communication;
 
 pub use self::chat_command::{command_callback, CefChatCommand};
 use crate::async_manager::AsyncManager;

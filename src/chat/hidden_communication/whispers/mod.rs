@@ -1,8 +1,7 @@
 mod incoming;
 mod outgoing;
-mod encoding;
 
-use super::{wait_for_message, SHOULD_BLOCK};
+use super::{encoding, wait_for_message, SHOULD_BLOCK};
 use crate::{async_manager::AsyncManager, chat::ENTITIES, error::*};
 use classicube_helpers::OptionWithInner;
 use futures::{future::RemoteHandle, prelude::*};

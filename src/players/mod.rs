@@ -2,11 +2,10 @@ mod web;
 mod youtube;
 
 pub use self::{web::WebPlayer, youtube::YoutubePlayer};
-use crate::{async_manager::AsyncManager, cef::Cef, entity_manager::EntityManager, error::*};
+use crate::error::*;
 use serde::{Deserialize, Serialize};
-use std::any::Any;
 
-pub trait PlayerTrait: Any {
+pub trait PlayerTrait: Clone {
     fn from_input(input: &str) -> Result<Self>
     where
         Self: Sized;
@@ -18,7 +17,7 @@ pub trait PlayerTrait: Any {
     // fn on_page_loaded(&mut self, _browser: &mut RustRefBrowser) {}
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Player {
     Youtube(YoutubePlayer),
     Web(WebPlayer),
@@ -81,41 +80,6 @@ fn test_create_player() {
             panic!("not Youtube");
         }
     }
-}
-
-/// Create an entity screen, start rendering a loading screen
-/// while we create a cef browser and wait for it to start rendering to it.
-///
-/// returns browser_id
-pub fn create(input: &str) -> Result<usize> {
-    let mut player = Player::from_input(input)?;
-    let url = player.on_create();
-
-    let entity_id = EntityManager::create_entity(player);
-
-    AsyncManager::spawn_local_on_main_thread(async move {
-        let browser = Cef::create_browser(url).await;
-
-        EntityManager::attach_browser(entity_id, browser);
-    });
-
-    Ok(entity_id)
-}
-
-pub fn play(input: &str, entity_id: usize) -> Result<()> {
-    let mut player = Player::from_input(input)?;
-    let url = player.on_create();
-
-    let browser = EntityManager::with_by_entity_id(entity_id, |entity| {
-        entity.player = player;
-
-        let browser = entity.browser.as_ref().chain_err(|| "no browser")?;
-        Ok(browser.clone())
-    })?;
-
-    browser.load_url(url)?;
-
-    Ok(())
 }
 
 // pub fn on_browser_page_loaded(_browser: RustRefBrowser) {

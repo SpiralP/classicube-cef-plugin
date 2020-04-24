@@ -9,20 +9,17 @@ use std::{mem, pin::Pin};
 pub struct CefEntity {
     pub id: usize,
 
-    // We don't need to Pin entity because all the ffi operations
-    // are temporary, they never store our pointer
-    pub entity: Entity,
+    pub entity: Pin<Box<Entity>>,
+    pub browser: Option<RustRefBrowser>,
+    pub player: Player,
 
     v_table: Pin<Box<EntityVTABLE>>,
     texture: OwnedGfxTexture,
-
-    pub browser: Option<RustRefBrowser>,
-    pub player: Player,
 }
 
 impl CefEntity {
     pub fn register(id: usize, player: Player) -> Self {
-        let entity = unsafe { mem::zeroed() };
+        let entity = Box::pin(unsafe { mem::zeroed() });
 
         let v_table = Box::pin(EntityVTABLE {
             Tick: Some(Self::tick),
@@ -55,6 +52,8 @@ impl CefEntity {
         unsafe {
             this.register_entity();
         }
+
+        this.set_scale(0.25);
 
         this
     }
@@ -91,7 +90,10 @@ impl CefEntity {
         Entity_Init(entity);
 
         let model_name = OwnedString::new("cef");
-        Entity_SetModel(entity, model_name.as_cc_string());
+        Entity_SetModel(
+            entity.as_mut().get_unchecked_mut(),
+            model_name.as_cc_string(),
+        );
 
         entity.VTABLE = v_table.as_mut().get_unchecked_mut();
         entity.Velocity.set(0.0, 0.0, 0.0);
@@ -109,11 +111,10 @@ impl CefEntity {
         }
     }
 
-    pub fn render_model(&self) {
-        let mut entity = self.entity;
-
+    pub fn render_model(&mut self) {
+        let entity = self.entity.as_mut();
         unsafe {
-            Model_Render(entity.Model, &mut entity);
+            Model_Render(entity.Model, entity.get_unchecked_mut());
         }
     }
 

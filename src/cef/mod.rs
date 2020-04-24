@@ -3,7 +3,7 @@ mod browser;
 
 pub use self::bindings::{Callbacks, RustRefApp, RustRefBrowser, RustRefClient};
 use self::browser::BROWSERS;
-use crate::{async_manager::AsyncManager, entity_manager::cef_paint_callback};
+use crate::{async_manager::AsyncManager, entity_manager::cef_paint_callback, error::*};
 use classicube_helpers::{shared::FutureShared, CellGetSet, OptionWithInner};
 use futures::stream::{FuturesUnordered, StreamExt};
 use log::debug;
@@ -170,12 +170,12 @@ impl Cef {
         }
     }
 
-    pub async fn close_browser(browser: &RustRefBrowser) {
+    pub async fn close_browser(browser: &RustRefBrowser) -> Result<()> {
         let mut event_receiver = Self::create_event_listener();
 
         let id = browser.get_identifier();
 
-        browser.close().unwrap();
+        browser.close()?;
 
         loop {
             if let CefEvent::BrowserClosed(browser) = event_receiver.recv().await.unwrap() {
@@ -184,6 +184,8 @@ impl Cef {
                 }
             }
         }
+
+        Ok(())
     }
 
     pub async fn close_all_browsers() {
@@ -197,7 +199,7 @@ impl Cef {
             .iter()
             .map(|(id, browser)| async move {
                 debug!("closing browser {}", id);
-                Self::close_browser(browser).await;
+                Self::close_browser(browser).await.unwrap();
                 id
             })
             .collect();

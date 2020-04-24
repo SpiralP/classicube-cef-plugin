@@ -8,7 +8,7 @@ use crate::{
     search,
 };
 use classicube_sys::{OwnedChatCommand, Vec3, ENTITIES_SELF_ID};
-use log::debug;
+use log::{debug, warn};
 use std::{os::raw::c_int, slice};
 
 extern "C" fn c_chat_command_callback(args: *const classicube_sys::String, args_count: c_int) {
@@ -172,7 +172,9 @@ pub async fn command_callback(
             })?;
 
             AsyncManager::spawn_local_on_main_thread(async move {
-                EntityManager::remove_entity(entity_id).await;
+                if let Err(e) = EntityManager::remove_entity(entity_id).await {
+                    warn!("{}", e);
+                }
             });
         }
 

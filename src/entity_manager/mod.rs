@@ -122,7 +122,7 @@ impl EntityManager {
         debug!("on_new_map_loaded entity_manager");
 
         AsyncManager::block_on_local(async {
-            Self::remove_all_entities().await;
+            Self::remove_all_entities().await.unwrap();
         });
     }
 
@@ -135,7 +135,7 @@ impl EntityManager {
         self.cef_event_page_loaded.take();
 
         AsyncManager::block_on_local(async {
-            Self::remove_all_entities().await;
+            Self::remove_all_entities().await.unwrap();
         });
     }
 
@@ -208,7 +208,6 @@ impl EntityManager {
             let e = &mut entity.entity;
 
             e.Position.set(info.pos[0], info.pos[1], info.pos[2]);
-            warn!("POSITION {:?}", e.Position);
 
             e.RotX = info.ang[0];
             e.RotY = info.ang[1];
@@ -256,24 +255,23 @@ impl EntityManager {
         })
     }
 
-    pub async fn remove_entity(entity_id: usize) {
+    pub async fn remove_entity(entity_id: usize) -> Result<()> {
         let maybe_browser = ENTITIES.with(|entities| {
             let entities = &mut *entities.borrow_mut();
 
             if let Some(mut entity) = entities.remove(&entity_id) {
                 if let Some(browser) = entity.browser.take() {
-                    Some(browser)
+                    Ok(Some(browser))
                 } else {
-                    None
+                    Ok::<_, Error>(None)
                 }
             } else {
-                warn!(
+                bail!(
                     "remove_entity: couldn't find entity for entity id {}",
                     entity_id
                 );
-                None
             }
-        });
+        })?;
 
         if let Some(browser) = maybe_browser {
             EntityManager::on_browser_close(&browser);
@@ -282,11 +280,13 @@ impl EntityManager {
                 "entity_manager closing browser {}",
                 browser.get_identifier()
             );
-            Cef::close_browser(&browser).await;
+            Cef::close_browser(&browser).await?;
         }
+
+        Ok(())
     }
 
-    pub async fn remove_all_entities() {
+    pub async fn remove_all_entities() -> Result<()> {
         // don't drain here because we remove them in remove_entity()
         let entity_ids: Vec<usize> = ENTITIES.with(|entities| {
             let entities = &*entities.borrow();
@@ -298,14 +298,17 @@ impl EntityManager {
             .iter()
             .map(|entity_id| async move {
                 debug!("entity_manager remove entity {}", entity_id);
-                Self::remove_entity(*entity_id).await;
-                entity_id
+                Self::remove_entity(*entity_id).await?;
+                Ok::<_, Error>(entity_id)
             })
             .collect();
 
         while let Some(entity_id) = entity_ids.next().await {
+            let entity_id = entity_id?;
             debug!("entity_manager entity {} removed", entity_id);
         }
+
+        Ok(())
     }
 
     fn on_browser_close(browser: &RustRefBrowser) {

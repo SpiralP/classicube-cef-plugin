@@ -239,6 +239,7 @@ fn find_player_from_message(mut full_msg: String) -> Option<(u8, String, String)
             });
 
             // we're a continue message
+            // TODO split_off bad mut :(
             full_msg = full_msg.split_off(4); // skip "> &f"
 
             // most likely there's a space

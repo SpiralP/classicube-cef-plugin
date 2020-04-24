@@ -1,5 +1,5 @@
 use super::{TEXTURE_HEIGHT, TEXTURE_WIDTH};
-use crate::cef::RustRefBrowser;
+use crate::{cef::RustRefBrowser, players::Player};
 use classicube_sys::{
     cc_bool, Bitmap, Entity, EntityVTABLE, Entity_Init, Entity_SetModel, Gfx_UpdateTexturePart,
     LocationUpdate, Model_Render, OwnedGfxTexture, OwnedString, PackedCol, PACKEDCOL_WHITE,
@@ -17,10 +17,11 @@ pub struct CefEntity {
     texture: OwnedGfxTexture,
 
     pub browser: Option<RustRefBrowser>,
+    pub player: Player,
 }
 
 impl CefEntity {
-    pub fn register(id: usize) -> Self {
+    pub fn register(id: usize, player: Player) -> Self {
         let entity = unsafe { mem::zeroed() };
 
         let v_table = Box::pin(EntityVTABLE {
@@ -48,6 +49,7 @@ impl CefEntity {
             v_table,
             texture,
             browser: None,
+            player,
         };
 
         unsafe {

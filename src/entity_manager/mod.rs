@@ -12,6 +12,7 @@ use crate::{
     async_manager::AsyncManager,
     cef::{Cef, RustRefBrowser},
     error::*,
+    players::Player,
 };
 use classicube_sys::Vec3;
 use futures::stream::{FuturesUnordered, StreamExt};
@@ -93,7 +94,7 @@ impl EntityManager {
 
     /// returns entity_id
     #[must_use]
-    pub fn create_entity() -> usize {
+    pub fn create_entity(player: Player) -> usize {
         ENTITIES.with(|entities| {
             let entities = &mut *entities.borrow_mut();
 
@@ -103,7 +104,7 @@ impl EntityManager {
                 entity_id
             });
 
-            let mut entity = CefEntity::register(entity_id);
+            let mut entity = CefEntity::register(entity_id, player);
             entity.set_scale(0.25);
 
             entities.insert(entity_id, entity);

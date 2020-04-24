@@ -2,21 +2,9 @@ mod web;
 mod youtube;
 
 pub use self::{web::WebPlayer, youtube::YoutubePlayer};
-use crate::{
-    async_manager::AsyncManager,
-    cef::{Cef, RustRefBrowser},
-    entity_manager::EntityManager,
-    error::*,
-};
-use log::debug;
+use crate::{async_manager::AsyncManager, cef::Cef, entity_manager::EntityManager, error::*};
 use serde::{Deserialize, Serialize};
-use std::{any::Any, cell::RefCell, collections::HashMap, os::raw::c_int};
-
-thread_local!(
-    #[allow(clippy::type_complexity)]
-    static PLAYERS: RefCell<HashMap<c_int, (RustRefBrowser, Box<dyn PlayerTrait>)>> =
-        RefCell::new(HashMap::new());
-);
+use std::any::Any;
 
 pub trait PlayerTrait: Any {
     fn from_input(input: &str) -> Result<Self>
@@ -36,28 +24,37 @@ pub enum Player {
     Web(WebPlayer),
 }
 
-fn create_player(input: &str) -> Result<Box<dyn PlayerTrait>> {
-    match YoutubePlayer::from_input(input) {
-        Ok(player) => Ok(Box::new(player)),
-        Err(_) => match WebPlayer::from_input(input) {
-            Ok(player) => Ok(Box::new(player)),
+impl PlayerTrait for Player {
+    fn from_input(input: &str) -> Result<Self> {
+        match YoutubePlayer::from_input(input) {
+            Ok(player) => Ok(Player::Youtube(player)),
+            Err(_) => {
+                match WebPlayer::from_input(input) {
+                    Ok(player) => Ok(Player::Web(player)),
 
-            Err(e) => {
-                if !input.starts_with("http") {
-                    // if it didn't start with http, try again with https:// in front
-                    create_player(&format!("https://{}", input))
-                } else {
-                    bail!("no player matched for input: {}", e);
+                    Err(e) => {
+                        if !input.starts_with("http") {
+                            // if it didn't start with http, try again with https:// in front
+                            Player::from_input(&format!("https://{}", input))
+                        } else {
+                            bail!("no player matched for input: {}", e);
+                        }
+                    }
                 }
             }
-        },
+        }
+    }
+
+    fn on_create(&mut self) -> String {
+        match self {
+            Player::Youtube(player) => player.on_create(),
+            Player::Web(player) => player.on_create(),
+        }
     }
 }
 
 #[test]
 fn test_create_player() {
-    use std::any::TypeId;
-
     let good_web = [
         "https://www.classicube.net/",
         "www.classicube.net/",
@@ -65,8 +62,11 @@ fn test_create_player() {
     ];
 
     for url in &good_web {
-        let player: Box<dyn PlayerTrait> = create_player(url).unwrap();
-        assert_eq!((*player).type_id(), TypeId::of::<WebPlayer>());
+        let player: Player = Player::from_input(url).unwrap();
+        if let Player::Web(_) = player {
+        } else {
+            panic!("not Web");
+        }
     }
 
     let good_youtube = [
@@ -75,50 +75,45 @@ fn test_create_player() {
     ];
 
     for url in &good_youtube {
-        let player: Box<dyn PlayerTrait> = create_player(url).unwrap();
-        assert_eq!((*player).type_id(), TypeId::of::<YoutubePlayer>());
+        let player: Player = Player::from_input(url).unwrap();
+        if let Player::Youtube(_) = player {
+        } else {
+            panic!("not Youtube");
+        }
     }
 }
 
 /// Create an entity screen, start rendering a loading screen
-/// while we create a cef browser and wait for it start rendering to it.
+/// while we create a cef browser and wait for it to start rendering to it.
 ///
 /// returns browser_id
 pub fn create(input: &str) -> Result<usize> {
-    let entity_id = EntityManager::create_entity();
-
-    let mut player = create_player(input)?;
+    let mut player = Player::from_input(input)?;
     let url = player.on_create();
+
+    let entity_id = EntityManager::create_entity(player);
 
     AsyncManager::spawn_local_on_main_thread(async move {
         let browser = Cef::create_browser(url).await;
 
-        EntityManager::attach_browser(entity_id, browser.clone());
-
-        let browser_id = browser.get_identifier();
-
-        PLAYERS.with(move |cell| {
-            let players = &mut *cell.borrow_mut();
-            players.insert(browser_id, (browser, player));
-        });
+        EntityManager::attach_browser(entity_id, browser);
     });
 
     Ok(entity_id)
 }
 
 pub fn play(input: &str, entity_id: usize) -> Result<()> {
-    let mut player = create_player(input)?;
+    let mut player = Player::from_input(input)?;
     let url = player.on_create();
 
-    let browser = EntityManager::get_browser_by_entity_id(entity_id)?;
+    let browser = EntityManager::with_by_entity_id(entity_id, |entity| {
+        entity.player = player;
+
+        let browser = entity.browser.as_ref().chain_err(|| "no browser")?;
+        Ok(browser.clone())
+    })?;
 
     browser.load_url(url)?;
-    let browser_id = browser.get_identifier();
-
-    PLAYERS.with(move |cell| {
-        let players = &mut *cell.borrow_mut();
-        players.insert(browser_id, (browser, player));
-    });
 
     Ok(())
 }
@@ -134,12 +129,3 @@ pub fn play(input: &str, entity_id: usize) -> Result<()> {
 //     //     }
 //     // });
 // }
-
-pub fn shutdown() {
-    debug!("shutdown players");
-
-    PLAYERS.with(move |cell| {
-        let players = &mut *cell.borrow_mut();
-        players.clear();
-    });
-}

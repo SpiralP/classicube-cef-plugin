@@ -1,7 +1,8 @@
-use super::{wait_for_message, SHOULD_BLOCK};
+use super::{encoding, encoding::Message, wait_for_message, SHOULD_BLOCK};
 use crate::{
     chat::{Chat, ENTITIES, TAB_LIST},
     error::*,
+    players::*,
 };
 use async_std::future::timeout;
 use classicube_helpers::{CellGetSet, OptionWithInner};
@@ -59,15 +60,42 @@ async fn step() -> Result<()> {
         if let Some(real_name) = maybe_real_name {
             debug!("sending to {:?}", real_name);
 
-            Chat::send(format!("@{}+ !CEF! no", real_name));
+            // TODO
+            let player = Player::Web(
+                WebPlayer::from_url("https://www.google.com/".parse().unwrap()).unwrap(),
+            );
+            let message = Message::Player(player);
+
+            let encoded = encoding::encode(&message)?;
+            Chat::send(format!("@{}+ !CEF!{}", real_name, encoded));
 
             // my outgoing whisper
-            timeout(Duration::from_secs(2), async {
+            timeout(Duration::from_secs(5), async {
                 loop {
                     let message = wait_for_message().await;
 
-                    if message.starts_with("&7[<] ") && message.contains(": &f!CEF! ") {
+                    if message.starts_with("&7[<] ") && message.contains(": &f!CEF!") {
                         SHOULD_BLOCK.set(true);
+
+                        // also block > continuation messages
+                        let timeout_result = timeout(Duration::from_secs(1), async {
+                            loop {
+                                let message = wait_for_message().await;
+                                if message.starts_with("> &f") {
+                                    // a continuation "> &f"
+                                    SHOULD_BLOCK.set(true);
+                                } else {
+                                    debug!("stopping because of other message {:?}", message);
+                                    break;
+                                }
+                            }
+                        })
+                        .await;
+
+                        if timeout_result.is_err() {
+                            debug!("stopping because of timeout");
+                        }
+
                         break;
                     }
                 }

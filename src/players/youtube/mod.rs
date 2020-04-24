@@ -117,7 +117,6 @@ async fn start_volume_loop(entity_id: usize) {
                     );
 
                     if let Some(browser) = &mut entity.browser {
-                        log::debug!("{}", percent);
                         browser.execute_javascript(code).unwrap();
                     }
                 }

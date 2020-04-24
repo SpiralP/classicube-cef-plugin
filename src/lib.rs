@@ -14,6 +14,45 @@ use classicube_sys::*;
 use log::debug;
 use std::{cell::Cell, os::raw::c_int, ptr};
 
+#[macro_export]
+macro_rules! time {
+    ($title:tt, $block:block) => {{
+        let before = ::std::time::Instant::now();
+        let res = $block;
+        let after = ::std::time::Instant::now();
+        let diff = after - before;
+        debug!("{} ({:?})", $title, diff);
+        res
+    }};
+
+    ($title:expr, $high_millis:tt, $block:block) => {{
+        let before = ::std::time::Instant::now();
+        let res = $block;
+        let after = ::std::time::Instant::now();
+        let diff = after - before;
+        if diff > ::std::time::Duration::from_millis($high_millis) {
+            ::log::warn!("{} ({:?})", $title, diff);
+        } else {
+            ::log::debug!("{} ({:?})", $title, diff);
+        }
+        res
+    }};
+}
+
+#[macro_export]
+macro_rules! time_silent {
+    ($title:expr, $high_millis:tt, $block:block) => {{
+        let before = ::std::time::Instant::now();
+        let res = $block;
+        let after = ::std::time::Instant::now();
+        let diff = after - before;
+        if diff > ::std::time::Duration::from_millis($high_millis) {
+            ::log::warn!("{} ({:?})", $title, diff);
+        }
+        res
+    }};
+}
+
 extern "C" fn init() {
     color_backtrace::install_with_settings(
         color_backtrace::Settings::new().verbosity(color_backtrace::Verbosity::Full),
@@ -21,15 +60,17 @@ extern "C" fn init() {
 
     logger::initialize(true, false);
 
-    Plugin::initialize();
+    time!("Plugin::initialize()", 10000, {
+        Plugin::initialize();
+    });
 }
 
 extern "C" fn free() {
     debug!("Free");
 
-    Plugin::shutdown();
-
-    debug!("shutdown OK");
+    time!("Plugin::shutdown()", 10000, {
+        Plugin::shutdown();
+    });
 }
 
 thread_local!(
@@ -37,7 +78,9 @@ thread_local!(
 );
 
 extern "C" fn on_new_map_loaded() {
-    Plugin::on_new_map_loaded();
+    time!("Plugin::on_new_map_loaded()", 10000, {
+        Plugin::on_new_map_loaded();
+    });
 }
 
 #[no_mangle]

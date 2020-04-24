@@ -123,26 +123,6 @@ impl EntityManager {
         });
     }
 
-    /// returns entity_id
-    #[must_use]
-    fn new_entity(player: Player) -> usize {
-        ENTITIES.with(|entities| {
-            let entities = &mut *entities.borrow_mut();
-
-            let entity_id = ENTITY_ID.with(|cell| {
-                let entity_id = cell.get();
-                cell.set(entity_id + 1);
-                entity_id
-            });
-
-            let entity = CefEntity::register(entity_id, player);
-            debug!("entity created {}", entity_id);
-            entities.insert(entity_id, entity);
-
-            entity_id
-        })
-    }
-
     fn attach_browser_to_entity(entity_id: usize, browser: RustRefBrowser) {
         let browser_id = browser.get_identifier();
 
@@ -163,15 +143,24 @@ impl EntityManager {
         });
     }
 
-    /// Create an entity screen, start rendering a loading screen
-    /// while we create a cef browser and wait for it to start rendering to it.
-    ///
-    /// returns browser_id
+    /// returns entity_id
     pub fn create_entity(input: &str) -> Result<usize> {
-        let mut player = Player::from_input(input)?;
-        let url = player.on_create();
+        let entity_id = ENTITY_ID.with(|cell| {
+            let entity_id = cell.get();
+            cell.set(entity_id + 1);
+            entity_id
+        });
 
-        let entity_id = EntityManager::new_entity(player);
+        let mut player = Player::from_input(input)?;
+        let url = player.on_create(entity_id);
+
+        ENTITIES.with(|entities| {
+            let entities = &mut *entities.borrow_mut();
+
+            let entity = CefEntity::register(entity_id, player);
+            debug!("entity created {}", entity_id);
+            entities.insert(entity_id, entity);
+        });
 
         AsyncManager::spawn_local_on_main_thread(async move {
             let browser = Cef::create_browser(url).await;
@@ -182,19 +171,19 @@ impl EntityManager {
         Ok(entity_id)
     }
 
+    /// returns entity_id
     pub fn create_entity_from_light_entity(info: LightEntity) -> Result<usize> {
-        let mut player = info.player.clone();
-        let url = player.on_create();
+        let entity_id = info.id;
 
-        let entity_id = ENTITIES.with(|entities| {
+        let mut player = info.player.clone();
+        let url = player.on_create(entity_id);
+
+        ENTITIES.with(|entities| {
             let entities = &mut *entities.borrow_mut();
 
-            let entity_id = info.id;
             let entity = CefEntity::register(entity_id, player);
             debug!("entity created {}", entity_id);
             entities.insert(entity_id, entity);
-
-            entity_id
         });
 
         EntityManager::with_by_entity_id(entity_id, |entity| {
@@ -218,7 +207,7 @@ impl EntityManager {
 
     pub fn entity_play(input: &str, entity_id: usize) -> Result<()> {
         let mut player = Player::from_input(input)?;
-        let url = player.on_create();
+        let url = player.on_create(entity_id);
 
         let browser = EntityManager::with_by_entity_id(entity_id, |entity| {
             entity.player = player;

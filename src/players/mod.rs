@@ -10,16 +10,18 @@ pub trait PlayerTrait: Clone {
     where
         Self: Sized;
 
+    /// Called after entity is created, given an entity_id
+    ///
     /// Called before creating the browser, returns a url
-    fn on_create(&mut self) -> String;
+    fn on_create(&mut self, entity_id: usize) -> String;
 
     /// Called after page is loaded
     fn on_page_loaded(&mut self, _browser: &mut RustRefBrowser) {}
 
-    fn on_tick(&mut self) {}
+    // fn on_tick(&mut self) {}
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Player {
     Youtube(YoutubePlayer),
     Web(WebPlayer),
@@ -46,10 +48,10 @@ impl PlayerTrait for Player {
         }
     }
 
-    fn on_create(&mut self) -> String {
+    fn on_create(&mut self, entity_id: usize) -> String {
         match self {
-            Player::Youtube(player) => player.on_create(),
-            Player::Web(player) => player.on_create(),
+            Player::Youtube(player) => player.on_create(entity_id),
+            Player::Web(player) => player.on_create(entity_id),
         }
     }
 
@@ -60,12 +62,12 @@ impl PlayerTrait for Player {
         }
     }
 
-    fn on_tick(&mut self) {
-        match self {
-            Player::Youtube(player) => player.on_tick(),
-            Player::Web(player) => player.on_tick(),
-        }
-    }
+    // fn on_tick(&mut self) {
+    //     match self {
+    //         Player::Youtube(player) => player.on_tick(),
+    //         Player::Web(player) => player.on_tick(),
+    //     }
+    // }
 }
 
 #[test]

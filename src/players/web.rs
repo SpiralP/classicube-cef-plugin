@@ -22,7 +22,7 @@ impl PlayerTrait for WebPlayer {
         }
     }
 
-    fn on_create(&mut self) -> String {
+    fn on_create(&mut self, _entity_id: usize) -> String {
         debug!("WebPlayer on_create {}", self.url);
         self.url.to_string()
     }

@@ -9,7 +9,7 @@
       //    after the API code downloads.
       function onYouTubeIframeAPIReady() {
         // window["START" + "_" + "TIME"] = 0;
-        window.player = new YT.Player("player", {
+        var player = new YT.Player("player", {
           width: "1920",
           height: "1080",
           videoId: "VIDEO_ID",
@@ -27,10 +27,13 @@
             onStateChange: onPlayerStateChange,
           },
         });
+
+        window.player = player;
       }
 
       // 4. The API will call this function when the video player is ready.
       function onPlayerReady(event) {
+        event.target.setVolume(START_VOLUME);
         event.target.playVideo();
       }
 

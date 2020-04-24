@@ -1,5 +1,9 @@
-use super::PlayerTrait;
-use crate::{cef::RustRefBrowser, error::*};
+use super::{Player, PlayerTrait};
+use crate::{
+    async_manager::AsyncManager, cef::RustRefBrowser, entity_manager::EntityManager, error::*,
+};
+use classicube_sys::{Entities, ENTITIES_SELF_ID};
+use futures::{future::RemoteHandle, prelude::*};
 use log::debug;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
@@ -9,13 +13,31 @@ use std::{
 };
 use url::Url;
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct YoutubePlayer {
     pub id: String,
     pub time: Duration,
 
+    // 0-1
+    pub volume: f32,
+
     #[serde(skip)]
     pub start_time: Option<Instant>,
+
+    #[serde(skip)]
+    volume_loop_handle: Option<RemoteHandle<()>>,
+}
+
+impl Clone for YoutubePlayer {
+    fn clone(&self) -> Self {
+        Self {
+            id: self.id.clone(),
+            time: self.time,
+            volume: self.volume,
+            start_time: None,
+            volume_loop_handle: None,
+        }
+    }
 }
 
 const PAGE_HTML: &str = include_str!("page.html");
@@ -41,8 +63,13 @@ impl PlayerTrait for YoutubePlayer {
         }
     }
 
-    fn on_create(&mut self) -> String {
+    fn on_create(&mut self, entity_id: usize) -> String {
         debug!("YoutubePlayer on_create {}", self.id);
+
+        let (f, remote_handle) = start_volume_loop(entity_id).remote_handle();
+        self.volume_loop_handle = Some(remote_handle);
+
+        AsyncManager::spawn_local_on_main_thread(f);
 
         format!(
             "data:text/html;base64,{}",
@@ -50,6 +77,10 @@ impl PlayerTrait for YoutubePlayer {
                 PAGE_HTML
                     .replace("VIDEO_ID", &self.id)
                     .replace("START_TIME", &format!("{}", self.time.as_secs()))
+                    .replace(
+                        "START_VOLUME",
+                        &format!("{}", (self.volume * 100f32) as u32)
+                    )
             )
         )
     }
@@ -57,62 +88,45 @@ impl PlayerTrait for YoutubePlayer {
     fn on_page_loaded(&mut self, _browser: &mut RustRefBrowser) {
         self.start_time = Some(Instant::now());
     }
+}
 
-    //     debug!("YoutubePlayer on_page_loaded {}", self.id);
+async fn start_volume_loop(entity_id: usize) {
+    loop {
+        AsyncManager::sleep(Duration::from_millis(32)).await;
 
-    //     // ["play", id] => {
-    //     //     cef.run_script(format!("player.loadVideoById(\"{}\");", id));
-    //     // }
+        EntityManager::with_by_entity_id(entity_id, |entity| {
+            if let Player::Youtube(yt) = &entity.player {
+                if yt.start_time.is_some() {
+                    // if we're loaded
 
-    //     // ["volume", percent] => {
-    //     //     // 0 to 100
-    //     //     cef.run_script(format!("player.setVolume({});", percent));
-    //     // }
+                    let me = unsafe { &*Entities.List[ENTITIES_SELF_ID as usize] };
+                    let entity_pos = entity.entity.Position;
 
-    //     browser
-    //         .execute_javascript(format!(
-    //             "player.loadVideoById(\"{}\", {});",
-    //             self.id,
-    //             self.time.as_secs()
-    //         ))
-    //         .unwrap();
-    // }
+                    let percent = (entity_pos - me.Position).length_squared().sqrt() / 10f32;
+                    let percent = (1.0 - percent).max(0.0).min(1.0);
+                    let percent = (percent * 100f32) as u32;
 
-    // TODO spawn a timer, remove it on Drop
-    // fn on_tick(&mut self, _browser: RustRefBrowser) {
-    // self.tokio_runtime.as_mut().unwrap().spawn(async {
-    //     // :(
-    //     tokio::time::delay_for(Duration::from_millis(2000)).await;
+                    let code = format!(
+                        r#"if (
+                            typeof window.player !== "undefined" &&
+                                typeof window.player.setVolume !== "undefined"
+                            ) {{
+                                window.player.setVolume({});
+                            }}"#,
+                        percent
+                    );
 
-    //     loop {
-    //         tokio::time::delay_for(Duration::from_millis(100)).await;
+                    if let Some(browser) = &mut entity.browser {
+                        log::debug!("{}", percent);
+                        browser.execute_javascript(code).unwrap();
+                    }
+                }
+            }
 
-    //         Self::run_on_main_thread(async {
-    //             let me = unsafe { &*Entities.List[ENTITIES_SELF_ID as usize] };
-    //             let player_pos = Vec3 {
-    //                 X: 64.0 - 4.0,
-    //                 Y: 48.0,
-    //                 Z: 64.0,
-    //             };
-
-    //             let percent = (player_pos - me.Position).length_squared() * 0.4;
-    //             let percent = (100.0 - percent).max(0.0).min(100.0);
-
-    //             let code = format!(
-    //                 r#"if (window.player && window.player.setVolume) {{
-    //                     window.player.setVolume({});
-    //                 }}"#,
-    //                 percent
-    //             );
-    //             let c_str = CString::new(code).unwrap();
-    //             unsafe {
-    //                 assert_eq!(crate::bindings::cef_run_script(c_str.as_ptr()), 0);
-    //             }
-    //         })
-    //         .await;
-    //     }
-    // });
-    // }
+            Ok(())
+        })
+        .unwrap();
+    }
 }
 
 impl YoutubePlayer {
@@ -126,6 +140,8 @@ impl YoutubePlayer {
             id,
             time: Duration::from_secs(0),
             start_time: None,
+            volume: 0.0,
+            volume_loop_handle: None,
         })
     }
 
@@ -216,9 +232,13 @@ fn test_youtube() {
             id: "gQngg8iQipk".into(),
             time: Duration::from_secs(0),
             start_time: None,
+            volume: 0.0,
+            volume_loop_handle: None,
         };
         for &url in &without_time {
-            assert_eq!(YoutubePlayer::from_input(url).unwrap(), should);
+            let yt = YoutubePlayer::from_input(url).unwrap();
+            assert_eq!(yt.id, should.id);
+            assert_eq!(yt.time, should.time);
         }
     }
 
@@ -237,20 +257,26 @@ fn test_youtube() {
             id: "gQngg8iQipk".into(),
             time: Duration::from_secs(36),
             start_time: None,
+            volume: 0.0,
+            volume_loop_handle: None,
         };
         for &url in &with_time {
-            assert_eq!(YoutubePlayer::from_input(url).unwrap(), should);
+            let yt = YoutubePlayer::from_input(url).unwrap();
+            assert_eq!(yt.id, should.id);
+            assert_eq!(yt.time, should.time);
         }
     }
 
-    assert_eq!(
-        YoutubePlayer::from_input("gQngg8iQipk").unwrap(),
-        YoutubePlayer {
-            id: "gQngg8iQipk".into(),
-            time: Duration::from_secs(0),
-            start_time: None,
-        }
-    );
+    let left = YoutubePlayer::from_input("gQngg8iQipk").unwrap();
+    let right = YoutubePlayer {
+        id: "gQngg8iQipk".into(),
+        time: Duration::from_secs(0),
+        start_time: None,
+        volume: 0.0,
+        volume_loop_handle: None,
+    };
+    assert_eq!(left.id, right.id);
+    assert_eq!(left.time, right.time);
 
     // not 11 chars
     assert!(YoutubePlayer::from_input("gQngg8iQip").is_err());

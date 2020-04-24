@@ -15,42 +15,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      # Cache for normal pushes
-      - name: Cache cargo registry
-        uses: actions/cache@v1
-        if: startsWith(github.ref, 'refs/tags/') != true
-        with:
-          path: ~/.cargo/registry
-          key: ${{ runner.os }}-${{ matrix.config.arch }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ matrix.config.arch }}-cargo-registry-
-      - name: Cache cargo index
-        uses: actions/cache@v1
-        if: startsWith(github.ref, 'refs/tags/') != true
-        with:
-          path: ~/.cargo/git
-          key: ${{ runner.os }}-${{ matrix.config.arch }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ matrix.config.arch }}-cargo-index-
-
-      # Cache for releases
-      - name: Cache cargo registry
-        uses: actions/cache@v1
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          path: ~/.cargo/registry
-          key: ${{ runner.os }}-${{ matrix.config.arch }}-release-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ matrix.config.arch }}-release-cargo-registry-
-      - name: Cache cargo index
-        uses: actions/cache@v1
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          path: ~/.cargo/git
-          key: ${{ runner.os }}-${{ matrix.config.arch }}-release-cargo-index-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ matrix.config.arch }}-release-cargo-index-
-
       - name: Install deps
         run: |
           iwr -useb get.scoop.sh | iex

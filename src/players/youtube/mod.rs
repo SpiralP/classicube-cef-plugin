@@ -1,9 +1,12 @@
 use super::{Player, PlayerTrait};
 use crate::{
-    async_manager::AsyncManager, cef::RustRefBrowser, chat::ENTITIES,
-    entity_manager::EntityManager, error::*,
+    async_manager::AsyncManager,
+    cef::RustRefBrowser,
+    chat::{Chat, ENTITIES},
+    entity_manager::EntityManager,
+    error::*,
 };
-use classicube_helpers::OptionWithInner;
+use classicube_helpers::{color, OptionWithInner};
 use classicube_sys::ENTITIES_SELF_ID;
 use futures::{future::RemoteHandle, prelude::*};
 use log::debug;
@@ -36,6 +39,18 @@ impl Clone for YoutubePlayer {
             id: self.id.clone(),
             time: self.time,
             volume: self.volume,
+            start_time: None,
+            volume_loop_handle: None,
+        }
+    }
+}
+
+impl Default for YoutubePlayer {
+    fn default() -> Self {
+        Self {
+            id: String::new(),
+            time: Duration::from_millis(0),
+            volume: 1.0,
             start_time: None,
             volume_loop_handle: None,
         }
@@ -91,9 +106,18 @@ impl PlayerTrait for YoutubePlayer {
         self.start_time = Some(Instant::now());
     }
 
-    // fn on_close(&mut self, _browser: &mut RustRefBrowser) {
-    //     self.start_time = None;
-    // }
+    fn on_title_change(&mut self, _browser: &mut RustRefBrowser, title: String) {
+        if title == "YouTube Loading" {
+            return;
+        }
+
+        Chat::print(format!(
+            "{}Now playing {}{}",
+            color::TEAL,
+            color::SILVER,
+            title,
+        ));
+    }
 }
 
 async fn start_volume_loop(entity_id: usize) {
@@ -159,9 +183,7 @@ impl YoutubePlayer {
         Some(Self {
             id,
             time: Duration::from_secs(0),
-            start_time: None,
-            volume: 0.0,
-            volume_loop_handle: None,
+            ..Default::default()
         })
     }
 
@@ -251,9 +273,7 @@ fn test_youtube() {
         let should = YoutubePlayer {
             id: "gQngg8iQipk".into(),
             time: Duration::from_secs(0),
-            start_time: None,
-            volume: 0.0,
-            volume_loop_handle: None,
+            ..Default::default()
         };
         for &url in &without_time {
             let yt = YoutubePlayer::from_input(url).unwrap();
@@ -276,9 +296,7 @@ fn test_youtube() {
         let should = YoutubePlayer {
             id: "gQngg8iQipk".into(),
             time: Duration::from_secs(36),
-            start_time: None,
-            volume: 0.0,
-            volume_loop_handle: None,
+            ..Default::default()
         };
         for &url in &with_time {
             let yt = YoutubePlayer::from_input(url).unwrap();
@@ -291,9 +309,7 @@ fn test_youtube() {
     let right = YoutubePlayer {
         id: "gQngg8iQipk".into(),
         time: Duration::from_secs(0),
-        start_time: None,
-        volume: 0.0,
-        volume_loop_handle: None,
+        ..Default::default()
     };
     assert_eq!(left.id, right.id);
     assert_eq!(left.time, right.time);

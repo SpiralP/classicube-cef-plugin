@@ -57,7 +57,8 @@ pub struct EntityManager {
     render_model_detour: RenderModelDetour,
     context_handler: ContextHandler,
 
-    cef_event_loop: Option<RemoteHandle<()>>,
+    cef_event_page_loaded: Option<RemoteHandle<()>>,
+    cef_event_title_change: Option<RemoteHandle<()>>,
 }
 
 impl EntityManager {
@@ -68,7 +69,8 @@ impl EntityManager {
             model: None,
             render_model_detour,
             context_handler: ContextHandler::new(),
-            cef_event_loop: None,
+            cef_event_page_loaded: None,
+            cef_event_title_change: None,
         }
     }
 
@@ -81,10 +83,8 @@ impl EntityManager {
 
         let mut event_listener = Cef::create_event_listener();
         let (f, remote_handle) = async move {
-            loop {
-                if let CefEvent::BrowserPageLoaded(mut browser) =
-                    event_listener.recv().await.unwrap()
-                {
+            while let Ok(event) = event_listener.recv().await {
+                if let CefEvent::BrowserPageLoaded(mut browser) = event {
                     let browser_id = browser.get_identifier();
 
                     EntityManager::with_by_browser_id(browser_id, |entity| {
@@ -96,10 +96,26 @@ impl EntityManager {
             }
         }
         .remote_handle();
-
         AsyncManager::spawn_local_on_main_thread(f);
+        self.cef_event_title_change = Some(remote_handle);
 
-        self.cef_event_loop = Some(remote_handle);
+        let mut event_listener = Cef::create_event_listener();
+        let (f, remote_handle) = async move {
+            while let Ok(event) = event_listener.recv().await {
+                if let CefEvent::BrowserTitleChange(mut browser, title) = event {
+                    let browser_id = browser.get_identifier();
+
+                    EntityManager::with_by_browser_id(browser_id, |entity| {
+                        entity.player.on_title_change(&mut browser, title);
+                        Ok(())
+                    })
+                    .unwrap();
+                }
+            }
+        }
+        .remote_handle();
+        AsyncManager::spawn_local_on_main_thread(f);
+        self.cef_event_title_change = Some(remote_handle);
     }
 
     pub fn on_new_map_loaded(&mut self) {
@@ -116,7 +132,7 @@ impl EntityManager {
         self.context_handler.shutdown();
         self.render_model_detour.shutdown();
         self.model.take();
-        self.cef_event_loop.take();
+        self.cef_event_page_loaded.take();
 
         AsyncManager::block_on_local(async {
             Self::remove_all_entities().await;

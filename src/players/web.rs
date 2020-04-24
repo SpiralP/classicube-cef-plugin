@@ -1,5 +1,6 @@
 use super::PlayerTrait;
-use crate::error::*;
+use crate::{cef::RustRefBrowser, chat::Chat, error::*};
+use classicube_helpers::color;
 use log::debug;
 use serde::{Deserialize, Serialize};
 use url::Url;
@@ -25,6 +26,15 @@ impl PlayerTrait for WebPlayer {
     fn on_create(&mut self, _entity_id: usize) -> String {
         debug!("WebPlayer on_create {}", self.url);
         self.url.to_string()
+    }
+
+    fn on_title_change(&mut self, _browser: &mut RustRefBrowser, title: String) {
+        Chat::print(format!(
+            "{}Now viewing {}{}",
+            color::TEAL,
+            color::SILVER,
+            title,
+        ));
     }
 }
 

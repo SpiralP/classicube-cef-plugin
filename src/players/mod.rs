@@ -13,10 +13,12 @@ pub trait PlayerTrait: Clone {
     /// Called after entity is created, given an entity_id
     ///
     /// Called before creating the browser, returns a url
-    fn on_create(&mut self, entity_id: usize) -> String;
+    fn on_create(&mut self, _entity_id: usize) -> String;
 
     /// Called after page is loaded
     fn on_page_loaded(&mut self, _browser: &mut RustRefBrowser) {}
+
+    fn on_title_change(&mut self, _browser: &mut RustRefBrowser, _title: String) {}
 
     // fn on_tick(&mut self) {}
 }
@@ -59,6 +61,13 @@ impl PlayerTrait for Player {
         match self {
             Player::Youtube(player) => player.on_page_loaded(browser),
             Player::Web(player) => player.on_page_loaded(browser),
+        }
+    }
+
+    fn on_title_change(&mut self, browser: &mut RustRefBrowser, title: String) {
+        match self {
+            Player::Youtube(player) => player.on_title_change(browser, title),
+            Player::Web(player) => player.on_title_change(browser, title),
         }
     }
 

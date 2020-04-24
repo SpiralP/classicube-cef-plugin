@@ -71,7 +71,7 @@ pub async fn query_whisper(real_name: String) -> Result<()> {
 
     let message = encoding::decode(full_message_encoded)?;
     debug!("decoded {:#?}", message);
-    encoding::received_message(message)?;
+    encoding::received_message(message).await?;
 
     Ok(())
 }

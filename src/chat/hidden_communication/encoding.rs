@@ -9,6 +9,7 @@ pub struct LightEntity {
     pub player: Player,
     pub pos: [f32; 3],
     pub ang: [f32; 2],
+    pub scale: f32,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -39,6 +40,7 @@ pub fn create_message() -> Message {
 
             let pos = [e.Position.X, e.Position.Y, e.Position.Z];
             let ang = [e.RotX, e.RotY];
+            let scale = entity.get_scale();
 
             let mut player = entity.player.clone();
             if let Player::Youtube(ref mut yt) = &mut player {
@@ -52,6 +54,7 @@ pub fn create_message() -> Message {
                 pos,
                 ang,
                 player,
+                scale,
             });
         }
     });
@@ -61,11 +64,11 @@ pub fn create_message() -> Message {
     }
 }
 
-pub fn received_message(mut message: Message) -> Result<()> {
+pub async fn received_message(mut message: Message) -> Result<()> {
     for info in message.entities.drain(..) {
         debug!("creating {:#?}", info);
 
-        EntityManager::create_entity_from_light_entity(info)?;
+        EntityManager::create_entity_from_light_entity(info).await?;
     }
 
     Ok(())

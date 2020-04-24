@@ -124,4 +124,9 @@ impl CefEntity {
         // TODO make 1.0 be 1 block wide
         entity.ModelScale.set(scale, scale, 1.0);
     }
+
+    pub fn get_scale(&self) -> f32 {
+        let CefEntity { entity, .. } = self;
+        entity.ModelScale.X
+    }
 }

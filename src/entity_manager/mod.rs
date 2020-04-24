@@ -188,8 +188,10 @@ impl EntityManager {
     }
 
     /// returns entity_id
-    pub fn create_entity_from_light_entity(info: LightEntity) -> Result<usize> {
+    pub async fn create_entity_from_light_entity(info: LightEntity) -> Result<usize> {
         let entity_id = info.id;
+
+        let _ignore_error = Self::remove_entity(entity_id).await;
 
         let mut player = info.player.clone();
         let url = player.on_create(entity_id);
@@ -210,6 +212,7 @@ impl EntityManager {
 
             e.RotX = info.ang[0];
             e.RotY = info.ang[1];
+            entity.set_scale(info.scale);
 
             AsyncManager::spawn_local_on_main_thread(async move {
                 let browser = Cef::create_browser(url).await;

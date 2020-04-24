@@ -1,15 +1,21 @@
 use super::PlayerTrait;
-use crate::error::*;
+use crate::{cef::RustRefBrowser, error::*};
 use log::debug;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, time::Duration};
+use std::{
+    collections::HashMap,
+    time::{Duration, Instant},
+};
 use url::Url;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct YoutubePlayer {
-    id: String,
-    time: Duration,
+    pub id: String,
+    pub time: Duration,
+
+    #[serde(skip)]
+    pub start_time: Option<Instant>,
 }
 
 const PAGE_HTML: &str = include_str!("page.html");
@@ -48,7 +54,10 @@ impl PlayerTrait for YoutubePlayer {
         )
     }
 
-    // fn on_page_loaded(&mut self, browser: &mut RustRefBrowser) {
+    fn on_page_loaded(&mut self, _browser: &mut RustRefBrowser) {
+        self.start_time = Some(Instant::now());
+    }
+
     //     debug!("YoutubePlayer on_page_loaded {}", self.id);
 
     //     // ["play", id] => {
@@ -116,6 +125,7 @@ impl YoutubePlayer {
         Some(Self {
             id,
             time: Duration::from_secs(0),
+            start_time: None,
         })
     }
 
@@ -205,6 +215,7 @@ fn test_youtube() {
         let should = YoutubePlayer {
             id: "gQngg8iQipk".into(),
             time: Duration::from_secs(0),
+            start_time: None,
         };
         for &url in &without_time {
             assert_eq!(YoutubePlayer::from_input(url).unwrap(), should);
@@ -225,6 +236,7 @@ fn test_youtube() {
         let should = YoutubePlayer {
             id: "gQngg8iQipk".into(),
             time: Duration::from_secs(36),
+            start_time: None,
         };
         for &url in &with_time {
             assert_eq!(YoutubePlayer::from_input(url).unwrap(), should);
@@ -236,6 +248,7 @@ fn test_youtube() {
         YoutubePlayer {
             id: "gQngg8iQipk".into(),
             time: Duration::from_secs(0),
+            start_time: None,
         }
     );
 

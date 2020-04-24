@@ -10,13 +10,17 @@ use self::{
 };
 use crate::{
     async_manager::AsyncManager,
-    cef::{Cef, RustRefBrowser},
+    cef::{Cef, CefEvent, RustRefBrowser},
     chat::hidden_communication::LightEntity,
     error::*,
     players::{Player, PlayerTrait},
 };
 use classicube_sys::Vec3;
-use futures::stream::{FuturesUnordered, StreamExt};
+use futures::{
+    future::RemoteHandle,
+    prelude::*,
+    stream::{FuturesUnordered, StreamExt},
+};
 use log::{debug, warn};
 use std::{
     cell::{Cell, RefCell},
@@ -52,6 +56,8 @@ pub struct EntityManager {
 
     render_model_detour: RenderModelDetour,
     context_handler: ContextHandler,
+
+    cef_event_loop: Option<RemoteHandle<()>>,
 }
 
 impl EntityManager {
@@ -62,6 +68,7 @@ impl EntityManager {
             model: None,
             render_model_detour,
             context_handler: ContextHandler::new(),
+            cef_event_loop: None,
         }
     }
 
@@ -71,6 +78,28 @@ impl EntityManager {
         self.context_handler.initialize();
         self.render_model_detour.initialize();
         self.model = Some(CefModel::register());
+
+        let mut event_listener = Cef::create_event_listener();
+        let (f, remote_handle) = async move {
+            loop {
+                if let CefEvent::BrowserPageLoaded(mut browser) =
+                    event_listener.recv().await.unwrap()
+                {
+                    let browser_id = browser.get_identifier();
+
+                    EntityManager::with_by_browser_id(browser_id, |entity| {
+                        entity.player.on_page_loaded(&mut browser);
+                        Ok(())
+                    })
+                    .unwrap();
+                }
+            }
+        }
+        .remote_handle();
+
+        AsyncManager::spawn_local_on_main_thread(f);
+
+        self.cef_event_loop = Some(remote_handle);
     }
 
     pub fn on_new_map_loaded(&mut self) {
@@ -87,6 +116,7 @@ impl EntityManager {
         self.context_handler.shutdown();
         self.render_model_detour.shutdown();
         self.model.take();
+        self.cef_event_loop.take();
 
         AsyncManager::block_on_local(async {
             Self::remove_all_entities().await;

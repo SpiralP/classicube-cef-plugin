@@ -33,7 +33,9 @@ thread_local!(
 );
 
 thread_local!(
-    static EVENT_QUEUE: RefCell<Option<broadcast::Sender<CefEvent>>> = RefCell::new(None);
+    static EVENT_QUEUE: RefCell<
+        Option<(broadcast::Sender<CefEvent>, broadcast::Receiver<CefEvent>)>,
+    > = RefCell::new(Some(broadcast::channel(32)));
 );
 
 thread_local!(
@@ -44,8 +46,8 @@ extern "C" fn on_context_initialized_callback(client: RustRefClient) {
     debug!("on_context_initialized_callback {:?}", client);
 
     EVENT_QUEUE
-        .with_inner_mut(move |event_queue| {
-            let _ignore_error = event_queue.send(CefEvent::ContextInitialized(client));
+        .with_inner_mut(move |(sender, _)| {
+            let _ignore_error = sender.send(CefEvent::ContextInitialized(client));
         })
         .unwrap();
 }
@@ -54,20 +56,12 @@ pub struct Cef {
     pub app: RustRefApp,
     pub client: RustRefClient,
 
-    _event_receiver: broadcast::Receiver<CefEvent>,
     create_browser_mutex: FutureShared<()>,
 }
 
 impl Cef {
     pub async fn initialize() {
         debug!("initialize cef");
-
-        let (event_sender, mut event_receiver) = broadcast::channel(32);
-
-        EVENT_QUEUE.with(move |cell| {
-            let event_queue = &mut *cell.borrow_mut();
-            *event_queue = Some(event_sender);
-        });
 
         let app = RustRefApp::create(Callbacks {
             on_context_initialized_callback: Some(on_context_initialized_callback),
@@ -77,6 +71,8 @@ impl Cef {
             on_title_change_callback: Some(browser::on_title_change),
             on_paint_callback: Some(cef_paint_callback),
         });
+
+        let mut event_receiver = Self::create_event_listener();
 
         app.initialize().unwrap();
 
@@ -105,7 +101,6 @@ impl Cef {
         let cef = Self {
             app,
             client,
-            _event_receiver: event_receiver,
             create_browser_mutex: FutureShared::new(()),
         };
 
@@ -147,7 +142,7 @@ impl Cef {
 
     pub fn create_event_listener() -> broadcast::Receiver<CefEvent> {
         EVENT_QUEUE
-            .with_inner(|event_queue| event_queue.subscribe())
+            .with_inner(|(sender, _receiver)| sender.subscribe())
             .unwrap()
     }
 

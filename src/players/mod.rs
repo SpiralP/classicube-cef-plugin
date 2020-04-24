@@ -2,7 +2,7 @@ mod web;
 mod youtube;
 
 pub use self::{web::WebPlayer, youtube::YoutubePlayer};
-use crate::error::*;
+use crate::{cef::RustRefBrowser, error::*};
 use serde::{Deserialize, Serialize};
 
 pub trait PlayerTrait: Clone {
@@ -13,8 +13,10 @@ pub trait PlayerTrait: Clone {
     /// Called before creating the browser, returns a url
     fn on_create(&mut self) -> String;
 
-    // /// Called after page is loaded
-    // fn on_page_loaded(&mut self, _browser: &mut RustRefBrowser) {}
+    /// Called after page is loaded
+    fn on_page_loaded(&mut self, _browser: &mut RustRefBrowser) {}
+
+    fn on_tick(&mut self) {}
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

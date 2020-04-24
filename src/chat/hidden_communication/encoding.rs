@@ -1,6 +1,7 @@
 use crate::{entity_manager::EntityManager, error::*, players::Player};
 use log::debug;
 use serde::{Deserialize, Serialize};
+use std::time::Instant;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct LightEntity {
@@ -39,7 +40,12 @@ pub fn create_message() -> Message {
             let pos = [e.Position.X, e.Position.Y, e.Position.Z];
             let ang = [e.RotX, e.RotY];
 
-            let player = entity.player.clone();
+            let mut player = entity.player.clone();
+            if let Player::Youtube(ref mut yt) = &mut player {
+                if let Some(start_time) = &mut yt.start_time {
+                    yt.time = Instant::now() - *start_time;
+                }
+            }
 
             light_entities.push(LightEntity {
                 id: *id,

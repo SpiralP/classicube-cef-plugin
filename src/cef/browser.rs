@@ -22,8 +22,8 @@ pub extern "C" fn on_after_created(browser: RustRefBrowser) {
     {
         let browser = browser.clone();
         EVENT_QUEUE
-            .with_inner_mut(move |event_queue| {
-                let _ignore_error = event_queue.send(CefEvent::BrowserCreated(browser));
+            .with_inner_mut(move |(sender, _receiver)| {
+                let _ignore_error = sender.send(CefEvent::BrowserCreated(browser));
             })
             .unwrap();
     }
@@ -40,8 +40,8 @@ pub extern "C" fn on_before_close(browser: RustRefBrowser) {
     debug!("on_before_close {}", id);
 
     EVENT_QUEUE
-        .with_inner_mut(move |event_queue| {
-            let _ignore_error = event_queue.send(CefEvent::BrowserClosed(browser));
+        .with_inner_mut(move |(sender, _receiver)| {
+            let _ignore_error = sender.send(CefEvent::BrowserClosed(browser));
         })
         .unwrap();
 
@@ -57,8 +57,8 @@ pub extern "C" fn on_page_loaded(browser: RustRefBrowser) {
     debug!("on_page_loaded {}", id);
 
     EVENT_QUEUE
-        .with_inner_mut(move |event_queue| {
-            let _ignore_error = event_queue.send(CefEvent::BrowserPageLoaded(browser));
+        .with_inner_mut(move |(sender, _receiver)| {
+            let _ignore_error = sender.send(CefEvent::BrowserPageLoaded(browser));
         })
         .unwrap();
 }
@@ -72,8 +72,8 @@ pub extern "C" fn on_title_change(browser: RustRefBrowser, title_c_str: *const c
     debug!("on_title_change {} {}", id, title);
 
     EVENT_QUEUE
-        .with_inner_mut(move |event_queue| {
-            let _ignore_error = event_queue.send(CefEvent::BrowserTitleChange(browser, title));
+        .with_inner_mut(move |(sender, _receiver)| {
+            let _ignore_error = sender.send(CefEvent::BrowserTitleChange(browser, title));
         })
         .unwrap();
 }

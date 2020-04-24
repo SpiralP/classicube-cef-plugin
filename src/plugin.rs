@@ -85,9 +85,11 @@ impl Plugin {
             plugin.entity_manager.shutdown();
             plugin.chat.shutdown();
 
-            AsyncManager::spawn_local_on_main_thread(async {
-                Cef::shutdown().await;
-            });
+            if plugin.context_initialized {
+                AsyncManager::spawn_local_on_main_thread(async {
+                    Cef::shutdown().await;
+                });
+            }
 
             // this will run all remaining tasks to completion
             plugin.async_manager.shutdown();

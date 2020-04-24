@@ -73,6 +73,8 @@ extern "C" int cef_interface_initialize(MyApp* app_ptr) {
   // so that it can paint
   settings.multi_threaded_message_loop = false;
 
+  CefString(&settings.log_file).FromASCII("cef-binary.log");
+
 #if defined(WIN32) || defined(_WIN32) || \
     defined(__WIN32) && !defined(__CYGWIN__)
   const char* cef_simple_name = "cefsimple.exe";

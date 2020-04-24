@@ -37,4 +37,8 @@ pub fn initialize(debug: bool, other_crates: bool) {
 
         CombinedLogger::init(loggers).unwrap();
     });
+
+    // erase file so it's only this session
+    let f = File::create("cef-binary.log").unwrap();
+    f.set_len(0).unwrap();
 }

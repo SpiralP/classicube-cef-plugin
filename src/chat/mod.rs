@@ -245,8 +245,7 @@ fn find_player_from_message(mut full_msg: String) -> Option<(u8, String, String)
 
             // most likely there's a space
             // the server trims the first line :(
-            // TODO try both messages? with and without the space?
-            full_msg = format!("{}{}", chat_last, full_msg);
+            full_msg = format!("{} {}", chat_last, full_msg);
             *last_chat = Some(full_msg.clone());
         }
 

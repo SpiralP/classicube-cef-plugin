@@ -79,8 +79,10 @@ pub async fn command_callback(
             })?;
         }
 
-        ["create", url] => {
-            let entity_id = EntityManager::create_entity(url)?;
+        ["create", ..] => {
+            let url: String = args.iter().skip(1).copied().collect();
+
+            let entity_id = EntityManager::create_entity(&url)?;
             EntityManager::with_by_entity_id(entity_id, |entity| {
                 move_entity(entity, player);
 
@@ -155,11 +157,13 @@ pub async fn command_callback(
             Ok(())
         })?,
 
-        ["load", url] | ["play", url] => {
+        ["load", ..] | ["play", ..] => {
+            let url: String = args.iter().skip(1).copied().collect();
+
             let entity_id = EntityManager::with_closest(player.eye_position, |closest_entity| {
                 Ok(closest_entity.id)
             })?;
-            EntityManager::entity_play(url, entity_id)?;
+            EntityManager::entity_play(&url, entity_id)?;
         }
 
         ["close"] | ["remove"] | ["stop"] | ["clear"] => {

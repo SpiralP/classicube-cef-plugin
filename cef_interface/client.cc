@@ -28,7 +28,8 @@ CefRefPtr<CefRequestHandler> MyClient::GetRequestHandler() {
 // CefDisplayHandler methods:
 void MyClient::OnTitleChange(CefRefPtr<CefBrowser> browser,
                              const CefString& title) {
-  if (on_title_change_callback) {
+  if (on_title_change_callback && title != last_title) {
+    last_title = title;
     auto title_utf8 = title.ToString();
     on_title_change_callback(cef_interface_add_ref_browser(browser.get()),
                              title_utf8.c_str());

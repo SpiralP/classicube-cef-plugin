@@ -31,8 +31,9 @@ thread_local!(
     static TAB_LIST: RefCell<Option<TabList>> = RefCell::new(None);
 );
 
+// TODO make this not public :p
 thread_local!(
-    static ENTITIES: RefCell<Option<Entities>> = RefCell::new(None);
+    pub static ENTITIES: RefCell<Option<Entities>> = RefCell::new(None);
 );
 
 thread_local!(

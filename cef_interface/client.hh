@@ -82,6 +82,8 @@ class MyClient : public CefClient,
   OnAfterCreatedCallback on_after_created_callback;
   OnTitleChangeCallback on_title_change_callback;
 
+  CefString last_title;
+
   IMPLEMENT_REFCOUNTING(MyClient);
   DISALLOW_COPY_AND_ASSIGN(MyClient);
 };

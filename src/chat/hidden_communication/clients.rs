@@ -1,103 +1,94 @@
+use super::{wait_for_message, SHOULD_BLOCK};
 use crate::{
     async_manager::AsyncManager,
     chat::{hidden_communication::whispers::start_whispering, Chat, TAB_LIST},
+    error::*,
     plugin::APP_NAME,
 };
-use classicube_helpers::{tab_list::remove_color, CellGetSet};
+use async_std::future::timeout;
+use classicube_helpers::{tab_list::remove_color, CellGetSet, OptionWithInner};
 use classicube_sys::ENTITIES_SELF_ID;
-use log::debug;
-use std::{
-    cell::{Cell, RefCell},
-    sync::Once,
-    time::Duration,
-};
+use futures::{future::RemoteHandle, prelude::*};
+use log::{debug, warn};
+use std::{cell::Cell, sync::Once, time::Duration};
 
 thread_local!(
-    static SIMULATING: Cell<bool> = Cell::new(false);
+    static CURRENT_RUNNING: Cell<Option<RemoteHandle<()>>> = Default::default();
 );
 
-pub fn query_clients() {
-    debug!("querying /clients");
+pub fn query() {
+    let (f, remote_handle) = async {
+        // whole query shouldn't take more than 10 seconds
+        match timeout(Duration::from_secs(10), do_query()).await {
+            Ok(result) => {
+                if let Err(e) = result {
+                    warn!("clients query failed: {}", e);
+                }
+            }
 
-    SIMULATING.with(|a| a.set(true));
+            Err(_timeout) => {
+                warn!("clients query timed out");
+            }
+        }
+    }
+    .remote_handle();
+
+    AsyncManager::spawn_local_on_main_thread(f);
+
+    CURRENT_RUNNING.with(move |cell| {
+        cell.set(Some(remote_handle));
+    });
+}
+
+async fn do_query() -> Result<()> {
+    debug!("querying /clients");
     Chat::send("/clients");
 
-    // &7Players using:
-    // &7  ClassiCube 1.1.3: &f� saiko, \n doberman411, Fist,
-    // > &fLemonLeman, � che, gemsgem, � xenon, Guzz
-
-    // &7  ClassiCube 1.1.3 +cef0.2.0 + More Models v1.2.4 + Ponies
-    // > &7v2.1: &f� Goodly
-}
-
-thread_local!(
-    static LISTENING: Cell<bool> = Cell::new(false);
-);
-
-thread_local!(
-    static MESSAGES: RefCell<Vec<String>> = RefCell::new(Vec::new());
-);
-
-// TODO async would be cool!
-#[must_use]
-pub fn handle_chat_message(message: &str) -> bool {
-    if !SIMULATING.get() {
-        return false;
-    }
-
-    if message == "&7Players using:" {
-        LISTENING.set(true);
-
-        // give it a couple seconds before stop listening
-        AsyncManager::spawn_local_on_main_thread(async {
-            AsyncManager::sleep(Duration::from_secs(2)).await;
-
-            if LISTENING.get() {
-                debug!("stopping because of timer");
-                LISTENING.set(false);
-                SIMULATING.set(false);
-
-                let messages = MESSAGES.with(|cell| {
-                    let messages = &mut *cell.borrow_mut();
-                    messages.drain(..).collect()
-                });
-                process_clients_response(messages);
+    timeout(Duration::from_secs(5), async {
+        loop {
+            let message = wait_for_message().await;
+            if message == "&7Players using:" {
+                SHOULD_BLOCK.set(true);
+                break;
             }
-        });
+            // keep checking other messages until we find ^
+        }
+    })
+    .await
+    .chain_err(|| "never found start of clients response")?;
 
-        return true;
+    let mut messages = Vec::new();
+
+    let timeout_result = timeout(Duration::from_secs(5), async {
+        loop {
+            let message = wait_for_message().await;
+            if message.starts_with("&7  ")
+                || message.starts_with("> &f")
+                || message.starts_with("> &7")
+            {
+                // probably a /clients response
+                messages.push(message.to_string());
+
+                // don't show this message!
+                SHOULD_BLOCK.set(true);
+            } else {
+                debug!("stopping because of other message {:?}", message);
+                break;
+            }
+        }
+    })
+    .await;
+
+    if timeout_result.is_err() {
+        debug!("stopping because of timeout");
     }
 
-    if !LISTENING.get() {
-        return false;
-    }
+    process_clients_response(messages).await?;
 
-    if message.starts_with("&7  ") || message.starts_with("> &f") || message.starts_with("> &7") {
-        // probably a /clients response
-        debug!("{:?}", message);
-        MESSAGES.with(|cell| {
-            let messages = &mut *cell.borrow_mut();
-            messages.push(message.to_string());
-        });
-
-        // don't show this message!
-        return true;
-    } else {
-        debug!("stopping because of {:?}", message);
-        LISTENING.set(false);
-        SIMULATING.set(false);
-
-        let messages = MESSAGES.with(|cell| {
-            let messages = &mut *cell.borrow_mut();
-            messages.drain(..).collect()
-        });
-        process_clients_response(messages);
-    }
-
-    false
+    Ok(())
 }
 
-fn process_clients_response(messages: Vec<String>) {
+async fn process_clients_response(messages: Vec<String>) -> Result<()> {
     debug!("{:#?}", messages);
 
     let mut full_lines = Vec::new();
@@ -111,7 +102,7 @@ fn process_clients_response(messages: Vec<String>) {
         } else {
             // a continuation message
 
-            let last = full_lines.last_mut().unwrap();
+            let last = full_lines.last_mut().chain_err(|| "no last?")?;
 
             // "> &f" or "> &7"
             *last = format!("{} {}", last, message[2..].to_string());
@@ -122,7 +113,7 @@ fn process_clients_response(messages: Vec<String>) {
 
     let mut names_with_cef: Vec<String> = Vec::new();
     for message in &full_lines {
-        let pos = message.find(": &f").unwrap();
+        let pos = message.find(": &f").chain_err(|| "couldn't find colon")?;
 
         let (left, right) = message.split_at(pos);
         // skip ": &f"
@@ -140,39 +131,29 @@ fn process_clients_response(messages: Vec<String>) {
 
     debug!("{:#?}", names_with_cef);
 
-    let player_ids_with_cef: Vec<u8> = names_with_cef
+    let players_with_cef: Vec<(u8, String)> = names_with_cef
         .drain(..)
         .filter_map(|name| {
-            TAB_LIST.with(|cell| {
-                let tab_list = &*cell.borrow();
-                let tab_list = tab_list.as_ref().unwrap();
-
+            TAB_LIST.with_inner(|tab_list| {
                 tab_list.find_entry_by_nick_name(&name).and_then(|entry| {
                     let id = entry.get_id();
                     if id == ENTITIES_SELF_ID as u8 {
                         None
                     } else {
-                        Some(id)
+                        let real_name = entry.get_real_name()?;
+                        Some((id, real_name))
                     }
                 })
-            })
+            })?
         })
         .collect();
 
-    debug!("{:#?}", player_ids_with_cef);
+    debug!("{:#?}", players_with_cef);
 
-    if !player_ids_with_cef.is_empty() {
-        let names: Vec<String> = player_ids_with_cef
+    if !players_with_cef.is_empty() {
+        let names: Vec<&str> = players_with_cef
             .iter()
-            .map(|id| {
-                TAB_LIST.with(|cell| {
-                    let tab_list = &*cell.borrow();
-                    let tab_list = tab_list.as_ref().unwrap();
-                    let entry = tab_list.get(*id).unwrap();
-
-                    entry.get_real_name().unwrap()
-                })
-            })
+            .map(|(_id, name)| name.as_str())
             .collect();
 
         static ONCE: Once = Once::new();
@@ -180,6 +161,8 @@ fn process_clients_response(messages: Vec<String>) {
             Chat::print(format!("Other players with cef: {}", names.join(", ")));
         });
 
-        start_whispering(player_ids_with_cef);
+        start_whispering(players_with_cef).await?;
     }
+
+    Ok(())
 }

@@ -1,41 +1,54 @@
 mod incoming;
 mod outgoing;
 
-use crate::chat::{ENTITIES, TAB_LIST};
+use super::{wait_for_message, SHOULD_BLOCK};
+use crate::{async_manager::AsyncManager, chat::ENTITIES, error::*};
+use classicube_helpers::OptionWithInner;
+use futures::{future::RemoteHandle, prelude::*};
 use log::debug;
+use std::cell::Cell;
 
-pub fn start_whispering(ids: Vec<u8>) {
+thread_local!(
+    static LISTENER: Cell<Option<RemoteHandle<()>>> = Default::default();
+);
+
+pub async fn start_whispering(players: Vec<(u8, String)>) -> Result<()> {
+    if players.is_empty() {
+        return Ok(());
+    }
+
     debug!("start_whispering");
 
-    let id = ids[0];
+    for (id, real_name) in players {
+        // check if they're on our map
+        let entity_exists = ENTITIES
+            .with_inner(|entities| entities.get(id).is_some())
+            .unwrap();
 
-    let entity_exists = ENTITIES.with(|cell| {
-        let entities = &*cell.borrow();
-        let entities = entities.as_ref().unwrap();
-        entities.get(id).is_some()
-    });
-
-    if entity_exists {
-        let maybe_real_name = TAB_LIST.with(|cell| {
-            let tab_list = &*cell.borrow();
-            let tab_list = tab_list.as_ref().unwrap();
-            tab_list.get(id).and_then(|entry| entry.get_real_name())
-        });
-
-        if let Some(real_name) = maybe_real_name {
-            outgoing::query_whisper(real_name);
+        if entity_exists {
+            // TODO handle errors?
+            outgoing::query_whisper(real_name).await?;
         }
     }
+
+    Ok(())
 }
 
-#[must_use]
-pub fn handle_chat_message(message: &str) -> bool {
-    let a = outgoing::handle_chat_message(message);
-    let b = incoming::handle_chat_message(message);
-
-    if a || b {
-        return true;
+pub fn start_listening() {
+    let (f, remote_handle) = async {
+        incoming::listen_loop().await;
     }
+    .remote_handle();
 
-    false
+    AsyncManager::spawn_local_on_main_thread(f);
+
+    LISTENER.with(move |cell| {
+        cell.set(Some(remote_handle));
+    });
+}
+
+pub fn stop_listening() {
+    LISTENER.with(move |cell| {
+        cell.set(None);
+    });
 }

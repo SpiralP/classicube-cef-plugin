@@ -7,6 +7,7 @@ use classicube_helpers::{
     entities::{Entities, ENTITY_SELF_ID},
     events::chat::{ChatReceivedEvent, ChatReceivedEventHandler},
     tab_list::{remove_color, TabList},
+    CellGetSet,
 };
 use classicube_sys::{
     Chat_Add, Chat_Send, MsgType, MsgType_MSG_TYPE_NORMAL, OwnedString, Server, Vec3,
@@ -89,11 +90,6 @@ impl Chat {
                 AsyncManager::sleep(Duration::from_millis(300)).await;
 
                 Chat::send("/client cef create");
-
-                // loop {
-                //     AsyncManager::sleep(Duration::from_millis(300)).await;
-                //     Chat::send("/client cef click");
-                // }
             });
         }
     }
@@ -120,11 +116,11 @@ impl Chat {
 
         let owned_string = OwnedString::new(s);
 
-        SIMULATING.with(|a| a.set(true));
+        SIMULATING.set(true);
         unsafe {
             Chat_Add(owned_string.as_cc_string());
         }
-        SIMULATING.with(|a| a.set(false));
+        SIMULATING.set(false);
     }
 
     pub fn send<S: Into<String>>(s: S) {
@@ -140,7 +136,7 @@ impl Chat {
 }
 
 fn handle_chat_received(message: String, message_type: MsgType) {
-    if SIMULATING.with(|a| a.get()) {
+    if SIMULATING.get() {
         return;
     }
     if message_type != MsgType_MSG_TYPE_NORMAL {

@@ -162,7 +162,7 @@ pub async fn command_callback(
             players::play(url, entity_id)?;
         }
 
-        ["close"] | ["remove"] | ["stop"] => {
+        ["close"] | ["remove"] | ["stop"] | ["clear"] => {
             let entity_id = EntityManager::with_closest(player.eye_position, |closest_entity| {
                 Ok(closest_entity.id)
             })?;

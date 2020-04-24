@@ -1,58 +1,45 @@
-use crate::{async_manager::AsyncManager, chat::Chat};
+use super::{wait_for_message, SHOULD_BLOCK};
+use crate::{chat::Chat, error::*};
+use async_std::future::timeout;
 use classicube_helpers::CellGetSet;
 use log::debug;
-use std::{cell::Cell, time::Duration};
+use std::time::Duration;
 
-thread_local!(
-    static SIMULATING: Cell<bool> = Cell::new(false);
-);
+pub async fn query_whisper(real_name: String) -> Result<()> {
+    debug!("query_whisper asking {}", real_name);
 
-pub fn query_whisper(real_name: String) {
-    debug!("start_whispering asking {}", real_name);
-
-    SIMULATING.set(true);
     Chat::send(format!("@{}+ ?CEF?", real_name));
+    // SpiralP2 -> SpiralP
     // &7[<] &uSpiralP2: &f?CEF?
     // &9[>] &uSpiralP: &f?CEF?
-}
 
-thread_local!(
-    static LISTENING: Cell<bool> = Cell::new(false);
-);
-
-#[must_use]
-pub fn handle_chat_message(message: &str) -> bool {
-    if SIMULATING.get() {
-        // my outgoing whisper
-        if message.starts_with("&7[<] ") && message.ends_with(": &f?CEF?") {
-            LISTENING.set(true);
-
-            // give it a couple seconds before stop listening
-            AsyncManager::spawn_local_on_main_thread(async {
-                AsyncManager::sleep(Duration::from_secs(2)).await;
-
-                if LISTENING.get() {
-                    debug!("stopping because of timer");
-                    LISTENING.set(false);
-                    SIMULATING.set(false);
-                }
-            });
-
-            return true;
-        }
-
-        if LISTENING.get() {
-            // incoming whisper from them
-            if message.starts_with("&9[>] ") && message.contains(": &f!CEF! ") {
-                debug!("stopping because of {:?}", message);
-                LISTENING.set(false);
-                SIMULATING.set(false);
-
-                // don't show this message!
-                return true;
+    // my outgoing whisper
+    timeout(Duration::from_secs(5), async {
+        loop {
+            let message = wait_for_message().await;
+            if message.starts_with("&7[<] ") && message.ends_with(": &f?CEF?") {
+                SHOULD_BLOCK.set(true);
+                break;
             }
         }
-    }
+    })
+    .await
+    .chain_err(|| "never found my outgoing whisper")?;
 
-    false
+    // incoming whisper from them
+    timeout(Duration::from_secs(5), async {
+        loop {
+            let message = wait_for_message().await;
+            if message.starts_with("&9[>] ") && message.contains(": &f!CEF! ") {
+                SHOULD_BLOCK.set(true);
+                debug!("got whisper response {:?}", message);
+
+                break;
+            }
+        }
+    })
+    .await
+    .chain_err(|| "never found response to my whisper")?;
+
+    Ok(())
 }

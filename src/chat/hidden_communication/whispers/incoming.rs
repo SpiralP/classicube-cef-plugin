@@ -1,65 +1,81 @@
+use super::{wait_for_message, SHOULD_BLOCK};
 use crate::{
     chat::{Chat, ENTITIES, TAB_LIST},
+    error::*,
 };
-use classicube_helpers::CellGetSet;
-use log::debug;
-use std::cell::Cell;
+use async_std::future::timeout;
+use classicube_helpers::{CellGetSet, OptionWithInner};
+use log::{debug, info, warn};
+use std::time::Duration;
 
-thread_local!(
-    static SIMULATING: Cell<bool> = Cell::new(false);
-);
+pub async fn listen_loop() {
+    loop {
+        match step().await {
+            Ok(_) => {}
 
-#[must_use]
-pub fn handle_chat_message(message: &str) -> bool {
-    if SIMULATING.get() {
-        // my outgoing whisper
-        if message.starts_with("&7[<] ") && message.contains(": &f!CEF! ") {
-            SIMULATING.set(false);
-
-            debug!("OK");
-
-            return true;
+            Err(e) => {
+                warn!("whisper listen_loop: {}", e);
+            }
         }
     }
+}
+
+async fn step() -> Result<()> {
+    let message = wait_for_message().await;
 
     // incoming whisper
     if message.starts_with("&9[>] ") && message.ends_with(": &f?CEF?") {
-        debug!("incoming_whisper {:?}", message);
+        SHOULD_BLOCK.set(true);
+
+        info!("incoming_whisper {:?}", message);
 
         // "&9[>] "
-        let colon_pos = message.find(": &f").unwrap();
+        let colon_pos = message.find(": &f").chain_err(|| "couldn't find colon")?;
         let nick_name = &message[6..colon_pos];
-        debug!("from {:?}", nick_name);
+        info!("from {:?}", nick_name);
 
-        let maybe_real_name = TAB_LIST.with(|cell| {
-            let tab_list = &*cell.borrow();
-            let tab_list = tab_list.as_ref().unwrap();
-            tab_list
-                .find_entry_by_nick_name(&nick_name)
-                .and_then(|entry| {
-                    let id = entry.get_id();
+        // find real nick and also make sure they're real
+        let maybe_real_name = TAB_LIST
+            .with_inner(|tab_list| {
+                tab_list
+                    .find_entry_by_nick_name(&nick_name)
+                    .and_then(|entry| {
+                        let id = entry.get_id();
 
-                    ENTITIES.with(|cell| {
-                        let entities = &*cell.borrow();
-                        let entities = entities.as_ref().unwrap();
-                        if entities.get(id).is_some() {
-                            Some(entry.get_real_name()?)
-                        } else {
-                            None
-                        }
+                        ENTITIES
+                            .with_inner(|entities| {
+                                if entities.get(id).is_some() {
+                                    Some(entry.get_real_name()?)
+                                } else {
+                                    None
+                                }
+                            })
+                            .chain_err(|| "ENTITIES")
+                            .ok()?
                     })
-                })
-        });
+            })
+            .chain_err(|| "TAB_LIST")?;
 
         if let Some(real_name) = maybe_real_name {
             debug!("sending to {:?}", real_name);
 
-            SIMULATING.set(true);
             Chat::send(format!("@{}+ !CEF! no", real_name));
 
-            return true;
+            // my outgoing whisper
+            timeout(Duration::from_secs(2), async {
+                loop {
+                    let message = wait_for_message().await;
+
+                    if message.starts_with("&7[<] ") && message.contains(": &f!CEF! ") {
+                        SHOULD_BLOCK.set(true);
+                        break;
+                    }
+                }
+            })
+            .await
+            .chain_err(|| "never found my outgoing whisper reply")?;
         }
     }
 
-    false
+    Ok(())
 }

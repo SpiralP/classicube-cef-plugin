@@ -1,11 +1,10 @@
-#![allow(clippy::single_match)]
-
 use super::Chat;
 use crate::{
     async_manager::AsyncManager,
     chat::{PlayerSnapshot, ENTITIES},
     entity_manager::{CefEntity, EntityManager, CEF_HEIGHT, CEF_WIDTH, MODEL_HEIGHT, MODEL_WIDTH},
     error::*,
+    players::{Player, YoutubePlayer},
     search,
 };
 use classicube_sys::{OwnedChatCommand, Vec3, ENTITIES_SELF_ID};
@@ -105,6 +104,7 @@ pub async fn command_callback(
     }
 
     // commands that target a certain entity by id
+    #[allow(clippy::single_match)]
     match args {
         ["here", entity_id] => {
             let entity_id: usize = entity_id.parse()?;
@@ -310,6 +310,51 @@ pub async fn command_callback(
 
             let browser = EntityManager::get_browser_by_entity_id(entity_id)?;
             browser.send_click(x, y)?;
+        }
+
+        ["time", time] | ["seek", time] => {
+            let entity_id = EntityManager::with_closest(player.eye_position, |closest_entity| {
+                if let Player::Youtube(_) = &closest_entity.player {
+                    Ok(closest_entity.id)
+                } else {
+                    bail!("not a Youtube player");
+                }
+            })?;
+
+            let browser = EntityManager::get_browser_by_entity_id(entity_id)?;
+
+            let seconds: u64 = if let Ok(seconds) = time.parse() {
+                seconds
+            } else {
+                // try 12:34 mm:ss format
+
+                let parts: Vec<_> = time.split(':').collect();
+                match parts.as_slice() {
+                    [hours, minutes, seconds] => {
+                        let hours: u64 = hours.parse()?;
+                        let minutes: u64 = minutes.parse()?;
+                        let seconds: u64 = seconds.parse()?;
+
+                        seconds + minutes * 60 + hours * 60 * 60
+                    }
+
+                    [minutes, seconds] => {
+                        let minutes: u64 = minutes.parse()?;
+                        let seconds: u64 = seconds.parse()?;
+
+                        seconds + minutes * 60
+                    }
+
+                    _ => {
+                        // let parts:Vec<_> = time.split("%").collect();
+                        // TODO 20%
+
+                        bail!("bad format");
+                    }
+                }
+            };
+
+            YoutubePlayer::seek_to(&browser, seconds);
         }
 
         _ => {}

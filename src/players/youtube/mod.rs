@@ -155,21 +155,41 @@ async fn start_volume_loop(entity_id: usize) {
             if let Some(my_pos) = maybe_my_pos {
                 let percent = (entity_pos - my_pos).length_squared().sqrt() / 10f32;
                 let percent = (1.0 - percent).max(0.0).min(1.0);
-                let percent = (percent * 100f32) as u32;
 
-                let code = format!(
-                    r#"if (
-                    typeof window.player !== "undefined" &&
-                        typeof window.player.setVolume !== "undefined"
-                    ) {{
-                        window.player.setVolume({});
-                    }}"#,
-                    percent
-                );
-
-                browser.execute_javascript(code).unwrap();
+                YoutubePlayer::set_volume(&browser, percent);
             }
         }
+    }
+}
+
+impl YoutubePlayer {
+    fn execute_player_method(browser: &RustRefBrowser, method_with_args: &str) {
+        let code = format!(
+            r#"if (
+            typeof window.player !== "undefined" &&
+                typeof window.player.setVolume !== "undefined"
+            ) {{
+                window.player.{};
+            }}"#,
+            method_with_args
+        );
+        browser.execute_javascript(code).unwrap();
+    }
+
+    /// volume is a float between 0-1
+    pub fn set_volume(browser: &RustRefBrowser, percent: f32) {
+        let percent = (percent * 100f32) as u32;
+
+        Self::execute_player_method(browser, &format!("setVolume({})", percent))
+    }
+
+    pub fn seek_to(browser: &RustRefBrowser, seconds: u64) {
+        // second arg true because:
+        //
+        // The allowSeekAhead parameter determines whether the player will
+        // make a new request to the server if the seconds parameter specifies
+        // a time outside of the currently buffered video data.
+        Self::execute_player_method(browser, &format!("seekTo({}, true)", seconds))
     }
 }
 

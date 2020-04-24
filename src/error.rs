@@ -8,6 +8,8 @@ error_chain! {
         ParseIntError(::std::num::ParseIntError);
         Url(url::ParseError);
         Tokio(tokio::task::JoinError);
+        Bincode(bincode::Error);
+        Base64(base64::DecodeError);
     }
 
     links {

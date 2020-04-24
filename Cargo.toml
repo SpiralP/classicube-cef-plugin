@@ -11,6 +11,7 @@ crate-type = ["cdylib"]
 async-dispatcher = { git = "https://github.com/SpiralP/rust-async-dispatcher.git" }
 async-std = "1.5.0"
 base64 = "0.12.0"
+bincode = "1.2.1"
 classicube-helpers = { git = "https://github.com/SpiralP/rust-classicube-helpers.git", features = ["futures"] }
 classicube-sys = { git = "https://github.com/SpiralP/rust-classicube-sys.git" }
 color-backtrace = { git = "https://github.com/SpiralP/color-backtrace-msgbox.git" }
@@ -23,6 +24,7 @@ nalgebra = "0.21.0"
 # at end of april they will update nalgebra in release
 ncollide3d = { git = "https://github.com/rustsim/ncollide.git", branch = "simba" }
 regex = "1.3.7"
+serde = { version = "1.0.106", features = ["derive"] }
 simplelog = "0.7.5"
 tokio = { version = "0.2.18", features = ["full"] }
 url = "2.1.1"

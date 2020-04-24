@@ -1,11 +1,12 @@
-use super::Player;
+use super::PlayerTrait;
 use crate::error::*;
 use log::debug;
 use regex::Regex;
+use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, time::Duration};
 use url::Url;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct YoutubePlayer {
     id: String,
     time: Duration,
@@ -13,7 +14,7 @@ pub struct YoutubePlayer {
 
 const PAGE_HTML: &str = include_str!("page.html");
 
-impl Player for YoutubePlayer {
+impl PlayerTrait for YoutubePlayer {
     fn from_input(url_or_id: &str) -> Result<Self> {
         if let Ok(url) = Url::parse(url_or_id) {
             if url.scheme() != "http" && url.scheme() != "https" {

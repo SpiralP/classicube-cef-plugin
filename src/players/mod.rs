@@ -9,15 +9,16 @@ use crate::{
     error::*,
 };
 use log::debug;
+use serde::{Deserialize, Serialize};
 use std::{any::Any, cell::RefCell, collections::HashMap, os::raw::c_int};
 
 thread_local!(
     #[allow(clippy::type_complexity)]
-    static PLAYERS: RefCell<HashMap<c_int, (RustRefBrowser, Box<dyn Player>)>> =
+    static PLAYERS: RefCell<HashMap<c_int, (RustRefBrowser, Box<dyn PlayerTrait>)>> =
         RefCell::new(HashMap::new());
 );
 
-pub trait Player: Any {
+pub trait PlayerTrait: Any {
     fn from_input(input: &str) -> Result<Self>
     where
         Self: Sized;
@@ -29,7 +30,13 @@ pub trait Player: Any {
     // fn on_page_loaded(&mut self, _browser: &mut RustRefBrowser) {}
 }
 
-fn create_player(input: &str) -> Result<Box<dyn Player>> {
+#[derive(Debug, Serialize, Deserialize)]
+pub enum Player {
+    Youtube(YoutubePlayer),
+    Web(WebPlayer),
+}
+
+fn create_player(input: &str) -> Result<Box<dyn PlayerTrait>> {
     match YoutubePlayer::from_input(input) {
         Ok(player) => Ok(Box::new(player)),
         Err(_) => match WebPlayer::from_input(input) {
@@ -58,7 +65,7 @@ fn test_create_player() {
     ];
 
     for url in &good_web {
-        let player: Box<dyn Player> = create_player(url).unwrap();
+        let player: Box<dyn PlayerTrait> = create_player(url).unwrap();
         assert_eq!((*player).type_id(), TypeId::of::<WebPlayer>());
     }
 
@@ -68,7 +75,7 @@ fn test_create_player() {
     ];
 
     for url in &good_youtube {
-        let player: Box<dyn Player> = create_player(url).unwrap();
+        let player: Box<dyn PlayerTrait> = create_player(url).unwrap();
         assert_eq!((*player).type_id(), TypeId::of::<YoutubePlayer>());
     }
 }

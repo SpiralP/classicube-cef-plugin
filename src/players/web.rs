@@ -1,14 +1,15 @@
-use super::Player;
+use super::PlayerTrait;
 use crate::error::*;
 use log::debug;
+use serde::{Deserialize, Serialize};
 use url::Url;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct WebPlayer {
-    url: Url,
+    url: String,
 }
 
-impl Player for WebPlayer {
+impl PlayerTrait for WebPlayer {
     fn from_input(url: &str) -> Result<Self> {
         let url = Url::parse(url)?;
 
@@ -28,8 +29,10 @@ impl Player for WebPlayer {
 }
 
 impl WebPlayer {
-    fn from_url(url: Url) -> Option<Self> {
-        Some(Self { url })
+    pub fn from_url(url: Url) -> Option<Self> {
+        Some(Self {
+            url: url.to_string(),
+        })
     }
 }
 

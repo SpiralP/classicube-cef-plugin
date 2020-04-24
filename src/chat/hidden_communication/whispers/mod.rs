@@ -1,5 +1,6 @@
 mod incoming;
 mod outgoing;
+mod encoding;
 
 use super::{wait_for_message, SHOULD_BLOCK};
 use crate::{async_manager::AsyncManager, chat::ENTITIES, error::*};

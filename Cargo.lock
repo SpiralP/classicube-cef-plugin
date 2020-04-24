@@ -169,6 +169,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7d5ca2cd0adc3f48f9e9ea5a6bbdf9ccc0bfade884847e484d452414c7ccffb3"
 
 [[package]]
+name = "bincode"
+version = "1.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5753e2a71534719bf3f4e57006c3a4f0d2c672a4b676eec84161f763eca87dbf"
+dependencies = [
+ "byteorder",
+ "serde",
+]
+
+[[package]]
 name = "bindgen"
 version = "0.53.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -333,6 +343,7 @@ dependencies = [
  "async-dispatcher",
  "async-std",
  "base64 0.12.0",
+ "bincode",
  "bindgen",
  "classicube-helpers",
  "classicube-sys",
@@ -346,6 +357,7 @@ dependencies = [
  "nalgebra",
  "ncollide3d",
  "regex",
+ "serde",
  "simplelog",
  "tokio",
  "url",

@@ -5,7 +5,7 @@ use super::{encoding, wait_for_message, SHOULD_BLOCK};
 use crate::{async_manager::AsyncManager, chat::ENTITIES, error::*};
 use classicube_helpers::OptionWithInner;
 use futures::{future::RemoteHandle, prelude::*};
-use log::debug;
+use log::{debug, warn};
 use std::cell::Cell;
 
 thread_local!(
@@ -26,8 +26,9 @@ pub async fn start_whispering(players: Vec<(u8, String)>) -> Result<()> {
             .unwrap();
 
         if entity_exists {
-            // TODO handle errors?
-            outgoing::query_whisper(real_name).await?;
+            if let Err(e) = outgoing::query_whisper(&real_name).await {
+                warn!("query_whisper {} failed: {}", real_name, e);
+            }
         }
     }
 

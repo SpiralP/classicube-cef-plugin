@@ -19,7 +19,7 @@ use tokio::sync::broadcast;
 // (1/60)*1000 = 16.6666666667
 const CEF_RATE: Duration = Duration::from_millis(16);
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub enum CefEvent {
     ContextInitialized(RustRefClient),
     BrowserCreated(RustRefBrowser),

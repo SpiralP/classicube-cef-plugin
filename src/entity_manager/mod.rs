@@ -98,7 +98,7 @@ impl EntityManager {
         }
         .remote_handle();
         AsyncManager::spawn_local_on_main_thread(f);
-        self.cef_event_title_change = Some(remote_handle);
+        self.cef_event_page_loaded = Some(remote_handle);
 
         let mut event_listener = Cef::create_event_listener();
         let (f, remote_handle) = async move {

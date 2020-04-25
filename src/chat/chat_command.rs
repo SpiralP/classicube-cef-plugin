@@ -178,6 +178,12 @@ pub async fn command_callback(
             });
         }
 
+        ["closeall"] | ["removeall"] | ["stopall"] | ["clearall"] => {
+            AsyncManager::block_on_local(async {
+                let _ignore_error = EntityManager::remove_all_entities().await;
+            });
+        }
+
         ["refresh"] | ["reload"] => {
             let entity_id = EntityManager::with_closest(player.eye_position, |closest_entity| {
                 Ok(closest_entity.id)

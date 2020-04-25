@@ -8,6 +8,18 @@ use url::Url;
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct WebPlayer {
     url: String,
+
+    #[serde(skip)]
+    last_title: String,
+}
+
+impl Default for WebPlayer {
+    fn default() -> Self {
+        Self {
+            url: String::new(),
+            last_title: String::new(),
+        }
+    }
 }
 
 impl PlayerTrait for WebPlayer {
@@ -29,6 +41,11 @@ impl PlayerTrait for WebPlayer {
     }
 
     fn on_title_change(&mut self, _browser: &mut RustRefBrowser, title: String) {
+        if self.last_title == title {
+            return;
+        }
+        self.last_title = title.clone();
+
         Chat::print(format!(
             "{}Now viewing {}{}",
             color::TEAL,
@@ -42,6 +59,7 @@ impl WebPlayer {
     pub fn from_url(url: Url) -> Option<Self> {
         Some(Self {
             url: url.to_string(),
+            ..Default::default()
         })
     }
 }
@@ -60,7 +78,8 @@ fn test_web() {
             assert_eq!(
                 WebPlayer::from_input(url).unwrap(),
                 WebPlayer {
-                    url: url.parse().unwrap()
+                    url: url.parse().unwrap(),
+                    ..Default::default()
                 }
             );
         }

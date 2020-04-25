@@ -31,18 +31,9 @@ pub struct YoutubePlayer {
 
     #[serde(skip)]
     volume_loop_handle: Option<RemoteHandle<()>>,
-}
 
-impl Clone for YoutubePlayer {
-    fn clone(&self) -> Self {
-        Self {
-            id: self.id.clone(),
-            time: self.time,
-            volume: self.volume,
-            start_time: None,
-            volume_loop_handle: None,
-        }
-    }
+    #[serde(skip)]
+    last_title: String,
 }
 
 impl Default for YoutubePlayer {
@@ -53,6 +44,18 @@ impl Default for YoutubePlayer {
             volume: 1.0,
             start_time: None,
             volume_loop_handle: None,
+            last_title: String::new(),
+        }
+    }
+}
+
+impl Clone for YoutubePlayer {
+    fn clone(&self) -> Self {
+        Self {
+            id: self.id.clone(),
+            time: self.time,
+            volume: self.volume,
+            ..Default::default()
         }
     }
 }
@@ -107,6 +110,11 @@ impl PlayerTrait for YoutubePlayer {
     }
 
     fn on_title_change(&mut self, _browser: &mut RustRefBrowser, title: String) {
+        if self.last_title == title {
+            return;
+        }
+        self.last_title = title.clone();
+
         if title == "YouTube Loading" {
             return;
         }

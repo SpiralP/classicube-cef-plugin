@@ -144,30 +144,46 @@ impl Cef {
     }
 
     pub async fn create_browser(url: String) -> RustRefBrowser {
-        let (mut create_browser_mutex, client, mut event_receiver) = {
+        let mut create_browser_mutex = {
             let mut mutex = CEF.with(|mutex| mutex.clone());
             let maybe_cef = mutex.lock().await;
             let cef = maybe_cef.as_ref().unwrap();
 
-            let create_browser_mutex = cef.create_browser_mutex.clone();
-            let client = cef.client.clone();
-            let event_receiver = Self::create_event_listener();
-
-            (create_browser_mutex, client, event_receiver)
+            cef.create_browser_mutex.clone()
         };
 
         // Since we can't distinguish which browser was created if multiple
         // create at the same time, we only allow 1 to be in the "creating"
         // state at a time.
-        let _ = create_browser_mutex.lock().await;
+        let mutex = create_browser_mutex.lock().await;
 
-        client.create_browser(url).unwrap();
+        let (client, mut event_receiver) = {
+            let mut mutex = CEF.with(|mutex| mutex.clone());
+            let maybe_cef = mutex.lock().await;
+            let cef = maybe_cef.as_ref().unwrap();
 
-        loop {
+            let client = cef.client.clone();
+            let event_receiver = Self::create_event_listener();
+
+            (client, event_receiver)
+        };
+
+        debug!("Cef::create_browser({:?})", url);
+        client.create_browser(&url).unwrap();
+
+        let browser = loop {
             if let CefEvent::BrowserCreated(browser) = event_receiver.recv().await.unwrap() {
                 break browser;
             }
-        }
+        };
+
+        let browser_id = browser.get_identifier();
+
+        debug!("Cef::create_browser({:?}) => {}", url, browser_id);
+
+        drop(mutex);
+
+        browser
     }
 
     pub async fn close_browser(browser: &RustRefBrowser) -> Result<()> {

@@ -19,7 +19,7 @@ thread_local!(
 pub fn query() {
     let (f, remote_handle) = async {
         // whole query shouldn't take more than 10 seconds
-        match timeout(Duration::from_secs(10), do_query()).await {
+        match timeout(Duration::from_secs(30), do_query()).await {
             Ok(result) => {
                 if let Err(e) = result {
                     warn!("clients query failed: {}", e);
@@ -42,6 +42,12 @@ pub fn query() {
 
 async fn do_query() -> Result<()> {
     // TODO check for "Server software: MCGalaxy 1.9.2.0"
+
+    // Server software: ProCraft
+    // &e  ClassiCube 1.1.3 +cef0.5.6 +cs3.4.2:&7 SpiralP
+    // &e  ClassiCube 1.1.4 + More Models v1.2.4:&c cybertoon
+    // >&8 [&9Owner&8][&cm&4a&6p&ep&ay&20&b1&8]&f,&c cybertoon,
+    // &e  ClassiCube 1.1.4 + Ponies v2.1:&1 *&bgemsgem&1*
 
     debug!("querying /clients");
     Chat::send("/clients");

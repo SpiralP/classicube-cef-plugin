@@ -69,7 +69,7 @@ impl Clone for RustRefApp {
 }
 
 impl RustRefClient {
-    pub fn create_browser(&self, startup_url: String) -> Result<()> {
+    pub fn create_browser(&self, startup_url: &str) -> Result<()> {
         let startup_url = CString::new(startup_url).unwrap();
 
         to_result(unsafe { cef_interface_create_browser(self.get(), startup_url.as_ptr()) })

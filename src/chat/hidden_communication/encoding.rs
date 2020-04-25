@@ -1,5 +1,5 @@
 use crate::{entity_manager::EntityManager, error::*, players::Player};
-use log::debug;
+use log::{debug, warn};
 use serde::{Deserialize, Serialize};
 use std::time::Instant;
 
@@ -66,6 +66,11 @@ pub fn create_message() -> Message {
 
 pub async fn received_message(mut message: Message) -> Result<()> {
     for info in message.entities.drain(..) {
+        // if it already exists don't do anything
+        if EntityManager::with_by_entity_id(info.id, |_| Ok(())).is_ok() {
+            warn!("entity {} already exists, skipping", info.id);
+        }
+
         debug!("creating {:#?}", info);
 
         EntityManager::create_entity_from_light_entity(info).await?;

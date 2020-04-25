@@ -87,11 +87,12 @@ impl EntityManager {
                 if let CefEvent::BrowserPageLoaded(mut browser) = event {
                     let browser_id = browser.get_identifier();
 
-                    EntityManager::with_by_browser_id(browser_id, |entity| {
+                    if let Err(e) = EntityManager::with_by_browser_id(browser_id, |entity| {
                         entity.player.on_page_loaded(&mut browser);
                         Ok(())
-                    })
-                    .unwrap();
+                    }) {
+                        warn!("{}", e);
+                    }
                 }
             }
         }
@@ -105,11 +106,12 @@ impl EntityManager {
                 if let CefEvent::BrowserTitleChange(mut browser, title) = event {
                     let browser_id = browser.get_identifier();
 
-                    EntityManager::with_by_browser_id(browser_id, |entity| {
+                    if let Err(e) = EntityManager::with_by_browser_id(browser_id, |entity| {
                         entity.player.on_title_change(&mut browser, title);
                         Ok(())
-                    })
-                    .unwrap();
+                    }) {
+                        warn!("{}", e);
+                    }
                 }
             }
         }
@@ -122,7 +124,7 @@ impl EntityManager {
         debug!("on_new_map_loaded entity_manager");
 
         AsyncManager::block_on_local(async {
-            Self::remove_all_entities().await.unwrap();
+            let _ignore_error = Self::remove_all_entities().await;
         });
     }
 
@@ -191,8 +193,6 @@ impl EntityManager {
     pub async fn create_entity_from_light_entity(info: LightEntity) -> Result<usize> {
         let entity_id = info.id;
 
-        let _ignore_error = Self::remove_entity(entity_id).await;
-
         let mut player = info.player.clone();
         let url = player.on_create(entity_id);
 
@@ -200,7 +200,7 @@ impl EntityManager {
             let entities = &mut *entities.borrow_mut();
 
             let entity = CefEntity::register(entity_id, player);
-            debug!("entity created {}", entity_id);
+            debug!("entity {} created", entity_id);
             entities.insert(entity_id, entity);
         });
 

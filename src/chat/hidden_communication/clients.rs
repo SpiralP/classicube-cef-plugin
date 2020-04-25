@@ -18,7 +18,8 @@ thread_local!(
 
 pub fn query() {
     let (f, remote_handle) = async {
-        // whole query shouldn't take more than 10 seconds
+        // whole query shouldn't take more than 30 seconds
+        // includes whispering and browser creation
         match timeout(Duration::from_secs(30), do_query()).await {
             Ok(result) => {
                 if let Err(e) = result {
@@ -52,7 +53,7 @@ async fn do_query() -> Result<()> {
     debug!("querying /clients");
     Chat::send("/clients");
 
-    timeout(Duration::from_secs(5), async {
+    timeout(Duration::from_secs(3), async {
         loop {
             let message = wait_for_message().await;
             if message.len() >= 2
@@ -70,7 +71,7 @@ async fn do_query() -> Result<()> {
 
     let mut messages = Vec::new();
 
-    let timeout_result = timeout(Duration::from_secs(5), async {
+    let timeout_result = timeout(Duration::from_secs(3), async {
         loop {
             let message = wait_for_message().await;
             if message.len() >= 4

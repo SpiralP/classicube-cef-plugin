@@ -14,7 +14,7 @@ pub async fn query_whisper(real_name: &str) -> Result<()> {
     // &9[>] &uSpiralP: &f?CEF?
 
     // my outgoing whisper
-    timeout(Duration::from_secs(5), async {
+    timeout(Duration::from_secs(3), async {
         loop {
             let message = wait_for_message().await;
 

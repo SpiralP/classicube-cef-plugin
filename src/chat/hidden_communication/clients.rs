@@ -55,7 +55,7 @@ async fn do_query() -> Result<()> {
     timeout(Duration::from_secs(5), async {
         loop {
             let message = wait_for_message().await;
-            if &message[0..1] == "&" && &message[2..] == "Players using:" {
+            if &message.as_bytes()[0..1] == b"&" && &message.as_bytes()[2..] == b"Players using:" {
                 SHOULD_BLOCK.set(true);
                 break;
             }
@@ -70,7 +70,9 @@ async fn do_query() -> Result<()> {
     let timeout_result = timeout(Duration::from_secs(5), async {
         loop {
             let message = wait_for_message().await;
-            if (&message[0..1] == "&" && &message[2..4] == "  ") || &message[0..3] == "> &" {
+            if (&message.as_bytes()[0..1] == b"&" && &message.as_bytes()[2..4] == b"  ")
+                || &message.as_bytes()[0..3] == b"> &"
+            {
                 // probably a /clients response
                 messages.push(message.to_string());
 
@@ -98,7 +100,7 @@ async fn process_clients_response(messages: Vec<String>) -> Result<()> {
 
     for message in &messages {
         // if we start with "&f  "
-        if &message[0..1] == "&" && &message[2..4] == "  " {
+        if &message.as_bytes()[0..1] == b"&" && &message.as_bytes()[2..4] == b"  " {
             // start of line
 
             // "&7  "

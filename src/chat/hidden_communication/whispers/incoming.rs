@@ -24,9 +24,10 @@ async fn step() -> Result<()> {
     let message = wait_for_message().await;
 
     // incoming whisper
-    if &message.as_bytes()[0..1] == b"&"
-        && &message.as_bytes()[2..6] == b"[>] "
-        && message.ends_with(": &f?CEF?")
+    if message.len() >= 6
+        && (&message.as_bytes()[0..1] == b"&"
+            && &message.as_bytes()[2..6] == b"[>] "
+            && message.ends_with(": &f?CEF?"))
     {
         SHOULD_BLOCK.set(true);
 
@@ -71,9 +72,10 @@ async fn step() -> Result<()> {
                 loop {
                     let message = wait_for_message().await;
 
-                    if &message.as_bytes()[0..1] == b"&"
-                        && &message.as_bytes()[2..6] == b"[<] "
-                        && message.contains(": &f!CEF!")
+                    if message.len() >= 6
+                        && (&message.as_bytes()[0..1] == b"&"
+                            && &message.as_bytes()[2..6] == b"[<] "
+                            && message.contains(": &f!CEF!"))
                     {
                         SHOULD_BLOCK.set(true);
 

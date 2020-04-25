@@ -55,7 +55,10 @@ async fn do_query() -> Result<()> {
     timeout(Duration::from_secs(5), async {
         loop {
             let message = wait_for_message().await;
-            if &message.as_bytes()[0..1] == b"&" && &message.as_bytes()[2..] == b"Players using:" {
+            if message.len() >= 2
+                && (&message.as_bytes()[0..1] == b"&"
+                    && &message.as_bytes()[2..] == b"Players using:")
+            {
                 SHOULD_BLOCK.set(true);
                 break;
             }
@@ -70,8 +73,9 @@ async fn do_query() -> Result<()> {
     let timeout_result = timeout(Duration::from_secs(5), async {
         loop {
             let message = wait_for_message().await;
-            if (&message.as_bytes()[0..1] == b"&" && &message.as_bytes()[2..4] == b"  ")
-                || &message.as_bytes()[0..3] == b"> &"
+            if message.len() >= 4
+                && ((&message.as_bytes()[0..1] == b"&" && &message.as_bytes()[2..4] == b"  ")
+                    || &message.as_bytes()[0..3] == b"> &")
             {
                 // probably a /clients response
                 messages.push(message.to_string());

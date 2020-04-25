@@ -179,7 +179,7 @@ pub async fn command_callback(
         }
 
         ["closeall"] | ["removeall"] | ["stopall"] | ["clearall"] => {
-            AsyncManager::block_on_local(async {
+            AsyncManager::spawn_local_on_main_thread(async {
                 let _ignore_error = EntityManager::remove_all_entities().await;
             });
         }

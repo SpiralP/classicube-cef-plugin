@@ -24,7 +24,7 @@ async fn step() -> Result<()> {
     let message = wait_for_message().await;
 
     // incoming whisper
-    if message.starts_with("&9[>] ") && message.ends_with(": &f?CEF?") {
+    if &message[0..1] == "&" && &message[2..6] == "[>] " && message.ends_with(": &f?CEF?") {
         SHOULD_BLOCK.set(true);
 
         info!("incoming_whisper {:?}", message);
@@ -68,7 +68,10 @@ async fn step() -> Result<()> {
                 loop {
                     let message = wait_for_message().await;
 
-                    if message.starts_with("&7[<] ") && message.contains(": &f!CEF!") {
+                    if &message[0..1] == "&"
+                        && &message[2..6] == "[<] "
+                        && message.contains(": &f!CEF!")
+                    {
                         SHOULD_BLOCK.set(true);
 
                         // also block > continuation messages

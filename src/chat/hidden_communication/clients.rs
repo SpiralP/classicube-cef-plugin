@@ -41,13 +41,15 @@ pub fn query() {
 }
 
 async fn do_query() -> Result<()> {
+    // TODO check for "Server software: MCGalaxy 1.9.2.0"
+
     debug!("querying /clients");
     Chat::send("/clients");
 
     timeout(Duration::from_secs(5), async {
         loop {
             let message = wait_for_message().await;
-            if message == "&7Players using:" {
+            if &message[0..1] == "&" && &message[2..] == "Players using:" {
                 SHOULD_BLOCK.set(true);
                 break;
             }
@@ -62,10 +64,7 @@ async fn do_query() -> Result<()> {
     let timeout_result = timeout(Duration::from_secs(5), async {
         loop {
             let message = wait_for_message().await;
-            if message.starts_with("&7  ")
-                || message.starts_with("> &f")
-                || message.starts_with("> &7")
-            {
+            if (&message[0..1] == "&" && &message[2..4] == "  ") || &message[0..3] == "> &" {
                 // probably a /clients response
                 messages.push(message.to_string());
 
@@ -89,12 +88,11 @@ async fn do_query() -> Result<()> {
 }
 
 async fn process_clients_response(messages: Vec<String>) -> Result<()> {
-    debug!("{:#?}", messages);
-
     let mut full_lines = Vec::new();
 
     for message in &messages {
-        if message.starts_with("&7  ") {
+        // if we start with "&f  "
+        if &message[0..1] == "&" && &message[2..4] == "  " {
             // start of line
 
             // "&7  "
@@ -147,8 +145,6 @@ async fn process_clients_response(messages: Vec<String>) -> Result<()> {
             })?
         })
         .collect();
-
-    debug!("{:#?}", players_with_cef);
 
     if !players_with_cef.is_empty() {
         let names: Vec<&str> = players_with_cef

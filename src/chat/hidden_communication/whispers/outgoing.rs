@@ -17,7 +17,8 @@ pub async fn query_whisper(real_name: &str) -> Result<()> {
     timeout(Duration::from_secs(5), async {
         loop {
             let message = wait_for_message().await;
-            if message.starts_with("&7[<] ") && message.ends_with(": &f?CEF?") {
+
+            if &message[0..1] == "&" && &message[2..6] == "[<] " && message.ends_with(": &f?CEF?") {
                 SHOULD_BLOCK.set(true);
                 break;
             }
@@ -30,7 +31,7 @@ pub async fn query_whisper(real_name: &str) -> Result<()> {
     let full_message_encoded = timeout(Duration::from_secs(5), async {
         loop {
             let message = wait_for_message().await;
-            if message.starts_with("&9[>] ") && message.contains(": &f!CEF!") {
+            if &message[0..1] == "&" && &message[2..6] == "[>] " && message.contains(": &f!CEF!") {
                 SHOULD_BLOCK.set(true);
                 debug!("got whisper response {:?}", message);
 

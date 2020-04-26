@@ -127,15 +127,17 @@ pub async fn command_callback(
             Ok(())
         })?,
 
-        ["at", x, y, z] => EntityManager::with_closest(player.eye_position, |entity| {
-            let x = x.parse()?;
-            let y = y.parse()?;
-            let z = z.parse()?;
+        ["at", x, y, z] | ["tp", x, y, z] => {
+            EntityManager::with_closest(player.eye_position, |entity| {
+                let x = x.parse()?;
+                let y = y.parse()?;
+                let z = z.parse()?;
 
-            entity.entity.Position.set(x, y, z);
+                entity.entity.Position.set(x, y, z);
 
-            Ok(())
-        })?,
+                Ok(())
+            })?
+        }
 
         ["angles", pitch, yaw] | ["angle", pitch, yaw] => {
             EntityManager::with_closest(player.eye_position, |entity| {

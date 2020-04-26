@@ -206,16 +206,19 @@ impl YoutubePlayer {
 
 impl YoutubePlayer {
     pub fn from_id(id: String) -> Option<Self> {
-        let regex = Regex::new(r"^[A-Za-z0-9_\-]{11}$").ok()?;
-        if !regex.is_match(&id) {
-            return None;
+        let regex = Regex::new(r"^[A-Za-z0-9_\-]{11}$").unwrap();
+        if regex.is_match(&id) {
+            Some(Self {
+                id,
+                time: Duration::from_secs(0),
+                ..Default::default()
+            })
+        } else if id.contains('%') {
+            let id = id.split('%').next()?;
+            Self::from_id(id.to_string())
+        } else {
+            None
         }
-
-        Some(Self {
-            id,
-            time: Duration::from_secs(0),
-            ..Default::default()
-        })
     }
 
     pub fn from_id_and_time(id: String, time: Duration) -> Option<Self> {
@@ -299,6 +302,8 @@ fn test_youtube() {
             "https://www.youtube.com/watch?v=gQngg8iQipk",
             "https://youtu.be/gQngg8iQipk",
             "https://www.youtube.com/embed/gQngg8iQipk",
+            // test for cc replacing & with %
+            "https://www.youtube.com/watch?v=gQngg8iQipk%list=ELG1JYZnaQbZc",
         ];
 
         let should = YoutubePlayer {

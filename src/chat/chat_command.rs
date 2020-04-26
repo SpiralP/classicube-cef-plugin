@@ -279,32 +279,25 @@ pub async fn command_callback(
                 let right = right.normalize();
                 let up = Vector3::cross(&right, &forward);
                 let up = up.normalize();
-
                 let right = -right;
-                // log::info!("up {}", up);
-                // log::info!("right {}", right);
 
                 let width = entity_scale.X * MODEL_WIDTH as f32;
                 let height = entity_scale.Y * MODEL_HEIGHT as f32;
 
                 let top_left = screen_pos - 0.5 * right * width + up * height;
-                // log::info!("top_left {}", top_left);
 
                 let diff = intersection_point - top_left;
                 let x = diff.dot(&right) / width;
                 let y = -(diff.dot(&up) / height);
 
-                // debug!("{} {}", x, y);
                 if x < 0.0 || x > 1.0 || y < 0.0 || y > 1.0 {
                     return Err("not looking at a screen".into());
                 }
 
                 let browser = EntityManager::get_browser_by_entity_id(entity_id)?;
                 let (browser_width, browser_height) = Cef::get_browser_size(&browser);
-                log::warn!("{} {}", browser_width, browser_height);
 
                 let (x, y) = (x * browser_width as f32, y * browser_height as f32);
-                // debug!("{} {}", x, y);
 
                 browser.send_click(x as _, y as _)?;
             }

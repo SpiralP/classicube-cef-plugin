@@ -129,12 +129,6 @@ impl CefEntity {
         self.entity.NameTex.uv.U2 = part.Width as f32 / TEXTURE_WIDTH as f32;
         self.entity.NameTex.uv.V2 = part.Height as f32 / TEXTURE_HEIGHT as f32;
 
-        log::debug!(
-            "{} {}",
-            self.entity.NameTex.uv.U2,
-            self.entity.NameTex.uv.V2
-        );
-
         unsafe {
             Gfx_UpdateTexturePart(self.texture.resource_id, 0, 0, &mut part, 0);
         }

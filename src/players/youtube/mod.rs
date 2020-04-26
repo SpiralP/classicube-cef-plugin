@@ -108,7 +108,6 @@ impl PlayerTrait for YoutubePlayer {
     }
 
     fn on_page_loaded(&mut self, _browser: &mut RustRefBrowser) {
-        log::warn!("OK");
         self.start_time = Some(Instant::now());
     }
 

@@ -317,8 +317,8 @@ pub async fn command_callback(
         }
 
         ["click", x, y] => {
-            let x: c_int = x.parse()?;
-            let y: c_int = y.parse()?;
+            let x = x.parse()?;
+            let y = y.parse()?;
 
             let entity_id = EntityManager::with_closest(player.eye_position, |closest_entity| {
                 Ok(closest_entity.id)
@@ -374,8 +374,8 @@ pub async fn command_callback(
         }
 
         ["resize", width, height] => {
-            let width: c_int = width.parse()?;
-            let height: c_int = height.parse()?;
+            let width = width.parse()?;
+            let height = height.parse()?;
 
             let entity_id = EntityManager::with_closest(player.eye_position, |closest_entity| {
                 Ok(closest_entity.id)

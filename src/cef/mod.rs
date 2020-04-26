@@ -242,8 +242,8 @@ impl Cef {
         }
     }
 
-    pub fn resize_browser(browser: &RustRefBrowser, width: c_int, height: c_int) -> Result<()> {
-        if width as usize > TEXTURE_WIDTH || height as usize > TEXTURE_HEIGHT {
+    pub fn resize_browser(browser: &RustRefBrowser, width: usize, height: usize) -> Result<()> {
+        if width < 1 || height < 1 || width > TEXTURE_WIDTH || height > TEXTURE_HEIGHT {
             bail!("size not within {}x{}", TEXTURE_WIDTH, TEXTURE_HEIGHT);
         }
 
@@ -251,7 +251,7 @@ impl Cef {
         BROWSER_SIZES.with(move |cell| {
             let sizes = &mut *cell.borrow_mut();
 
-            sizes.insert(browser_id, (width, height));
+            sizes.insert(browser_id, (width as _, height as _));
         });
 
         browser.was_resized()?;

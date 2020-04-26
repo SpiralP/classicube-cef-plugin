@@ -161,7 +161,7 @@ async fn start_volume_loop(entity_id: usize) {
                 .flatten();
 
             if let Some(my_pos) = maybe_my_pos {
-                let percent = (entity_pos - my_pos).length_squared().sqrt() / 10f32;
+                let percent = (entity_pos - my_pos).length_squared().sqrt() / 30f32;
                 let percent = (1.0 - percent).max(0.0).min(1.0);
 
                 YoutubePlayer::set_volume(&browser, percent);

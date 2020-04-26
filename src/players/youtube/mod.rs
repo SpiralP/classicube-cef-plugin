@@ -55,6 +55,8 @@ impl Clone for YoutubePlayer {
             id: self.id.clone(),
             time: self.time,
             volume: self.volume,
+            // we need start_time because we use clone in encoding.rs
+            start_time: self.start_time,
             ..Default::default()
         }
     }
@@ -106,6 +108,7 @@ impl PlayerTrait for YoutubePlayer {
     }
 
     fn on_page_loaded(&mut self, _browser: &mut RustRefBrowser) {
+        log::warn!("OK");
         self.start_time = Some(Instant::now());
     }
 

@@ -47,6 +47,7 @@ pub fn create_message() -> Message {
                 if let Some(start_time) = &mut yt.start_time {
                     yt.time = Instant::now() - *start_time;
                 }
+                yt.start_time = None;
             }
 
             light_entities.push(LightEntity {

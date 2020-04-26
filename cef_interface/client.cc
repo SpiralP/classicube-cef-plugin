@@ -27,6 +27,9 @@ CefRefPtr<CefRequestHandler> MyClient::GetRequestHandler() {
 CefRefPtr<CefJSDialogHandler> MyClient::GetJSDialogHandler() {
   return this;
 }
+CefRefPtr<CefDialogHandler> MyClient::GetDialogHandler() {
+  return this;
+}
 
 // CefDisplayHandler methods:
 void MyClient::OnTitleChange(CefRefPtr<CefBrowser> browser,
@@ -153,4 +156,18 @@ bool MyClient::OnJSDialog(CefRefPtr<CefBrowser> browser,
   // Set |suppress_message| to true and return false to suppress the message
   suppress_message = true;
   return false;
+}
+
+// CefDialogHandler methods:
+bool MyClient::OnFileDialog(CefRefPtr<CefBrowser> browser,
+                            CefDialogHandler::FileDialogMode mode,
+                            const CefString& title,
+                            const CefString& default_file_path,
+                            const std::vector<CefString>& accept_filters,
+                            int selected_accept_filter,
+                            CefRefPtr<CefFileDialogCallback> callback) {
+  // To display a custom dialog return true and execute |callback| either inline
+  // or at a later time.
+  callback->Cancel();
+  return true;
 }

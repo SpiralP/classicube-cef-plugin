@@ -12,7 +12,8 @@ class MyClient : public CefClient,
                  public CefLoadHandler,
                  public CefRequestHandler,
                  public CefResourceRequestHandler,
-                 public CefJSDialogHandler {
+                 public CefJSDialogHandler,
+                 public CefDialogHandler {
  public:
   MyClient(Callbacks callbacks);
 
@@ -23,6 +24,7 @@ class MyClient : public CefClient,
   CefRefPtr<CefLoadHandler> GetLoadHandler() OVERRIDE;
   CefRefPtr<CefRequestHandler> GetRequestHandler() OVERRIDE;
   CefRefPtr<CefJSDialogHandler> GetJSDialogHandler() OVERRIDE;
+  CefRefPtr<CefDialogHandler> GetDialogHandler() OVERRIDE;
 
   // CefDisplayHandler methods:
   void OnTitleChange(CefRefPtr<CefBrowser> browser,
@@ -84,7 +86,16 @@ class MyClient : public CefClient,
                   const CefString& message_text,
                   const CefString& default_prompt_text,
                   CefRefPtr<CefJSDialogCallback> callback,
-                  bool& suppress_message);
+                  bool& suppress_message) OVERRIDE;
+
+  // CefDialogHandler methods:
+  bool OnFileDialog(CefRefPtr<CefBrowser> browser,
+                    CefDialogHandler::FileDialogMode mode,
+                    const CefString& title,
+                    const CefString& default_file_path,
+                    const std::vector<CefString>& accept_filters,
+                    int selected_accept_filter,
+                    CefRefPtr<CefFileDialogCallback> callback) OVERRIDE;
 
  private:
   OnBeforeCloseCallback on_before_close_callback;

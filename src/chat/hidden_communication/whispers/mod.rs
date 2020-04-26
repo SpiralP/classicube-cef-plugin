@@ -6,6 +6,7 @@ use crate::{async_manager::AsyncManager, chat::ENTITIES, error::*};
 use classicube_helpers::OptionWithInner;
 use futures::{future::RemoteHandle, prelude::*};
 use log::{debug, warn};
+use rand::seq::SliceRandom;
 use std::cell::Cell;
 
 thread_local!(
@@ -19,23 +20,28 @@ pub async fn start_whispering(players: Vec<(u8, String)>) -> Result<()> {
 
     debug!("start_whispering");
 
-    for (id, real_name) in players {
-        // check if they're on our map
-        let entity_exists = ENTITIES
-            .with_inner(|entities| entities.get(id).is_some())
-            .unwrap();
+    let mut real_players: Vec<_> = players
+        .iter()
+        .filter(|(id, _real_name)| {
+            // check if they're on our map
+            ENTITIES
+                .with_inner(|entities| entities.get(*id).is_some())
+                .unwrap()
+        })
+        .collect();
 
-        if entity_exists {
-            match outgoing::query_whisper(&real_name).await {
-                Ok(had_data) => {
-                    if had_data {
-                        break;
-                    }
-                }
+    real_players.shuffle(&mut rand::thread_rng());
 
-                Err(e) => {
-                    warn!("query_whisper {} failed: {}", real_name, e);
+    for (_id, real_name) in real_players {
+        match outgoing::query_whisper(&real_name).await {
+            Ok(had_data) => {
+                if had_data {
+                    break;
                 }
+            }
+
+            Err(e) => {
+                warn!("query_whisper {} failed: {}", real_name, e);
             }
         }
     }

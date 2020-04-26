@@ -11,7 +11,7 @@
       // window["START" + "_" + "TIME"] = 36;
       // window["START" + "_" + "VOLUME"] = 10;
 
-      var videoId = "VIDEO_ID";
+      var videoId = "VIDEO_ID"; // Wimkqo8gDZ0
       var startTime = START_TIME;
       var startVolume = START_VOLUME;
 
@@ -42,8 +42,32 @@
 
       // 4. The API will call this function when the video player is ready.
       function onPlayerReady(event) {
-        event.target.setVolume(startVolume);
-        event.target.playVideo();
+        var player = event.target;
+        player.setVolume(startVolume);
+        player.playVideo();
+      }
+
+      // https://stackoverflow.com/a/6313008
+      function formatSeconds(totalSeconds) {
+        var sec_num = parseInt(totalSeconds, 10); // don't forget the second param
+        var hours = Math.floor(sec_num / 3600);
+        var minutes = Math.floor((sec_num - hours * 3600) / 60);
+        var seconds = sec_num - hours * 3600 - minutes * 60;
+
+        if (hours < 10) {
+          hours = "0" + hours;
+        }
+        if (minutes < 10) {
+          minutes = "0" + minutes;
+        }
+        if (seconds < 10) {
+          seconds = "0" + seconds;
+        }
+        if (hours !== "00") {
+          return hours + ":" + minutes + ":" + seconds;
+        } else {
+          return minutes + ":" + seconds;
+        }
       }
 
       // 5. The API calls this function when the player's state changes.
@@ -52,8 +76,13 @@
       // var done = false;
       function onPlayerStateChange(event) {
         if (event.data == YT.PlayerState.PLAYING) {
-          var videoData = event.target.getVideoData();
-          document.title = videoData.title;
+          var player = event.target;
+          var videoData = player.getVideoData();
+          console.log(videoData);
+
+          var totalSeconds = player.getDuration();
+          document.title =
+            videoData.title + " (" + formatSeconds(totalSeconds) + ")";
         }
       }
     </script>

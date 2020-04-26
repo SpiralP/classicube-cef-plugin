@@ -95,7 +95,7 @@ impl RustRefBrowser {
         unsafe { cef_interface_browser_get_identifier(self.get()) }
     }
 
-    pub fn load_url(&self, url: String) -> Result<()> {
+    pub fn load_url<T: Into<Vec<u8>>>(&self, url: T) -> Result<()> {
         let url = CString::new(url).unwrap();
 
         to_result(unsafe { cef_interface_browser_load_url(self.get(), url.as_ptr()) })

@@ -168,7 +168,16 @@ pub async fn command_callback(
             EntityManager::entity_play(&url, entity_id)?;
         }
 
-        ["close"] | ["remove"] | ["stop"] | ["clear"] => {
+        ["stop"] => {
+            let entity_id = EntityManager::with_closest(player.eye_position, |closest_entity| {
+                Ok(closest_entity.id)
+            })?;
+
+            let browser = EntityManager::get_browser_by_entity_id(entity_id)?;
+            browser.load_url("data:text/html,")?;
+        }
+
+        ["close"] | ["remove"] | ["clear"] => {
             let entity_id = EntityManager::with_closest(player.eye_position, |closest_entity| {
                 Ok(closest_entity.id)
             })?;

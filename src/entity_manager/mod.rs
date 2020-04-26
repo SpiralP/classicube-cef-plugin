@@ -181,7 +181,7 @@ impl EntityManager {
         });
 
         AsyncManager::spawn_local_on_main_thread(async move {
-            let browser = Cef::create_browser(url).await;
+            let browser = Cef::create_browser(url).await.unwrap();
 
             EntityManager::attach_browser_to_entity(entity_id, browser);
         });
@@ -214,7 +214,7 @@ impl EntityManager {
             entity.set_scale(info.scale);
 
             AsyncManager::spawn_local_on_main_thread(async move {
-                let browser = Cef::create_browser(url).await;
+                let browser = Cef::create_browser(url).await.unwrap();
 
                 EntityManager::attach_browser_to_entity(entity_id, browser);
             });

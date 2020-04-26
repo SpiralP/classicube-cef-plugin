@@ -143,7 +143,7 @@ impl Cef {
             .unwrap()
     }
 
-    pub async fn create_browser(url: String) -> RustRefBrowser {
+    pub async fn create_browser(url: String) -> Result<RustRefBrowser> {
         let mut create_browser_mutex = {
             let mut mutex = CEF.with(|mutex| mutex.clone());
             let maybe_cef = mutex.lock().await;
@@ -168,7 +168,7 @@ impl Cef {
             (client, event_receiver)
         };
 
-        client.create_browser(&url).unwrap();
+        client.create_browser(&url)?;
 
         let browser = loop {
             if let CefEvent::BrowserCreated(browser) = event_receiver.recv().await.unwrap() {
@@ -182,7 +182,7 @@ impl Cef {
 
         drop(mutex);
 
-        browser
+        Ok(browser)
     }
 
     pub async fn close_browser(browser: &RustRefBrowser) -> Result<()> {

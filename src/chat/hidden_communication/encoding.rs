@@ -1,7 +1,7 @@
 use crate::{entity_manager::EntityManager, error::*, players::Player};
 use log::{debug, warn};
 use serde::{Deserialize, Serialize};
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct LightEntity {
@@ -35,7 +35,7 @@ pub fn create_message() -> Message {
     let mut light_entities = Vec::new();
 
     EntityManager::with_all_entities(|entities| {
-        for (id, entity) in entities {
+        for (&id, entity) in entities {
             let e = &entity.entity;
 
             let pos = [e.Position.X, e.Position.Y, e.Position.Z];
@@ -45,13 +45,15 @@ pub fn create_message() -> Message {
             let mut player = entity.player.clone();
             if let Player::Youtube(ref mut yt) = &mut player {
                 if let Some(start_time) = &mut yt.start_time {
-                    yt.time = Instant::now() - *start_time;
+                    // this is about 5 seconds behind because of the load time
+                    // of the browser page
+                    yt.time = Instant::now() - *start_time + Duration::from_secs(4);
                 }
                 yt.start_time = None;
             }
 
             light_entities.push(LightEntity {
-                id: *id,
+                id,
                 pos,
                 ang,
                 player,
@@ -72,6 +74,7 @@ pub async fn received_message(mut message: Message) -> Result<bool> {
         // if it already exists don't do anything
         if EntityManager::with_by_entity_id(info.id, |_| Ok(())).is_ok() {
             warn!("entity {} already exists, skipping", info.id);
+            continue;
         }
 
         debug!("creating {:#?}", info);

@@ -69,7 +69,7 @@ impl Clone for RustRefApp {
 }
 
 impl RustRefClient {
-    pub fn create_browser(&self, startup_url: &str) -> Result<()> {
+    pub fn create_browser<T: Into<Vec<u8>>>(&self, startup_url: T) -> Result<()> {
         let startup_url = CString::new(startup_url).unwrap();
 
         to_result(unsafe { cef_interface_create_browser(self.get(), startup_url.as_ptr()) })
@@ -102,7 +102,7 @@ impl RustRefBrowser {
     }
 
     #[allow(dead_code)]
-    pub fn execute_javascript(&self, code: String) -> Result<()> {
+    pub fn execute_javascript<T: Into<Vec<u8>>>(&self, code: T) -> Result<()> {
         let code = CString::new(code).unwrap();
 
         to_result(unsafe { cef_interface_browser_execute_javascript(self.get(), code.as_ptr()) })
@@ -112,7 +112,7 @@ impl RustRefBrowser {
         to_result(unsafe { cef_interface_browser_send_click(self.get(), x, y) })
     }
 
-    pub fn send_text(&self, text: String) -> Result<()> {
+    pub fn send_text<T: Into<Vec<u8>>>(&self, text: T) -> Result<()> {
         let text = CString::new(text).unwrap();
         to_result(unsafe { cef_interface_browser_send_text(self.get(), text.as_ptr()) })
     }

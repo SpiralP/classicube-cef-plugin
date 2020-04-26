@@ -112,8 +112,12 @@ impl Chat {
     }
 
     pub fn print<S: Into<String>>(s: S) {
-        let s = s.into();
+        let mut s = s.into();
         info!("{}", s);
+
+        if s.len() > 255 {
+            s.truncate(255);
+        }
 
         let owned_string = OwnedString::new(s);
 

@@ -1,4 +1,4 @@
-use super::{encoding, wait_for_message, SHOULD_BLOCK};
+use super::{encoding, is_incoming_whisper, is_outgoing_whisper, wait_for_message, SHOULD_BLOCK};
 use crate::{chat::Chat, error::*};
 use async_std::future::timeout;
 use classicube_helpers::CellGetSet;
@@ -18,11 +18,7 @@ pub async fn query_whisper(real_name: &str) -> Result<bool> {
         loop {
             let message = wait_for_message().await;
 
-            if message.len() >= 6
-                && (&message.as_bytes()[0..1] == b"&"
-                    && &message.as_bytes()[2..6] == b"[<] "
-                    && message.ends_with(": &f?CEF?"))
-            {
+            if is_outgoing_whisper(&message) && message.ends_with(": &f?CEF?") {
                 SHOULD_BLOCK.set(true);
                 break;
             }
@@ -35,11 +31,7 @@ pub async fn query_whisper(real_name: &str) -> Result<bool> {
     let full_message_encoded = timeout(Duration::from_secs(5), async {
         loop {
             let message = wait_for_message().await;
-            if message.len() >= 6
-                && (&message.as_bytes()[0..1] == b"&"
-                    && &message.as_bytes()[2..6] == b"[>] "
-                    && message.contains(": &f!CEF!"))
-            {
+            if is_incoming_whisper(&message) && message.contains(": &f!CEF!") {
                 SHOULD_BLOCK.set(true);
                 debug!("got whisper response {:?}", message);
 

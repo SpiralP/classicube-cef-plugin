@@ -3,6 +3,8 @@
 #include <include/cef_client.h>
 #include <include/wrapper/cef_helpers.h>
 
+#include <unordered_map>
+
 #include "interface.hh"
 
 class MyClient : public CefClient,
@@ -114,6 +116,7 @@ class MyClient : public CefClient,
   OnLoadEndCallback on_load_end_callback;
   OnAfterCreatedCallback on_after_created_callback;
   OnTitleChangeCallback on_title_change_callback;
+  GetViewRectCallback get_view_rect_callback;
 
   IMPLEMENT_REFCOUNTING(MyClient);
   DISALLOW_COPY_AND_ASSIGN(MyClient);

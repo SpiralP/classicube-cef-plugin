@@ -1,8 +1,9 @@
 use super::Chat;
 use crate::{
     async_manager::AsyncManager,
+    cef::Cef,
     chat::{PlayerSnapshot, ENTITIES},
-    entity_manager::{CefEntity, EntityManager, CEF_HEIGHT, CEF_WIDTH, MODEL_HEIGHT, MODEL_WIDTH},
+    entity_manager::{CefEntity, EntityManager, MODEL_HEIGHT, MODEL_WIDTH},
     error::*,
     players::{Player, YoutubePlayer},
     search,
@@ -298,10 +299,13 @@ pub async fn command_callback(
                     return Err("not looking at a screen".into());
                 }
 
-                let (x, y) = (x * CEF_WIDTH as f32, y * CEF_HEIGHT as f32);
+                let browser = EntityManager::get_browser_by_entity_id(entity_id)?;
+                let (browser_width, browser_height) = Cef::get_browser_size(&browser);
+                log::warn!("{} {}", browser_width, browser_height);
+
+                let (x, y) = (x * browser_width as f32, y * browser_height as f32);
                 // debug!("{} {}", x, y);
 
-                let browser = EntityManager::get_browser_by_entity_id(entity_id)?;
                 browser.send_click(x as _, y as _)?;
             }
         }
@@ -374,6 +378,18 @@ pub async fn command_callback(
             };
 
             YoutubePlayer::seek_to(&browser, seconds);
+        }
+
+        ["resize", width, height] => {
+            let width: c_int = width.parse()?;
+            let height: c_int = height.parse()?;
+
+            let entity_id = EntityManager::with_closest(player.eye_position, |closest_entity| {
+                Ok(closest_entity.id)
+            })?;
+
+            let browser = EntityManager::get_browser_by_entity_id(entity_id)?;
+            Cef::resize_browser(&browser, width, height)?;
         }
 
         _ => {}

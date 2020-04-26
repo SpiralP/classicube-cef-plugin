@@ -2,8 +2,12 @@ mod bindings;
 mod browser;
 
 pub use self::bindings::{Callbacks, RustRefApp, RustRefBrowser, RustRefClient};
-use self::browser::BROWSERS;
-use crate::{async_manager::AsyncManager, entity_manager::cef_paint_callback, error::*};
+use self::browser::{BROWSERS, BROWSER_SIZES};
+use crate::{
+    async_manager::AsyncManager,
+    entity_manager::{cef_paint_callback, TEXTURE_HEIGHT, TEXTURE_WIDTH},
+    error::*,
+};
 use classicube_helpers::{shared::FutureShared, CellGetSet, OptionWithInner};
 use futures::stream::{FuturesUnordered, StreamExt};
 use log::debug;
@@ -14,6 +18,9 @@ use std::{
     time::Duration,
 };
 use tokio::sync::broadcast;
+
+pub const CEF_DEFAULT_WIDTH: c_int = 1920;
+pub const CEF_DEFAULT_HEIGHT: c_int = 1080;
 
 // we've set cef to render at 60 fps
 // (1/60)*1000 = 16.6666666667
@@ -70,6 +77,7 @@ impl Cef {
             on_load_end_callback: Some(browser::on_page_loaded),
             on_title_change_callback: Some(browser::on_title_change),
             on_paint_callback: Some(cef_paint_callback),
+            get_view_rect_callback: Some(browser::get_view_rect),
         });
 
         let mut event_receiver = Self::create_event_listener();
@@ -232,5 +240,33 @@ impl Cef {
         while let Some(id) = ids.next().await {
             debug!("browser {} closed", id);
         }
+    }
+
+    pub fn resize_browser(browser: &RustRefBrowser, width: c_int, height: c_int) -> Result<()> {
+        if width as usize > TEXTURE_WIDTH || height as usize > TEXTURE_HEIGHT {
+            bail!("size not within {}x{}", TEXTURE_WIDTH, TEXTURE_HEIGHT);
+        }
+
+        let browser_id = browser.get_identifier();
+        BROWSER_SIZES.with(move |cell| {
+            let sizes = &mut *cell.borrow_mut();
+
+            sizes.insert(browser_id, (width, height));
+        });
+
+        browser.was_resized()?;
+        Ok(())
+    }
+
+    pub fn get_browser_size(browser: &RustRefBrowser) -> (c_int, c_int) {
+        let browser_id = browser.get_identifier();
+        BROWSER_SIZES.with(move |cell| {
+            let sizes = &*cell.borrow();
+
+            sizes
+                .get(&browser_id)
+                .cloned()
+                .unwrap_or((CEF_DEFAULT_WIDTH, CEF_DEFAULT_HEIGHT))
+        })
     }
 }

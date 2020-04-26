@@ -1,4 +1,4 @@
-use super::{CefEvent, EVENT_QUEUE};
+use super::{bindings::RustRect, CefEvent, CEF_DEFAULT_HEIGHT, CEF_DEFAULT_WIDTH, EVENT_QUEUE};
 use crate::cef::RustRefBrowser;
 use classicube_helpers::OptionWithInner;
 use log::debug;
@@ -76,4 +76,27 @@ pub extern "C" fn on_title_change(browser: RustRefBrowser, title_c_str: *const c
             let _ignore_error = sender.send(CefEvent::BrowserTitleChange(browser, title));
         })
         .unwrap();
+}
+
+thread_local!(
+    pub static BROWSER_SIZES: RefCell<HashMap<c_int, (c_int, c_int)>> = Default::default();
+);
+
+pub extern "C" fn get_view_rect(browser: RustRefBrowser) -> RustRect {
+    let browser_id = browser.get_identifier();
+
+    BROWSER_SIZES.with(move |cell| {
+        let sizes = &mut *cell.borrow_mut();
+
+        let (width, height) = sizes
+            .get(&browser_id)
+            .unwrap_or(&(CEF_DEFAULT_WIDTH, CEF_DEFAULT_HEIGHT));
+
+        RustRect {
+            x: 0,
+            y: 0,
+            width: *width,
+            height: *height,
+        }
+    })
 }

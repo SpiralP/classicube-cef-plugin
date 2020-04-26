@@ -28,9 +28,6 @@ use std::{
     os::raw::*,
 };
 
-pub const CEF_WIDTH: u32 = 1920;
-pub const CEF_HEIGHT: u32 = 1080;
-
 pub const TEXTURE_WIDTH: usize = 2048;
 pub const TEXTURE_HEIGHT: usize = 2048;
 

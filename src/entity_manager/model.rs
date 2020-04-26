@@ -1,8 +1,8 @@
-use super::{CEF_HEIGHT, CEF_WIDTH, MODEL_HEIGHT, MODEL_WIDTH, TEXTURE_HEIGHT, TEXTURE_WIDTH};
+use super::{TEXTURE_HEIGHT, TEXTURE_WIDTH};
 use crate::helpers::*;
 use classicube_sys::{
     Bitmap, Entity, Model, ModelTex, ModelVertex, Model_Init, Model_Register, OwnedGfxTexture,
-    PackedCol, PackedCol_Make, Texture, TextureRec, MODEL_BOX_VERTICES,
+    PackedCol, PackedCol_Make, MODEL_BOX_VERTICES,
 };
 use std::{ffi::CString, mem, pin::Pin};
 
@@ -82,30 +82,11 @@ impl CefModel {
     extern "C" fn draw(entity: *mut Entity) {
         let entity = unsafe { &mut *entity };
 
-        let resource_id = entity.TextureId;
-
-        let mut tex = Texture {
-            ID: resource_id,
-            X: -8,
-            Y: -9,
-            // TODO have these be dynamic, they're block sizes
-            // and use a pixels per block for resolution
-            // ACTUALLY let's try using ModelScale on Entity and keep this 16:9 like the CEF resolution is
-            Width: MODEL_WIDTH as _,
-            Height: MODEL_HEIGHT as _,
-            uv: TextureRec {
-                U1: 0.0,
-                V1: 0.0,
-                U2: CEF_WIDTH as f32 / TEXTURE_WIDTH as f32,
-                V2: CEF_HEIGHT as f32 / TEXTURE_HEIGHT as f32,
-            },
-        };
-
         unsafe {
             classicube_sys::Gfx_SetAlphaTest(0);
             classicube_sys::Gfx_SetTexturing(1);
 
-            Texture_RenderShaded(&mut tex, WHITE_TRANSPARENT);
+            Texture_RenderShaded(&mut entity.NameTex, WHITE_TRANSPARENT);
         }
     }
 

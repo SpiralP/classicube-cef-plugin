@@ -50,6 +50,15 @@ typedef void (*OnLoadEndCallback)(RustRefBrowser browser);
 typedef void (*OnTitleChangeCallback)(RustRefBrowser browser,
                                       const char* title);
 
+struct RustRect {
+  int x;
+  int y;
+  int width;
+  int height;
+};
+
+typedef RustRect (*GetViewRectCallback)(RustRefBrowser browser);
+
 struct Callbacks {
   OnContextInitializedCallback on_context_initialized_callback;
   OnAfterCreatedCallback on_after_created_callback;
@@ -57,6 +66,7 @@ struct Callbacks {
   OnPaintCallback on_paint_callback;
   OnLoadEndCallback on_load_end_callback;
   OnTitleChangeCallback on_title_change_callback;
+  GetViewRectCallback get_view_rect_callback;
 };
 
 // functions to rust
@@ -84,9 +94,12 @@ extern "C" int cef_interface_browser_send_text(CefBrowser* browser_ptr,
                                                const char* text);
 extern "C" int cef_interface_browser_reload(CefBrowser* browser_ptr);
 
-/// Tell browser to close, OnBeforeClose will be called soon?
+extern "C" int cef_interface_browser_was_resized(CefBrowser* browser_ptr);
+
+/// Tell browser to close, OnBeforeClose will be called soon
 extern "C" int cef_interface_browser_close(CefBrowser* browser_ptr);
 
 // functions from rust
+
 extern "C" void rust_print(const char* c_str);
 extern "C" void rust_wprint(const wchar_t* c_str);

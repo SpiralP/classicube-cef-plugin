@@ -110,11 +110,11 @@ extern "C" int cef_interface_create_browser(MyClient* client_ptr,
   bool browser = CefBrowserHost::CreateBrowser(windowInfo, client_ptr, url,
                                                settings, extra_info, NULL);
 
-  if (!browser) {
+  if (browser) {
+    return 0;
+  } else {
     return -1;
   }
-
-  return 0;
 }
 
 extern "C" int cef_interface_browser_get_identifier(CefBrowser* browser_ptr) {
@@ -179,6 +179,11 @@ extern "C" int cef_interface_browser_send_text(CefBrowser* browser_ptr,
 
 extern "C" int cef_interface_browser_reload(CefBrowser* browser_ptr) {
   browser_ptr->Reload();
+  return 0;
+}
+
+extern "C" int cef_interface_browser_was_resized(CefBrowser* browser_ptr) {
+  browser_ptr->GetHost()->WasResized();
   return 0;
 }
 

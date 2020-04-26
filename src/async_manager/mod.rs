@@ -98,7 +98,6 @@ impl AsyncManager {
             .unwrap();
     }
 
-    #[allow(dead_code)]
     pub async fn sleep(duration: Duration) {
         let _ = async_std::future::timeout(duration, async_std::future::pending::<()>()).await;
     }
@@ -106,7 +105,6 @@ impl AsyncManager {
     /// Block thread until future is resolved.
     ///
     /// This will continue to call the same executor so cef_step() will still be called!
-    #[allow(dead_code)]
     pub fn block_on_local<F>(f: F)
     where
         F: Future<Output = ()> + 'static,
@@ -138,7 +136,6 @@ impl AsyncManager {
         }
     }
 
-    #[allow(dead_code)]
     pub fn spawn<F>(f: F) -> JoinHandle<F::Output>
     where
         F: Future + Send + 'static,
@@ -174,7 +171,6 @@ impl AsyncManager {
         handle.dispatch(f).await
     }
 
-    #[allow(dead_code)]
     pub fn spawn_local_on_main_thread<F>(f: F)
     where
         F: Future<Output = ()> + 'static,

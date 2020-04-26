@@ -2,13 +2,14 @@ use super::EntityManager;
 use crate::cef::RustRefBrowser;
 use classicube_sys::*;
 use log::warn;
+use std::os::raw::{c_int, c_void};
 
 /// This gets called from cef browser's OnPaint
 pub extern "C" fn cef_paint_callback(
     browser: RustRefBrowser,
-    new_pixels: *const ::std::os::raw::c_void,
-    new_width: ::std::os::raw::c_int,
-    new_height: ::std::os::raw::c_int,
+    new_pixels: *const c_void,
+    new_width: c_int,
+    new_height: c_int,
 ) {
     let browser_id = browser.get_identifier();
 

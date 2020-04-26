@@ -101,7 +101,6 @@ impl RustRefBrowser {
         to_result(unsafe { cef_interface_browser_load_url(self.get(), url.as_ptr()) })
     }
 
-    #[allow(dead_code)]
     pub fn execute_javascript<T: Into<Vec<u8>>>(&self, code: T) -> Result<()> {
         let code = CString::new(code).unwrap();
 
@@ -123,6 +122,10 @@ impl RustRefBrowser {
 
     pub fn close(&self) -> Result<()> {
         to_result(unsafe { cef_interface_browser_close(self.get()) })
+    }
+
+    pub fn was_resized(&self) -> Result<()> {
+        to_result(unsafe { cef_interface_browser_was_resized(self.get()) })
     }
 
     fn get(&self) -> *mut CefBrowser {

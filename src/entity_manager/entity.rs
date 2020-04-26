@@ -1,8 +1,13 @@
 use super::{TEXTURE_HEIGHT, TEXTURE_WIDTH};
-use crate::{cef::RustRefBrowser, players::Player};
+use crate::{
+    cef::RustRefBrowser,
+    entity_manager::{MODEL_HEIGHT, MODEL_WIDTH},
+    players::Player,
+};
 use classicube_sys::{
-    cc_bool, Bitmap, Entity, EntityVTABLE, Entity_Init, Entity_SetModel, Gfx_UpdateTexturePart,
-    LocationUpdate, Model_Render, OwnedGfxTexture, OwnedString, PackedCol, PACKEDCOL_WHITE,
+    cc_bool, cc_int16, Bitmap, Entity, EntityVTABLE, Entity_Init, Entity_SetModel,
+    Gfx_UpdateTexturePart, LocationUpdate, Model_Render, OwnedGfxTexture, OwnedString, PackedCol,
+    Texture, TextureRec, PACKEDCOL_WHITE,
 };
 use std::{mem, pin::Pin};
 
@@ -101,13 +106,37 @@ impl CefEntity {
         entity.TextureId = texture.resource_id;
 
         entity.Position.set(0.0, 0.0, 0.0);
+
+        // hack so that Model can see browser resolution sizes
+        // that are updated in update_texture
+        entity.NameTex = Texture {
+            ID: entity.TextureId,
+            X: -(MODEL_WIDTH as cc_int16 / 2),
+            Y: -(MODEL_HEIGHT as cc_int16),
+            Width: MODEL_WIDTH as _,
+            Height: MODEL_HEIGHT as _,
+            uv: TextureRec {
+                U1: 0.0,
+                V1: 0.0,
+                U2: 1.0,
+                V2: 1.0,
+            },
+        };
     }
 
     pub fn update_texture(&mut self, mut part: Bitmap) {
-        let CefEntity { texture, .. } = self;
+        // update uv's
+        self.entity.NameTex.uv.U2 = part.Width as f32 / TEXTURE_WIDTH as f32;
+        self.entity.NameTex.uv.V2 = part.Height as f32 / TEXTURE_HEIGHT as f32;
+
+        log::debug!(
+            "{} {}",
+            self.entity.NameTex.uv.U2,
+            self.entity.NameTex.uv.V2
+        );
 
         unsafe {
-            Gfx_UpdateTexturePart(texture.resource_id, 0, 0, &mut part, 0);
+            Gfx_UpdateTexturePart(self.texture.resource_id, 0, 0, &mut part, 0);
         }
     }
 

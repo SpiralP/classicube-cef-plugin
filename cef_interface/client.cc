@@ -6,6 +6,7 @@ MyClient::MyClient(Callbacks callbacks) {
   this->on_load_end_callback = callbacks.on_load_end_callback;
   this->on_after_created_callback = callbacks.on_after_created_callback;
   this->on_title_change_callback = callbacks.on_title_change_callback;
+  this->get_view_rect_callback = callbacks.get_view_rect_callback;
 }
 
 // CefClient methods:
@@ -89,10 +90,12 @@ bool MyClient::OnBeforePopup(
 
 // CefRenderHandler methods:
 void MyClient::GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) {
-  rect.x = 0;
-  rect.y = 0;
-  rect.width = 1920;
-  rect.height = 1080;
+  auto new_rect =
+      get_view_rect_callback(cef_interface_add_ref_browser(browser.get()));
+  rect.x = new_rect.x;
+  rect.y = new_rect.y;
+  rect.width = new_rect.width;
+  rect.height = new_rect.height;
 }
 
 void MyClient::OnPaint(CefRefPtr<CefBrowser> browser,

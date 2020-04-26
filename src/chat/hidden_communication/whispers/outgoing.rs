@@ -5,7 +5,7 @@ use classicube_helpers::CellGetSet;
 use log::debug;
 use std::time::Duration;
 
-pub async fn query_whisper(real_name: &str) -> Result<()> {
+pub async fn query_whisper(real_name: &str) -> Result<bool> {
     debug!("query_whisper asking {}", real_name);
 
     Chat::send(format!("@{}+ ?CEF?", real_name));
@@ -80,7 +80,5 @@ pub async fn query_whisper(real_name: &str) -> Result<()> {
 
     let message = encoding::decode(full_message_encoded)?;
     debug!("decoded {:#?}", message);
-    encoding::received_message(message).await?;
-
-    Ok(())
+    Ok(encoding::received_message(message).await?)
 }

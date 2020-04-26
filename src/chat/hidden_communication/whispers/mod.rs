@@ -26,8 +26,16 @@ pub async fn start_whispering(players: Vec<(u8, String)>) -> Result<()> {
             .unwrap();
 
         if entity_exists {
-            if let Err(e) = outgoing::query_whisper(&real_name).await {
-                warn!("query_whisper {} failed: {}", real_name, e);
+            match outgoing::query_whisper(&real_name).await {
+                Ok(had_data) => {
+                    if had_data {
+                        break;
+                    }
+                }
+
+                Err(e) => {
+                    warn!("query_whisper {} failed: {}", real_name, e);
+                }
             }
         }
     }

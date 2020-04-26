@@ -30,6 +30,9 @@ CefRefPtr<CefJSDialogHandler> MyClient::GetJSDialogHandler() {
 CefRefPtr<CefDialogHandler> MyClient::GetDialogHandler() {
   return this;
 }
+CefRefPtr<CefDownloadHandler> MyClient::GetDownloadHandler() {
+  return this;
+}
 
 // CefDisplayHandler methods:
 void MyClient::OnTitleChange(CefRefPtr<CefBrowser> browser,
@@ -37,6 +40,11 @@ void MyClient::OnTitleChange(CefRefPtr<CefBrowser> browser,
   auto title_utf8 = title.ToString();
   on_title_change_callback(cef_interface_add_ref_browser(browser.get()),
                            title_utf8.c_str());
+}
+void MyClient::OnLoadingProgressChange(CefRefPtr<CefBrowser> browser,
+                                       double progress) {
+  // auto ag = std::to_string(progress);
+  // rust_print(ag.c_str());
 }
 
 // CefLifeSpanHandler methods:
@@ -170,4 +178,12 @@ bool MyClient::OnFileDialog(CefRefPtr<CefBrowser> browser,
   // or at a later time.
   callback->Cancel();
   return true;
+}
+
+// CefDownloadHandler methods:
+void MyClient::OnBeforeDownload(CefRefPtr<CefBrowser> browser,
+                                CefRefPtr<CefDownloadItem> download_item,
+                                const CefString& suggested_name,
+                                CefRefPtr<CefBeforeDownloadCallback> callback) {
+  // By default the download will be canceled.
 }

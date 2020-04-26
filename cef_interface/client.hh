@@ -13,7 +13,8 @@ class MyClient : public CefClient,
                  public CefRequestHandler,
                  public CefResourceRequestHandler,
                  public CefJSDialogHandler,
-                 public CefDialogHandler {
+                 public CefDialogHandler,
+                 public CefDownloadHandler {
  public:
   MyClient(Callbacks callbacks);
 
@@ -25,10 +26,14 @@ class MyClient : public CefClient,
   CefRefPtr<CefRequestHandler> GetRequestHandler() OVERRIDE;
   CefRefPtr<CefJSDialogHandler> GetJSDialogHandler() OVERRIDE;
   CefRefPtr<CefDialogHandler> GetDialogHandler() OVERRIDE;
+  CefRefPtr<CefDownloadHandler> GetDownloadHandler() OVERRIDE;
 
   // CefDisplayHandler methods:
   void OnTitleChange(CefRefPtr<CefBrowser> browser,
                      const CefString& title) OVERRIDE;
+
+  void OnLoadingProgressChange(CefRefPtr<CefBrowser> browser,
+                               double progress) OVERRIDE;
 
   // CefLifeSpanHandler methods:
   bool DoClose(CefRefPtr<CefBrowser> browser) OVERRIDE;
@@ -96,6 +101,12 @@ class MyClient : public CefClient,
                     const std::vector<CefString>& accept_filters,
                     int selected_accept_filter,
                     CefRefPtr<CefFileDialogCallback> callback) OVERRIDE;
+
+  // CefDownloadHandler methods:
+  void OnBeforeDownload(CefRefPtr<CefBrowser> browser,
+                        CefRefPtr<CefDownloadItem> download_item,
+                        const CefString& suggested_name,
+                        CefRefPtr<CefBeforeDownloadCallback> callback) OVERRIDE;
 
  private:
   OnBeforeCloseCallback on_before_close_callback;

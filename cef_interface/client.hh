@@ -11,7 +11,8 @@ class MyClient : public CefClient,
                  public CefRenderHandler,
                  public CefLoadHandler,
                  public CefRequestHandler,
-                 public CefResourceRequestHandler {
+                 public CefResourceRequestHandler,
+                 public CefJSDialogHandler {
  public:
   MyClient(Callbacks callbacks);
 
@@ -21,6 +22,7 @@ class MyClient : public CefClient,
   CefRefPtr<CefRenderHandler> GetRenderHandler() OVERRIDE;
   CefRefPtr<CefLoadHandler> GetLoadHandler() OVERRIDE;
   CefRefPtr<CefRequestHandler> GetRequestHandler() OVERRIDE;
+  CefRefPtr<CefJSDialogHandler> GetJSDialogHandler() OVERRIDE;
 
   // CefDisplayHandler methods:
   void OnTitleChange(CefRefPtr<CefBrowser> browser,
@@ -74,6 +76,15 @@ class MyClient : public CefClient,
       CefRefPtr<CefFrame> frame,
       CefRefPtr<CefRequest> request,
       CefRefPtr<CefRequestCallback> callback) OVERRIDE;
+
+  // CefJSDialogHandler methods:
+  bool OnJSDialog(CefRefPtr<CefBrowser> browser,
+                  const CefString& origin_url,
+                  CefJSDialogHandler::JSDialogType dialog_type,
+                  const CefString& message_text,
+                  const CefString& default_prompt_text,
+                  CefRefPtr<CefJSDialogCallback> callback,
+                  bool& suppress_message);
 
  private:
   OnBeforeCloseCallback on_before_close_callback;

@@ -206,7 +206,7 @@ fn handle_chat_received(message: String, message_type: MsgType) {
                 });
             }
         }
-    } else if message.contains(": ") {
+    } else if message.contains(": ") && !message.starts_with("&5Discord: &f[") {
         log::warn!("couldn't match player for {:?}", message);
     }
 }

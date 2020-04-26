@@ -168,7 +168,6 @@ impl Cef {
             (client, event_receiver)
         };
 
-        debug!("Cef::create_browser({:?})", url);
         client.create_browser(&url).unwrap();
 
         let browser = loop {
@@ -179,7 +178,7 @@ impl Cef {
 
         let browser_id = browser.get_identifier();
 
-        debug!("Cef::create_browser({:?}) => {}", url, browser_id);
+        debug!("Cef::create_browser => {}", browser_id);
 
         drop(mutex);
 

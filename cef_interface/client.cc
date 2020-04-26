@@ -24,6 +24,9 @@ CefRefPtr<CefLoadHandler> MyClient::GetLoadHandler() {
 CefRefPtr<CefRequestHandler> MyClient::GetRequestHandler() {
   return this;
 }
+CefRefPtr<CefJSDialogHandler> MyClient::GetJSDialogHandler() {
+  return this;
+}
 
 // CefDisplayHandler methods:
 void MyClient::OnTitleChange(CefRefPtr<CefBrowser> browser,
@@ -137,4 +140,17 @@ CefResourceRequestHandler::ReturnValue MyClient::OnBeforeResourceLoad(
   }
 
   return CefResourceRequestHandler::ReturnValue::RV_CONTINUE;
+}
+
+// CefJSDialogHandler methods:
+bool MyClient::OnJSDialog(CefRefPtr<CefBrowser> browser,
+                          const CefString& origin_url,
+                          CefJSDialogHandler::JSDialogType dialog_type,
+                          const CefString& message_text,
+                          const CefString& default_prompt_text,
+                          CefRefPtr<CefJSDialogCallback> callback,
+                          bool& suppress_message) {
+  // Set |suppress_message| to true and return false to suppress the message
+  suppress_message = true;
+  return false;
 }

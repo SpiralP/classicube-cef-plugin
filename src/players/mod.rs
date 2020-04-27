@@ -22,7 +22,7 @@ pub trait PlayerTrait {
 
     fn on_title_change(&mut self, _browser: &mut RustRefBrowser, _title: String) {}
 
-    fn get_current_time(&self, _browser: &mut RustRefBrowser) -> Result<Duration> {
+    fn get_current_time(&self) -> Result<Duration> {
         bail!("getting time not supported");
     }
 
@@ -85,6 +85,22 @@ impl PlayerTrait for Player {
             Player::Youtube(player) => player.on_title_change(browser, title),
             Player::Media(player) => player.on_title_change(browser, title),
             Player::Web(player) => player.on_title_change(browser, title),
+        }
+    }
+
+    fn get_current_time(&self) -> Result<Duration> {
+        match self {
+            Player::Youtube(player) => player.get_current_time(),
+            Player::Media(player) => player.get_current_time(),
+            Player::Web(player) => player.get_current_time(),
+        }
+    }
+
+    fn set_current_time(&mut self, browser: &mut RustRefBrowser, time: Duration) -> Result<()> {
+        match self {
+            Player::Youtube(player) => player.set_current_time(browser, time),
+            Player::Media(player) => player.set_current_time(browser, time),
+            Player::Web(player) => player.set_current_time(browser, time),
         }
     }
 }

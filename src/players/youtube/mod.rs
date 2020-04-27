@@ -134,6 +134,11 @@ impl PlayerTrait for YoutubePlayer {
 
         Ok(())
     }
+
+    fn get_current_time(&self) -> Result<Duration> {
+        let start_time = self.start_time.ok_or("no start time")?;
+        Ok(Instant::now() - start_time)
+    }
 }
 
 async fn start_volume_loop(entity_id: usize) {

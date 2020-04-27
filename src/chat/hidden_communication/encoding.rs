@@ -1,7 +1,11 @@
-use crate::{entity_manager::EntityManager, error::*, players::Player};
+use crate::{
+    entity_manager::EntityManager,
+    error::*,
+    players::{Player, PlayerTrait},
+};
 use log::{debug, warn};
 use serde::{Deserialize, Serialize};
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct LightEntity {
@@ -43,13 +47,15 @@ pub fn create_message() -> Message {
             let scale = entity.get_scale();
 
             let mut player = entity.player.clone();
-            if let Player::Youtube(ref mut yt) = &mut player {
-                if let Some(start_time) = &mut yt.start_time {
-                    // this is about 5 seconds behind because of the load time
-                    // of the browser page
-                    yt.time = Instant::now() - *start_time + Duration::from_secs(4);
+
+            if let Ok(time) = entity.player.get_current_time() {
+                // this is a couple seconds behind because of the load time
+                // of the browser page
+                if let Player::Youtube(ref mut yt) = &mut player {
+                    yt.time = time + Duration::from_secs(4);
+                } else if let Player::Media(ref mut media) = &mut player {
+                    media.time = time + Duration::from_secs(4);
                 }
-                yt.start_time = None;
             }
 
             light_entities.push(LightEntity {

@@ -188,7 +188,8 @@ impl MediaPlayer {
     }
 
     fn seek_to(browser: &RustRefBrowser, seconds: f32) {
-        Self::execute_player_method(browser, &format!("currentTime = {}", seconds))
+        Self::execute_player_method(browser, &format!("currentTime = {}", seconds));
+        Self::execute_player_method(browser, "play()");
     }
 }
 

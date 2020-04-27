@@ -205,12 +205,11 @@ impl YoutubePlayer {
     }
 
     fn seek_to(browser: &RustRefBrowser, seconds: u64) {
-        // second arg true because:
-        //
-        // The allowSeekAhead parameter determines whether the player will
-        // make a new request to the server if the seconds parameter specifies
-        // a time outside of the currently buffered video data.
-        Self::execute_player_method(browser, &format!("seekTo({}, true)", seconds))
+        // We recommend that you set this parameter to false while the user drags the
+        // mouse along a video progress bar and then set it to true when the user releases
+        // the mouse.
+        Self::execute_player_method(browser, &format!("seekTo({}, true)", seconds));
+        Self::execute_player_method(browser, "playVideo()");
     }
 }
 

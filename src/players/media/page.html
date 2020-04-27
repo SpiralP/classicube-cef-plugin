@@ -2,9 +2,22 @@
 <html>
   <head>
     <title>Media Loading</title>
+    <style>
+      body {
+        padding: 0;
+        margin: 0;
+        overflow: hidden;
+      }
+      video {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        height: 100vh;
+      }
+    </style>
   </head>
 
-  <body style="padding: 0; margin: 0; overflow: hidden;">
+  <body>
     <video autoplay id="player" src="MEDIA_URL"></video>
     <script>
       var player = document.getElementById("player");

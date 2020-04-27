@@ -1,14 +1,16 @@
+mod media;
 mod web;
 mod youtube;
 
-pub use self::{web::WebPlayer, youtube::YoutubePlayer};
+pub use self::{media::MediaPlayer, web::WebPlayer, youtube::YoutubePlayer};
 use crate::{cef::RustRefBrowser, error::*};
 use serde::{Deserialize, Serialize};
+use std::time::Duration;
 
-pub trait PlayerTrait: Clone {
+pub trait PlayerTrait {
     fn from_input(input: &str) -> Result<Self>
     where
-        Self: Sized;
+        Self: Sized + Clone;
 
     /// Called after entity is created, given an entity_id
     ///
@@ -20,12 +22,19 @@ pub trait PlayerTrait: Clone {
 
     fn on_title_change(&mut self, _browser: &mut RustRefBrowser, _title: String) {}
 
-    // fn on_tick(&mut self) {}
+    fn get_current_time(&self, _browser: &mut RustRefBrowser) -> Result<Duration> {
+        bail!("getting time not supported");
+    }
+
+    fn set_current_time(&mut self, _browser: &mut RustRefBrowser, _time: Duration) -> Result<()> {
+        bail!("setting time not supported");
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Player {
     Youtube(YoutubePlayer),
+    Media(MediaPlayer),
     Web(WebPlayer),
 }
 
@@ -34,15 +43,20 @@ impl PlayerTrait for Player {
         match YoutubePlayer::from_input(input) {
             Ok(player) => Ok(Player::Youtube(player)),
             Err(_) => {
-                match WebPlayer::from_input(input) {
-                    Ok(player) => Ok(Player::Web(player)),
+                match MediaPlayer::from_input(input) {
+                    Ok(player) => Ok(Player::Media(player)),
+                    Err(_) => {
+                        match WebPlayer::from_input(input) {
+                            Ok(player) => Ok(Player::Web(player)),
 
-                    Err(e) => {
-                        if !input.starts_with("http") {
-                            // if it didn't start with http, try again with https:// in front
-                            Player::from_input(&format!("https://{}", input))
-                        } else {
-                            bail!("no player matched for input: {}", e);
+                            Err(e) => {
+                                if !input.starts_with("http") {
+                                    // if it didn't start with http, try again with https:// in front
+                                    Player::from_input(&format!("https://{}", input))
+                                } else {
+                                    bail!("no player matched for input: {}", e);
+                                }
+                            }
                         }
                     }
                 }
@@ -53,6 +67,7 @@ impl PlayerTrait for Player {
     fn on_create(&mut self, entity_id: usize) -> String {
         match self {
             Player::Youtube(player) => player.on_create(entity_id),
+            Player::Media(player) => player.on_create(entity_id),
             Player::Web(player) => player.on_create(entity_id),
         }
     }
@@ -60,6 +75,7 @@ impl PlayerTrait for Player {
     fn on_page_loaded(&mut self, browser: &mut RustRefBrowser) {
         match self {
             Player::Youtube(player) => player.on_page_loaded(browser),
+            Player::Media(player) => player.on_page_loaded(browser),
             Player::Web(player) => player.on_page_loaded(browser),
         }
     }
@@ -67,16 +83,10 @@ impl PlayerTrait for Player {
     fn on_title_change(&mut self, browser: &mut RustRefBrowser, title: String) {
         match self {
             Player::Youtube(player) => player.on_title_change(browser, title),
+            Player::Media(player) => player.on_title_change(browser, title),
             Player::Web(player) => player.on_title_change(browser, title),
         }
     }
-
-    // fn on_tick(&mut self) {
-    //     match self {
-    //         Player::Youtube(player) => player.on_tick(),
-    //         Player::Web(player) => player.on_tick(),
-    //     }
-    // }
 }
 
 #[test]
@@ -108,15 +118,3 @@ fn test_create_player() {
         }
     }
 }
-
-// pub fn on_browser_page_loaded(_browser: RustRefBrowser) {
-//     // let browser_id = browser.get_identifier();
-
-//     // PLAYERS.with(|players| {
-//     //     let players = &mut *players.borrow_mut();
-
-//     //     if let Some((browser, player)) = players.get_mut(&browser_id) {
-//     //         player.on_page_loaded(browser);
-//     //     }
-//     // });
-// }

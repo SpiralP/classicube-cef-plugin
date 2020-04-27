@@ -5,12 +5,12 @@ use crate::{
     chat::{PlayerSnapshot, ENTITIES},
     entity_manager::{CefEntity, EntityManager, MODEL_HEIGHT, MODEL_WIDTH},
     error::*,
-    players::{Player, YoutubePlayer},
+    players::PlayerTrait,
     search,
 };
 use classicube_sys::{OwnedChatCommand, Vec3, ENTITIES_SELF_ID};
 use log::{debug, warn};
-use std::{os::raw::c_int, slice};
+use std::{os::raw::c_int, slice, time::Duration};
 
 extern "C" fn c_chat_command_callback(args: *const classicube_sys::String, args_count: c_int) {
     let args = unsafe { slice::from_raw_parts(args, args_count as _) };
@@ -330,14 +330,10 @@ pub async fn command_callback(
 
         ["time", time] | ["seek", time] => {
             let entity_id = EntityManager::with_closest(player.eye_position, |closest_entity| {
-                if let Player::Youtube(_) = &closest_entity.player {
-                    Ok(closest_entity.id)
-                } else {
-                    bail!("not a Youtube player");
-                }
+                Ok(closest_entity.id)
             })?;
 
-            let browser = EntityManager::get_browser_by_entity_id(entity_id)?;
+            let mut browser = EntityManager::get_browser_by_entity_id(entity_id)?;
 
             let seconds: u64 = if let Ok(seconds) = time.parse() {
                 seconds
@@ -370,7 +366,12 @@ pub async fn command_callback(
                 }
             };
 
-            YoutubePlayer::seek_to(&browser, seconds);
+            EntityManager::with_by_entity_id(entity_id, |entity| {
+                entity
+                    .player
+                    .set_current_time(&mut browser, Duration::from_secs(seconds))?;
+                Ok(())
+            })?;
         }
 
         ["resize", width, height] => {

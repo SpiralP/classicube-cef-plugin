@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Media Loading</title>
+  </head>
+
+  <body style="padding: 0; margin: 0; overflow: hidden;">
+    <video autoplay id="player" src="MEDIA_URL"></video>
+    <script>
+      var player = document.getElementById("player");
+      window.player = player;
+
+      // window["START" + "_" + "TIME"] = 0;
+      // window["START" + "_" + "VOLUME"] = 0.25;
+
+      player.currentTime = START_TIME;
+      player.volume = START_VOLUME;
+
+      // https://stackoverflow.com/a/6313008
+      function formatSeconds(totalSeconds) {
+        var sec_num = parseInt(totalSeconds, 10); // don't forget the second param
+        var hours = Math.floor(sec_num / 3600);
+        var minutes = Math.floor((sec_num - hours * 3600) / 60);
+        var seconds = sec_num - hours * 3600 - minutes * 60;
+
+        if (hours < 10) {
+          hours = "0" + hours;
+        }
+        if (minutes < 10) {
+          minutes = "0" + minutes;
+        }
+        if (seconds < 10) {
+          seconds = "0" + seconds;
+        }
+        if (hours !== "00") {
+          return hours + ":" + minutes + ":" + seconds;
+        } else {
+          return minutes + ":" + seconds;
+        }
+      }
+
+      player.addEventListener("loadedmetadata", function () {
+        var totalSeconds = player.duration;
+        var url = new URL(player.src);
+        var host = url.host;
+        document.title = host + " (" + formatSeconds(totalSeconds) + ")";
+      });
+    </script>
+  </body>
+</html>

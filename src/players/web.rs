@@ -28,26 +28,10 @@ impl PlayerTrait for WebPlayer {
 
         if url.scheme() != "http" && url.scheme() != "https" {
             Err("not http/https".into())
+        } else if let Some(this) = Self::from_url(url) {
+            Ok(this)
         } else {
-            let has_tld = url
-                .host()
-                .map(|host| {
-                    if let url::Host::Domain(s) = host {
-                        s.contains('.')
-                    } else {
-                        // allow direct ips
-                        true
-                    }
-                })
-                .unwrap_or(false);
-
-            if !has_tld {
-                Err("not a url".into())
-            } else if let Some(this) = Self::from_url(url) {
-                Ok(this)
-            } else {
-                Err("url didn't BAP".into())
-            }
+            Err("not a normal url".into())
         }
     }
 
@@ -73,10 +57,26 @@ impl PlayerTrait for WebPlayer {
 
 impl WebPlayer {
     pub fn from_url(url: Url) -> Option<Self> {
-        Some(Self {
-            url: url.to_string(),
-            ..Default::default()
-        })
+        let has_tld = url
+            .host()
+            .map(|host| {
+                if let url::Host::Domain(s) = host {
+                    s.contains('.')
+                } else {
+                    // allow direct ips
+                    true
+                }
+            })
+            .unwrap_or(false);
+
+        if has_tld {
+            Some(Self {
+                url: url.to_string(),
+                ..Default::default()
+            })
+        } else {
+            None
+        }
     }
 }
 

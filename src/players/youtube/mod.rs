@@ -18,16 +18,18 @@ use std::{
 };
 use url::Url;
 
+const PAGE_HTML: &str = include_str!("page.html");
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct YoutubePlayer {
     pub id: String,
     pub time: Duration,
 
-    // 0-1
-    pub volume: f32,
-
     #[serde(skip)]
     pub start_time: Option<Instant>,
+
+    // 0-1
+    pub volume: f32,
 
     #[serde(skip)]
     volume_loop_handle: Option<RemoteHandle<()>>,
@@ -61,8 +63,6 @@ impl Clone for YoutubePlayer {
         }
     }
 }
-
-const PAGE_HTML: &str = include_str!("page.html");
 
 impl PlayerTrait for YoutubePlayer {
     fn from_input(url_or_id: &str) -> Result<Self> {
@@ -128,6 +128,12 @@ impl PlayerTrait for YoutubePlayer {
             title,
         ));
     }
+
+    fn set_current_time(&mut self, browser: &mut RustRefBrowser, time: Duration) -> Result<()> {
+        Self::seek_to(browser, time.as_secs());
+
+        Ok(())
+    }
 }
 
 async fn start_volume_loop(entity_id: usize) {
@@ -187,13 +193,13 @@ impl YoutubePlayer {
     }
 
     /// volume is a float between 0-1
-    pub fn set_volume(browser: &RustRefBrowser, percent: f32) {
+    fn set_volume(browser: &RustRefBrowser, percent: f32) {
         let percent = (percent * 100f32) as u32;
 
         Self::execute_player_method(browser, &format!("setVolume({})", percent))
     }
 
-    pub fn seek_to(browser: &RustRefBrowser, seconds: u64) {
+    fn seek_to(browser: &RustRefBrowser, seconds: u64) {
         // second arg true because:
         //
         // The allowSeekAhead parameter determines whether the player will

@@ -52,9 +52,6 @@ extern "C" RustRefApp cef_interface_create_app(Callbacks callbacks) {
 }
 
 extern "C" int cef_interface_initialize(MyApp* app_ptr) {
-  // Enable High-DPI support on Windows 7 or newer.
-  CefEnableHighDPISupport();
-
   // Structure for passing command-line arguments.
   // The definition of this structure is platform-specific.
   CefMainArgs main_args;

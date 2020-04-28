@@ -3,6 +3,9 @@ use classicube_helpers::detour::static_detour;
 use classicube_sys::*;
 use std::os::raw::{c_double, c_float};
 
+// TODO we can just replace the .RenderModel field!
+// nvm, tried it and VTABLE is a *const and might be optimized strangely
+
 static_detour! {
     static DETOUR: unsafe extern "C" fn(*mut Entity, c_double, c_float);
 }

@@ -18,14 +18,14 @@ pub unsafe extern "C" fn rust_print(c_str: *const ::std::os::raw::c_char) {
     debug!("{}", s);
 }
 
-#[no_mangle]
-pub unsafe extern "C" fn rust_wprint(c_str: *const u16) {
-    use widestring::WideCStr;
+// #[no_mangle]
+// pub unsafe extern "C" fn rust_wprint(c_str: *const u16) {
+//     use widestring::WideCStr;
 
-    let string = WideCStr::from_ptr_str(c_str);
+//     let string = WideCStr::from_ptr_str(c_str);
 
-    debug!("{}", string.to_string().unwrap());
-}
+//     debug!("{}", string.to_string().unwrap());
+// }
 
 fn to_result(n: c_int) -> Result<()> {
     if n == 0 {

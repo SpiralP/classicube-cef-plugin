@@ -102,4 +102,4 @@ extern "C" int cef_interface_browser_close(CefBrowser* browser_ptr);
 // functions from rust
 
 extern "C" void rust_print(const char* c_str);
-extern "C" void rust_wprint(const wchar_t* c_str);
+// extern "C" void rust_wprint(const wchar_t* c_str);

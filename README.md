@@ -2,6 +2,7 @@
 
 ## Compiling
 
+- Rust nightly
 - Download CEF "Standard Distribution"
   - http://opensource.spotify.com/cefbuilds/index.html#windows64_builds
   - Extract and rename the `cef_binary_...` folder to `cef_interface/cef_binary`

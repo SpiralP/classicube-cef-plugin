@@ -66,7 +66,8 @@ impl Clone for YoutubePlayer {
 
 impl PlayerTrait for YoutubePlayer {
     fn from_input(url_or_id: &str) -> Result<Self> {
-        if let Ok(url) = Url::parse(url_or_id) {
+        let url_or_id = url_or_id.replace("%feature=", "&feature=");
+        if let Ok(url) = Url::parse(&url_or_id) {
             if url.scheme() != "http" && url.scheme() != "https" {
                 Err("not http/https".into())
             } else if let Some(this) = Self::from_normal(&url) {
@@ -231,6 +232,7 @@ impl YoutubePlayer {
     }
 
     pub fn from_id_and_time(id: String, time: Duration) -> Option<Self> {
+        println!("{}", id);
         let mut this = Self::from_id(id)?;
         this.time = time;
 
@@ -312,7 +314,10 @@ fn test_youtube() {
             "https://youtu.be/gQngg8iQipk",
             "https://www.youtube.com/embed/gQngg8iQipk",
             // test for cc replacing & with %
+            "https://www.youtube.com/watch?v=gQngg8iQipk&list=ELG1JYZnaQbZc",
             "https://www.youtube.com/watch?v=gQngg8iQipk%list=ELG1JYZnaQbZc",
+            "https://www.youtube.com/watch?v=gQngg8iQipk&feature=youtu.be",
+            "https://www.youtube.com/watch?v=gQngg8iQipk%feature=youtu.be",
         ];
 
         let should = YoutubePlayer {

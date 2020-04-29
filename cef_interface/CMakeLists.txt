@@ -288,7 +288,6 @@ if(OS_LINUX)
   if (EXISTS "${CEF_BINARY_DIR}/libminigbm.so")
     COPY_FILES("${CEF_TARGET}" "libminigbm.so" "${CEF_BINARY_DIR}" "${CEF_TARGET_OUT_DIR}")
   endif()
-
 endif()
 
 

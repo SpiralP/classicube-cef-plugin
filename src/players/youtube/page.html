@@ -81,8 +81,12 @@
           var videoData = player.getVideoData();
 
           var totalSeconds = player.getDuration();
-          document.title =
-            videoData.title + " (" + formatSeconds(totalSeconds) + ")";
+          if (isFinite(totalSeconds)) {
+            document.title =
+              videoData.title + " (" + formatSeconds(totalSeconds) + ")";
+          } else {
+            document.title = videoData.title;
+          }
         }
       }
     </script>

@@ -56,7 +56,11 @@
         var totalSeconds = player.duration;
         var url = new URL(player.src);
         var host = url.host;
-        document.title = host + " (" + formatSeconds(totalSeconds) + ")";
+        if (isFinite(totalSeconds)) {
+          document.title = host + " (" + formatSeconds(totalSeconds) + ")";
+        } else {
+          document.title = host;
+        }
       });
     </script>
   </body>

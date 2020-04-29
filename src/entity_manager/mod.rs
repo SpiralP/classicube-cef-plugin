@@ -161,7 +161,12 @@ impl EntityManager {
     /// returns entity_id
     pub fn create_entity(input: &str) -> Result<usize> {
         let entity_id = ENTITY_ID.with(|cell| {
-            let entity_id = cell.get();
+            let mut entity_id = cell.get();
+
+            // if it already exists, try another
+            while EntityManager::with_by_entity_id(entity_id, |_| Ok(())).is_ok() {
+                entity_id += 1;
+            }
             cell.set(entity_id + 1);
             entity_id
         });
@@ -188,7 +193,16 @@ impl EntityManager {
 
     /// returns entity_id
     pub async fn create_entity_from_light_entity(info: LightEntity) -> Result<usize> {
-        let entity_id = info.id;
+        let entity_id = ENTITY_ID.with(|cell| {
+            let mut entity_id = cell.get();
+
+            // if it already exists, try another
+            while EntityManager::with_by_entity_id(entity_id, |_| Ok(())).is_ok() {
+                entity_id += 1;
+            }
+            cell.set(entity_id + 1);
+            entity_id
+        });
 
         let mut player = info.player.clone();
         let url = player.on_create(entity_id);

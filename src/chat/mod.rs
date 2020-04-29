@@ -12,6 +12,7 @@ use classicube_helpers::{
 use classicube_sys::{
     Chat_Add, Chat_Send, MsgType, MsgType_MSG_TYPE_NORMAL, OwnedString, Server, Vec3,
 };
+use deunicode::deunicode;
 use futures::{future::RemoteHandle, prelude::*};
 use log::{debug, info};
 use std::{
@@ -112,8 +113,9 @@ impl Chat {
     }
 
     pub fn print<S: Into<String>>(s: S) {
-        let mut s = s.into();
+        let s = s.into();
         info!("{}", s);
+        let mut s = deunicode(&s);
 
         if s.len() > 255 {
             s.truncate(255);
@@ -131,6 +133,7 @@ impl Chat {
     pub fn send<S: Into<String>>(s: S) {
         let s = s.into();
         info!("{}", s);
+        let s = deunicode(&s);
 
         let owned_string = OwnedString::new(s);
 
@@ -138,6 +141,14 @@ impl Chat {
             Chat_Send(owned_string.as_cc_string(), 0);
         }
     }
+}
+
+#[test]
+fn test_unicode() {
+    let input = "Ｌｕｉｇｉ，　ｂｒｏｔｈｅｒ．．．[ヒップホップ MIX]";
+    println!("{:?}", deunicode(input));
+
+    assert_eq!(deunicode(input), "Luigi, brother...[hitupuhotupu MIX]");
 }
 
 fn handle_chat_received(message: String, message_type: MsgType) {

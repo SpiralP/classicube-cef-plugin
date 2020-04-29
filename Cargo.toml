@@ -15,6 +15,7 @@ bincode = "1.2.1"
 classicube-helpers = { git = "https://github.com/SpiralP/rust-classicube-helpers.git", features = ["futures"] }
 classicube-sys = { git = "https://github.com/SpiralP/rust-classicube-sys.git" }
 color-backtrace = { git = "https://github.com/SpiralP/color-backtrace-msgbox.git" }
+deunicode = "1.1.1"
 error-chain = "0.12.2"
 futures = "0.3.4"
 invidious = { git = "https://github.com/SpiralP/rust-invidious.git" }

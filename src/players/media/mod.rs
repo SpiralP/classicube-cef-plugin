@@ -202,7 +202,7 @@ impl MediaPlayer {
         let ext = path.extension()?.to_str()?;
 
         match ext {
-            "mp3" | "wav" | "ogg" | "aac" | "mp4" | "webm" | "avi" | "3gp" => Some(Self {
+            "mp3" | "wav" | "ogg" | "aac" | "mp4" | "webm" | "avi" | "3gp" | "mov" => Some(Self {
                 url: url.to_string(),
                 ..Default::default()
             }),

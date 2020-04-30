@@ -1,10 +1,13 @@
 use std::{env, fs, path::Path};
 
-#[cfg(windows)]
+#[cfg(target_os = "windows")]
 const CEF_SIMPLE_NAME: &str = "cefsimple.exe";
 
-#[cfg(not(windows))]
+#[cfg(target_os = "linux")]
 const CEF_SIMPLE_NAME: &str = "cefsimple";
+
+#[cfg(target_os = "macos")]
+const CEF_SIMPLE_NAME: &str = "cefsimple.app";
 
 fn main() {
     let profile = if cfg!(debug_assertions) {
@@ -13,7 +16,7 @@ fn main() {
         "Release"
     };
 
-    #[cfg(windows)]
+    #[cfg(target_os = "windows")]
     {
         // this must be linked first!
         // or else we get debug assertion popups about heap corruption/crt memory
@@ -24,7 +27,7 @@ fn main() {
         }
     }
 
-    #[cfg(unix)]
+    #[cfg(target_os = "linux")]
     {
         // fixes undefined reference to `std::ios_base::Init::Init()'
         // only errored on test
@@ -61,10 +64,10 @@ fn main() {
             .display()
     );
 
-    #[cfg(windows)]
+    #[cfg(target_os = "windows")]
     println!("cargo:rustc-link-lib=static=libcef_dll_wrapper");
 
-    #[cfg(not(windows))]
+    #[cfg(not(target_os = "windows"))]
     println!("cargo:rustc-link-lib=static=cef_dll_wrapper");
 
     // link to cef_interface
@@ -84,13 +87,14 @@ fn main() {
         profile
     );
 
-    #[cfg(windows)]
+    #[cfg(target_os = "windows")]
     println!("cargo:rustc-link-lib=dylib=libcef");
 
-    #[cfg(not(windows))]
+    #[cfg(target_os = "linux")]
     println!("cargo:rustc-link-lib=dylib=cef");
 
-    fs::copy(
+    let _ignore = fs::remove_dir_all(Path::new(&out_dir).join(CEF_SIMPLE_NAME));
+    fs::rename(
         cmake_path
             .join("build/cef_binary/tests/cefsimple")
             .join(profile)

@@ -7,3 +7,8 @@ rustflags = [
 rustflags = [
   "-C", "target-feature=+crt-static",
 ]
+
+[target.x86_64-apple-darwin]
+rustflags = [
+  "-C", "link-args=-undefined dynamic_lookup",
+]

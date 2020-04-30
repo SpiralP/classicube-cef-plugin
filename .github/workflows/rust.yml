@@ -85,6 +85,7 @@ jobs:
       matrix:
         config:
           - { arch: x86_64, bits: 64 }
+          # I don't want to figure out the dependencies on 32 bit linux
           # - { arch: i686, bits: 32 }
 
     steps:
@@ -152,5 +153,71 @@ jobs:
           files: |
             classicube_cef_linux_${{ matrix.config.arch }}.so
             cefsimple-linux-${{ matrix.config.arch }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  mac:
+    name: Build MacOS ${{ matrix.config.arch }}
+    runs-on: macOS-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - { arch: x86_64, bits: 64 }
+          # cef-binary doesn't have 32 bit download
+          # - { arch: i686, bits: 32 }
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install deps
+        run: |
+          brew install cmake \
+          && curl 'http://opensource.spotify.com/cefbuilds/cef_binary_81.2.17%2Bgb382c62%2Bchromium-81.0.4044.113_macosx${{ matrix.config.bits }}.tar.bz2' | tar -xjf - \
+          && mv cef_binary_* cef_interface/cef_binary
+
+      - name: Install nightly
+        uses: actions-rs/toolchain@v1
+        with:
+          target: ${{ matrix.config.arch }}-apple-darwin
+          toolchain: nightly-${{ matrix.config.arch }}-apple-darwin
+          override: true
+
+      - name: Build
+        uses: actions-rs/cargo@v1
+        if: startsWith(github.ref, 'refs/tags/') != true
+        with:
+          target: ${{ matrix.config.arch }}-apple-darwin
+          command: build
+
+      - name: Test
+        uses: actions-rs/cargo@v1
+        if: startsWith(github.ref, 'refs/tags/') != true
+        with:
+          target: ${{ matrix.config.arch }}-apple-darwin
+          command: test
+          args: -- --nocapture
+
+      - name: Build Release
+        uses: actions-rs/cargo@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          target: ${{ matrix.config.arch }}-apple-darwin
+          command: build
+          args: --release
+
+      - run: mv target/release/libclassicube_cef_plugin.dylib "classicube_cef_macos_${{ matrix.config.arch }}.dylib"
+        if: startsWith(github.ref, 'refs/tags/')
+
+      - run: mv target/release/build/classicube-cef-plugin-*/out/cefsimple.app "cefsimple-macos-${{ matrix.config.arch }}.app"
+        if: startsWith(github.ref, 'refs/tags/')
+
+      - name: Upload Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            classicube_cef_macos_${{ matrix.config.arch }}.dylib
+            cefsimple-macos-${{ matrix.config.arch }}.app
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

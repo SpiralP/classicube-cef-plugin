@@ -78,6 +78,10 @@ impl EntityManager {
         self.render_model_detour.initialize();
         self.model = Some(CefModel::register());
 
+        self.initialize_listeners();
+    }
+
+    fn initialize_listeners(&mut self) {
         let mut event_listener = Cef::create_event_listener();
         let (f, remote_handle) = async move {
             while let Ok(event) = event_listener.recv().await {

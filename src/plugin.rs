@@ -39,6 +39,10 @@ impl Plugin {
             async_manager.initialize();
             chat.initialize();
 
+            AsyncManager::spawn_local_on_main_thread(async {
+                Cef::initialize().await;
+            });
+
             let plugin = Self {
                 async_manager,
                 chat,
@@ -59,10 +63,6 @@ impl Plugin {
             .with_inner_mut(|plugin| {
                 if !plugin.context_initialized {
                     plugin.entity_manager.initialize();
-
-                    AsyncManager::spawn_local_on_main_thread(async {
-                        Cef::initialize().await;
-                    });
 
                     plugin.context_initialized = true;
                 }
@@ -85,11 +85,9 @@ impl Plugin {
             plugin.entity_manager.shutdown();
             plugin.chat.shutdown();
 
-            if plugin.context_initialized {
-                AsyncManager::spawn_local_on_main_thread(async {
-                    Cef::shutdown().await;
-                });
-            }
+            AsyncManager::spawn_local_on_main_thread(async {
+                Cef::shutdown().await;
+            });
 
             // this will run all remaining tasks to completion
             plugin.async_manager.shutdown();

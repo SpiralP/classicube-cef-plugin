@@ -1,8 +1,6 @@
 use crate::helpers::*;
 use classicube_helpers::events::gfx::{ContextLostEventHandler, ContextRecreatedEventHandler};
-use classicube_sys::{
-    OwnedGfxVertexBuffer, VertexFormat__VERTEX_FORMAT_P3FC4B, VertexFormat__VERTEX_FORMAT_P3FT2FC4B,
-};
+use classicube_sys::{OwnedGfxVertexBuffer, VertexFormat__VERTEX_FORMAT_P3FT2FC4B};
 use log::debug;
 
 pub struct ContextHandler {
@@ -19,14 +17,7 @@ impl ContextHandler {
     }
 
     fn context_recreated() {
-        // create texture, vertex buffers
-
-        QUAD_VB.with(|cell| {
-            *cell.borrow_mut() = Some(OwnedGfxVertexBuffer::create(
-                VertexFormat__VERTEX_FORMAT_P3FC4B,
-                4,
-            ));
-        });
+        // create texture buffer
 
         TEX_VB.with(|cell| {
             *cell.borrow_mut() = Some(OwnedGfxVertexBuffer::create(
@@ -37,10 +28,7 @@ impl ContextHandler {
     }
 
     fn context_lost() {
-        // delete vertex buffers
-        QUAD_VB.with(|cell| {
-            cell.borrow_mut().take();
-        });
+        // delete texture buffer
 
         TEX_VB.with(|cell| {
             cell.borrow_mut().take();
@@ -52,13 +40,13 @@ impl ContextHandler {
         Self::context_recreated();
 
         self.context_lost_handler.on(|_| {
-            debug!("ContextLost {:?}", std::thread::current().id());
+            debug!("ContextLost");
 
             Self::context_lost();
         });
 
         self.context_recreated_handler.on(|_| {
-            debug!("ContextRecreated {:?}", std::thread::current().id());
+            debug!("ContextRecreated");
 
             Self::context_recreated();
         });

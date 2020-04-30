@@ -13,7 +13,7 @@ mod search;
 use self::plugin::Plugin;
 use classicube_sys::*;
 use log::debug;
-use std::{cell::Cell, os::raw::c_int, ptr};
+use std::{os::raw::c_int, ptr};
 
 extern "C" fn init() {
     color_backtrace::install_with_settings(
@@ -34,10 +34,6 @@ extern "C" fn free() {
         Plugin::shutdown();
     });
 }
-
-thread_local!(
-    static CONTEXT_LOADED: Cell<bool> = Cell::new(false);
-);
 
 extern "C" fn on_new_map_loaded() {
     time!("Plugin::on_new_map_loaded()", 10000, {

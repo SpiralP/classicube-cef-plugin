@@ -2,12 +2,10 @@ mod cef_paint;
 mod context_handler;
 mod entity;
 mod model;
-mod render_model_detour;
+mod render_model_hook;
 
 pub use self::{cef_paint::cef_paint_callback, entity::CefEntity};
-use self::{
-    context_handler::ContextHandler, model::CefModel, render_model_detour::RenderModelDetour,
-};
+use self::{context_handler::ContextHandler, model::CefModel};
 use crate::{
     async_manager::AsyncManager,
     cef::{Cef, CefEvent, RustRefBrowser},
@@ -51,7 +49,6 @@ pub struct EntityManager {
     // model is just the shape, the entities holds the texture id and scaling
     model: Option<CefModel>,
 
-    render_model_detour: RenderModelDetour,
     context_handler: ContextHandler,
 
     cef_event_page_loaded: Option<RemoteHandle<()>>,
@@ -60,11 +57,8 @@ pub struct EntityManager {
 
 impl EntityManager {
     pub fn new() -> Self {
-        let render_model_detour = RenderModelDetour::new();
-
         Self {
             model: None,
-            render_model_detour,
             context_handler: ContextHandler::new(),
             cef_event_page_loaded: None,
             cef_event_title_change: None,
@@ -75,7 +69,7 @@ impl EntityManager {
         debug!("initialize entity_manager");
 
         self.context_handler.initialize();
-        self.render_model_detour.initialize();
+        render_model_hook::initialize();
         self.model = Some(CefModel::register());
 
         self.initialize_listeners();
@@ -133,7 +127,7 @@ impl EntityManager {
         debug!("shutdown entity_manager");
 
         self.context_handler.shutdown();
-        self.render_model_detour.shutdown();
+        render_model_hook::shutdown();
         self.model.take();
         self.cef_event_page_loaded.take();
 

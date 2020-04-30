@@ -159,6 +159,7 @@ fn handle_chat_received(message: String, message_type: MsgType) {
         return;
     }
 
+    // TODO if it wasn't a > message, fire the command of the last
     if let Some((id, _name, message)) = find_player_from_message(message.clone()) {
         // let name: String = remove_color(name).trim().to_string();
 

@@ -10,8 +10,8 @@ use crate::{
 };
 use classicube_sys::{
     Camera, Entities, LocalPlayer, OwnedChatCommand, RayTracer, Vec3, ENTITIES_SELF_ID,
-    FACE_CONSTS_FACE_XMAX, FACE_CONSTS_FACE_XMIN, FACE_CONSTS_FACE_YMAX, FACE_CONSTS_FACE_YMIN,
-    FACE_CONSTS_FACE_ZMAX, FACE_CONSTS_FACE_ZMIN,
+    FACE_CONSTS, FACE_CONSTS_FACE_XMAX, FACE_CONSTS_FACE_XMIN, FACE_CONSTS_FACE_YMAX,
+    FACE_CONSTS_FACE_YMIN, FACE_CONSTS_FACE_ZMAX, FACE_CONSTS_FACE_ZMIN,
 };
 use log::{debug, warn};
 use nalgebra::*;
@@ -22,9 +22,9 @@ fn vec3_to_vector3(v: &Vec3) -> Vector3<f32> {
     Vector3::new(v.X, v.Y, v.Z)
 }
 
-fn vector3_to_vec3(v: &Vector3<f32>) -> Vec3 {
-    Vec3::new(v.x, v.y, v.z)
-}
+// fn vector3_to_vec3(v: &Vector3<f32>) -> Vec3 {
+//     Vec3::new(v.x, v.y, v.z)
+// }
 
 extern "C" fn c_chat_command_callback(args: *const classicube_sys::String, args_count: c_int) {
     let args = unsafe { slice::from_raw_parts(args, args_count as _) };
@@ -172,27 +172,28 @@ pub async fn command_callback(
                 let trace = get_camera_trace().chain_err(|| "no picked block")?;
 
                 // the block's hit face
-                let normal: Unit<Vector3<f32>> = match trace.Closest as c_int {
-                    FACE_CONSTS_FACE_XMIN => -Vector3::x_axis(),
-                    FACE_CONSTS_FACE_XMAX => Vector3::x_axis(),
-                    FACE_CONSTS_FACE_ZMIN => -Vector3::z_axis(),
-                    FACE_CONSTS_FACE_ZMAX => Vector3::z_axis(),
-                    FACE_CONSTS_FACE_YMIN => -Vector3::y_axis(),
-                    FACE_CONSTS_FACE_YMAX => Vector3::y_axis(),
+                let (mult, yaw) = match trace.Closest as FACE_CONSTS {
+                    FACE_CONSTS_FACE_XMIN => (Vec3::new(-0.01, 0.0, 0.0), 270.0),
+                    FACE_CONSTS_FACE_XMAX => (Vec3::new(1.01, 0.0, 0.0), 90.0),
+                    FACE_CONSTS_FACE_ZMIN => (Vec3::new(0.0, 0.0, -0.01), 0.0),
+                    FACE_CONSTS_FACE_ZMAX => (Vec3::new(0.0, 0.0, 1.01), 180.0),
+                    FACE_CONSTS_FACE_YMIN | FACE_CONSTS_FACE_YMAX => {
+                        let me = unsafe { &*Entities.List[ENTITIES_SELF_ID as usize] };
+                        let snap = (me.Yaw + 45.0 / 2.0) / 45.0;
+                        let snap = snap as u32 * 45;
+                        let snap = snap as f32 + 180f32;
+
+                        (Vec3::new(0.5, 1.0, 0.5), snap)
+                    }
 
                     _ => {
                         return Err("oh no".into());
                     }
                 };
 
-                let middle = Vec3::from(trace.pos) + Vec3::new(0.5, 0.5, 0.5);
-                let position = middle + vector3_to_vec3(&normal) * 0.51;
-
-                let quaternion =
-                    UnitQuaternion::from_axis_angle(&normal, std::f32::consts::FRAC_PI_2);
-
-                let (yaw, _pitch, _) = quaternion.euler_angles();
-                let yaw = yaw.to_degrees();
+                // let middle = Vec3::from(trace.pos) + Vec3::new(0.5, 0.0, 0.5);
+                let position = Vec3::from(trace.pos) + mult;
+                // let position = position - Vec3::new(0.5, 0.0, 0.5);
 
                 Chat::send(format!(
                     "cef at {} {} {} {} {}",

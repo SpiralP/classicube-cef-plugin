@@ -9,9 +9,9 @@ use crate::{
     search,
 };
 use classicube_sys::{
-    Camera, OwnedChatCommand, RayTracer, Vec3, ENTITIES_SELF_ID, FACE_CONSTS_FACE_XMAX,
-    FACE_CONSTS_FACE_XMIN, FACE_CONSTS_FACE_YMAX, FACE_CONSTS_FACE_YMIN, FACE_CONSTS_FACE_ZMAX,
-    FACE_CONSTS_FACE_ZMIN,
+    Camera, Entities, LocalPlayer, OwnedChatCommand, RayTracer, Vec3, ENTITIES_SELF_ID,
+    FACE_CONSTS_FACE_XMAX, FACE_CONSTS_FACE_XMIN, FACE_CONSTS_FACE_YMAX, FACE_CONSTS_FACE_YMIN,
+    FACE_CONSTS_FACE_ZMAX, FACE_CONSTS_FACE_ZMIN,
 };
 use log::{debug, warn};
 use nalgebra::*;
@@ -148,52 +148,79 @@ pub async fn command_callback(
                     let camera = unsafe { &*Camera.Active };
                     let get_picked_block = camera.GetPickedBlock.unwrap();
                     let mut ray_tracer = unsafe { std::mem::zeroed() };
+
+                    let entity_ptr = unsafe { Entities.List[ENTITIES_SELF_ID as usize] };
+                    let local_player = entity_ptr as *mut LocalPlayer;
+                    let local_player = unsafe { &mut *local_player };
+
+                    let old_reach_distance = local_player.ReachDistance;
+                    if local_player.ReachDistance < 32.0 {
+                        local_player.ReachDistance = 32.0;
+                    }
                     unsafe {
                         get_picked_block(&mut ray_tracer);
                     }
+                    local_player.ReachDistance = old_reach_distance;
+
+                    // debug!("{:#?}", ray_tracer);
                     if ray_tracer.Valid != 0 {
                         Some(ray_tracer)
                     } else {
                         None
                     }
                 }
-                EntityManager::with_closest(player.eye_position, |entity| {
-                    let trace = get_camera_trace().chain_err(|| "no picked block")?;
-                    debug!("{:#?}", trace);
+                let trace = get_camera_trace().chain_err(|| "no picked block")?;
 
-                    // the block's hit face
-                    let normal: Unit<Vector3<f32>> = match trace.Closest as c_int {
-                        FACE_CONSTS_FACE_XMIN => -Vector3::x_axis(),
-                        FACE_CONSTS_FACE_XMAX => Vector3::x_axis(),
-                        FACE_CONSTS_FACE_ZMIN => -Vector3::z_axis(),
-                        FACE_CONSTS_FACE_ZMAX => Vector3::z_axis(),
-                        FACE_CONSTS_FACE_YMIN => -Vector3::y_axis(),
-                        FACE_CONSTS_FACE_YMAX => Vector3::y_axis(),
+                // the block's hit face
+                let normal: Unit<Vector3<f32>> = match trace.Closest as c_int {
+                    FACE_CONSTS_FACE_XMIN => -Vector3::x_axis(),
+                    FACE_CONSTS_FACE_XMAX => Vector3::x_axis(),
+                    FACE_CONSTS_FACE_ZMIN => -Vector3::z_axis(),
+                    FACE_CONSTS_FACE_ZMAX => Vector3::z_axis(),
+                    FACE_CONSTS_FACE_YMIN => -Vector3::y_axis(),
+                    FACE_CONSTS_FACE_YMAX => Vector3::y_axis(),
 
-                        _ => {
-                            return Err("oh no".into());
-                        }
-                    };
+                    _ => {
+                        return Err("oh no".into());
+                    }
+                };
 
-                    let middle = Vec3::from(trace.pos) + Vec3::new(0.5, 0.5, 0.5);
-                    entity.entity.Position = middle + vector3_to_vec3(&normal) * 0.51;
+                let middle = Vec3::from(trace.pos) + Vec3::new(0.5, 0.5, 0.5);
+                let position = middle + vector3_to_vec3(&normal) * 0.51;
 
-                    let quaternion =
-                        UnitQuaternion::from_axis_angle(&normal, std::f32::consts::FRAC_PI_2);
+                let quaternion =
+                    UnitQuaternion::from_axis_angle(&normal, std::f32::consts::FRAC_PI_2);
 
-                    let (yaw, _pitch, _) = quaternion.euler_angles();
-                    // let pitch = pitch.to_degrees();
-                    let yaw = yaw.to_degrees();
+                let (yaw, _pitch, _) = quaternion.euler_angles();
+                let yaw = yaw.to_degrees();
 
-                    // entity.entity.RotX = pitch;
-                    entity.entity.RotY = yaw;
-
-                    Ok(())
-                })?
+                Chat::send(format!(
+                    "cef at {} {} {} {} {}",
+                    position.X, position.Y, position.Z, yaw, 0.0
+                ));
             }
         }
 
-        ["at", x, y, z] | ["tp", x, y, z] => {
+        ["at", x, y, z, yaw, pitch]
+        | ["tp", x, y, z, yaw, pitch]
+        | ["move", x, y, z, yaw, pitch] => {
+            EntityManager::with_closest(player.eye_position, |entity| {
+                let x = x.parse()?;
+                let y = y.parse()?;
+                let z = z.parse()?;
+                let yaw = yaw.parse()?;
+                let pitch = pitch.parse()?;
+
+                entity.entity.Position.set(x, y, z);
+
+                entity.entity.RotX = pitch;
+                entity.entity.RotY = yaw;
+
+                Ok(())
+            })?
+        }
+
+        ["at", x, y, z] | ["tp", x, y, z] | ["move", x, y, z] => {
             EntityManager::with_closest(player.eye_position, |entity| {
                 let x = x.parse()?;
                 let y = y.parse()?;
@@ -205,10 +232,20 @@ pub async fn command_callback(
             })?
         }
 
-        ["angles", pitch, yaw] | ["angle", pitch, yaw] => {
+        ["angles", yaw] | ["angle", yaw] | ["rotate", yaw] => {
             EntityManager::with_closest(player.eye_position, |entity| {
-                let pitch = pitch.parse()?;
                 let yaw = yaw.parse()?;
+
+                entity.entity.RotY = yaw;
+
+                Ok(())
+            })?
+        }
+
+        ["angles", yaw, pitch] | ["angle", yaw, pitch] | ["rotate", yaw, pitch] => {
+            EntityManager::with_closest(player.eye_position, |entity| {
+                let yaw = yaw.parse()?;
+                let pitch = pitch.parse()?;
 
                 entity.entity.RotX = pitch;
                 entity.entity.RotY = yaw;

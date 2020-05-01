@@ -8,9 +8,23 @@ use crate::{
     players::PlayerTrait,
     search,
 };
-use classicube_sys::{OwnedChatCommand, Vec3, ENTITIES_SELF_ID};
+use classicube_sys::{
+    Camera, OwnedChatCommand, RayTracer, Vec3, ENTITIES_SELF_ID, FACE_CONSTS_FACE_XMAX,
+    FACE_CONSTS_FACE_XMIN, FACE_CONSTS_FACE_YMAX, FACE_CONSTS_FACE_YMIN, FACE_CONSTS_FACE_ZMAX,
+    FACE_CONSTS_FACE_ZMIN,
+};
 use log::{debug, warn};
+use nalgebra::*;
+use ncollide3d::{query::*, shape::*};
 use std::{os::raw::c_int, slice, time::Duration};
+
+fn vec3_to_vector3(v: &Vec3) -> Vector3<f32> {
+    Vector3::new(v.X, v.Y, v.Z)
+}
+
+fn vector3_to_vec3(v: &Vector3<f32>) -> Vec3 {
+    Vec3::new(v.x, v.y, v.z)
+}
 
 extern "C" fn c_chat_command_callback(args: *const classicube_sys::String, args_count: c_int) {
     let args = unsafe { slice::from_raw_parts(args, args_count as _) };
@@ -128,6 +142,57 @@ pub async fn command_callback(
             Ok(())
         })?,
 
+        ["there"] => {
+            if is_self {
+                fn get_camera_trace() -> Option<RayTracer> {
+                    let camera = unsafe { &*Camera.Active };
+                    let get_picked_block = camera.GetPickedBlock.unwrap();
+                    let mut ray_tracer = unsafe { std::mem::zeroed() };
+                    unsafe {
+                        get_picked_block(&mut ray_tracer);
+                    }
+                    if ray_tracer.Valid != 0 {
+                        Some(ray_tracer)
+                    } else {
+                        None
+                    }
+                }
+                EntityManager::with_closest(player.eye_position, |entity| {
+                    let trace = get_camera_trace().chain_err(|| "no picked block")?;
+                    debug!("{:#?}", trace);
+
+                    // the block's hit face
+                    let normal: Unit<Vector3<f32>> = match trace.Closest as c_int {
+                        FACE_CONSTS_FACE_XMIN => -Vector3::x_axis(),
+                        FACE_CONSTS_FACE_XMAX => Vector3::x_axis(),
+                        FACE_CONSTS_FACE_ZMIN => -Vector3::z_axis(),
+                        FACE_CONSTS_FACE_ZMAX => Vector3::z_axis(),
+                        FACE_CONSTS_FACE_YMIN => -Vector3::y_axis(),
+                        FACE_CONSTS_FACE_YMAX => Vector3::y_axis(),
+
+                        _ => {
+                            return Err("oh no".into());
+                        }
+                    };
+
+                    let middle = Vec3::from(trace.pos) + Vec3::new(0.5, 0.5, 0.5);
+                    entity.entity.Position = middle + vector3_to_vec3(&normal) * 0.51;
+
+                    let quaternion =
+                        UnitQuaternion::from_axis_angle(&normal, std::f32::consts::FRAC_PI_2);
+
+                    let (yaw, _pitch, _) = quaternion.euler_angles();
+                    // let pitch = pitch.to_degrees();
+                    let yaw = yaw.to_degrees();
+
+                    // entity.entity.RotX = pitch;
+                    entity.entity.RotY = yaw;
+
+                    Ok(())
+                })?
+            }
+        }
+
         ["at", x, y, z] | ["tp", x, y, z] => {
             EntityManager::with_closest(player.eye_position, |entity| {
                 let x = x.parse()?;
@@ -215,9 +280,6 @@ pub async fn command_callback(
                     ))
                 })?;
 
-            use nalgebra::*;
-            use ncollide3d::{query::*, shape::*};
-
             fn intersect(
                 eye_pos: Point3<f32>,
                 [aim_pitch, aim_yaw]: [f32; 2],
@@ -255,10 +317,6 @@ pub async fn command_callback(
                 } else {
                     None
                 }
-            }
-
-            fn vec3_to_vector3(v: &Vec3) -> Vector3<f32> {
-                Vector3::new(v.X, v.Y, v.Z)
             }
 
             let eye_pos = vec3_to_vector3(&player.eye_position);

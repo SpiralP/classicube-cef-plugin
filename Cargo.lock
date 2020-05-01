@@ -148,9 +148,9 @@ dependencies = [
 
 [[package]]
 name = "backtrace-sys"
-version = "0.1.36"
+version = "0.1.37"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "78848718ee1255a2485d1309ad9cdecfc2e7d0362dd11c6829364c6b35ae1bc7"
+checksum = "18fbebbe1c9d1f383a9cc7e8ccdb471b91c8d024ee9c2ca5b5346121fe8b4399"
 dependencies = [
  "cc 1.0.52",
  "libc",
@@ -369,7 +369,7 @@ dependencies = [
 [[package]]
 name = "classicube-helpers"
 version = "0.1.0"
-source = "git+https://github.com/SpiralP/rust-classicube-helpers.git#7f97fe07606d99f3dd5a1eb6ac846861a7f23341"
+source = "git+https://github.com/SpiralP/rust-classicube-helpers.git#0a48e6e3698c587a50528be8e4c7c11b64a61c90"
 dependencies = [
  "classicube-sys",
  "detour",
@@ -381,7 +381,7 @@ dependencies = [
 [[package]]
 name = "classicube-sys"
 version = "0.1.0"
-source = "git+https://github.com/SpiralP/rust-classicube-sys.git#89969b9df7afdba8c00789b96157e71af8bef825"
+source = "git+https://github.com/SpiralP/rust-classicube-sys.git#f73eda729d04e0f059be5025d9c9b7ff9c1fe905"
 dependencies = [
  "bindgen",
  "cc 1.0.52",
@@ -1728,9 +1728,9 @@ checksum = "a1d01941d82fa2ab50be1e79e6714289dd7cde78eba4c074bc5a4374f650dfe0"
 
 [[package]]
 name = "quote"
-version = "1.0.3"
+version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2bdc6c187c65bca4260c9011c9e3132efe4909da44726bad24cf7572ae338d7f"
+checksum = "4c1f4b0efa5fc5e8ceb705136bfee52cfdb6a4e3509f770b478cd6ed434232a7"
 dependencies = [
  "proc-macro2",
 ]

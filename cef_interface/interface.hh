@@ -77,7 +77,7 @@ extern "C" int cef_interface_shutdown();
 extern "C" int cef_interface_step();
 
 extern "C" int cef_interface_initialize(MyApp* app_ptr);
-extern "C" int cef_interface_execute_process();
+extern "C" int cef_interface_execute_process(int argc, char* argv[]);
 
 // Browser
 

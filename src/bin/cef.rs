@@ -3,24 +3,51 @@
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 
+#[cfg(target_os = "windows")]
 #[link(name = "User32", kind = "dylib")]
 extern "C" {}
 
+#[cfg(target_os = "windows")]
+#[cfg(debug_assertions)]
 #[link(name = "ucrtd", kind = "static")]
 extern "C" {}
 
+#[cfg(target_os = "linux")]
+#[link(name = "stdc++", kind = "static")]
+extern "C" {}
+
+// link to cef_interface
+
+#[cfg(target_os = "windows")]
 #[link(name = "libcef_dll_wrapper", kind = "dylib")]
 extern "C" {}
 
-#[link(name = "libcef", kind = "dylib")]
+#[cfg(not(target_os = "windows"))]
+#[link(name = "cef_dll_wrapper", kind = "dylib")]
 extern "C" {}
+
+// link to cef_interface
 
 #[link(name = "cef_interface", kind = "static")]
 extern "C" {}
 
+// link to libcef
+
+#[cfg(target_os = "windows")]
+#[link(name = "libcef", kind = "dylib")]
+extern "C" {}
+
+#[cfg(target_os = "linux")]
+#[link(name = "cef", kind = "dylib")]
+extern "C" {}
+
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 
-use std::{ffi::CStr, os::raw::c_char};
+use std::{
+    env,
+    ffi::{CStr, CString},
+    os::raw::{c_char, c_int},
+};
 
 #[no_mangle]
 pub unsafe extern "C" fn rust_print(c_str: *const c_char) {
@@ -31,6 +58,20 @@ pub unsafe extern "C" fn rust_print(c_str: *const c_char) {
 
 fn main() {
     unsafe {
-        assert_eq!(cef_interface_execute_process(), 0);
+        // int argc, char* argv[]
+
+        let mut arg_v = env::args()
+            .map(|s| CString::new(s).unwrap().into_raw())
+            .collect::<Vec<*mut c_char>>();
+        let arg_c = arg_v.len();
+
+        assert_eq!(
+            cef_interface_execute_process(arg_c as c_int, arg_v.as_mut_ptr()),
+            0
+        );
+
+        for ptr in arg_v.drain(..) {
+            CString::from_raw(ptr);
+        }
     }
 }

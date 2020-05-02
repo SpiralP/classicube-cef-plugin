@@ -28,12 +28,3 @@
     - Rename this to `cef.exe` if it wasn't already
 
 * Copy our plugin `classicube_cef_plugin.dll` to `ClassiCube/plugins/`
-
-### Running on Linux
-
-```
-cd ClassiCube/
-export LD_LIBRARY_PATH=.
-export PATH=$PATH:.
-./ClassiCube
-```

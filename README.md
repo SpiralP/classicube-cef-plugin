@@ -16,7 +16,8 @@
 - Run `cargo build --release`
   - This will create:
     - `target/release/classicube_cef_plugin.dll`
-    - `target/release/cef.exe`
+    - `target/release/build/classicube-cef-plugin-*/out/cef.exe`
+      - There will be 2 folders named `classicube-cef-plugin-*`, look in both to find `out`
 
 ## Installing
 

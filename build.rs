@@ -1,4 +1,4 @@
-use std::{env, path::Path};
+use std::{env, fs, path::Path};
 
 fn main() {
     let profile = if cfg!(debug_assertions) {
@@ -114,4 +114,34 @@ fn main() {
     bindings
         .write_to_file(out_path.join("bindings.rs"))
         .expect("Couldn't write bindings!");
+
+    // build cef_exe
+    let cmake_path = cmake::Config::new("cef_interface")
+        .static_crt(true)
+        .build_target("cef_exe")
+        .profile(profile)
+        .define("USE_SANDBOX", "OFF")
+        .build();
+
+    #[cfg(target_os = "windows")]
+    const CEF_EXE_NAME: &str = "cef.exe";
+
+    #[cfg(target_os = "windows")]
+    const CEF_EXE_OLD_NAME: &str = "cef_exe.exe";
+
+    #[cfg(not(target_os = "windows"))]
+    const CEF_EXE_NAME: &str = "cef";
+
+    #[cfg(not(target_os = "windows"))]
+    const CEF_EXE_OLD_NAME: &str = "cef_exe";
+
+    let _ignore = fs::remove_dir_all(Path::new(&out_dir).join(CEF_EXE_NAME));
+    fs::copy(
+        cmake_path
+            .join("build")
+            .join(profile)
+            .join(CEF_EXE_OLD_NAME),
+        Path::new(&out_dir).join(CEF_EXE_NAME),
+    )
+    .unwrap();
 }

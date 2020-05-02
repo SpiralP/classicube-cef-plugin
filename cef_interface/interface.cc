@@ -88,31 +88,6 @@ extern "C" int cef_interface_initialize(MyApp* app_ptr) {
   return 0;
 }
 
-extern "C" int cef_interface_execute_process(int argc, char* argv[]) {
-  rust_print("cef_interface_execute_process");
-
-  // Provide CEF with command-line arguments.
-
-#if defined(_WIN64) || defined(_WIN32)
-  CefMainArgs main_args(GetModuleHandle(NULL));
-#else
-  CefMainArgs main_args(argc, argv);
-#endif
-
-  // CEF applications have multiple sub-processes (render, plugin, GPU, etc)
-  // that share the same executable. This function checks the command-line and,
-  // if this is a sub-process, executes the appropriate logic.
-  int exit_code = CefExecuteProcess(main_args, nullptr, nullptr);
-  if (exit_code >= 0) {
-    // The sub-process has completed so return here.
-    rust_print("cef_interface_execute_process sub-process has completed");
-    return exit_code;
-  } else {
-    rust_print("cef_interface_execute_process ???");
-    return 0;
-  }
-}
-
 // Browser
 
 extern "C" int cef_interface_create_browser(MyClient* client_ptr,

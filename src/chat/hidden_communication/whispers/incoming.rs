@@ -86,6 +86,12 @@ async fn send_reply(real_name: String) -> Result<()> {
     debug!("sending to {:?}", real_name);
 
     let message = encoding::create_message();
+
+    if message.entities.is_empty() {
+        // don't send anything if nothing to send, asker will time out and ask someone else
+        return Ok(());
+    }
+
     let encoded = encoding::encode(&message)?;
     Chat::send(format!("@{}+ !CEF!{}", real_name, encoded));
 

@@ -74,7 +74,7 @@ pub fn create_message() -> Message {
 }
 
 pub async fn received_message(mut message: Message) -> Result<bool> {
-    // let mut had_data = false;
+    let mut had_data = false;
 
     for info in message.entities.drain(..) {
         // if it already exists don't do anything
@@ -87,8 +87,8 @@ pub async fn received_message(mut message: Message) -> Result<bool> {
 
         EntityManager::create_entity_from_light_entity(info).await?;
 
-        // had_data = true;
+        had_data = true;
     }
 
-    Ok(true)
+    Ok(had_data)
 }

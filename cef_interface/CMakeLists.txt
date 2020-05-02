@@ -200,7 +200,7 @@ add_subdirectory(${CEF_LIBCEF_DLL_WRAPPER_PATH} libcef_dll_wrapper)
 # Comes from the <target>/CMakeLists.txt file in the current directory.
 # TODO: Change these lines to match your project target when you copy this file.
 # if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests")
-add_subdirectory(cef_binary/tests/cefsimple)
+#   add_subdirectory(cef_binary/tests/cefsimple)
 #   add_subdirectory(tests/gtest)
 #   add_subdirectory(tests/ceftests)
 # endif()
@@ -268,7 +268,7 @@ SET_CEF_TARGET_OUT_DIR()
 
 add_library(${CEF_TARGET} STATIC ${CEF_INTERFACE_SRCS})
 SET_EXECUTABLE_TARGET_PROPERTIES(${CEF_TARGET})
-add_dependencies(${CEF_TARGET} libcef_dll_wrapper cefsimple)
+add_dependencies(${CEF_TARGET} libcef_dll_wrapper)
 target_link_libraries(${CEF_TARGET} libcef_lib libcef_dll_wrapper ${CEF_STANDARD_LIBS})
 
 COPY_FILES("${CEF_TARGET}" "${CEF_BINARY_FILES}" "${CEF_BINARY_DIR}" "${CEF_TARGET_OUT_DIR}")

@@ -16,16 +16,15 @@
 - Run `cargo build --release`
   - This will create:
     - `target/release/classicube_cef_plugin.dll`
-    - `target/release/build/classicube-cef-plugin-*/out/cefsimple.exe`
-      - There will be 2 folders named `classicube-cef-plugin-*`, look in both to find `out`
+    - `target/release/cef.exe`
 
 ## Installing
 
 - Copy these files to the same folder as the `ClassiCube` executable:
   - All files in `cef_binary/Release/`
   - All files in `cef_binary/Resources/`
-  - Our `cefsimple.exe` file
-    - Rename this to `cefsimple.exe` if it wasn't already
+  - Our `cef.exe` file
+    - Rename this to `cef.exe` if it wasn't already
 
 * Copy our plugin `classicube_cef_plugin.dll` to `ClassiCube/plugins/`
 

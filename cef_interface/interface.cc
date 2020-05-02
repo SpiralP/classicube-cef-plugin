@@ -40,8 +40,8 @@ extern "C" RustRefBrowser cef_interface_add_ref_browser(CefBrowser* ptr) {
   r.ptr = ptr;
   return r;
 }
-extern "C" int cef_interface_release_ref_browser(CefBrowser* browser_ptr) {
-  browser_ptr->Release();
+extern "C" int cef_interface_release_ref_browser(CefBrowser* browser) {
+  browser->Release();
   return 0;
 }
 
@@ -72,21 +72,40 @@ extern "C" int cef_interface_initialize(MyApp* app_ptr) {
 
   CefString(&settings.log_file).FromASCII("cef-binary.log");
 
-#if defined(WIN32) || defined(_WIN32) || \
-    defined(__WIN32) && !defined(__CYGWIN__)
-  const char* cef_simple_name = "cefsimple.exe";
+#if defined(_WIN64) || defined(_WIN32)
+  const char* cef_exe_path = "cef.exe";
 #else
-  const char* cef_simple_name = "cefsimple";
+  const char* cef_exe_path = "cef";
 #endif
 
   // Specify the path for the sub-process executable.
-  CefString(&settings.browser_subprocess_path).FromASCII(cef_simple_name);
+  CefString(&settings.browser_subprocess_path).FromASCII(cef_exe_path);
 
   // Initialize CEF in the main process.
   if (!CefInitialize(main_args, settings, app_ptr, NULL)) {
     return -1;
   }
   return 0;
+}
+
+extern "C" int cef_interface_execute_process() {
+  rust_print("cef_interface_execute_process");
+
+  // Provide CEF with command-line arguments.
+  CefMainArgs main_args(GetModuleHandle(NULL));
+
+  // CEF applications have multiple sub-processes (render, plugin, GPU, etc)
+  // that share the same executable. This function checks the command-line and,
+  // if this is a sub-process, executes the appropriate logic.
+  int exit_code = CefExecuteProcess(main_args, nullptr, nullptr);
+  if (exit_code >= 0) {
+    // The sub-process has completed so return here.
+    rust_print("cef_interface_execute_process sub-process has completed");
+    return exit_code;
+  } else {
+    rust_print("cef_interface_execute_process ???");
+    return 0;
+  }
 }
 
 // Browser
@@ -114,21 +133,21 @@ extern "C" int cef_interface_create_browser(MyClient* client_ptr,
   }
 }
 
-extern "C" int cef_interface_browser_get_identifier(CefBrowser* browser_ptr) {
-  return browser_ptr->GetIdentifier();
+extern "C" int cef_interface_browser_get_identifier(CefBrowser* browser) {
+  return browser->GetIdentifier();
 }
 
-extern "C" int cef_interface_browser_load_url(CefBrowser* browser_ptr,
+extern "C" int cef_interface_browser_load_url(CefBrowser* browser,
                                               const char* url) {
-  auto frame = browser_ptr->GetMainFrame();
+  auto frame = browser->GetMainFrame();
   frame->LoadURL(url);
 
   return 0;
 }
 
-extern "C" int cef_interface_browser_execute_javascript(CefBrowser* browser_ptr,
+extern "C" int cef_interface_browser_execute_javascript(CefBrowser* browser,
                                                         const char* code) {
-  CefRefPtr<CefFrame> frame = browser_ptr->GetMainFrame();
+  CefRefPtr<CefFrame> frame = browser->GetMainFrame();
   if (!frame) {
     return -1;
   }
@@ -138,10 +157,10 @@ extern "C" int cef_interface_browser_execute_javascript(CefBrowser* browser_ptr,
   return 0;
 }
 
-extern "C" int cef_interface_browser_send_click(CefBrowser* browser_ptr,
+extern "C" int cef_interface_browser_send_click(CefBrowser* browser,
                                                 int x,
                                                 int y) {
-  auto browser_host = browser_ptr->GetHost();
+  auto browser_host = browser->GetHost();
 
   CefMouseEvent event = CefMouseEvent();
   event.x = x;
@@ -156,9 +175,9 @@ extern "C" int cef_interface_browser_send_click(CefBrowser* browser_ptr,
   return 0;
 }
 
-extern "C" int cef_interface_browser_send_text(CefBrowser* browser_ptr,
+extern "C" int cef_interface_browser_send_text(CefBrowser* browser,
                                                const char* text) {
-  auto browser_host = browser_ptr->GetHost();
+  auto browser_host = browser->GetHost();
 
   for (const char* c = text; *c; ++c) {
     CefKeyEvent event = CefKeyEvent();
@@ -174,18 +193,18 @@ extern "C" int cef_interface_browser_send_text(CefBrowser* browser_ptr,
   return 0;
 }
 
-extern "C" int cef_interface_browser_reload(CefBrowser* browser_ptr) {
-  browser_ptr->Reload();
+extern "C" int cef_interface_browser_reload(CefBrowser* browser) {
+  browser->Reload();
   return 0;
 }
 
-extern "C" int cef_interface_browser_was_resized(CefBrowser* browser_ptr) {
-  browser_ptr->GetHost()->WasResized();
+extern "C" int cef_interface_browser_was_resized(CefBrowser* browser) {
+  browser->GetHost()->WasResized();
   return 0;
 }
 
-extern "C" int cef_interface_browser_close(CefBrowser* browser_ptr) {
-  auto browser_host = browser_ptr->GetHost();
+extern "C" int cef_interface_browser_close(CefBrowser* browser) {
+  auto browser_host = browser->GetHost();
 
   // force_close: true because we don't want popups!
   browser_host->CloseBrowser(true);

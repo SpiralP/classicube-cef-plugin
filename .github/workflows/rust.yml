@@ -64,7 +64,7 @@ jobs:
       - run: Rename-Item -Path "target\release\classicube_cef_plugin.dll" -NewName "classicube_cef_windows_${{ matrix.config.arch }}.dll"
         if: startsWith(github.ref, 'refs/tags/')
 
-      - run: Get-ChildItem "target\release\build\classicube-cef-plugin-*\out\cefsimple.exe" | Rename-Item -NewName "cefsimple-${{ matrix.config.arch }}.exe"
+      - run: Get-ChildItem "target\release\cef.exe" | Rename-Item -NewName "cef-windows-${{ matrix.config.arch }}.exe"
         if: startsWith(github.ref, 'refs/tags/')
 
       - name: Upload Release
@@ -73,7 +73,7 @@ jobs:
         with:
           files: |
             target/release/classicube_cef_windows_${{ matrix.config.arch }}.dll
-            target/release/build/classicube-cef-plugin-*/out/cefsimple-${{ matrix.config.arch }}.exe
+            target/release/cef-windows-${{ matrix.config.arch }}.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -143,7 +143,7 @@ jobs:
       - run: mv target/release/libclassicube_cef_plugin.so "classicube_cef_linux_${{ matrix.config.arch }}.so"
         if: startsWith(github.ref, 'refs/tags/')
 
-      - run: mv target/release/build/classicube-cef-plugin-*/out/cefsimple "cefsimple-linux-${{ matrix.config.arch }}"
+      - run: mv target/release/cef "cef-linux-${{ matrix.config.arch }}"
         if: startsWith(github.ref, 'refs/tags/')
 
       - name: Upload Release
@@ -152,7 +152,7 @@ jobs:
         with:
           files: |
             classicube_cef_linux_${{ matrix.config.arch }}.so
-            cefsimple-linux-${{ matrix.config.arch }}
+            cef-linux-${{ matrix.config.arch }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -209,9 +209,7 @@ jobs:
       - run: mv target/release/libclassicube_cef_plugin.dylib "classicube_cef_macos_${{ matrix.config.arch }}.dylib"
         if: startsWith(github.ref, 'refs/tags/')
 
-      - run: |
-          mv target/release/build/classicube-cef-plugin-*/out/cefsimple.app . \
-          && tar -cvf - cefsimple.app/ | gzip - > "cefsimple-macos-${{ matrix.config.arch }}.tar.gz"
+      - run: mv target/release/cef "cef-macos-${{ matrix.config.arch }}"
         if: startsWith(github.ref, 'refs/tags/')
       # - name: Upload Release
       #   uses: softprops/action-gh-release@v1
@@ -219,6 +217,6 @@ jobs:
       #   with:
       #     files: |
       #       classicube_cef_macos_${{ matrix.config.arch }}.dylib
-      #       cefsimple-macos-${{ matrix.config.arch }}.tar.gz
+      #       cef-macos-${{ matrix.config.arch }}
       #   env:
       #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

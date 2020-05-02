@@ -1,6 +1,6 @@
 /target
 cef_binary*
-/cefsimple.exe
+/cef.exe
 GPUCache
 debug.log
 cef.log

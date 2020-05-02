@@ -1,13 +1,4 @@
-use std::{env, fs, path::Path};
-
-#[cfg(target_os = "windows")]
-const CEF_SIMPLE_NAME: &str = "cefsimple.exe";
-
-#[cfg(target_os = "linux")]
-const CEF_SIMPLE_NAME: &str = "cefsimple";
-
-#[cfg(target_os = "macos")]
-const CEF_SIMPLE_NAME: &str = "cefsimple.app";
+use std::{env, path::Path};
 
 fn main() {
     let profile = if cfg!(debug_assertions) {
@@ -92,16 +83,6 @@ fn main() {
 
     #[cfg(target_os = "linux")]
     println!("cargo:rustc-link-lib=dylib=cef");
-
-    let _ignore = fs::remove_dir_all(Path::new(&out_dir).join(CEF_SIMPLE_NAME));
-    fs::rename(
-        cmake_path
-            .join("build/cef_binary/tests/cefsimple")
-            .join(profile)
-            .join(CEF_SIMPLE_NAME),
-        Path::new(&out_dir).join(CEF_SIMPLE_NAME),
-    )
-    .unwrap();
 
     // The bindgen::Builder is the main entry point
     // to bindgen, and lets you build up options for

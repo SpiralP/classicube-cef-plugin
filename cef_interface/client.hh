@@ -30,6 +30,11 @@ class MyClient : public CefClient,
   CefRefPtr<CefDialogHandler> GetDialogHandler() OVERRIDE;
   CefRefPtr<CefDownloadHandler> GetDownloadHandler() OVERRIDE;
 
+  bool OnProcessMessageReceived(CefRefPtr<CefBrowser> browser,
+                                CefRefPtr<CefFrame> frame,
+                                CefProcessId source_process,
+                                CefRefPtr<CefProcessMessage> message) OVERRIDE;
+
   // CefDisplayHandler methods:
   void OnTitleChange(CefRefPtr<CefBrowser> browser,
                      const CefString& title) OVERRIDE;
@@ -117,6 +122,7 @@ class MyClient : public CefClient,
   OnAfterCreatedCallback on_after_created_callback;
   OnTitleChangeCallback on_title_change_callback;
   GetViewRectCallback get_view_rect_callback;
+  OnJavascriptCallback on_javascript_callback;
 
   IMPLEMENT_REFCOUNTING(MyClient);
   DISALLOW_COPY_AND_ASSIGN(MyClient);

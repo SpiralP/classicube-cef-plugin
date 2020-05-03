@@ -1,10 +1,13 @@
 #pragma once
 
+#include <cstdint>
+
 // TODO use a namespace for cef_interface_ prefix!
 
 class MyApp;
 class MyClient;
 class CefBrowser;
+class CefV8Value;
 
 struct RustRefApp {
   MyApp* ptr;
@@ -27,6 +30,16 @@ struct RustRefBrowser {
 extern "C" RustRefBrowser cef_interface_add_ref_browser(
     CefBrowser* browser_ptr);
 extern "C" int cef_interface_release_ref_browser(CefBrowser* browser_ptr);
+
+struct RustRefString {
+  const char* ptr;
+  size_t len;
+};
+
+/// must call cef_interface_delete_ref_string
+extern "C" RustRefString cef_interface_new_ref_string(const char* c_str,
+                                                      size_t len);
+extern "C" int cef_interface_delete_ref_string(const char* c_str);
 
 /// Called on the browser process UI thread immediately after the CEF context
 /// has been initialized.
@@ -59,6 +72,45 @@ struct RustRect {
 
 typedef RustRect (*GetViewRectCallback)(RustRefBrowser browser);
 
+struct FFIRustV8Value {
+  enum class Tag : uint8_t {
+    Unknown,
+    Array,
+    ArrayBuffer,
+    Bool,
+    Date,
+    Double,
+    Function,
+    Int,
+    Null,
+    Object,
+    String,
+    UInt,
+    Undefined,
+  };
+
+  Tag tag;
+  union {
+    bool bool_;
+    double double_;
+    int32_t int_;
+    RustRefString string;
+    uint32_t uint;
+  };
+};
+
+struct FFIRustV8Response {
+  bool success;
+  union {
+    FFIRustV8Value result;
+    bool error;
+  };
+};
+
+typedef void (*OnJavascriptCallback)(RustRefBrowser browser,
+                                     uint64_t id,
+                                     FFIRustV8Response v8_response);
+
 struct Callbacks {
   OnContextInitializedCallback on_context_initialized_callback;
   OnAfterCreatedCallback on_after_created_callback;
@@ -67,6 +119,7 @@ struct Callbacks {
   OnLoadEndCallback on_load_end_callback;
   OnTitleChangeCallback on_title_change_callback;
   GetViewRectCallback get_view_rect_callback;
+  OnJavascriptCallback on_javascript_callback;
 };
 
 // functions to rust
@@ -87,6 +140,9 @@ extern "C" int cef_interface_browser_load_url(CefBrowser* browser_ptr,
                                               const char* url);
 extern "C" int cef_interface_browser_execute_javascript(CefBrowser* browser_ptr,
                                                         const char* code);
+extern "C" int cef_interface_browser_eval_javascript(CefBrowser* browser_ptr,
+                                                     uint64_t task_id,
+                                                     const char* c_code);
 extern "C" int cef_interface_browser_send_click(CefBrowser* browser_ptr,
                                                 int x,
                                                 int y);

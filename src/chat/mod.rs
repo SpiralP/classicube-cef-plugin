@@ -92,6 +92,28 @@ impl Chat {
                 AsyncManager::sleep(Duration::from_millis(300)).await;
 
                 Chat::send("/client cef create");
+
+                AsyncManager::sleep(Duration::from_millis(1000)).await;
+
+                let browser = crate::entity_manager::EntityManager::with_all_entities(|entities| {
+                    entities
+                        .values()
+                        .next()
+                        .unwrap()
+                        .browser
+                        .as_ref()
+                        .unwrap()
+                        .clone()
+                });
+
+                AsyncManager::spawn_local_on_main_thread(async move {
+                    debug!(
+                        "{:#?}",
+                        browser
+                            .eval_javascript("'the world is not anymore the way it used to be'")
+                            .await
+                    );
+                });
             });
         }
     }

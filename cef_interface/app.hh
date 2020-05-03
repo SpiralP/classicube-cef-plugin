@@ -5,12 +5,15 @@
 #include "client.hh"
 #include "interface.hh"
 
-class MyApp : public CefApp, public CefBrowserProcessHandler {
+class MyApp : public CefApp,
+              public CefBrowserProcessHandler,
+              public CefRenderProcessHandler {
  public:
   MyApp(Callbacks callbacks);
 
   // CefApp methods:
   CefRefPtr<CefBrowserProcessHandler> GetBrowserProcessHandler() OVERRIDE;
+  CefRefPtr<CefRenderProcessHandler> GetRenderProcessHandler() OVERRIDE;
 
   void OnBeforeCommandLineProcessing(
       const CefString& process_type,
@@ -18,6 +21,12 @@ class MyApp : public CefApp, public CefBrowserProcessHandler {
 
   // CefBrowserProcessHandler methods:
   void OnContextInitialized() OVERRIDE;
+
+  // CefRenderProcessHandler methods:
+  bool OnProcessMessageReceived(CefRefPtr<CefBrowser> browser,
+                                CefRefPtr<CefFrame> frame,
+                                CefProcessId source_process,
+                                CefRefPtr<CefProcessMessage> message) OVERRIDE;
 
  private:
   OnContextInitializedCallback on_context_initialized_callback;

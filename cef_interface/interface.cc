@@ -1,6 +1,8 @@
 #include "interface.hh"
 
+#include <include/base/cef_bind.h>
 #include <include/cef_origin_whitelist.h>
+#include <include/wrapper/cef_closure_task.h>
 
 #include <chrono>    // std::chrono::seconds
 #include <iostream>  // std::cout, std::endl
@@ -9,39 +11,54 @@
 #include "app.hh"
 #include "client.hh"
 
-extern "C" RustRefApp cef_interface_add_ref_app(MyApp* ptr) {
-  ptr->AddRef();
+extern "C" RustRefApp cef_interface_add_ref_app(MyApp* app) {
+  app->AddRef();
 
   RustRefApp r;
-  r.ptr = ptr;
+  r.ptr = app;
   return r;
 }
-extern "C" int cef_interface_release_ref_app(MyApp* app_ptr) {
-  app_ptr->Release();
+extern "C" int cef_interface_release_ref_app(MyApp* app) {
+  app->Release();
   return 0;
 }
 
-extern "C" RustRefClient cef_interface_add_ref_client(MyClient* ptr) {
-  ptr->AddRef();
+extern "C" RustRefClient cef_interface_add_ref_client(MyClient* client) {
+  client->AddRef();
 
   RustRefClient r;
-  r.ptr = ptr;
+  r.ptr = client;
   return r;
 }
-extern "C" int cef_interface_release_ref_client(MyClient* client_ptr) {
-  client_ptr->Release();
+extern "C" int cef_interface_release_ref_client(MyClient* client) {
+  client->Release();
   return 0;
 }
 
-extern "C" RustRefBrowser cef_interface_add_ref_browser(CefBrowser* ptr) {
-  ptr->AddRef();
+extern "C" RustRefBrowser cef_interface_add_ref_browser(CefBrowser* browser) {
+  browser->AddRef();
 
   RustRefBrowser r;
-  r.ptr = ptr;
+  r.ptr = browser;
   return r;
 }
 extern "C" int cef_interface_release_ref_browser(CefBrowser* browser) {
   browser->Release();
+  return 0;
+}
+
+extern "C" RustRefString cef_interface_new_ref_string(const char* c_str,
+                                                      size_t len) {
+  char* copy = new char[len + 1];
+  strcpy(copy, c_str);
+
+  RustRefString r;
+  r.ptr = copy;
+  r.len = len;
+  return r;
+}
+extern "C" int cef_interface_delete_ref_string(const char* c_str) {
+  delete[] c_str;
   return 0;
 }
 
@@ -51,7 +68,7 @@ extern "C" RustRefApp cef_interface_create_app(Callbacks callbacks) {
   return cef_interface_add_ref_app(app);
 }
 
-extern "C" int cef_interface_initialize(MyApp* app_ptr) {
+extern "C" int cef_interface_initialize(MyApp* app) {
   // Structure for passing command-line arguments.
   // The definition of this structure is platform-specific.
   CefMainArgs main_args;
@@ -82,7 +99,7 @@ extern "C" int cef_interface_initialize(MyApp* app_ptr) {
   CefString(&settings.browser_subprocess_path).FromASCII(cef_exe_path);
 
   // Initialize CEF in the main process.
-  if (!CefInitialize(main_args, settings, app_ptr, NULL)) {
+  if (!CefInitialize(main_args, settings, app, NULL)) {
     return -1;
   }
   return 0;
@@ -90,7 +107,7 @@ extern "C" int cef_interface_initialize(MyApp* app_ptr) {
 
 // Browser
 
-extern "C" int cef_interface_create_browser(MyClient* client_ptr,
+extern "C" int cef_interface_create_browser(MyClient* client,
                                             const char* startup_url) {
   // Create the browser window.
   CefWindowInfo windowInfo;
@@ -103,7 +120,7 @@ extern "C" int cef_interface_create_browser(MyClient* client_ptr,
   CefRefPtr<CefDictionaryValue> extra_info = CefDictionaryValue::Create();
   extra_info->SetInt("bap", 23);
 
-  bool browser = CefBrowserHost::CreateBrowser(windowInfo, client_ptr, url,
+  bool browser = CefBrowserHost::CreateBrowser(windowInfo, client, url,
                                                settings, extra_info, NULL);
 
   if (browser) {
@@ -133,6 +150,27 @@ extern "C" int cef_interface_browser_execute_javascript(CefBrowser* browser,
   }
 
   frame->ExecuteJavaScript(code, frame->GetURL(), 0);
+
+  return 0;
+}
+
+extern "C" int cef_interface_browser_eval_javascript(CefBrowser* browser,
+                                                     uint64_t task_id,
+                                                     const char* c_code) {
+  auto frame = browser->GetMainFrame();
+
+  CefString script(c_code);
+  CefString script_url(frame->GetURL());
+  int start_line = 0;
+
+  auto message = CefProcessMessage::Create("EvalJavascript");
+  CefRefPtr<CefListValue> args = message->GetArgumentList();
+  args->SetBinary(0, CefBinaryValue::Create(&task_id, sizeof(uint64_t)));
+  args->SetString(1, script);
+  args->SetString(2, script_url);
+  args->SetInt(3, start_line);
+
+  frame->SendProcessMessage(PID_RENDERER, message);
 
   return 0;
 }

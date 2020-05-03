@@ -1,5 +1,6 @@
 mod bindings;
 mod browser;
+mod javascript;
 
 pub use self::bindings::{Callbacks, RustRefApp, RustRefBrowser, RustRefClient};
 use self::browser::{BROWSERS, BROWSER_SIZES};
@@ -78,6 +79,7 @@ impl Cef {
             on_title_change_callback: Some(browser::on_title_change),
             on_paint_callback: Some(cef_paint_callback),
             get_view_rect_callback: Some(browser::get_view_rect),
+            on_javascript_callback: Some(javascript::on_javascript_callback),
         });
 
         let mut event_receiver = Self::create_event_listener();

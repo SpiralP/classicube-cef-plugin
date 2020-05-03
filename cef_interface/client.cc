@@ -1,5 +1,7 @@
 #include "client.hh"
 
+#include "serialize.hh"
+
 MyClient::MyClient(Callbacks callbacks) {
   this->on_before_close_callback = callbacks.on_before_close_callback;
   this->on_paint_callback = callbacks.on_paint_callback;
@@ -7,6 +9,7 @@ MyClient::MyClient(Callbacks callbacks) {
   this->on_after_created_callback = callbacks.on_after_created_callback;
   this->on_title_change_callback = callbacks.on_title_change_callback;
   this->get_view_rect_callback = callbacks.get_view_rect_callback;
+  this->on_javascript_callback = callbacks.on_javascript_callback;
 }
 
 // CefClient methods:
@@ -35,12 +38,41 @@ CefRefPtr<CefDownloadHandler> MyClient::GetDownloadHandler() {
   return this;
 }
 
+bool MyClient::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser,
+                                        CefRefPtr<CefFrame> frame,
+                                        CefProcessId source_process,
+                                        CefRefPtr<CefProcessMessage> message) {
+  // this is called on our main thread
+
+  auto message_name = message->GetName();
+
+  if (message_name == "EvalJavascriptReturn") {
+    CefRefPtr<CefListValue> args = message->GetArgumentList();
+    uint64_t task_id = 0;
+    args->GetBinary(0)->GetData(&task_id, sizeof(uint64_t), 0);
+
+    if (on_javascript_callback) {
+      auto binary = args->GetBinary(1);
+
+      auto v8_response = deserialize_v8_response(binary.get());
+      on_javascript_callback(cef_interface_add_ref_browser(browser.get()),
+                             task_id, v8_response);
+    }
+
+    return true;
+  }
+
+  return false;
+}
+
 // CefDisplayHandler methods:
 void MyClient::OnTitleChange(CefRefPtr<CefBrowser> browser,
                              const CefString& title) {
-  auto title_utf8 = title.ToString();
-  on_title_change_callback(cef_interface_add_ref_browser(browser.get()),
-                           title_utf8.c_str());
+  if (on_title_change_callback) {
+    auto title_utf8 = title.ToString();
+    on_title_change_callback(cef_interface_add_ref_browser(browser.get()),
+                             title_utf8.c_str());
+  }
 }
 void MyClient::OnLoadingProgressChange(CefRefPtr<CefBrowser> browser,
                                        double progress) {
@@ -90,12 +122,19 @@ bool MyClient::OnBeforePopup(
 
 // CefRenderHandler methods:
 void MyClient::GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) {
-  auto new_rect =
-      get_view_rect_callback(cef_interface_add_ref_browser(browser.get()));
-  rect.x = new_rect.x;
-  rect.y = new_rect.y;
-  rect.width = new_rect.width;
-  rect.height = new_rect.height;
+  if (get_view_rect_callback) {
+    auto new_rect =
+        get_view_rect_callback(cef_interface_add_ref_browser(browser.get()));
+    rect.x = new_rect.x;
+    rect.y = new_rect.y;
+    rect.width = new_rect.width;
+    rect.height = new_rect.height;
+  } else {
+    rect.x = 0;
+    rect.y = 0;
+    rect.width = 180;
+    rect.height = 100;
+  }
 }
 
 void MyClient::OnPaint(CefRefPtr<CefBrowser> browser,
@@ -136,6 +175,7 @@ CefRefPtr<CefResourceRequestHandler> MyClient::GetResourceRequestHandler(
     auto main_url = frame->GetURL();
 
     if (main_url == "" && url.rfind("https://www.youtube.com/embed/", 0) == 0) {
+      // use MyClient::OnBeforeResourceLoad
       return this;
     }
   }

@@ -34,5 +34,8 @@ int main(int argc, char* argv[]) {
 }
 
 extern "C" void rust_print(const char* c_str) {
-  //
+  printf("%s\n", c_str);
+  // CefString str(c_str);
+
+  // LOG(INFO) << str;
 }

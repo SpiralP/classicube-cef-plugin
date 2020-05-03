@@ -1,11 +1,14 @@
 use std::{env, fs, path::Path};
 
 fn main() {
-    let profile = if cfg!(debug_assertions) {
-        "Debug"
-    } else {
-        "Release"
-    };
+    // just use Release cef-binary because Debug makes crt problems for windows
+    // istringstream would crash on destructor
+    let profile = "Release";
+    // if cfg!(debug_assertions) {
+    //     "Debug"
+    // } else {
+    //     "Release"
+    // };
 
     #[cfg(target_os = "windows")]
     {
@@ -34,6 +37,9 @@ fn main() {
     println!("cargo:rerun-if-changed=cef_interface/app.hh");
     println!("cargo:rerun-if-changed=cef_interface/client.cc");
     println!("cargo:rerun-if-changed=cef_interface/client.hh");
+    println!("cargo:rerun-if-changed=cef_interface/serialize.cc");
+    println!("cargo:rerun-if-changed=cef_interface/serialize.hh");
+    println!("cargo:rerun-if-changed=cef_interface/cef_exe.cc");
 
     let cmake_path = cmake::Config::new("cef_interface")
         .static_crt(true)
@@ -104,6 +110,7 @@ fn main() {
         // included header files changed.
         .parse_callbacks(Box::new(bindgen::CargoCallbacks))
         .whitelist_function("cef_interface_.*")
+        .rustified_enum("FFIRustV8Value_Tag")
         // Finish the builder and generate the bindings.
         .generate()
         // Unwrap the Result and panic on failure.

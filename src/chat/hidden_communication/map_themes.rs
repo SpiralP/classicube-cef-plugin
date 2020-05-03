@@ -41,7 +41,7 @@ async fn do_check() -> Result<()> {
     if let Some(url) = get_map_theme_url().await? {
         debug!("map_theme got {:?}", url);
 
-        let volume = 0.25;
+        let volume = 0.5;
         let player = match YoutubePlayer::from_url(&url) {
             Ok(mut player) => {
                 player.volume = volume;

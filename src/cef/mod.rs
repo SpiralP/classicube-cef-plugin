@@ -2,8 +2,11 @@ mod bindings;
 mod browser;
 mod javascript;
 
-pub use self::bindings::{Callbacks, RustRefApp, RustRefBrowser, RustRefClient};
 use self::browser::{BROWSERS, BROWSER_SIZES};
+pub use self::{
+    bindings::{Callbacks, RustRefApp, RustRefBrowser, RustRefClient},
+    javascript::RustV8Value,
+};
 use crate::{
     async_manager::AsyncManager,
     entity_manager::{cef_paint_callback, TEXTURE_HEIGHT, TEXTURE_WIDTH},

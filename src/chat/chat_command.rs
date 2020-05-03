@@ -466,6 +466,7 @@ pub async fn command_callback(
                 entity
                     .player
                     .set_current_time(&mut browser, Duration::from_secs(seconds))?;
+
                 Ok(())
             })?;
         }

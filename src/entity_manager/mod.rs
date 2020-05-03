@@ -83,7 +83,7 @@ impl EntityManager {
                     let browser_id = browser.get_identifier();
 
                     if let Err(e) = EntityManager::with_by_browser_id(browser_id, |entity| {
-                        entity.player.on_page_loaded(&mut browser);
+                        entity.player.on_page_loaded(entity.id, &mut browser);
                         Ok(())
                     }) {
                         warn!("{}", e);
@@ -102,7 +102,9 @@ impl EntityManager {
                     let browser_id = browser.get_identifier();
 
                     if let Err(e) = EntityManager::with_by_browser_id(browser_id, |entity| {
-                        entity.player.on_title_change(&mut browser, title);
+                        entity
+                            .player
+                            .on_title_change(entity.id, &mut browser, title);
                         Ok(())
                     }) {
                         warn!("{}", e);

@@ -1,11 +1,6 @@
-use crate::{
-    entity_manager::EntityManager,
-    error::*,
-    players::{Player, PlayerTrait},
-};
+use crate::{entity_manager::EntityManager, error::*, players::Player};
 use log::{debug, warn};
 use serde::{Deserialize, Serialize};
-use std::time::Duration;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct LightEntity {
@@ -35,38 +30,39 @@ pub fn decode<T: AsRef<[u8]>>(input: T) -> Result<Message> {
     Ok(bincode::deserialize(&data)?)
 }
 
-pub fn create_message() -> Message {
-    let mut light_entities = Vec::new();
+pub async fn create_message() -> Message {
+    let light_entities: Vec<_> = EntityManager::with_all_entities(|entities| {
+        entities
+            .iter()
+            .map(|(&id, entity)| {
+                let e = &entity.entity;
 
-    EntityManager::with_all_entities(|entities| {
-        for (&id, entity) in entities {
-            let e = &entity.entity;
+                let pos = [e.Position.X, e.Position.Y, e.Position.Z];
+                let ang = [e.RotX, e.RotY];
+                let scale = entity.get_scale();
 
-            let pos = [e.Position.X, e.Position.Y, e.Position.Z];
-            let ang = [e.RotX, e.RotY];
-            let scale = entity.get_scale();
+                let player = entity.player.clone();
 
-            let mut player = entity.player.clone();
-
-            if let Ok(time) = entity.player.get_current_time() {
-                // this is a couple seconds behind because of the load time
-                // of the browser page
-                if let Player::Youtube(ref mut yt) = &mut player {
-                    yt.time = time + Duration::from_secs(4);
-                } else if let Player::Media(ref mut media) = &mut player {
-                    media.time = time + Duration::from_secs(4);
+                LightEntity {
+                    id,
+                    pos,
+                    ang,
+                    player,
+                    scale,
                 }
-            }
-
-            light_entities.push(LightEntity {
-                id,
-                pos,
-                ang,
-                player,
-                scale,
-            });
-        }
+            })
+            .collect()
     });
+
+    // if let Ok(time) = entity.player.get_current_time().await {
+    //     // this is a couple seconds behind because of the load time
+    //     // of the browser page
+    //     if let Player::Youtube(ref mut yt) = &mut player {
+    //         yt.time = time + Duration::from_secs(4);
+    //     } else if let Player::Media(ref mut media) = &mut player {
+    //         media.time = time + Duration::from_secs(4);
+    //     }
+    // }
 
     Message {
         entities: light_entities,

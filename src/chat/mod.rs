@@ -113,6 +113,23 @@ impl Chat {
                             .eval_javascript("'the world is not anymore the way it used to be'")
                             .await
                     );
+
+                    debug!(
+                        "{:#?}",
+                        browser
+                            .eval_javascript(
+                                r#"
+                                (() => {
+                                    if (typeof window.player !== "undefined") {
+                                        window.player.ag();
+                                    } else {
+                                        return 232;
+                                    }
+                                })();
+                                "#
+                            )
+                            .await
+                    );
                 });
             });
         }

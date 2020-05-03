@@ -1,3 +1,4 @@
+mod helpers;
 mod media;
 mod web;
 mod youtube;
@@ -18,16 +19,30 @@ pub trait PlayerTrait {
     fn on_create(&mut self, _entity_id: usize) -> String;
 
     /// Called after page is loaded
-    fn on_page_loaded(&mut self, _browser: &mut RustRefBrowser) {}
+    fn on_page_loaded(&mut self, _entity_id: usize, _browser: &mut RustRefBrowser) {}
 
-    fn on_title_change(&mut self, _browser: &mut RustRefBrowser, _title: String) {}
+    fn on_title_change(
+        &mut self,
+        _entity_id: usize,
+        _browser: &mut RustRefBrowser,
+        _title: String,
+    ) {
+    }
 
-    fn get_current_time(&self) -> Result<Duration> {
+    fn get_current_time(&self, _browser: &RustRefBrowser) -> Result<Duration> {
         bail!("getting time not supported");
     }
 
     fn set_current_time(&mut self, _browser: &mut RustRefBrowser, _time: Duration) -> Result<()> {
         bail!("setting time not supported");
+    }
+
+    fn get_volume(&self, _browser: &RustRefBrowser) -> Result<f32> {
+        Ok(1.0)
+    }
+
+    fn set_volume(&mut self, _browser: &RustRefBrowser, _percent: f32) -> Result<()> {
+        bail!("setting volume not supported");
     }
 }
 
@@ -72,27 +87,27 @@ impl PlayerTrait for Player {
         }
     }
 
-    fn on_page_loaded(&mut self, browser: &mut RustRefBrowser) {
+    fn on_page_loaded(&mut self, entity_id: usize, browser: &mut RustRefBrowser) {
         match self {
-            Player::Youtube(player) => player.on_page_loaded(browser),
-            Player::Media(player) => player.on_page_loaded(browser),
-            Player::Web(player) => player.on_page_loaded(browser),
+            Player::Youtube(player) => player.on_page_loaded(entity_id, browser),
+            Player::Media(player) => player.on_page_loaded(entity_id, browser),
+            Player::Web(player) => player.on_page_loaded(entity_id, browser),
         }
     }
 
-    fn on_title_change(&mut self, browser: &mut RustRefBrowser, title: String) {
+    fn on_title_change(&mut self, entity_id: usize, browser: &mut RustRefBrowser, title: String) {
         match self {
-            Player::Youtube(player) => player.on_title_change(browser, title),
-            Player::Media(player) => player.on_title_change(browser, title),
-            Player::Web(player) => player.on_title_change(browser, title),
+            Player::Youtube(player) => player.on_title_change(entity_id, browser, title),
+            Player::Media(player) => player.on_title_change(entity_id, browser, title),
+            Player::Web(player) => player.on_title_change(entity_id, browser, title),
         }
     }
 
-    fn get_current_time(&self) -> Result<Duration> {
+    fn get_current_time(&self, browser: &RustRefBrowser) -> Result<Duration> {
         match self {
-            Player::Youtube(player) => player.get_current_time(),
-            Player::Media(player) => player.get_current_time(),
-            Player::Web(player) => player.get_current_time(),
+            Player::Youtube(player) => player.get_current_time(browser),
+            Player::Media(player) => player.get_current_time(browser),
+            Player::Web(player) => player.get_current_time(browser),
         }
     }
 
@@ -101,6 +116,22 @@ impl PlayerTrait for Player {
             Player::Youtube(player) => player.set_current_time(browser, time),
             Player::Media(player) => player.set_current_time(browser, time),
             Player::Web(player) => player.set_current_time(browser, time),
+        }
+    }
+
+    fn get_volume(&self, browser: &RustRefBrowser) -> Result<f32> {
+        match self {
+            Player::Youtube(player) => player.get_volume(browser),
+            Player::Media(player) => player.get_volume(browser),
+            Player::Web(player) => player.get_volume(browser),
+        }
+    }
+
+    fn set_volume(&mut self, browser: &RustRefBrowser, percent: f32) -> Result<()> {
+        match self {
+            Player::Youtube(player) => player.set_volume(browser, percent),
+            Player::Media(player) => player.set_volume(browser, percent),
+            Player::Web(player) => player.set_volume(browser, percent),
         }
     }
 }

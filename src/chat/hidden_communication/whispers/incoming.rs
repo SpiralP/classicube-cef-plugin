@@ -85,7 +85,7 @@ async fn handle_request(message: String) -> Result<()> {
 async fn send_reply(real_name: String) -> Result<()> {
     debug!("sending to {:?}", real_name);
 
-    let message = encoding::create_message();
+    let message = encoding::create_message().await;
 
     if message.entities.is_empty() {
         // don't send anything if nothing to send, asker will time out and ask someone else

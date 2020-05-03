@@ -16,27 +16,31 @@ async fn start_loop(entity_id: usize) -> Result<()> {
     loop {
         // update volume via distance
         EntityManager::with_by_entity_id(entity_id, |entity| {
-            if let Some(browser) = &entity.browser {
-                let maybe_my_pos = ENTITIES
-                    .with_inner(|entities| {
-                        let me = entities.get(ENTITIES_SELF_ID as _)?;
+            if !entity.player.has_global_volume() {
+                if let Some(browser) = &entity.browser {
+                    let maybe_my_pos = ENTITIES
+                        .with_inner(|entities| {
+                            let me = entities.get(ENTITIES_SELF_ID as _)?;
 
-                        Some(me.get_position())
-                    })
-                    .flatten();
+                            Some(me.get_position())
+                        })
+                        .flatten();
 
-                if let Some(my_pos) = maybe_my_pos {
-                    let entity_pos = entity.entity.Position;
+                    if let Some(my_pos) = maybe_my_pos {
+                        let entity_pos = entity.entity.Position;
 
-                    let percent = (entity_pos - my_pos).length_squared().sqrt() / 30f32;
-                    let percent = (1.0 - percent).max(0.0).min(1.0);
+                        let percent = (entity_pos - my_pos).length_squared().sqrt() / 30f32;
+                        let percent = (1.0 - percent).max(0.0).min(1.0);
 
-                    entity.player.set_volume(&browser, percent)?;
+                        entity.player.set_volume(&browser, percent)?;
+                    }
                 }
             }
 
             Ok(())
         })?;
+
+        // TODO add a has_timed
 
         enum Kind {
             Youtube,

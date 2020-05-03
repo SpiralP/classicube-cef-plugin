@@ -1,5 +1,6 @@
 mod clients;
 mod encoding;
+mod map_themes;
 mod whispers;
 
 pub use self::encoding::LightEntity;
@@ -54,6 +55,8 @@ pub fn initialize() {
 pub fn on_new_map_loaded() {
     if unsafe { Server.IsSinglePlayer } == 0 {
         clients::query();
+
+        map_themes::on_new_map_loaded();
     }
 }
 
@@ -67,7 +70,7 @@ pub fn shutdown() {
     }
 }
 
-async fn wait_for_message() -> String {
+pub async fn wait_for_message() -> String {
     let (sender, receiver) = oneshot::channel();
 
     WAITING_FOR_MESSAGE.with(|cell| {

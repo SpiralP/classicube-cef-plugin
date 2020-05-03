@@ -429,8 +429,6 @@ pub async fn command_callback(
                 Ok(closest_entity.id)
             })?;
 
-            let mut browser = EntityManager::get_browser_by_entity_id(entity_id)?;
-
             let seconds: u64 = if let Ok(seconds) = time.parse() {
                 seconds
             } else {
@@ -463,9 +461,11 @@ pub async fn command_callback(
             };
 
             EntityManager::with_by_entity_id(entity_id, |entity| {
+                let browser = entity.browser.as_ref().chain_err(|| "no browser")?;
+
                 entity
                     .player
-                    .set_current_time(&mut browser, Duration::from_secs(seconds))?;
+                    .set_current_time(&browser, Duration::from_secs(seconds))?;
 
                 Ok(())
             })?;

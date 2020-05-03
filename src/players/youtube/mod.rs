@@ -22,6 +22,9 @@ pub struct YoutubePlayer {
 
     // 0-1
     pub volume: f32,
+    pub global_volume: bool,
+
+    should_send: bool,
 
     #[serde(skip)]
     volume_loop_handle: Option<RemoteHandle<()>>,
@@ -36,6 +39,8 @@ impl Default for YoutubePlayer {
             id: String::new(),
             time: Duration::from_millis(0),
             volume: 1.0,
+            global_volume: false,
+            should_send: true,
             volume_loop_handle: None,
             last_title: String::new(),
         }
@@ -48,6 +53,8 @@ impl Clone for YoutubePlayer {
             id: self.id.clone(),
             time: self.time,
             volume: self.volume,
+            global_volume: self.global_volume,
+            should_send: self.should_send,
             ..Default::default()
         }
     }
@@ -57,17 +64,7 @@ impl PlayerTrait for YoutubePlayer {
     fn from_input(url_or_id: &str) -> Result<Self> {
         let url_or_id = url_or_id.replace("%feature=", "&feature=");
         if let Ok(url) = Url::parse(&url_or_id) {
-            if url.scheme() != "http" && url.scheme() != "https" {
-                Err("not http/https".into())
-            } else if let Some(this) = Self::from_normal(&url) {
-                Ok(this)
-            } else if let Some(this) = Self::from_short(&url) {
-                Ok(this)
-            } else if let Some(this) = Self::from_embed(&url) {
-                Ok(this)
-            } else {
-                Err("couldn't match url from input".into())
-            }
+            Self::from_url(&url)
         } else if let Some(this) = Self::from_id(url_or_id.to_string()) {
             Ok(this)
         } else {
@@ -75,7 +72,7 @@ impl PlayerTrait for YoutubePlayer {
         }
     }
 
-    fn on_create(&mut self, _entity_id: usize) -> String {
+    fn on_create(&mut self) -> String {
         debug!("YoutubePlayer on_create {}", self.id);
 
         format!(
@@ -92,14 +89,13 @@ impl PlayerTrait for YoutubePlayer {
         )
     }
 
-    fn on_page_loaded(&mut self, entity_id: usize, _browser: &mut RustRefBrowser) {
+    fn on_page_loaded(&mut self, entity_id: usize, _browser: &RustRefBrowser) {
         let (f, remote_handle) = start_update_loop(entity_id).remote_handle();
         self.volume_loop_handle = Some(remote_handle);
-
         AsyncManager::spawn_local_on_main_thread(f);
     }
 
-    fn on_title_change(&mut self, _entity_id: usize, _browser: &mut RustRefBrowser, title: String) {
+    fn on_title_change(&mut self, _entity_id: usize, _browser: &RustRefBrowser, title: String) {
         if self.last_title == title {
             return;
         }
@@ -121,7 +117,7 @@ impl PlayerTrait for YoutubePlayer {
         Ok(self.time)
     }
 
-    fn set_current_time(&mut self, browser: &mut RustRefBrowser, time: Duration) -> Result<()> {
+    fn set_current_time(&mut self, browser: &RustRefBrowser, time: Duration) -> Result<()> {
         // We recommend that you set this parameter to false while the user drags the
         // mouse along a video progress bar and then set it to true when the user releases
         // the mouse.
@@ -142,6 +138,24 @@ impl PlayerTrait for YoutubePlayer {
         Self::execute_player_method(browser, &format!("setVolume({})", percent));
 
         Ok(())
+    }
+
+    fn has_global_volume(&self) -> bool {
+        self.global_volume
+    }
+
+    fn set_global_volume(&mut self, global_volume: bool) -> Result<()> {
+        self.global_volume = global_volume;
+
+        Ok(())
+    }
+
+    fn get_should_send(&self) -> bool {
+        self.should_send
+    }
+
+    fn set_should_send(&mut self, should_send: bool) {
+        self.should_send = should_send;
     }
 }
 
@@ -225,14 +239,27 @@ impl YoutubePlayer {
     }
 
     pub fn from_id_and_time(id: String, time: Duration) -> Option<Self> {
-        println!("{}", id);
         let mut this = Self::from_id(id)?;
         this.time = time;
 
         Some(this)
     }
 
-    pub fn from_normal(url: &Url) -> Option<Self> {
+    pub fn from_url(url: &Url) -> Result<Self> {
+        if url.scheme() != "http" && url.scheme() != "https" {
+            Err("not http/https".into())
+        } else if let Some(this) = Self::from_normal(&url) {
+            Ok(this)
+        } else if let Some(this) = Self::from_short(&url) {
+            Ok(this)
+        } else if let Some(this) = Self::from_embed(&url) {
+            Ok(this)
+        } else {
+            Err("couldn't match url from input".into())
+        }
+    }
+
+    fn from_normal(url: &Url) -> Option<Self> {
         let host_str = url.host_str()?;
         if host_str != "youtube.com" && host_str != "www.youtube.com" {
             return None;
@@ -257,7 +284,7 @@ impl YoutubePlayer {
         Some(Self::from_id_and_time(id, time)?)
     }
 
-    pub fn from_short(url: &Url) -> Option<Self> {
+    fn from_short(url: &Url) -> Option<Self> {
         let host_str = url.host_str()?;
         if host_str != "youtu.be" {
             return None;
@@ -275,7 +302,7 @@ impl YoutubePlayer {
         Some(Self::from_id_and_time(id, time)?)
     }
 
-    pub fn from_embed(url: &Url) -> Option<Self> {
+    fn from_embed(url: &Url) -> Option<Self> {
         let host_str = url.host_str()?;
         if host_str != "youtube.com" && host_str != "www.youtube.com" {
             return None;

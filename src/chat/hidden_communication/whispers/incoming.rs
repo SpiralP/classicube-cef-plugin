@@ -1,7 +1,10 @@
-use super::{encoding, is_incoming_whisper, is_outgoing_whisper, wait_for_message, SHOULD_BLOCK};
+use super::{encoding, wait_for_message, SHOULD_BLOCK};
 use crate::{
     async_manager::AsyncManager,
-    chat::{Chat, ENTITIES, TAB_LIST},
+    chat::{
+        helpers::{is_incoming_whisper, is_outgoing_whisper},
+        Chat, ENTITIES, TAB_LIST,
+    },
     error::*,
 };
 use async_std::future::timeout;

@@ -1,4 +1,5 @@
 mod chat_command;
+pub mod helpers;
 pub mod hidden_communication;
 
 pub use self::chat_command::{command_callback, CefChatCommand};
@@ -288,13 +289,15 @@ fn find_player_from_message(mut full_msg: String) -> Option<(u8, String, String)
         let mut last_chat = cell.borrow_mut();
 
         if !full_msg.starts_with("> &f") {
+            // normal message start
             *last_chat = Some(full_msg.clone());
         } else if let Some(chat_last) = &*last_chat {
+            // we're a continue message
+
             FUTURE_HANDLE.with(|cell| {
                 cell.set(None);
             });
 
-            // we're a continue message
             // TODO split_off bad mut :(
             full_msg = full_msg.split_off(4); // skip "> &f"
 

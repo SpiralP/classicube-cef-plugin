@@ -1,5 +1,11 @@
-use super::{encoding, is_incoming_whisper, is_outgoing_whisper, wait_for_message, SHOULD_BLOCK};
-use crate::{chat::Chat, error::*};
+use super::{encoding, wait_for_message, SHOULD_BLOCK};
+use crate::{
+    chat::{
+        helpers::{is_incoming_whisper, is_outgoing_whisper},
+        Chat,
+    },
+    error::*,
+};
 use async_std::future::timeout;
 use classicube_helpers::CellGetSet;
 use log::debug;

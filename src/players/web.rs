@@ -11,6 +11,9 @@ pub struct WebPlayer {
 
     #[serde(skip)]
     last_title: String,
+
+    #[serde(skip)]
+    should_send: bool,
 }
 
 impl Default for WebPlayer {
@@ -18,6 +21,7 @@ impl Default for WebPlayer {
         Self {
             url: String::new(),
             last_title: String::new(),
+            should_send: true,
         }
     }
 }
@@ -35,12 +39,12 @@ impl PlayerTrait for WebPlayer {
         }
     }
 
-    fn on_create(&mut self, _entity_id: usize) -> String {
+    fn on_create(&mut self) -> String {
         debug!("WebPlayer on_create {}", self.url);
         self.url.to_string()
     }
 
-    fn on_title_change(&mut self, _entity_id: usize, _browser: &mut RustRefBrowser, title: String) {
+    fn on_title_change(&mut self, _entity_id: usize, _browser: &RustRefBrowser, title: String) {
         if self.last_title == title {
             return;
         }
@@ -52,6 +56,14 @@ impl PlayerTrait for WebPlayer {
             color::SILVER,
             title,
         ));
+    }
+
+    fn get_should_send(&self) -> bool {
+        self.should_send
+    }
+
+    fn set_should_send(&mut self, should_send: bool) {
+        self.should_send = should_send;
     }
 }
 

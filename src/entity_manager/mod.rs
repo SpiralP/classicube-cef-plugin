@@ -79,11 +79,11 @@ impl EntityManager {
         let mut event_listener = Cef::create_event_listener();
         let (f, remote_handle) = async move {
             while let Ok(event) = event_listener.recv().await {
-                if let CefEvent::BrowserPageLoaded(mut browser) = event {
+                if let CefEvent::BrowserPageLoaded(browser) = event {
                     let browser_id = browser.get_identifier();
 
                     if let Err(e) = EntityManager::with_by_browser_id(browser_id, |entity| {
-                        entity.player.on_page_loaded(entity.id, &mut browser);
+                        entity.player.on_page_loaded(entity.id, &browser);
                         Ok(())
                     }) {
                         warn!("{}", e);
@@ -98,13 +98,11 @@ impl EntityManager {
         let mut event_listener = Cef::create_event_listener();
         let (f, remote_handle) = async move {
             while let Ok(event) = event_listener.recv().await {
-                if let CefEvent::BrowserTitleChange(mut browser, title) = event {
+                if let CefEvent::BrowserTitleChange(browser, title) = event {
                     let browser_id = browser.get_identifier();
 
                     if let Err(e) = EntityManager::with_by_browser_id(browser_id, |entity| {
-                        entity
-                            .player
-                            .on_title_change(entity.id, &mut browser, title);
+                        entity.player.on_title_change(entity.id, &browser, title);
                         Ok(())
                     }) {
                         warn!("{}", e);
@@ -158,9 +156,8 @@ impl EntityManager {
         });
     }
 
-    /// returns entity_id
-    pub fn create_entity(input: &str) -> Result<usize> {
-        let entity_id = ENTITY_ID.with(|cell| {
+    fn get_new_id() -> usize {
+        ENTITY_ID.with(|cell| {
             let mut entity_id = cell.get();
 
             // if it already exists, try another
@@ -169,10 +166,20 @@ impl EntityManager {
             }
             cell.set(entity_id + 1);
             entity_id
-        });
+        })
+    }
 
-        let mut player = Player::from_input(input)?;
-        let url = player.on_create(entity_id);
+    /// returns entity_id
+    pub fn create_entity(input: &str) -> Result<usize> {
+        let player = Player::from_input(input)?;
+
+        Ok(Self::create_entity_player(player)?)
+    }
+
+    pub fn create_entity_player(mut player: Player) -> Result<usize> {
+        let url = player.on_create();
+
+        let entity_id = Self::get_new_id();
 
         ENTITIES.with(|entities| {
             let entities = &mut *entities.borrow_mut();
@@ -191,21 +198,33 @@ impl EntityManager {
         Ok(entity_id)
     }
 
+    pub fn entity_play(input: &str, entity_id: usize) -> Result<()> {
+        let player = Player::from_input(input)?;
+
+        Ok(Self::entity_play_player(player, entity_id)?)
+    }
+
+    pub fn entity_play_player(mut player: Player, entity_id: usize) -> Result<()> {
+        let url = player.on_create();
+
+        let browser = EntityManager::with_by_entity_id(entity_id, |entity| {
+            entity.player = player;
+
+            let browser = entity.browser.as_ref().chain_err(|| "no browser")?;
+            Ok(browser.clone())
+        })?;
+
+        browser.load_url(url)?;
+
+        Ok(())
+    }
+
     /// returns entity_id
     pub async fn create_entity_from_light_entity(info: LightEntity) -> Result<usize> {
-        let entity_id = ENTITY_ID.with(|cell| {
-            let mut entity_id = cell.get();
-
-            // if it already exists, try another
-            while EntityManager::with_by_entity_id(entity_id, |_| Ok(())).is_ok() {
-                entity_id += 1;
-            }
-            cell.set(entity_id + 1);
-            entity_id
-        });
-
         let mut player = info.player.clone();
-        let url = player.on_create(entity_id);
+        let url = player.on_create();
+
+        let entity_id = Self::get_new_id();
 
         ENTITIES.with(|entities| {
             let entities = &mut *entities.borrow_mut();
@@ -232,22 +251,6 @@ impl EntityManager {
 
             Ok(entity_id)
         })
-    }
-
-    pub fn entity_play(input: &str, entity_id: usize) -> Result<()> {
-        let mut player = Player::from_input(input)?;
-        let url = player.on_create(entity_id);
-
-        let browser = EntityManager::with_by_entity_id(entity_id, |entity| {
-            entity.player = player;
-
-            let browser = entity.browser.as_ref().chain_err(|| "no browser")?;
-            Ok(browser.clone())
-        })?;
-
-        browser.load_url(url)?;
-
-        Ok(())
     }
 
     pub fn get_browser_by_entity_id(entity_id: usize) -> Result<RustRefBrowser> {

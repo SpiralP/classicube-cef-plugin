@@ -1,4 +1,8 @@
-use crate::{entity_manager::EntityManager, error::*, players::Player};
+use crate::{
+    entity_manager::EntityManager,
+    error::*,
+    players::{Player, PlayerTrait},
+};
 use log::{debug, warn};
 use serde::{Deserialize, Serialize};
 
@@ -34,7 +38,11 @@ pub async fn create_message() -> Message {
     let light_entities: Vec<_> = EntityManager::with_all_entities(|entities| {
         entities
             .iter()
-            .map(|(&id, entity)| {
+            .filter_map(|(&id, entity)| {
+                if !entity.player.get_should_send() {
+                    return None;
+                }
+
                 let e = &entity.entity;
 
                 let pos = [e.Position.X, e.Position.Y, e.Position.Z];
@@ -43,13 +51,13 @@ pub async fn create_message() -> Message {
 
                 let player = entity.player.clone();
 
-                LightEntity {
+                Some(LightEntity {
                     id,
                     pos,
                     ang,
                     player,
                     scale,
-                }
+                })
             })
             .collect()
     });

@@ -13,27 +13,19 @@ pub trait PlayerTrait {
     where
         Self: Sized + Clone;
 
-    /// Called after entity is created, given an entity_id
-    ///
     /// Called before creating the browser, returns a url
-    fn on_create(&mut self, _entity_id: usize) -> String;
+    fn on_create(&mut self) -> String;
 
     /// Called after page is loaded
-    fn on_page_loaded(&mut self, _entity_id: usize, _browser: &mut RustRefBrowser) {}
+    fn on_page_loaded(&mut self, _entity_id: usize, _browser: &RustRefBrowser) {}
 
-    fn on_title_change(
-        &mut self,
-        _entity_id: usize,
-        _browser: &mut RustRefBrowser,
-        _title: String,
-    ) {
-    }
+    fn on_title_change(&mut self, _entity_id: usize, _browser: &RustRefBrowser, _title: String) {}
 
     fn get_current_time(&self, _browser: &RustRefBrowser) -> Result<Duration> {
         bail!("getting time not supported");
     }
 
-    fn set_current_time(&mut self, _browser: &mut RustRefBrowser, _time: Duration) -> Result<()> {
+    fn set_current_time(&mut self, _browser: &RustRefBrowser, _time: Duration) -> Result<()> {
         bail!("setting time not supported");
     }
 
@@ -44,6 +36,18 @@ pub trait PlayerTrait {
     fn set_volume(&mut self, _browser: &RustRefBrowser, _percent: f32) -> Result<()> {
         bail!("setting volume not supported");
     }
+
+    fn has_global_volume(&self) -> bool {
+        true
+    }
+
+    fn set_global_volume(&mut self, _global_volume: bool) -> Result<()> {
+        bail!("setting global volume not supported");
+    }
+
+    fn get_should_send(&self) -> bool;
+
+    fn set_should_send(&mut self, _should_send: bool);
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -79,15 +83,15 @@ impl PlayerTrait for Player {
         }
     }
 
-    fn on_create(&mut self, entity_id: usize) -> String {
+    fn on_create(&mut self) -> String {
         match self {
-            Player::Youtube(player) => player.on_create(entity_id),
-            Player::Media(player) => player.on_create(entity_id),
-            Player::Web(player) => player.on_create(entity_id),
+            Player::Youtube(player) => player.on_create(),
+            Player::Media(player) => player.on_create(),
+            Player::Web(player) => player.on_create(),
         }
     }
 
-    fn on_page_loaded(&mut self, entity_id: usize, browser: &mut RustRefBrowser) {
+    fn on_page_loaded(&mut self, entity_id: usize, browser: &RustRefBrowser) {
         match self {
             Player::Youtube(player) => player.on_page_loaded(entity_id, browser),
             Player::Media(player) => player.on_page_loaded(entity_id, browser),
@@ -95,7 +99,7 @@ impl PlayerTrait for Player {
         }
     }
 
-    fn on_title_change(&mut self, entity_id: usize, browser: &mut RustRefBrowser, title: String) {
+    fn on_title_change(&mut self, entity_id: usize, browser: &RustRefBrowser, title: String) {
         match self {
             Player::Youtube(player) => player.on_title_change(entity_id, browser, title),
             Player::Media(player) => player.on_title_change(entity_id, browser, title),
@@ -111,7 +115,7 @@ impl PlayerTrait for Player {
         }
     }
 
-    fn set_current_time(&mut self, browser: &mut RustRefBrowser, time: Duration) -> Result<()> {
+    fn set_current_time(&mut self, browser: &RustRefBrowser, time: Duration) -> Result<()> {
         match self {
             Player::Youtube(player) => player.set_current_time(browser, time),
             Player::Media(player) => player.set_current_time(browser, time),
@@ -132,6 +136,38 @@ impl PlayerTrait for Player {
             Player::Youtube(player) => player.set_volume(browser, percent),
             Player::Media(player) => player.set_volume(browser, percent),
             Player::Web(player) => player.set_volume(browser, percent),
+        }
+    }
+
+    fn has_global_volume(&self) -> bool {
+        match self {
+            Player::Youtube(player) => player.has_global_volume(),
+            Player::Media(player) => player.has_global_volume(),
+            Player::Web(player) => player.has_global_volume(),
+        }
+    }
+
+    fn set_global_volume(&mut self, global_volume: bool) -> Result<()> {
+        match self {
+            Player::Youtube(player) => player.set_global_volume(global_volume),
+            Player::Media(player) => player.set_global_volume(global_volume),
+            Player::Web(player) => player.set_global_volume(global_volume),
+        }
+    }
+
+    fn get_should_send(&self) -> bool {
+        match self {
+            Player::Youtube(player) => player.get_should_send(),
+            Player::Media(player) => player.get_should_send(),
+            Player::Web(player) => player.get_should_send(),
+        }
+    }
+
+    fn set_should_send(&mut self, should_send: bool) {
+        match self {
+            Player::Youtube(player) => player.set_should_send(should_send),
+            Player::Media(player) => player.set_should_send(should_send),
+            Player::Web(player) => player.set_should_send(should_send),
         }
     }
 }

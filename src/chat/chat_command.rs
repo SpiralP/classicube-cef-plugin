@@ -483,6 +483,36 @@ pub async fn command_callback(
             Cef::resize_browser(&browser, width, height)?;
         }
 
+        ["volume", "global", percent] | ["global", "volume", percent] => {
+            let percent = percent.parse()?;
+
+            let entity_id = EntityManager::with_closest(player.eye_position, |closest_entity| {
+                Ok(closest_entity.id)
+            })?;
+
+            let browser = EntityManager::get_browser_by_entity_id(entity_id)?;
+            EntityManager::with_closest(player.eye_position, |entity| {
+                entity.player.set_volume(&browser, percent)?;
+                entity.player.set_global_volume(true)?;
+                Ok(())
+            })?;
+        }
+
+        ["volume", percent] => {
+            let percent = percent.parse()?;
+
+            let entity_id = EntityManager::with_closest(player.eye_position, |closest_entity| {
+                Ok(closest_entity.id)
+            })?;
+
+            let browser = EntityManager::get_browser_by_entity_id(entity_id)?;
+            EntityManager::with_closest(player.eye_position, |entity| {
+                entity.player.set_volume(&browser, percent)?;
+                entity.player.set_global_volume(false)?;
+                Ok(())
+            })?;
+        }
+
         _ => {}
     }
 

@@ -82,7 +82,7 @@ async fn do_check() -> Result<()> {
 /// will check for message block messages containing urls
 /// a couple seconds after joining a map
 async fn get_map_theme_url() -> Result<Option<Url>> {
-    let maybe_url = timeout(Duration::from_secs(2), async {
+    let maybe_url = timeout(Duration::from_secs(5), async {
         loop {
             // TODO filter out join/leave, whispers, chat messages
             let message = wait_for_message().await;
@@ -114,9 +114,12 @@ async fn get_map_theme_url() -> Result<Option<Url>> {
 
                 let regex = regex::Regex::new(r"https?://(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)").unwrap();
 
+                debug!("trying regex");
                 let match_ = regex.find(&full_message).chain_err(|| "regex find url")?;
                 let url = match_.as_str();
+                debug!("got match {:?}", url);
                 let url = Url::parse(url)?;
+                debug!("url parsed {:?}", url);
 
                 return Ok::<_, Error>(url);
             }

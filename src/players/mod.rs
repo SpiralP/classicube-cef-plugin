@@ -5,7 +5,9 @@ mod volume_fade;
 mod web;
 mod youtube;
 
-pub use self::{media::MediaPlayer, web::WebPlayer, youtube::YoutubePlayer};
+pub use self::{
+    media::MediaPlayer, mute_lose_focus::IS_FOCUSED, web::WebPlayer, youtube::YoutubePlayer,
+};
 use crate::{cef::RustRefBrowser, error::*};
 use serde::{Deserialize, Serialize};
 use std::time::Duration;

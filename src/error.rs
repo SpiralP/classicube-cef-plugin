@@ -6,6 +6,7 @@ error_chain! {
         Fmt(::std::fmt::Error);
         ParseFloatError(::std::num::ParseFloatError);
         ParseIntError(::std::num::ParseIntError);
+        ParseBoolError(::std::str::ParseBoolError);
         Url(url::ParseError);
         Tokio(tokio::task::JoinError);
         Bincode(bincode::Error);

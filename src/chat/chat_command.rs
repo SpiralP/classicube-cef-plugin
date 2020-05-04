@@ -5,9 +5,11 @@ use crate::{
     chat::{PlayerSnapshot, ENTITIES},
     entity_manager::{CefEntity, EntityManager, MODEL_HEIGHT, MODEL_WIDTH},
     error::*,
-    players::PlayerTrait,
+    options::set_mute_lose_focus,
+    players::{PlayerTrait, IS_FOCUSED},
     search,
 };
+use classicube_helpers::CellGetSet;
 use classicube_sys::{
     Camera, Entities, LocalPlayer, OwnedChatCommand, RayTracer, Vec3, ENTITIES_SELF_ID,
     FACE_CONSTS, FACE_CONSTS_FACE_XMAX, FACE_CONSTS_FACE_XMIN, FACE_CONSTS_FACE_YMAX,
@@ -514,6 +516,31 @@ pub async fn command_callback(
         }
 
         _ => {}
+    }
+
+    // settings
+    if is_self {
+        match args {
+            ["settings", "mute-lose-focus", toggle]
+            | ["options", "mute-lose-focus", toggle]
+            | ["setting", "mute-lose-focus", toggle]
+            | ["option", "mute-lose-focus", toggle] => {
+                let toggle = toggle.parse()?;
+
+                set_mute_lose_focus(toggle);
+                IS_FOCUSED.set(true);
+            }
+
+            ["settings", "volume", percent]
+            | ["options", "volume", percent]
+            | ["setting", "volume", percent]
+            | ["option", "volume", percent] => {
+                let _percent: f32 = percent.parse()?;
+                // TODO
+            }
+
+            _ => {}
+        }
     }
 
     Ok(())

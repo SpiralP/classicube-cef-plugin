@@ -6,6 +6,7 @@ mod error;
 mod helpers;
 mod logger;
 mod macros;
+mod options;
 mod players;
 mod plugin;
 mod search;

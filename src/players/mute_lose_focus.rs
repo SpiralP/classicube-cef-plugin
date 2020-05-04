@@ -1,3 +1,4 @@
+use crate::options::get_mute_lose_focus;
 use classicube_helpers::{events::window::FocusChangedEventHandler, CellGetSet};
 use classicube_sys::WindowInfo;
 use std::cell::{Cell, RefCell};
@@ -14,8 +15,10 @@ pub fn initialize() {
     let mut focus_handler = FocusChangedEventHandler::new();
 
     focus_handler.on(|_| {
-        let focused = unsafe { WindowInfo.Focused } != 0;
-        IS_FOCUSED.set(focused);
+        if get_mute_lose_focus() {
+            let focused = unsafe { WindowInfo.Focused } != 0;
+            IS_FOCUSED.set(focused);
+        }
     });
 
     FOCUS_HANDLER.with(|cell| {

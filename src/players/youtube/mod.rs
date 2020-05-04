@@ -145,7 +145,7 @@ impl PlayerTrait for YoutubePlayer {
     fn set_volume(&mut self, browser: &RustRefBrowser, percent: f32) -> Result<()> {
         let real_volume = if IS_FOCUSED.get() { percent } else { 0.0 };
 
-        if (real_volume - self.real_volume).abs() > 0.01 {
+        if (real_volume - self.real_volume).abs() > 0.0001 {
             Self::execute_player_method(
                 browser,
                 &format!("setVolume({})", (real_volume * 100f32) as u32),

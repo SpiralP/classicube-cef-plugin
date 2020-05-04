@@ -1,5 +1,6 @@
 mod helpers;
 mod media;
+mod mute_lose_focus;
 mod web;
 mod youtube;
 
@@ -200,4 +201,12 @@ fn test_create_player() {
             panic!("not Youtube");
         }
     }
+}
+
+pub fn initialize() {
+    mute_lose_focus::initialize();
+}
+
+pub fn shutdown() {
+    mute_lose_focus::shutdown();
 }

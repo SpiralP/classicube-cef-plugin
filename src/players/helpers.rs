@@ -14,10 +14,14 @@ pub async fn start_update_loop(entity_id: usize) {
 
 async fn start_loop(entity_id: usize) -> Result<()> {
     loop {
-        // update volume via distance
+        // update volume
         EntityManager::with_by_entity_id(entity_id, |entity| {
-            if !entity.player.has_global_volume() {
-                if let Some(browser) = &entity.browser {
+            if let Some(browser) = &entity.browser {
+                let current_volume = entity.player.get_volume(&browser)?;
+
+                if !entity.player.has_global_volume() {
+                    // use distance
+
                     let maybe_my_pos = ENTITIES
                         .with_inner(|entities| {
                             let me = entities.get(ENTITIES_SELF_ID as _)?;
@@ -34,6 +38,10 @@ async fn start_loop(entity_id: usize) -> Result<()> {
 
                         entity.player.set_volume(&browser, percent)?;
                     }
+                } else {
+                    // global volume
+
+                    entity.player.set_volume(&browser, current_volume)?;
                 }
             }
 

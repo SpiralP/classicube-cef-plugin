@@ -1,4 +1,6 @@
-use crate::{async_manager::AsyncManager, cef::Cef, chat::Chat, entity_manager::EntityManager};
+use crate::{
+    async_manager::AsyncManager, cef::Cef, chat::Chat, entity_manager::EntityManager, players,
+};
 use classicube_helpers::OptionWithInner;
 use classicube_sys::{Server, String_AppendConst};
 use log::debug;
@@ -63,6 +65,7 @@ impl Plugin {
             .with_inner_mut(|plugin| {
                 if !plugin.context_initialized {
                     plugin.entity_manager.initialize();
+                    players::initialize();
 
                     plugin.context_initialized = true;
                 }
@@ -82,6 +85,7 @@ impl Plugin {
             let plugin = &mut *cell.borrow_mut();
             let mut plugin = plugin.take().unwrap();
 
+            players::shutdown();
             plugin.entity_manager.shutdown();
             plugin.chat.shutdown();
 

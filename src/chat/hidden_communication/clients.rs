@@ -135,7 +135,8 @@ async fn process_clients_response(messages: Vec<String>) -> Result<()> {
 
         let mut names: Vec<String> = right.split(", ").map(|a| a.to_string()).collect();
 
-        if left.contains(APP_NAME) {
+        let app_name_without_last_number = APP_NAME.rsplitn(2, '.').nth(1).unwrap();
+        if left.contains(app_name_without_last_number) {
             names_with_cef.append(&mut names);
         }
     }

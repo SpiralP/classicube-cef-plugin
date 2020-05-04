@@ -211,9 +211,12 @@ fn handle_chat_received(message: String, message_type: MsgType) {
             .map(|a| a.to_string())
             .collect::<Vec<String>>();
 
+        // if you put a leading space " cef"
+        // you get ["&f", "cef"]
+
         if split
             .get(0)
-            .map(|first| remove_color(first).trim() == "cef")
+            .map(|first| remove_color(first) == "cef")
             .unwrap_or(false)
         {
             // remove "cef"

@@ -50,19 +50,19 @@ pub fn initialize() {
     }
 
     whispers::start_listening();
+    map_themes::start_listening();
 }
 
 pub fn on_new_map_loaded() {
     if unsafe { Server.IsSinglePlayer } == 0 {
         clients::query();
-
-        map_themes::on_new_map_loaded();
     }
 }
 
 pub fn shutdown() {
     debug!("shutdown hidden_communication");
 
+    map_themes::stop_listening();
     whispers::stop_listening();
 
     unsafe {

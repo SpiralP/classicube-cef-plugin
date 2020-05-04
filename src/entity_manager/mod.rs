@@ -209,9 +209,16 @@ impl EntityManager {
         let url = player.on_create();
 
         let browser = EntityManager::with_by_entity_id(entity_id, |entity| {
-            entity.player = player;
-
             let browser = entity.browser.as_ref().chain_err(|| "no browser")?;
+
+            let had_global_volume = entity.player.has_global_volume();
+            let volume = entity.player.get_volume(&browser);
+            entity.player = player;
+            let _ignore = entity.player.set_global_volume(had_global_volume);
+            if let Ok(volume) = volume {
+                let _ignore = entity.player.set_volume(&browser, volume);
+            }
+
             Ok(browser.clone())
         })?;
 

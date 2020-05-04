@@ -89,6 +89,10 @@ thread_local!(
     static CURRENT_MAP_THEME: Cell<Option<usize>> = Default::default();
 );
 
+pub fn on_new_map_loaded() {
+    CURRENT_MAP_THEME.set(None);
+}
+
 async fn handle_map_theme_url(message: String) -> Result<()> {
     let regex = regex::Regex::new(r"https?://(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)").unwrap();
 

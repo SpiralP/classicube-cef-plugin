@@ -56,6 +56,7 @@ pub fn initialize() {
 pub fn on_new_map_loaded() {
     if unsafe { Server.IsSinglePlayer } == 0 {
         clients::query();
+        map_themes::on_new_map_loaded();
     }
 }
 

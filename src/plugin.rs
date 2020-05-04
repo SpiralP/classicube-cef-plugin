@@ -55,6 +55,16 @@ impl Plugin {
         });
     }
 
+    pub fn on_new_map() {
+        debug!("plugin on_new_map_loaded");
+
+        PLUGIN
+            .with_inner_mut(|_plugin| {
+                players::on_new_map();
+            })
+            .unwrap();
+    }
+
     /// Called every time when our plugin's `OnNewMapLoaded` is called
     ///
     /// Rendering context is set up by now.
@@ -71,8 +81,8 @@ impl Plugin {
                 }
 
                 plugin.entity_manager.on_new_map_loaded();
-
                 plugin.chat.on_new_map_loaded();
+                players::on_new_map_loaded();
             })
             .unwrap();
     }

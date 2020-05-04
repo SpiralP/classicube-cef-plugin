@@ -22,7 +22,7 @@ extern "C" fn init() {
 
     logger::initialize(true, false);
 
-    time!("Plugin::initialize()", 10000, {
+    time!("Plugin::initialize()", 5000, {
         Plugin::initialize();
     });
 }
@@ -30,13 +30,19 @@ extern "C" fn init() {
 extern "C" fn free() {
     debug!("Free");
 
-    time!("Plugin::shutdown()", 10000, {
+    time!("Plugin::shutdown()", 1000, {
         Plugin::shutdown();
     });
 }
 
+extern "C" fn on_new_map() {
+    time!("Plugin::on_new_map()", 1000, {
+        Plugin::on_new_map();
+    });
+}
+
 extern "C" fn on_new_map_loaded() {
-    time!("Plugin::on_new_map_loaded()", 10000, {
+    time!("Plugin::on_new_map_loaded()", 1000, {
         Plugin::on_new_map_loaded();
     });
 }
@@ -53,7 +59,7 @@ pub static mut Plugin_Component: IGameComponent = IGameComponent {
     // Called to reset the component's state. (e.g. reconnecting to server)
     Reset: None,
     // Called to update the component's state when the user begins loading a new map.
-    OnNewMap: None,
+    OnNewMap: Some(on_new_map),
     // Called to update the component's state when the user has finished loading a new map.
     OnNewMapLoaded: Some(on_new_map_loaded),
     // Next component in linked list of components.

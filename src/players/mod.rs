@@ -1,6 +1,7 @@
 mod helpers;
 mod media;
 mod mute_lose_focus;
+mod volume_fade;
 mod web;
 mod youtube;
 
@@ -205,6 +206,14 @@ fn test_create_player() {
 
 pub fn initialize() {
     mute_lose_focus::initialize();
+}
+
+pub fn on_new_map() {
+    volume_fade::on_new_map();
+}
+
+pub fn on_new_map_loaded() {
+    volume_fade::on_new_map_loaded();
 }
 
 pub fn shutdown() {

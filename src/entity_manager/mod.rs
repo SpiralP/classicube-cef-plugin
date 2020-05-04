@@ -130,6 +130,7 @@ impl EntityManager {
         render_model_hook::shutdown();
         self.model.take();
         self.cef_event_page_loaded.take();
+        self.cef_event_title_change.take();
 
         AsyncManager::block_on_local(async {
             Self::remove_all_entities().await.unwrap();

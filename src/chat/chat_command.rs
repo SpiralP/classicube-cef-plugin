@@ -473,7 +473,7 @@ pub async fn command_callback(
             })?;
         }
 
-        ["resize", width, height] => {
+        ["resize", width, height] | ["resolution", width, height] => {
             let width = width.parse()?;
             let height = height.parse()?;
 

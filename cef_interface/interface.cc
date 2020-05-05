@@ -87,6 +87,8 @@ extern "C" int cef_interface_initialize(MyApp* app) {
   // so that it can paint
   settings.multi_threaded_message_loop = false;
 
+  settings.background_color = 0xFFFFFFFF;
+
   CefString(&settings.log_file).FromASCII("cef-binary.log");
 
 #if defined(_WIN64) || defined(_WIN32)

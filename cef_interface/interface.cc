@@ -3,6 +3,9 @@
 #include <include/base/cef_bind.h>
 #include <include/cef_origin_whitelist.h>
 #include <include/wrapper/cef_closure_task.h>
+#if defined(OS_MACOSX)
+#include <include/wrapper/cef_library_loader.h>
+#endif
 
 #include <chrono>    // std::chrono::seconds
 #include <iostream>  // std::cout, std::endl
@@ -69,6 +72,13 @@ extern "C" RustRefApp cef_interface_create_app(Callbacks callbacks) {
 }
 
 extern "C" int cef_interface_initialize(MyApp* app) {
+#if defined(OS_MACOSX)
+  if (!cef_load_library("./cef/Chromium Embedded Framework.framework/Chromium "
+                        "Embedded Framework")) {
+    return 1;
+  }
+#endif
+
   // Structure for passing command-line arguments.
   // The definition of this structure is platform-specific.
   CefMainArgs main_args;
@@ -87,12 +97,23 @@ extern "C" int cef_interface_initialize(MyApp* app) {
   // so that it can paint
   settings.multi_threaded_message_loop = false;
 
-  settings.background_color = 0xFFFFFFFF;
-
   CefString(&settings.log_file).FromASCII("cef-binary.log");
 
 #if defined(_WIN64) || defined(_WIN32)
   const char* cef_exe_path = "cef.exe";
+#elif defined(OS_MACOSX)
+  const char* cef_exe_path = "./cef/cef.app/Contents/MacOS/cef";
+
+  CefString(&settings.main_bundle_path).FromASCII("./cef");
+
+  // this needs full path or crashes!
+  char cwd[PATH_MAX + 1];
+  if (!getcwd(cwd, sizeof(cwd))) {
+    return -1;
+  }
+  std::string full_path(cwd);
+  full_path += "/cef/Chromium Embedded Framework.framework";
+  CefString(&settings.framework_dir_path).FromASCII(full_path.c_str());
 #else
   const char* cef_exe_path = "cef";
 #endif
@@ -239,5 +260,10 @@ extern "C" int cef_interface_step() {
 
 extern "C" int cef_interface_shutdown() {
   CefShutdown();
+
+#if defined(OS_MACOSX)
+  cef_unload_library();
+#endif
+
   return 0;
 }

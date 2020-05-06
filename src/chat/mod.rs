@@ -108,6 +108,7 @@ impl Chat {
                 });
 
                 AsyncManager::spawn_local_on_main_thread(async move {
+                    debug!("eval");
                     debug!(
                         "{:#?}",
                         browser

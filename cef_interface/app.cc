@@ -55,10 +55,6 @@ bool MyApp::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser,
     auto script_url = args->GetString(2);
     auto start_line = args->GetInt(3);
 
-    std::string s("EvalJavascript ");
-    s += std::to_string(task_id);
-    rust_print(s.c_str());
-
     auto response_message = CefProcessMessage::Create("EvalJavascriptReturn");
     CefRefPtr<CefListValue> response_args = response_message->GetArgumentList();
     response_args->SetBinary(0, args->GetBinary(0));

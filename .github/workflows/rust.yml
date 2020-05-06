@@ -211,12 +211,12 @@ jobs:
 
       - run: mv target/release/build/classicube-cef-plugin-*/out/cef "cef-macos-${{ matrix.config.arch }}"
         if: startsWith(github.ref, 'refs/tags/')
-      # - name: Upload Release
-      #   uses: softprops/action-gh-release@v1
-      #   if: startsWith(github.ref, 'refs/tags/')
-      #   with:
-      #     files: |
-      #       classicube_cef_macos_${{ matrix.config.arch }}.dylib
-      #       cef-macos-${{ matrix.config.arch }}
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            classicube_cef_macos_${{ matrix.config.arch }}.dylib
+            cef-macos-${{ matrix.config.arch }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

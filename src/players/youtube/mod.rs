@@ -67,6 +67,10 @@ impl Clone for YoutubePlayer {
 }
 
 impl PlayerTrait for YoutubePlayer {
+    fn type_name(&self) -> &'static str {
+        "Youtube"
+    }
+
     fn from_input(url_or_id: &str) -> Result<Self> {
         let url_or_id = url_or_id.replace("%feature=", "&feature=");
         if let Ok(url) = Url::parse(&url_or_id) {

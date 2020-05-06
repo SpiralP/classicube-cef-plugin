@@ -211,12 +211,16 @@ impl EntityManager {
         let browser = EntityManager::with_by_entity_id(entity_id, |entity| {
             let browser = entity.browser.as_ref().chain_err(|| "no browser")?;
 
-            let had_global_volume = entity.player.has_global_volume();
-            let volume = entity.player.get_volume(&browser);
-            entity.player = player;
-            let _ignore = entity.player.set_global_volume(had_global_volume);
-            if let Ok(volume) = volume {
-                let _ignore = entity.player.set_volume(&browser, volume);
+            if entity.player.type_name() == player.type_name() {
+                let had_global_volume = entity.player.has_global_volume();
+                let volume = entity.player.get_volume(&browser);
+                entity.player = player;
+                let _ignore = entity.player.set_global_volume(had_global_volume);
+                if let Ok(volume) = volume {
+                    let _ignore = entity.player.set_volume(&browser, volume);
+                }
+            } else {
+                entity.player = player;
             }
 
             Ok(browser.clone())

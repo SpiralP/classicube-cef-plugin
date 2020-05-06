@@ -67,6 +67,10 @@ impl Clone for MediaPlayer {
 }
 
 impl PlayerTrait for MediaPlayer {
+    fn type_name(&self) -> &'static str {
+        "Media"
+    }
+
     fn from_input(url: &str) -> Result<Self> {
         // make sure it's a normal url
         WebPlayer::from_input(url)?;

@@ -27,6 +27,10 @@ impl Default for WebPlayer {
 }
 
 impl PlayerTrait for WebPlayer {
+    fn type_name(&self) -> &'static str {
+        "Web"
+    }
+
     fn from_input(url: &str) -> Result<Self> {
         let url = Url::parse(url)?;
 

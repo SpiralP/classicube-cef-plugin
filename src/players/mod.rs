@@ -13,6 +13,8 @@ use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
 pub trait PlayerTrait {
+    fn type_name(&self) -> &'static str;
+
     fn from_input(input: &str) -> Result<Self>
     where
         Self: Sized + Clone;
@@ -62,6 +64,14 @@ pub enum Player {
 }
 
 impl PlayerTrait for Player {
+    fn type_name(&self) -> &'static str {
+        match self {
+            Player::Youtube(player) => player.type_name(),
+            Player::Media(player) => player.type_name(),
+            Player::Web(player) => player.type_name(),
+        }
+    }
+
     fn from_input(input: &str) -> Result<Self> {
         match YoutubePlayer::from_input(input) {
             Ok(player) => Ok(Player::Youtube(player)),

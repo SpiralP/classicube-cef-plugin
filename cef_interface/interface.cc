@@ -116,6 +116,9 @@ extern "C" int cef_interface_initialize(MyApp* app) {
   CefString(&settings.framework_dir_path).FromASCII(full_path.c_str());
 #else
   const char* cef_exe_path = "cef";
+
+  // linux had trouble finding locales
+  CefString(&settings.locales_dir_path).FromASCII("./cef/cef_binary/locales");
 #endif
 
   // Specify the path for the sub-process executable.

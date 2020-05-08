@@ -17,9 +17,8 @@ thread_local!(
 pub fn initialize() {
     let app = App::new("cef")
         .setting(AppSettings::SubcommandRequiredElseHelp)
-        .global_setting(AppSettings::ColoredHelp)
         .global_setting(AppSettings::DisableVersion)
-        .global_setting(AppSettings::DisableHelpFlags);
+        .global_setting(AppSettings::ColoredHelp);
 
     #[cfg(not(test))]
     let app = app.global_setting(AppSettings::ColorAlways);

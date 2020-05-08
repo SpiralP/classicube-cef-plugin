@@ -11,6 +11,7 @@ error_chain! {
         Tokio(tokio::task::JoinError);
         Bincode(bincode::Error);
         Base64(base64::DecodeError);
+        Clap(clap::Error);
     }
 
     links {

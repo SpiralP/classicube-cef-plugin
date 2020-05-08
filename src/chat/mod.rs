@@ -1,8 +1,9 @@
 mod chat_command;
+pub mod commands;
 pub mod helpers;
 pub mod hidden_communication;
 
-pub use self::chat_command::{command_callback, CefChatCommand};
+pub use self::chat_command::CefChatCommand;
 use crate::async_manager::AsyncManager;
 use classicube_helpers::{
     entities::{Entities, ENTITY_SELF_ID},
@@ -10,9 +11,7 @@ use classicube_helpers::{
     tab_list::{remove_color, TabList},
     CellGetSet,
 };
-use classicube_sys::{
-    Chat_Add, Chat_Send, MsgType, MsgType_MSG_TYPE_NORMAL, OwnedString, Server, Vec3,
-};
+use classicube_sys::{Chat_Send, MsgType, MsgType_MSG_TYPE_NORMAL, OwnedString, Server, Vec3};
 use deunicode::deunicode;
 use futures::{future::RemoteHandle, prelude::*};
 use log::{debug, info};
@@ -80,6 +79,8 @@ impl Chat {
         });
 
         hidden_communication::initialize();
+
+        commands::initialize();
     }
 
     pub fn on_new_map_loaded(&mut self) {
@@ -100,27 +101,24 @@ impl Chat {
                     entities
                         .values()
                         .next()
-                        .unwrap()
-                        .browser
-                        .as_ref()
-                        .unwrap()
-                        .clone()
+                        .and_then(|e| e.browser.as_ref().cloned())
                 });
 
-                AsyncManager::spawn_local_on_main_thread(async move {
-                    debug!("eval");
-                    debug!(
-                        "{:#?}",
-                        browser
-                            .eval_javascript("'the world is not anymore the way it used to be'")
-                            .await
-                    );
+                if let Some(browser) = browser {
+                    AsyncManager::spawn_local_on_main_thread(async move {
+                        debug!("eval");
+                        debug!(
+                            "{:#?}",
+                            browser
+                                .eval_javascript("'the world is not anymore the way it used to be'")
+                                .await
+                        );
 
-                    debug!(
-                        "{:#?}",
-                        browser
-                            .eval_javascript(
-                                r#"
+                        debug!(
+                            "{:#?}",
+                            browser
+                                .eval_javascript(
+                                    r#"
                                 (() => {
                                     if (typeof window.player !== "undefined") {
                                         window.player.ag();
@@ -129,10 +127,11 @@ impl Chat {
                                     }
                                 })();
                                 "#
-                            )
-                            .await
-                    );
-                });
+                                )
+                                .await
+                        );
+                    });
+                }
             });
         }
     }
@@ -162,12 +161,18 @@ impl Chat {
             s.truncate(255);
         }
 
-        let owned_string = OwnedString::new(s);
-
         SIMULATING.set(true);
+
+        #[cfg(not(test))]
         unsafe {
+            use classicube_sys::Chat_Add;
+            let owned_string = OwnedString::new(s);
             Chat_Add(owned_string.as_cc_string());
         }
+
+        #[cfg(test)]
+        println!("{}", s);
+
         SIMULATING.set(false);
     }
 
@@ -223,25 +228,7 @@ fn handle_chat_received(message: String, message_type: MsgType) {
             // remove "cef"
             split.remove(0);
 
-            let player_snapshot = ENTITIES.with(|cell| {
-                let entities = &*cell.borrow();
-                let entities = entities.as_ref().unwrap();
-                entities.get(id).map(|entity| {
-                    let position = entity.get_position();
-                    let eye_position = entity.get_eye_position();
-                    let head = entity.get_head();
-                    let rot = entity.get_rot();
-                    PlayerSnapshot {
-                        Position: position,
-                        eye_position,
-                        Pitch: head[0],
-                        Yaw: head[1],
-                        RotX: rot[0],
-                        RotY: rot[1],
-                        RotZ: rot[2],
-                    }
-                })
-            });
+            let player_snapshot = PlayerSnapshot::from_entity_id(id);
 
             if let Some(player_snapshot) = player_snapshot {
                 FUTURE_HANDLE.with(|cell| {
@@ -252,9 +239,14 @@ fn handle_chat_received(message: String, message_type: MsgType) {
 
                         let is_self = id == ENTITY_SELF_ID;
 
-                        if let Err(e) = command_callback(&player_snapshot, split, is_self).await {
+                        if let Err(e) = commands::run(player_snapshot, split, is_self).await {
                             if is_self {
-                                Chat::print(format!("cef command error: {}", e));
+                                Chat::print(format!(
+                                    "{}cef command error: {}{}",
+                                    classicube_helpers::color::RED,
+                                    classicube_helpers::color::WHITE,
+                                    e
+                                ));
                             }
                         }
                     }
@@ -273,13 +265,39 @@ fn handle_chat_received(message: String, message_type: MsgType) {
 
 #[allow(non_snake_case)]
 pub struct PlayerSnapshot {
-    pub Position: Vec3,
+    pub id: u8,
     pub eye_position: Vec3,
+    pub Position: Vec3,
     pub Pitch: f32,
     pub Yaw: f32,
     pub RotX: f32,
     pub RotY: f32,
     pub RotZ: f32,
+}
+
+impl PlayerSnapshot {
+    pub fn from_entity_id(id: u8) -> Option<Self> {
+        ENTITIES.with(|cell| {
+            let entities = &*cell.borrow();
+            let entities = entities.as_ref().unwrap();
+            entities.get(id).map(|entity| {
+                let position = entity.get_position();
+                let eye_position = entity.get_eye_position();
+                let head = entity.get_head();
+                let rot = entity.get_rot();
+                Self {
+                    id,
+                    Position: position,
+                    eye_position,
+                    Pitch: head[0],
+                    Yaw: head[1],
+                    RotX: rot[0],
+                    RotY: rot[1],
+                    RotZ: rot[2],
+                }
+            })
+        })
+    }
 }
 
 fn find_player_from_message(mut full_msg: String) -> Option<(u8, String, String)> {

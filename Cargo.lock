@@ -1456,8 +1456,9 @@ dependencies = [
 
 [[package]]
 name = "ncollide3d"
-version = "0.22.0"
-source = "git+https://github.com/rustsim/ncollide.git?branch=simba#9c603651afc6cc70d017a82215feeeba57522d1c"
+version = "0.23.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2bde8b69e02e0aeabd9f3d1fba2088ff3a76aa22eadbec68c4704f5a64919a83"
 dependencies = [
  "approx",
  "bitflags",

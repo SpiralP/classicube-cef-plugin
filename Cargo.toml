@@ -40,5 +40,3 @@ cmake = "0.1.42"
 [features]
 ci = []
 
-[profile.release]
-debug = true

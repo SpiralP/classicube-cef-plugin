@@ -155,25 +155,27 @@ impl Chat {
     pub fn print<S: Into<String>>(s: S) {
         let s = s.into();
         info!("{}", s);
-        let mut s = deunicode(&s);
-
-        if s.len() > 255 {
-            s.truncate(255);
-        }
-
-        SIMULATING.set(true);
 
         #[cfg(not(test))]
-        unsafe {
+        {
             use classicube_sys::Chat_Add;
+
+            let mut s = deunicode(&s);
+
+            if s.len() > 255 {
+                s.truncate(255);
+            }
+
+            SIMULATING.set(true);
+
             let owned_string = OwnedString::new(s);
-            Chat_Add(owned_string.as_cc_string());
+
+            unsafe {
+                Chat_Add(owned_string.as_cc_string());
+            }
+
+            SIMULATING.set(false);
         }
-
-        #[cfg(test)]
-        println!("{}", s);
-
-        SIMULATING.set(false);
     }
 
     pub fn send<S: Into<String>>(s: S) {

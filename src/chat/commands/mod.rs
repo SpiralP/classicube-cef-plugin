@@ -17,6 +17,7 @@ thread_local!(
 pub fn initialize() {
     let app = App::new("cef")
         .setting(AppSettings::SubcommandRequiredElseHelp)
+        .setting(AppSettings::DisableHelpFlags)
         .global_setting(AppSettings::DisableVersion)
         .global_setting(AppSettings::ColoredHelp);
 
@@ -114,7 +115,7 @@ async fn test_commands() {
     unsafe {
         run(
             std::mem::zeroed(),
-            vec!["help".into(), "create".into()],
+            vec!["help".into(), "angle".into()],
             true,
         )
         .await

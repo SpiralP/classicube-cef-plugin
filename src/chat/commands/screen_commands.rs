@@ -46,7 +46,7 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
             .alias("angle")
             .about("Change angles of the closest screen")
             .arg(Arg::with_name("yaw").required(true))
-            .arg(Arg::with_name("pitch").required(false)),
+            .arg(Arg::with_name("pitch")),
     )
     .subcommand(
         App::new("click")
@@ -55,8 +55,8 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
                 "If x, y are specified click at that position, otherwise click where you are \
                  aiming",
             )
-            .arg(Arg::with_name("x").required(false).requires("y"))
-            .arg(Arg::with_name("y").required(false).requires("x")),
+            .arg(Arg::with_name("x").requires("y"))
+            .arg(Arg::with_name("y").requires("x")),
     )
     .subcommand(
         App::new("type")
@@ -84,13 +84,14 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
     )
     .subcommand(
         App::new("at")
+            .usage("cef at <x> <y> <z> [yaw] [pitch]")
             .alias("tp")
             .about("Move the closest screen to coords x,y,z and optional yaw,pitch")
             .arg(Arg::with_name("x").required(true))
             .arg(Arg::with_name("y").required(true))
             .arg(Arg::with_name("z").required(true))
-            .arg(Arg::with_name("yaw").required(false))
-            .arg(Arg::with_name("pitch").required(false).requires("yaw")),
+            .arg(Arg::with_name("yaw"))
+            .arg(Arg::with_name("pitch").requires("yaw")),
     )
 }
 

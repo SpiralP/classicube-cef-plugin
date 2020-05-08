@@ -12,7 +12,7 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
     app.subcommand(
         App::new("create")
             .about("Creates a new screen")
-            .arg(Arg::with_name("url").required(false).multiple(true)),
+            .arg(Arg::with_name("url").multiple(true)),
     )
     .subcommand(
         App::new("closeall")

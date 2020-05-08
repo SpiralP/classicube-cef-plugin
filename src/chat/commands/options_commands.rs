@@ -22,19 +22,17 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
             .subcommand(
                 App::new("mute-lose-focus")
                     .about("Mute cef when you alt-tab out of the game")
-                    .arg(Arg::with_name("bool").required(false).default_value("true")),
+                    .arg(Arg::with_name("bool").default_value("true")),
             )
             .subcommand(
                 App::new("autoplay-map-themes")
                     .about("Auto-play map themes")
-                    .arg(Arg::with_name("bool").required(false).default_value("true")),
+                    .arg(Arg::with_name("bool").default_value("true")),
             )
             .subcommand(
-                App::new("map-theme-volume").about("Map theme volume").arg(
-                    Arg::with_name("percent")
-                        .required(false)
-                        .default_value("0.5"),
-                ),
+                App::new("map-theme-volume")
+                    .about("Map theme volume")
+                    .arg(Arg::with_name("percent").default_value("0.5")),
             ),
     )
 }

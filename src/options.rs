@@ -60,3 +60,16 @@ pub fn get_autoplay_map_themes() -> bool {
 pub fn set_autoplay_map_themes(option: bool) {
     set(AUTOPLAY_MAP_THEMES, format!("{}", option))
 }
+
+/// defaults to true
+pub const MAP_THEME_VOLUME: &str = "cef-map-theme-volume";
+
+pub fn get_map_theme_volume() -> f32 {
+    get(MAP_THEME_VOLUME)
+        .and_then(|o| o.parse().ok())
+        .unwrap_or(0.5)
+}
+
+pub fn set_map_theme_volume(option: f32) {
+    set(MAP_THEME_VOLUME, format!("{}", option))
+}

@@ -35,10 +35,6 @@ pub fn set<S: Into<Vec<u8>>>(key: S, value: String) {
     }
 }
 
-// trait Setting {
-//     // fn get
-// }
-
 /// defaults to true
 pub const MUTE_LOSE_FOCUS_OPTION: &str = "cef-mute-lose-focus";
 
@@ -52,15 +48,15 @@ pub fn set_mute_lose_focus(option: bool) {
     set(MUTE_LOSE_FOCUS_OPTION, format!("{}", option))
 }
 
-// /// defaults to true
-// pub const AUTOPLAY_MAP_THEMES: &str = "cef-autoplay-map-themes";
+/// defaults to true
+pub const AUTOPLAY_MAP_THEMES: &str = "cef-autoplay-map-themes";
 
-// pub fn get_mute_lose_focus() -> bool {
-//     get(AUTOPLAY_MAP_THEMES)
-//         .and_then(|o| o.parse().ok())
-//         .unwrap_or(true)
-// }
+pub fn get_autoplay_map_themes() -> bool {
+    get(AUTOPLAY_MAP_THEMES)
+        .and_then(|o| o.parse().ok())
+        .unwrap_or(true)
+}
 
-// pub fn set_mute_lose_focus(option: bool) {
-//     set(AUTOPLAY_MAP_THEMES, format!("{}", option))
-// }
+pub fn set_autoplay_map_themes(option: bool) {
+    set(AUTOPLAY_MAP_THEMES, format!("{}", option))
+}

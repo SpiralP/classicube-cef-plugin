@@ -3,6 +3,7 @@ use crate::{
     async_manager::AsyncManager,
     entity_manager::EntityManager,
     error::*,
+    options::get_autoplay_map_themes,
     players::{MediaPlayer, Player, PlayerTrait, YoutubePlayer},
 };
 use async_std::future::timeout;
@@ -86,7 +87,7 @@ pub async fn listen_loop() {
 }
 
 thread_local!(
-    static CURRENT_MAP_THEME: Cell<Option<usize>> = Default::default();
+    pub static CURRENT_MAP_THEME: Cell<Option<usize>> = Default::default();
 );
 
 pub fn on_new_map_loaded() {
@@ -94,6 +95,10 @@ pub fn on_new_map_loaded() {
 }
 
 async fn handle_map_theme_url(message: String) -> Result<()> {
+    if !get_autoplay_map_themes() {
+        return Ok(());
+    }
+
     let regex = regex::Regex::new(r"https?://(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)").unwrap();
 
     let match_ = regex.find(&message).chain_err(|| "regex find url")?;

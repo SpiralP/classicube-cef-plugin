@@ -3,7 +3,7 @@ mod encoding;
 mod map_themes;
 mod whispers;
 
-pub use self::encoding::LightEntity;
+pub use self::{encoding::LightEntity, map_themes::CURRENT_MAP_THEME};
 use super::SIMULATING;
 use crate::async_manager::AsyncManager;
 use classicube_helpers::{detour::static_detour, CellGetSet};

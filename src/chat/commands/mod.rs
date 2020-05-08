@@ -106,14 +106,19 @@ fn get_last_color(text: &str) -> Option<char> {
     last_color
 }
 
+#[cfg(not(feature = "ci"))]
 #[tokio::test]
 async fn test_commands() {
     crate::logger::initialize(true, true);
     initialize();
 
     unsafe {
-        run(std::mem::zeroed(), vec!["create".into(), "ag".into()], true)
-            .await
-            .unwrap();
+        run(
+            std::mem::zeroed(),
+            vec!["help".into(), "create".into()],
+            true,
+        )
+        .await
+        .unwrap();
     }
 }

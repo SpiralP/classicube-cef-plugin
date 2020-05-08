@@ -36,3 +36,6 @@ widestring = "0.4.0"
 [build-dependencies]
 bindgen = "0.53.2"
 cmake = "0.1.42"
+
+[features]
+ci = []

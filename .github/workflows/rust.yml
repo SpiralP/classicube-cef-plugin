@@ -51,7 +51,7 @@ jobs:
         with:
           target: ${{ matrix.config.arch }}-pc-windows-msvc
           command: test
-          args: -- --nocapture
+          args: --features ci -- --nocapture
 
       - name: Build Release
         uses: actions-rs/cargo@v1
@@ -130,7 +130,7 @@ jobs:
         with:
           target: ${{ matrix.config.arch }}-unknown-linux-gnu
           command: test
-          args: -- --nocapture
+          args: --features ci -- --nocapture
 
       - name: Build Release
         uses: actions-rs/cargo@v1
@@ -196,7 +196,7 @@ jobs:
         with:
           target: ${{ matrix.config.arch }}-apple-darwin
           command: test
-          args: -- --nocapture
+          args: --features ci -- --nocapture
 
       - name: Build Release
         uses: actions-rs/cargo@v1

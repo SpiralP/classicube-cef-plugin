@@ -97,6 +97,8 @@ extern "C" int cef_interface_initialize(MyApp* app) {
   // so that it can paint
   settings.multi_threaded_message_loop = false;
 
+  settings.background_color = 0xFFFFFFFF;
+
   CefString(&settings.log_file).FromASCII("cef-binary.log");
 
 #if defined(_WIN64) || defined(_WIN32)
@@ -134,26 +136,24 @@ extern "C" int cef_interface_initialize(MyApp* app) {
 // Browser
 
 extern "C" int cef_interface_create_browser(MyClient* client,
-                                            const char* startup_url) {
+                                            const char* startup_url,
+                                            int frame_rate) {
   // Create the browser window.
   CefWindowInfo windowInfo;
   windowInfo.SetAsWindowless(0);
 
   const CefString& url = startup_url;
   CefBrowserSettings settings;
-  settings.windowless_frame_rate = 30;
-
-  CefRefPtr<CefDictionaryValue> extra_info = CefDictionaryValue::Create();
-  extra_info->SetInt("bap", 23);
+  settings.windowless_frame_rate = frame_rate;
 
   bool browser = CefBrowserHost::CreateBrowser(windowInfo, client, url,
-                                               settings, extra_info, NULL);
+                                               settings, nullptr, nullptr);
 
-  if (browser) {
-    return 0;
-  } else {
+  if (!browser) {
     return -1;
   }
+
+  return 0;
 }
 
 extern "C" int cef_interface_browser_get_identifier(CefBrowser* browser) {

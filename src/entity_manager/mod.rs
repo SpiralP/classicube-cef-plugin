@@ -11,6 +11,7 @@ use crate::{
     cef::{Cef, CefEvent, RustRefBrowser},
     chat::hidden_communication::LightEntity,
     error::*,
+    options::get_frame_rate,
     players::{Player, PlayerTrait},
 };
 use classicube_sys::Vec3;
@@ -174,10 +175,10 @@ impl EntityManager {
     pub fn create_entity(input: &str) -> Result<usize> {
         let player = Player::from_input(input)?;
 
-        Ok(Self::create_entity_player(player)?)
+        Ok(Self::create_entity_player(player, get_frame_rate())?)
     }
 
-    pub fn create_entity_player(mut player: Player) -> Result<usize> {
+    pub fn create_entity_player(mut player: Player, fps: u16) -> Result<usize> {
         let url = player.on_create();
 
         let entity_id = Self::get_new_id();
@@ -191,7 +192,7 @@ impl EntityManager {
         });
 
         AsyncManager::spawn_local_on_main_thread(async move {
-            let browser = Cef::create_browser(url).await.unwrap();
+            let browser = Cef::create_browser(url, fps).await.unwrap();
 
             EntityManager::attach_browser_to_entity(entity_id, browser);
         });
@@ -256,7 +257,7 @@ impl EntityManager {
             entity.set_scale(info.scale);
 
             AsyncManager::spawn_local_on_main_thread(async move {
-                let browser = Cef::create_browser(url).await.unwrap();
+                let browser = Cef::create_browser(url, get_frame_rate()).await.unwrap();
 
                 EntityManager::attach_browser_to_entity(entity_id, browser);
             });

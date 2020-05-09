@@ -72,10 +72,10 @@ impl Clone for RustRefApp {
 }
 
 impl RustRefClient {
-    pub fn create_browser<T: Into<Vec<u8>>>(&self, startup_url: T) -> Result<()> {
+    pub fn create_browser<T: Into<Vec<u8>>>(&self, startup_url: T, fps: c_int) -> Result<()> {
         let startup_url = CString::new(startup_url).unwrap();
 
-        to_result(unsafe { cef_interface_create_browser(self.ptr, startup_url.as_ptr()) })
+        to_result(unsafe { cef_interface_create_browser(self.ptr, startup_url.as_ptr(), fps) })
     }
 }
 impl Drop for RustRefClient {

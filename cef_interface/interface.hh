@@ -135,7 +135,8 @@ extern "C" int cef_interface_initialize(MyApp* app_ptr);
 // Browser
 
 extern "C" int cef_interface_create_browser(MyClient* client_ptr,
-                                            const char* startup_url);
+                                            const char* startup_url,
+                                            int frame_rate);
 extern "C" int cef_interface_browser_get_identifier(CefBrowser* browser_ptr);
 extern "C" int cef_interface_browser_load_url(CefBrowser* browser_ptr,
                                               const char* url);

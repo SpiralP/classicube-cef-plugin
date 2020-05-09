@@ -36,40 +36,54 @@ pub fn set<S: Into<Vec<u8>>>(key: S, value: String) {
 }
 
 /// defaults to true
-pub const MUTE_LOSE_FOCUS_OPTION: &str = "cef-mute-lose-focus";
+pub const MUTE_LOSE_FOCUS: &str = "cef-mute-lose-focus";
+pub const MUTE_LOSE_FOCUS_DEFAULT: &str = "true";
 
 pub fn get_mute_lose_focus() -> bool {
-    get(MUTE_LOSE_FOCUS_OPTION)
+    get(MUTE_LOSE_FOCUS)
         .and_then(|o| o.parse().ok())
-        .unwrap_or(true)
+        .unwrap_or_else(|| MUTE_LOSE_FOCUS_DEFAULT.parse().unwrap())
 }
 
 pub fn set_mute_lose_focus(option: bool) {
-    set(MUTE_LOSE_FOCUS_OPTION, format!("{}", option))
+    set(MUTE_LOSE_FOCUS, format!("{}", option))
 }
 
-/// defaults to true
 pub const AUTOPLAY_MAP_THEMES: &str = "cef-autoplay-map-themes";
+pub const AUTOPLAY_MAP_THEMES_DEFAULT: &str = "true";
 
 pub fn get_autoplay_map_themes() -> bool {
     get(AUTOPLAY_MAP_THEMES)
         .and_then(|o| o.parse().ok())
-        .unwrap_or(true)
+        .unwrap_or_else(|| AUTOPLAY_MAP_THEMES_DEFAULT.parse().unwrap())
 }
 
 pub fn set_autoplay_map_themes(option: bool) {
     set(AUTOPLAY_MAP_THEMES, format!("{}", option))
 }
 
-/// defaults to true
 pub const MAP_THEME_VOLUME: &str = "cef-map-theme-volume";
+pub const MAP_THEME_VOLUME_DEFAULT: &str = "0.5";
 
 pub fn get_map_theme_volume() -> f32 {
     get(MAP_THEME_VOLUME)
         .and_then(|o| o.parse().ok())
-        .unwrap_or(0.5)
+        .unwrap_or_else(|| MAP_THEME_VOLUME_DEFAULT.parse().unwrap())
 }
 
 pub fn set_map_theme_volume(option: f32) {
     set(MAP_THEME_VOLUME, format!("{}", option))
+}
+
+pub const FRAME_RATE: &str = "cef-frame-rate";
+pub const FRAME_RATE_DEFAULT: &str = "30";
+
+pub fn get_frame_rate() -> u16 {
+    get(FRAME_RATE)
+        .and_then(|o| o.parse().ok())
+        .unwrap_or_else(|| FRAME_RATE_DEFAULT.parse().unwrap())
+}
+
+pub fn set_frame_rate(option: u16) {
+    set(FRAME_RATE, format!("{}", option))
 }

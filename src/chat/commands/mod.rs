@@ -64,7 +64,11 @@ pub async fn run(player: PlayerSnapshot, mut args: Vec<String>, is_self: bool) -
 
         Err(e) => {
             log::warn!("{:#?}", e);
-            chat_print_lines(format!("{}", e));
+
+            if is_self {
+                chat_print_lines(format!("{}", e));
+            }
+
             Ok(())
         }
     }
@@ -115,7 +119,8 @@ async fn test_commands() {
     unsafe {
         run(
             std::mem::zeroed(),
-            vec!["help".into(), "angle".into()],
+            vec!["volume".into(), "--help".into()],
+            // vec!["help".into(), "angle".into()],
             true,
         )
         .await

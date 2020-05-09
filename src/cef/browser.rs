@@ -14,6 +14,10 @@ thread_local!(
     pub static BROWSERS: RefCell<HashMap<c_int, RustRefBrowser>> = RefCell::new(HashMap::new());
 );
 
+thread_local!(
+    pub static BROWSER_SIZES: RefCell<HashMap<c_int, (c_int, c_int)>> = Default::default();
+);
+
 // OnAfterCreated
 pub extern "C" fn on_after_created(browser: RustRefBrowser) {
     let id = browser.get_identifier();
@@ -77,10 +81,6 @@ pub extern "C" fn on_title_change(browser: RustRefBrowser, title_c_str: *const c
         })
         .unwrap();
 }
-
-thread_local!(
-    pub static BROWSER_SIZES: RefCell<HashMap<c_int, (c_int, c_int)>> = Default::default();
-);
 
 pub extern "C" fn get_view_rect(browser: RustRefBrowser) -> RustRect {
     let browser_id = browser.get_identifier();

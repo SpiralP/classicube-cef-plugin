@@ -19,8 +19,8 @@
       //    after the API code downloads.
       function onYouTubeIframeAPIReady() {
         var player = new YT.Player("player", {
-          width: "1920",
-          height: "1080",
+          width: window.innerWidth,
+          height: window.innerHeight,
           videoId: videoId,
           playerVars: {
             autoplay: 1,
@@ -89,6 +89,12 @@
           }
         }
       }
+
+      window.addEventListener("resize", () => {
+        if (typeof window.player !== "undefined") {
+          window.player.setSize(window.innerWidth, window.innerHeight);
+        }
+      });
     </script>
 
     <script src="https://www.youtube.com/iframe_api"></script>

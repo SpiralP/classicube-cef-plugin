@@ -175,10 +175,14 @@ impl EntityManager {
     pub fn create_entity(input: &str) -> Result<usize> {
         let player = Player::from_input(input)?;
 
-        Ok(Self::create_entity_player(player, get_frame_rate())?)
+        Ok(Self::create_entity_player(player, get_frame_rate(), None)?)
     }
 
-    pub fn create_entity_player(mut player: Player, fps: u16) -> Result<usize> {
+    pub fn create_entity_player(
+        mut player: Player,
+        fps: u16,
+        resolution: Option<(usize, usize)>,
+    ) -> Result<usize> {
         let url = player.on_create();
 
         let entity_id = Self::get_new_id();
@@ -192,9 +196,21 @@ impl EntityManager {
         });
 
         AsyncManager::spawn_local_on_main_thread(async move {
-            let browser = Cef::create_browser(url, fps).await.unwrap();
+            let result = async move {
+                let browser = Cef::create_browser(url, fps).await?;
 
-            EntityManager::attach_browser_to_entity(entity_id, browser);
+                if let Some((width, height)) = resolution {
+                    Cef::resize_browser(&browser, width, height)?;
+                }
+
+                EntityManager::attach_browser_to_entity(entity_id, browser);
+
+                Ok::<_, Error>(())
+            };
+
+            if let Err(e) = result.await {
+                warn!("create_entity_player: {}", e);
+            }
         });
 
         Ok(entity_id)

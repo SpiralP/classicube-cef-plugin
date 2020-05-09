@@ -140,10 +140,11 @@ extern "C" int cef_interface_create_browser(MyClient* client,
                                             int frame_rate) {
   // Create the browser window.
   CefWindowInfo windowInfo;
-  windowInfo.SetAsWindowless(0);
+  windowInfo.SetAsWindowless(nullptr);
 
   const CefString& url = startup_url;
   CefBrowserSettings settings;
+
   settings.windowless_frame_rate = frame_rate;
 
   bool browser = CefBrowserHost::CreateBrowser(windowInfo, client, url,

@@ -133,8 +133,8 @@ async fn handle_map_theme_url(message: String) -> Result<()> {
         EntityManager::entity_play_player(player, entity_id)?;
         entity_id
     } else {
-        // 1 fps screen
-        EntityManager::create_entity_player(player, 1)?
+        // 1 fps, 1x1 resolution
+        EntityManager::create_entity_player(player, 1, Some((1, 1)))?
     };
 
     CURRENT_MAP_THEME.set(Some(entity_id));

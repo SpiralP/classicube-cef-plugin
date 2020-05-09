@@ -14,23 +14,22 @@ struct RustRefApp {
   MyApp* ptr;
 };
 
-extern "C" RustRefApp cef_interface_add_ref_app(MyApp* app_ptr);
-extern "C" int cef_interface_release_ref_app(MyApp* app_ptr);
+extern "C" RustRefApp cef_interface_add_ref_app(MyApp* app);
+extern "C" int cef_interface_release_ref_app(MyApp* app);
 
 struct RustRefClient {
   MyClient* ptr;
 };
 
-extern "C" RustRefClient cef_interface_add_ref_client(MyClient* client_ptr);
-extern "C" int cef_interface_release_ref_client(MyClient* client_ptr);
+extern "C" RustRefClient cef_interface_add_ref_client(MyClient* client);
+extern "C" int cef_interface_release_ref_client(MyClient* client);
 
 struct RustRefBrowser {
   CefBrowser* ptr;
 };
 
-extern "C" RustRefBrowser cef_interface_add_ref_browser(
-    CefBrowser* browser_ptr);
-extern "C" int cef_interface_release_ref_browser(CefBrowser* browser_ptr);
+extern "C" RustRefBrowser cef_interface_add_ref_browser(CefBrowser* browser);
+extern "C" int cef_interface_release_ref_browser(CefBrowser* browser);
 
 struct RustRefString {
   const char* ptr;
@@ -130,32 +129,32 @@ extern "C" RustRefApp cef_interface_create_app(Callbacks callbacks);
 extern "C" int cef_interface_shutdown();
 extern "C" int cef_interface_step();
 
-extern "C" int cef_interface_initialize(MyApp* app_ptr);
+extern "C" int cef_interface_initialize(MyApp* app);
 
 // Browser
 
-extern "C" int cef_interface_create_browser(MyClient* client_ptr,
+extern "C" int cef_interface_create_browser(MyClient* client,
                                             const char* startup_url,
                                             int frame_rate);
-extern "C" int cef_interface_browser_get_identifier(CefBrowser* browser_ptr);
-extern "C" int cef_interface_browser_load_url(CefBrowser* browser_ptr,
+extern "C" int cef_interface_browser_get_identifier(CefBrowser* browser);
+extern "C" int cef_interface_browser_load_url(CefBrowser* browser,
                                               const char* url);
-extern "C" int cef_interface_browser_execute_javascript(CefBrowser* browser_ptr,
+extern "C" int cef_interface_browser_execute_javascript(CefBrowser* browser,
                                                         const char* code);
-extern "C" int cef_interface_browser_eval_javascript(CefBrowser* browser_ptr,
+extern "C" int cef_interface_browser_eval_javascript(CefBrowser* browser,
                                                      uint64_t task_id,
                                                      const char* c_code);
-extern "C" int cef_interface_browser_send_click(CefBrowser* browser_ptr,
+extern "C" int cef_interface_browser_send_click(CefBrowser* browser,
                                                 int x,
                                                 int y);
-extern "C" int cef_interface_browser_send_text(CefBrowser* browser_ptr,
+extern "C" int cef_interface_browser_send_text(CefBrowser* browser,
                                                const char* text);
-extern "C" int cef_interface_browser_reload(CefBrowser* browser_ptr);
+extern "C" int cef_interface_browser_reload(CefBrowser* browser);
 
-extern "C" int cef_interface_browser_was_resized(CefBrowser* browser_ptr);
+extern "C" int cef_interface_browser_was_resized(CefBrowser* browser);
 
 /// Tell browser to close, OnBeforeClose will be called soon
-extern "C" int cef_interface_browser_close(CefBrowser* browser_ptr);
+extern "C" int cef_interface_browser_close(CefBrowser* browser);
 
 // functions from rust
 

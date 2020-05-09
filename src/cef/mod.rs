@@ -247,17 +247,25 @@ impl Cef {
         }
     }
 
-    pub fn resize_browser(browser: &RustRefBrowser, width: usize, height: usize) -> Result<()> {
+    fn set_browser_size(browser_id: c_int, width: usize, height: usize) -> Result<()> {
+        // 0 size crashes
         if width < 1 || height < 1 || width > TEXTURE_WIDTH || height > TEXTURE_HEIGHT {
             bail!("size not within {}x{}", TEXTURE_WIDTH, TEXTURE_HEIGHT);
         }
 
-        let browser_id = browser.get_identifier();
         BROWSER_SIZES.with(move |cell| {
             let sizes = &mut *cell.borrow_mut();
 
             sizes.insert(browser_id, (width as _, height as _));
         });
+
+        Ok(())
+    }
+
+    pub fn resize_browser(browser: &RustRefBrowser, width: usize, height: usize) -> Result<()> {
+        let browser_id = browser.get_identifier();
+
+        Self::set_browser_size(browser_id, width, height)?;
 
         browser.was_resized()?;
         Ok(())

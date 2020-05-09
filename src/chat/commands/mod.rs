@@ -38,8 +38,14 @@ pub fn initialize() {
 }
 
 pub fn get_matches(args: &[String]) -> Result<ArgMatches<'static>> {
+    // we MUST clone here or we get a strange bug where reusing the same App gives different output
+    // for example doing "cef -- help" then "cef help" will give
+    //
+    // error: The subcommand 'help' wasn't recognized
+    //        Did you mean 'help'?
+    //
     Ok(COMMAND_APP
-        .with_inner_mut(|app| app.get_matches_from_safe_borrow(args))
+        .with_inner_mut(|app| app.clone().get_matches_from_safe(args))
         .unwrap()?)
 }
 
@@ -115,14 +121,15 @@ async fn test_commands() {
     crate::logger::initialize(true, true);
     initialize();
 
-    unsafe {
-        run(
-            std::mem::zeroed(),
-            vec!["volume".into(), "--help".into()],
-            // vec!["help".into(), "angle".into()],
-            true,
-        )
+    run(
+        unsafe { std::mem::zeroed() },
+        vec!["--".into(), "help".into()],
+        true,
+    )
+    .await
+    .unwrap();
+
+    run(unsafe { std::mem::zeroed() }, vec!["help".into()], true)
         .await
         .unwrap();
-    }
 }

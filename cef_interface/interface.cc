@@ -52,7 +52,7 @@ extern "C" int cef_interface_release_ref_browser(CefBrowser* browser) {
 
 extern "C" RustRefString cef_interface_new_ref_string(const char* c_str,
                                                       size_t len) {
-  char* copy = new char[len + 1];
+  char* copy = new char[len + 1]();
   strcpy(copy, c_str);
 
   RustRefString r;

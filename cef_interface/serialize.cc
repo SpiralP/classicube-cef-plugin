@@ -86,7 +86,7 @@ void read(std::istringstream& s, T* value) {
 
 FFIRustV8Response deserialize_v8_response(CefBinaryValue* binary) {
   size_t len = binary->GetSize();
-  char* data = new char[len];
+  char* data = new char[len + 1]();
   binary->GetData(data, len, 0);
 
   // std::string copies from data
@@ -115,7 +115,7 @@ FFIRustV8Response deserialize_v8_response(CefBinaryValue* binary) {
       size_t string_len = 0;
       read(s, &string_len);
 
-      char* tmp = new char[string_len];
+      char* tmp = new char[string_len + 1]();
       s.read(tmp, string_len);
       response.result.string = cef_interface_new_ref_string(tmp, string_len);
       delete[] tmp;

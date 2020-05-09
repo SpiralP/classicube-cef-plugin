@@ -22,11 +22,17 @@ CefRefPtr<CefRenderProcessHandler> MyApp::GetRenderProcessHandler() {
 void MyApp::OnBeforeCommandLineProcessing(
     const CefString& process_type,
     CefRefPtr<CefCommandLine> command_line) {
-  // Command-line flags can be modified in this callback.
-  // |process_type| is empty for the browser process.
   command_line->AppendSwitchWithValue("autoplay-policy",
                                       "no-user-gesture-required");
   command_line->AppendSwitch("disable-extensions");
+
+  std::string new_value("HardwareMediaKeyHandling");
+  if (command_line->HasSwitch("disable-features")) {
+    CefString old_value = command_line->GetSwitchValue("disable-features");
+    new_value += ",";
+    new_value += old_value;
+  }
+  command_line->AppendSwitchWithValue("disable-features", new_value);
 }
 
 // CefBrowserProcessHandler methods:

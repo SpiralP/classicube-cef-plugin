@@ -14,13 +14,15 @@ pub extern "C" fn cef_paint_callback(
     let browser_id = browser.get_identifier();
 
     if let Err(e) = EntityManager::with_by_browser_id(browser_id, |entity| {
-        let part = Bitmap {
-            Scan0: new_pixels as *mut _,
-            Width: new_width as i32,
-            Height: new_height as i32,
-        };
+        if entity.get_scale() != 0.0 {
+            let part = Bitmap {
+                Scan0: new_pixels as *mut _,
+                Width: new_width as i32,
+                Height: new_height as i32,
+            };
 
-        entity.update_texture(part);
+            entity.update_texture(part);
+        }
 
         Ok(())
     }) {

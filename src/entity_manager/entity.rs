@@ -135,9 +135,11 @@ impl CefEntity {
     }
 
     pub fn render_model(&mut self) {
-        let entity = self.entity.as_mut();
-        unsafe {
-            Model_Render(entity.Model, entity.get_unchecked_mut());
+        if self.get_scale() != 0.0 {
+            let entity = self.entity.as_mut();
+            unsafe {
+                Model_Render(entity.Model, entity.get_unchecked_mut());
+            }
         }
     }
 

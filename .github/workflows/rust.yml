@@ -56,8 +56,6 @@ jobs:
       - name: Build Release
         uses: actions-rs/cargo@v1
         if: startsWith(github.ref, 'refs/tags/')
-        env:
-          RUSTFLAGS: -g
         with:
           target: ${{ matrix.config.arch }}-pc-windows-msvc
           command: build

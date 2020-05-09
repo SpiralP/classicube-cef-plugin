@@ -208,7 +208,7 @@ pub async fn handle_command(
         }
 
         ("type", Some(matches)) => {
-            let parts = matches.values_of_lossy("url").unwrap_or_default();
+            let parts = matches.values_of_lossy("words").unwrap_or_default();
             let text: String = parts.join(" ");
             let text = (*text).to_string();
 

@@ -99,11 +99,11 @@ impl Plugin {
             plugin.entity_manager.shutdown();
             plugin.chat.shutdown();
 
-            AsyncManager::spawn_local_on_main_thread(async {
+            AsyncManager::block_on_local(async {
                 Cef::shutdown().await;
             });
 
-            // this will run all remaining tasks to completion
+            // this will stop all tasks immediately
             plugin.async_manager.shutdown();
         });
     }

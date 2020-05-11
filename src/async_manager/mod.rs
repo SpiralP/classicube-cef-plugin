@@ -77,12 +77,7 @@ impl AsyncManager {
 
                 ASYNC_DISPATCHER_HANDLE.lock().unwrap().take();
                 ASYNC_DISPATCHER_LOCAL_HANDLE.with(|cell| cell.borrow_mut().take());
-                ASYNC_DISPATCHER.with(|cell| {
-                    if let Some(mut async_dispatcher) = cell.borrow_mut().take() {
-                        // let async cef stuff close browsers and whatnot
-                        async_dispatcher.run();
-                    }
-                });
+                ASYNC_DISPATCHER.with(|cell| cell.borrow_mut().take());
             } else {
                 debug!("async_dispatcher already shutdown?");
             }
@@ -132,7 +127,7 @@ impl AsyncManager {
             }
 
             // don't burn anything
-            std::thread::sleep(Duration::from_millis(32));
+            std::thread::sleep(Duration::from_millis(16));
         }
     }
 

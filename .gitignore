@@ -5,3 +5,4 @@ GPUCache
 debug.log
 cef.log
 cef-binary.log
+.vscode/launch.json

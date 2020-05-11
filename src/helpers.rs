@@ -1,24 +1,28 @@
-#![allow(non_snake_case)]
+use std::time::Duration;
 
-use classicube_sys::*;
-use std::cell::RefCell;
+pub fn format_duration(duration: Duration) -> String {
+    let seconds = duration.as_secs();
+    let hours = seconds / 3600;
+    let minutes = (seconds - hours * 3600) / 60;
+    let seconds = seconds - hours * 3600 - minutes * 60;
 
-thread_local!(
-    pub static TEX_VB: RefCell<Option<OwnedGfxVertexBuffer>> = RefCell::new(None);
-);
-
-pub unsafe fn Gfx_Draw2DTexture(tex: &mut Texture, col: PackedCol) {
-    let mut vertices = Gfx_Make2DQuad(tex, col);
-
-    Gfx_SetVertexFormat(VertexFormat__VERTEX_FORMAT_P3FT2FC4B);
-    TEX_VB.with(|tex_vb| {
-        let tex_vb = tex_vb.borrow_mut();
-        let tex_vb = tex_vb.as_ref().unwrap();
-        Gfx_UpdateDynamicVb_IndexedTris(tex_vb.resource_id, vertices.as_mut_ptr() as _, 4);
-    });
+    if hours != 0 {
+        format!("{:02}:{:02}:{:02}", hours, minutes, seconds)
+    } else {
+        format!("{:02}:{:02}", minutes, seconds)
+    }
 }
 
-pub unsafe fn Texture_RenderShaded(tex: &mut Texture, shadeCol: PackedCol) {
-    Gfx_BindTexture(tex.ID);
-    Gfx_Draw2DTexture(tex, shadeCol);
+#[test]
+fn test_format_duration() {
+    for (a, b) in &[
+        (Duration::from_secs(2), "00:02"),
+        (Duration::from_secs(60), "01:00"),
+        (Duration::from_secs(61), "01:01"),
+        (Duration::from_secs(60 * 60), "01:00:00"),
+        (Duration::from_secs(60 * 60 + 1), "01:00:01"),
+        (Duration::from_secs(60 * 60 + 60 + 1), "01:01:01"),
+    ] {
+        assert_eq!(&format_duration(*a), b);
+    }
 }

@@ -1,5 +1,4 @@
-use super::{TEXTURE_HEIGHT, TEXTURE_WIDTH};
-use crate::helpers::*;
+use super::{helpers::*, TEXTURE_HEIGHT, TEXTURE_WIDTH};
 use classicube_sys::{
     Bitmap, Entity, Gfx_SetAlphaTest, Gfx_SetTexturing, Model, ModelTex, ModelVertex, Model_Init,
     Model_Register, OwnedGfxTexture, PackedCol, PackedCol_Make, SKIN_TYPE_SKIN_64x64,

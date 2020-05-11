@@ -126,7 +126,7 @@ impl PlayerTrait for YoutubePlayer {
         ));
     }
 
-    fn get_current_time(&self, _browser: &RustRefBrowser) -> Result<Duration> {
+    fn get_current_time(&self) -> Result<Duration> {
         Ok(self.time)
     }
 

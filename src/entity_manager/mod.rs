@@ -1,6 +1,7 @@
 mod cef_paint;
 mod context_handler;
 mod entity;
+mod helpers;
 mod model;
 mod render_model_hook;
 

@@ -5,6 +5,7 @@ use crate::{
     chat::{Chat, PlayerSnapshot},
     entity_manager::{EntityManager, MODEL_HEIGHT, MODEL_WIDTH},
     error::*,
+    helpers::format_duration,
     players::PlayerTrait,
 };
 use clap::{App, Arg, ArgMatches};
@@ -342,7 +343,16 @@ pub async fn handle_command(
                 let title = entity.player.get_title();
 
                 if !title.is_empty() {
-                    Chat::print(format!("{}Playing {}{}", color::TEAL, color::SILVER, title,));
+                    Chat::print(format!(
+                        "{}Playing {}{} ",
+                        color::TEAL,
+                        color::SILVER,
+                        title
+                    ));
+                }
+
+                if let Ok(time) = entity.player.get_current_time() {
+                    Chat::print(format!("At time {}", format_duration(time)));
                 }
 
                 Chat::print(url);

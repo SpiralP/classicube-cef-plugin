@@ -1,4 +1,4 @@
-use crate::helpers::*;
+use super::helpers::*;
 use classicube_helpers::events::gfx::{ContextLostEventHandler, ContextRecreatedEventHandler};
 use classicube_sys::{OwnedGfxVertexBuffer, VertexFormat__VERTEX_FORMAT_P3FT2FC4B};
 use log::debug;

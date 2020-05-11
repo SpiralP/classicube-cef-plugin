@@ -2,12 +2,13 @@ use super::helpers::*;
 use crate::{
     async_manager::AsyncManager,
     cef::Cef,
-    chat::PlayerSnapshot,
+    chat::{Chat, PlayerSnapshot},
     entity_manager::{EntityManager, MODEL_HEIGHT, MODEL_WIDTH},
     error::*,
     players::PlayerTrait,
 };
 use clap::{App, Arg, ArgMatches};
+use classicube_helpers::color;
 use log::warn;
 use nalgebra::*;
 use ncollide3d::{query::*, shape::*};
@@ -92,6 +93,11 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
             .arg(Arg::with_name("z").required(true))
             .arg(Arg::with_name("yaw"))
             .arg(Arg::with_name("pitch").requires("yaw")),
+    )
+    .subcommand(
+        App::new("info")
+            .alias("link")
+            .about("Get what's playing on the current screen"),
     )
 }
 
@@ -322,6 +328,24 @@ pub async fn handle_command(
                         entity.entity.RotX = pitch;
                     }
                 }
+
+                Ok(())
+            })?;
+
+            Ok(true)
+        }
+
+        ("info", Some(_matches)) => {
+            // let's have it print for everyone
+            EntityManager::with_closest(player.eye_position, |entity| {
+                let url = entity.player.get_url();
+                let title = entity.player.get_title();
+
+                if !title.is_empty() {
+                    Chat::print(format!("{}Playing {}{}", color::TEAL, color::SILVER, title,));
+                }
+
+                Chat::print(url);
 
                 Ok(())
             })?;

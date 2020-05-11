@@ -169,6 +169,14 @@ impl PlayerTrait for MediaPlayer {
     fn set_should_send(&mut self, should_send: bool) {
         self.should_send = should_send;
     }
+
+    fn get_url(&self) -> String {
+        self.url.clone()
+    }
+
+    fn get_title(&self) -> String {
+        self.last_title.clone()
+    }
 }
 
 impl MediaPlayer {

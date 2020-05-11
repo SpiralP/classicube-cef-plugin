@@ -54,6 +54,10 @@ pub trait PlayerTrait {
     fn get_should_send(&self) -> bool;
 
     fn set_should_send(&mut self, _should_send: bool);
+
+    fn get_url(&self) -> String;
+
+    fn get_title(&self) -> String;
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -182,6 +186,22 @@ impl PlayerTrait for Player {
             Player::Youtube(player) => player.set_should_send(should_send),
             Player::Media(player) => player.set_should_send(should_send),
             Player::Web(player) => player.set_should_send(should_send),
+        }
+    }
+
+    fn get_url(&self) -> String {
+        match self {
+            Player::Youtube(player) => player.get_url(),
+            Player::Media(player) => player.get_url(),
+            Player::Web(player) => player.get_url(),
+        }
+    }
+
+    fn get_title(&self) -> String {
+        match self {
+            Player::Youtube(player) => player.get_title(),
+            Player::Media(player) => player.get_title(),
+            Player::Web(player) => player.get_title(),
         }
     }
 }

@@ -1,8 +1,9 @@
 use super::{TEXTURE_HEIGHT, TEXTURE_WIDTH};
 use crate::helpers::*;
 use classicube_sys::{
-    Bitmap, Entity, Model, ModelTex, ModelVertex, Model_Init, Model_Register, OwnedGfxTexture,
-    PackedCol, PackedCol_Make, MODEL_BOX_VERTICES,
+    Bitmap, Entity, Gfx_SetAlphaTest, Gfx_SetTexturing, Model, ModelTex, ModelVertex, Model_Init,
+    Model_Register, OwnedGfxTexture, PackedCol, PackedCol_Make, SKIN_TYPE_SKIN_64x64,
+    MODEL_BOX_VERTICES,
 };
 use std::{ffi::CString, mem, pin::Pin};
 
@@ -72,7 +73,7 @@ impl CefModel {
         } = self;
 
         default_model_tex.name = default_texture_name.as_ptr();
-        default_model_tex.skinType = classicube_sys::SKIN_TYPE_SKIN_64x64 as _;
+        default_model_tex.skinType = SKIN_TYPE_SKIN_64x64 as _;
         default_model_tex.texID = self.default_texture.as_mut().unwrap().resource_id;
 
         // we don't need to register our texture!
@@ -83,8 +84,8 @@ impl CefModel {
         let entity = unsafe { &mut *entity };
 
         unsafe {
-            classicube_sys::Gfx_SetAlphaTest(0);
-            classicube_sys::Gfx_SetTexturing(1);
+            Gfx_SetAlphaTest(0);
+            Gfx_SetTexturing(1);
 
             Texture_RenderShaded(&mut entity.NameTex, WHITE_TRANSPARENT);
         }

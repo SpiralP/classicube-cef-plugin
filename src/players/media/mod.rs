@@ -104,12 +104,7 @@ impl PlayerTrait for MediaPlayer {
     }
 
     fn on_title_change(&mut self, _entity_id: usize, _browser: &RustRefBrowser, title: String) {
-        if self.last_title == title {
-            return;
-        }
-        self.last_title = title.clone();
-
-        if title == "Media Loading" {
+        if self.last_title == title || title == "Media Loading" {
             return;
         }
 
@@ -119,6 +114,8 @@ impl PlayerTrait for MediaPlayer {
             color::SILVER,
             title,
         ));
+
+        self.last_title = title;
     }
 
     fn get_current_time(&self) -> Result<Duration> {

@@ -109,12 +109,7 @@ impl PlayerTrait for YoutubePlayer {
     }
 
     fn on_title_change(&mut self, _entity_id: usize, _browser: &RustRefBrowser, title: String) {
-        if self.last_title == title {
-            return;
-        }
-        self.last_title = title.clone();
-
-        if title == "YouTube Loading" {
+        if self.last_title == title || title == "YouTube Loading" {
             return;
         }
 
@@ -124,6 +119,8 @@ impl PlayerTrait for YoutubePlayer {
             color::SILVER,
             title,
         ));
+
+        self.last_title = title;
     }
 
     fn get_current_time(&self) -> Result<Duration> {

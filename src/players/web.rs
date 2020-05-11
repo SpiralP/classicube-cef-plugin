@@ -52,7 +52,6 @@ impl PlayerTrait for WebPlayer {
         if self.last_title == title {
             return;
         }
-        self.last_title = title.clone();
 
         Chat::print(format!(
             "{}Now viewing {}{}",
@@ -60,6 +59,8 @@ impl PlayerTrait for WebPlayer {
             color::SILVER,
             title,
         ));
+
+        self.last_title = title;
     }
 
     fn get_should_send(&self) -> bool {

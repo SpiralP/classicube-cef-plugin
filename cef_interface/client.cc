@@ -231,4 +231,14 @@ void MyClient::OnBeforeDownload(CefRefPtr<CefBrowser> browser,
                                 const CefString& suggested_name,
                                 CefRefPtr<CefBeforeDownloadCallback> callback) {
   // By default the download will be canceled.
+  rust_print("OnBeforeDownload");
+}
+
+void MyClient::OnDownloadUpdated(CefRefPtr<CefBrowser> browser,
+                                 CefRefPtr<CefDownloadItem> download_item,
+                                 CefRefPtr<CefDownloadItemCallback> callback) {
+  rust_print("OnDownloadUpdated");
+  // Execute |callback| either asynchronously or in this method to cancel the
+  // download if desired.
+  callback->Cancel();
 }

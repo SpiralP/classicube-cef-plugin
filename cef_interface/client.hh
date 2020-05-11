@@ -115,6 +115,10 @@ class MyClient : public CefClient,
                         const CefString& suggested_name,
                         CefRefPtr<CefBeforeDownloadCallback> callback) OVERRIDE;
 
+  void OnDownloadUpdated(CefRefPtr<CefBrowser> browser,
+                         CefRefPtr<CefDownloadItem> download_item,
+                         CefRefPtr<CefDownloadItemCallback> callback) OVERRIDE;
+
  private:
   OnBeforeCloseCallback on_before_close_callback;
   OnPaintCallback on_paint_callback;

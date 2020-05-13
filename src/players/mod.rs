@@ -1,3 +1,4 @@
+mod dash;
 mod helpers;
 mod media;
 mod mute_lose_focus;
@@ -6,7 +7,8 @@ mod web;
 mod youtube;
 
 pub use self::{
-    media::MediaPlayer, mute_lose_focus::IS_FOCUSED, web::WebPlayer, youtube::YoutubePlayer,
+    dash::DashPlayer, media::MediaPlayer, mute_lose_focus::IS_FOCUSED, web::WebPlayer,
+    youtube::YoutubePlayer,
 };
 use crate::{cef::RustRefBrowser, error::*};
 use serde::{Deserialize, Serialize};
@@ -63,6 +65,7 @@ pub trait PlayerTrait {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Player {
     Youtube(YoutubePlayer),
+    Dash(DashPlayer),
     Media(MediaPlayer),
     Web(WebPlayer),
 }
@@ -71,6 +74,7 @@ impl PlayerTrait for Player {
     fn type_name(&self) -> &'static str {
         match self {
             Player::Youtube(player) => player.type_name(),
+            Player::Dash(player) => player.type_name(),
             Player::Media(player) => player.type_name(),
             Player::Web(player) => player.type_name(),
         }
@@ -80,18 +84,23 @@ impl PlayerTrait for Player {
         match YoutubePlayer::from_input(input) {
             Ok(player) => Ok(Player::Youtube(player)),
             Err(_) => {
-                match MediaPlayer::from_input(input) {
-                    Ok(player) => Ok(Player::Media(player)),
+                match DashPlayer::from_input(input) {
+                    Ok(player) => Ok(Player::Dash(player)),
                     Err(_) => {
-                        match WebPlayer::from_input(input) {
-                            Ok(player) => Ok(Player::Web(player)),
+                        match MediaPlayer::from_input(input) {
+                            Ok(player) => Ok(Player::Media(player)),
+                            Err(_) => {
+                                match WebPlayer::from_input(input) {
+                                    Ok(player) => Ok(Player::Web(player)),
 
-                            Err(e) => {
-                                if !input.starts_with("http") {
-                                    // if it didn't start with http, try again with https:// in front
-                                    Player::from_input(&format!("https://{}", input))
-                                } else {
-                                    bail!("no player matched for input: {}", e);
+                                    Err(e) => {
+                                        if !input.starts_with("http") {
+                                            // if it didn't start with http, try again with https:// in front
+                                            Player::from_input(&format!("https://{}", input))
+                                        } else {
+                                            bail!("no player matched for input: {}", e);
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -104,6 +113,7 @@ impl PlayerTrait for Player {
     fn on_create(&mut self) -> String {
         match self {
             Player::Youtube(player) => player.on_create(),
+            Player::Dash(player) => player.on_create(),
             Player::Media(player) => player.on_create(),
             Player::Web(player) => player.on_create(),
         }
@@ -112,6 +122,7 @@ impl PlayerTrait for Player {
     fn on_page_loaded(&mut self, entity_id: usize, browser: &RustRefBrowser) {
         match self {
             Player::Youtube(player) => player.on_page_loaded(entity_id, browser),
+            Player::Dash(player) => player.on_page_loaded(entity_id, browser),
             Player::Media(player) => player.on_page_loaded(entity_id, browser),
             Player::Web(player) => player.on_page_loaded(entity_id, browser),
         }
@@ -120,6 +131,7 @@ impl PlayerTrait for Player {
     fn on_title_change(&mut self, entity_id: usize, browser: &RustRefBrowser, title: String) {
         match self {
             Player::Youtube(player) => player.on_title_change(entity_id, browser, title),
+            Player::Dash(player) => player.on_title_change(entity_id, browser, title),
             Player::Media(player) => player.on_title_change(entity_id, browser, title),
             Player::Web(player) => player.on_title_change(entity_id, browser, title),
         }
@@ -128,6 +140,7 @@ impl PlayerTrait for Player {
     fn get_current_time(&self) -> Result<Duration> {
         match self {
             Player::Youtube(player) => player.get_current_time(),
+            Player::Dash(player) => player.get_current_time(),
             Player::Media(player) => player.get_current_time(),
             Player::Web(player) => player.get_current_time(),
         }
@@ -136,6 +149,7 @@ impl PlayerTrait for Player {
     fn set_current_time(&mut self, browser: &RustRefBrowser, time: Duration) -> Result<()> {
         match self {
             Player::Youtube(player) => player.set_current_time(browser, time),
+            Player::Dash(player) => player.set_current_time(browser, time),
             Player::Media(player) => player.set_current_time(browser, time),
             Player::Web(player) => player.set_current_time(browser, time),
         }
@@ -144,6 +158,7 @@ impl PlayerTrait for Player {
     fn get_volume(&self, browser: &RustRefBrowser) -> Result<f32> {
         match self {
             Player::Youtube(player) => player.get_volume(browser),
+            Player::Dash(player) => player.get_volume(browser),
             Player::Media(player) => player.get_volume(browser),
             Player::Web(player) => player.get_volume(browser),
         }
@@ -152,6 +167,7 @@ impl PlayerTrait for Player {
     fn set_volume(&mut self, browser: &RustRefBrowser, percent: f32) -> Result<()> {
         match self {
             Player::Youtube(player) => player.set_volume(browser, percent),
+            Player::Dash(player) => player.set_volume(browser, percent),
             Player::Media(player) => player.set_volume(browser, percent),
             Player::Web(player) => player.set_volume(browser, percent),
         }
@@ -160,6 +176,7 @@ impl PlayerTrait for Player {
     fn has_global_volume(&self) -> bool {
         match self {
             Player::Youtube(player) => player.has_global_volume(),
+            Player::Dash(player) => player.has_global_volume(),
             Player::Media(player) => player.has_global_volume(),
             Player::Web(player) => player.has_global_volume(),
         }
@@ -168,6 +185,7 @@ impl PlayerTrait for Player {
     fn set_global_volume(&mut self, global_volume: bool) -> Result<()> {
         match self {
             Player::Youtube(player) => player.set_global_volume(global_volume),
+            Player::Dash(player) => player.set_global_volume(global_volume),
             Player::Media(player) => player.set_global_volume(global_volume),
             Player::Web(player) => player.set_global_volume(global_volume),
         }
@@ -176,6 +194,7 @@ impl PlayerTrait for Player {
     fn get_should_send(&self) -> bool {
         match self {
             Player::Youtube(player) => player.get_should_send(),
+            Player::Dash(player) => player.get_should_send(),
             Player::Media(player) => player.get_should_send(),
             Player::Web(player) => player.get_should_send(),
         }
@@ -184,6 +203,7 @@ impl PlayerTrait for Player {
     fn set_should_send(&mut self, should_send: bool) {
         match self {
             Player::Youtube(player) => player.set_should_send(should_send),
+            Player::Dash(player) => player.set_should_send(should_send),
             Player::Media(player) => player.set_should_send(should_send),
             Player::Web(player) => player.set_should_send(should_send),
         }
@@ -192,6 +212,7 @@ impl PlayerTrait for Player {
     fn get_url(&self) -> String {
         match self {
             Player::Youtube(player) => player.get_url(),
+            Player::Dash(player) => player.get_url(),
             Player::Media(player) => player.get_url(),
             Player::Web(player) => player.get_url(),
         }
@@ -200,6 +221,7 @@ impl PlayerTrait for Player {
     fn get_title(&self) -> String {
         match self {
             Player::Youtube(player) => player.get_title(),
+            Player::Dash(player) => player.get_title(),
             Player::Media(player) => player.get_title(),
             Player::Web(player) => player.get_title(),
         }

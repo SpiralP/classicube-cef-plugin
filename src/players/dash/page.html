@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Dash Loading</title>
+    <style>
+      body {
+        padding: 0;
+        margin: 0;
+        overflow: hidden;
+      }
+      video {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        height: 100vh;
+      }
+    </style>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/shaka-player/2.5.11/shaka-player.compiled.js"></script>
+  </head>
+
+  <body>
+    <video autoplay id="player"></video>
+    <script>
+      var player = document.getElementById("player");
+      player.volume = START_VOLUME;
+      window.player = player;
+
+      var manifestUri = "DASH_URL";
+
+      function initApp() {
+        // Install built-in polyfills to patch browser incompatibilities.
+        shaka.polyfill.installAll();
+
+        // Check to see if the browser supports the basic APIs Shaka needs.
+        if (shaka.Player.isBrowserSupported()) {
+          // Everything looks good!
+          initPlayer();
+        } else {
+          // This browser does not have the minimum set of APIs we need.
+          console.error("Browser not supported!");
+        }
+      }
+
+      function initPlayer() {
+        // Create a Player instance.
+        var shakaPlayer = new shaka.Player(player);
+
+        // Listen for error events.
+        shakaPlayer.addEventListener("error", onErrorEvent);
+
+        // Try to load a manifest.
+        // This is an asynchronous process.
+        shakaPlayer
+          .load(manifestUri)
+          .then(function () {
+            // This runs if the asynchronous load is successful.
+            // console.log("The video has now been loaded!");
+          })
+          .catch(onError); // onError is executed if the asynchronous load fails.
+      }
+
+      function onErrorEvent(event) {
+        // Extract the shaka.util.Error object from the event.
+        onError(event.detail);
+      }
+
+      function onError(error) {
+        // Log the error.
+        console.error("Error code", error.code, "object", "" + error);
+      }
+
+      document.addEventListener("DOMContentLoaded", initApp);
+    </script>
+  </body>
+</html>

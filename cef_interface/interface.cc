@@ -239,7 +239,7 @@ extern "C" int cef_interface_browser_send_text(CefBrowser* browser,
 }
 
 extern "C" int cef_interface_browser_reload(CefBrowser* browser) {
-  browser->Reload();
+  browser->ReloadIgnoreCache();
   return 0;
 }
 

@@ -55,39 +55,39 @@ async fn start_loop(entity_id: usize) -> Result<()> {
             Media,
         }
         // update time
-        let (browser, kind) = EntityManager::with_by_entity_id(entity_id, |entity| {
+        let opt = EntityManager::with_by_entity_id(entity_id, |entity| {
             Ok(match &entity.player {
-                Player::Media(_) => (entity.browser.as_ref().cloned(), Kind::Media),
-                Player::Youtube(_) => (entity.browser.as_ref().cloned(), Kind::Youtube),
+                Player::Media(_) => Some((entity.browser.as_ref().cloned(), Kind::Media)),
+                Player::Youtube(_) => Some((entity.browser.as_ref().cloned(), Kind::Youtube)),
 
-                _ => {
-                    bail!("not supported");
-                }
+                _ => None,
             })
         })?;
 
-        if let Some(browser) = browser {
-            let time = match kind {
-                Kind::Media => MediaPlayer::get_real_time(&browser).await,
-                Kind::Youtube => YoutubePlayer::get_real_time(&browser).await,
-            };
+        if let Some((maybe_browser, kind)) = opt {
+            if let Some(browser) = maybe_browser {
+                let time = match kind {
+                    Kind::Media => MediaPlayer::get_real_time(&browser).await,
+                    Kind::Youtube => YoutubePlayer::get_real_time(&browser).await,
+                };
 
-            if let Ok(time) = time {
-                EntityManager::with_by_entity_id(entity_id, move |entity| {
-                    match &mut entity.player {
-                        Player::Media(player) => {
-                            player.time = time;
-                        }
-                        Player::Youtube(player) => {
-                            player.time = time;
-                        }
+                if let Ok(time) = time {
+                    EntityManager::with_by_entity_id(entity_id, move |entity| {
+                        match &mut entity.player {
+                            Player::Media(player) => {
+                                player.time = time;
+                            }
+                            Player::Youtube(player) => {
+                                player.time = time;
+                            }
 
-                        _ => {
-                            bail!("not supported");
+                            _ => {
+                                bail!("not supported");
+                            }
                         }
-                    }
-                    Ok(())
-                })?;
+                        Ok(())
+                    })?;
+                }
             }
         }
 

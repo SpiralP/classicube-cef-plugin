@@ -66,9 +66,8 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
             .arg(Arg::with_name("words").required(true).multiple(true)),
     )
     .subcommand(
-        App::new("resize")
-            .alias("resolution")
-            .about("Resize the resolution of the closest screen")
+        App::new("resolution")
+            .about("Set the resolution of the closest screen")
             .arg(Arg::with_name("width").required(true))
             .arg(Arg::with_name("height").required(true)),
     )
@@ -229,7 +228,7 @@ pub async fn handle_command(
             Ok(true)
         }
 
-        ("resize", Some(matches)) => {
+        ("resolution", Some(matches)) => {
             let width = matches.value_of("width").unwrap().parse()?;
             let height = matches.value_of("height").unwrap().parse()?;
 

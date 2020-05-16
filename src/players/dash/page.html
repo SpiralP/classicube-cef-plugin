@@ -45,19 +45,32 @@
       function initPlayer() {
         // Create a Player instance.
         var shakaPlayer = new shaka.Player(player);
+        // these make the video play right away, but the video skips a bunch :(
+        // shakaPlayer.configure("manifest.dash.ignoreMinBufferTime", true);
+        // shakaPlayer.configure("streaming.rebufferingGoal", 3 /* seconds */);
 
         // Listen for error events.
         shakaPlayer.addEventListener("error", onErrorEvent);
 
         // Try to load a manifest.
         // This is an asynchronous process.
-        shakaPlayer
-          .load(manifestUri)
-          .then(function () {
-            // This runs if the asynchronous load is successful.
-            // console.log("The video has now been loaded!");
-          })
-          .catch(onError); // onError is executed if the asynchronous load fails.
+        // onError is executed if the asynchronous load fails.
+        shakaPlayer.load(manifestUri).catch((error) => {
+          onError(error);
+
+          if (error.code === 1001) {
+            // BAD_HTTP_STATUS
+            // error.data[0] is the URI.
+            // error.data[1] is the status code.
+            // error.data[2] is the response text, or null if the response could not be interpretted as text.
+            if (error.data[1] === 404) {
+              // maybe ffmpeg hasn't started yet, let's reload in a few seconds
+              setTimeout(() => {
+                window.location.reload();
+              }, 2000);
+            }
+          }
+        });
       }
 
       function onErrorEvent(event) {

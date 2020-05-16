@@ -64,9 +64,9 @@
             // error.data[1] is the status code.
             // error.data[2] is the response text, or null if the response could not be interpretted as text.
             if (error.data[1] === 404) {
-              // maybe ffmpeg hasn't started yet, let's reload in a few seconds
+              // maybe ffmpeg hasn't started yet, let's retry in a few seconds
               setTimeout(() => {
-                window.location.reload();
+                initPlayer();
               }, 2000);
             }
           }

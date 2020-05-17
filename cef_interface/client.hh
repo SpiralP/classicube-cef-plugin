@@ -84,6 +84,12 @@ class MyClient : public CefClient,
       const CefString& request_initiator,
       bool& disable_default_handling) OVERRIDE;
 
+  bool OnCertificateError(CefRefPtr<CefBrowser> browser,
+                          cef_errorcode_t cert_error,
+                          const CefString& request_url,
+                          CefRefPtr<CefSSLInfo> ssl_info,
+                          CefRefPtr<CefRequestCallback> callback) OVERRIDE;
+
   // CefResourceRequestHandler methods:
   CefResourceRequestHandler::ReturnValue OnBeforeResourceLoad(
       CefRefPtr<CefBrowser> browser,
@@ -120,13 +126,7 @@ class MyClient : public CefClient,
                          CefRefPtr<CefDownloadItemCallback> callback) OVERRIDE;
 
  private:
-  OnBeforeCloseCallback on_before_close_callback;
-  OnPaintCallback on_paint_callback;
-  OnLoadEndCallback on_load_end_callback;
-  OnAfterCreatedCallback on_after_created_callback;
-  OnTitleChangeCallback on_title_change_callback;
-  GetViewRectCallback get_view_rect_callback;
-  OnJavascriptCallback on_javascript_callback;
+  Callbacks callbacks;
 
   IMPLEMENT_REFCOUNTING(MyClient);
   DISALLOW_COPY_AND_ASSIGN(MyClient);

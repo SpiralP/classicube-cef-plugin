@@ -2,14 +2,8 @@
 
 #include "serialize.hh"
 
-MyClient::MyClient(Callbacks callbacks) {
-  this->on_before_close_callback = callbacks.on_before_close_callback;
-  this->on_paint_callback = callbacks.on_paint_callback;
-  this->on_load_end_callback = callbacks.on_load_end_callback;
-  this->on_after_created_callback = callbacks.on_after_created_callback;
-  this->on_title_change_callback = callbacks.on_title_change_callback;
-  this->get_view_rect_callback = callbacks.get_view_rect_callback;
-  this->on_javascript_callback = callbacks.on_javascript_callback;
+MyClient::MyClient(Callbacks callbacks_) {
+  this->callbacks = callbacks_;
 }
 
 // CefClient methods:
@@ -51,12 +45,12 @@ bool MyClient::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser,
     uint64_t task_id = 0;
     args->GetBinary(0)->GetData(&task_id, sizeof(uint64_t), 0);
 
-    if (on_javascript_callback) {
+    if (callbacks.on_javascript) {
       auto binary = args->GetBinary(1);
 
       auto v8_response = deserialize_v8_response(binary.get());
-      on_javascript_callback(cef_interface_add_ref_browser(browser.get()),
-                             task_id, v8_response);
+      callbacks.on_javascript(cef_interface_add_ref_browser(browser.get()),
+                              task_id, v8_response);
     }
 
     return true;
@@ -68,10 +62,10 @@ bool MyClient::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser,
 // CefDisplayHandler methods:
 void MyClient::OnTitleChange(CefRefPtr<CefBrowser> browser,
                              const CefString& title) {
-  if (on_title_change_callback) {
+  if (callbacks.on_title_change) {
     auto title_utf8 = title.ToString();
-    on_title_change_callback(cef_interface_add_ref_browser(browser.get()),
-                             title_utf8.c_str());
+    callbacks.on_title_change(cef_interface_add_ref_browser(browser.get()),
+                              title_utf8.c_str());
   }
 }
 void MyClient::OnLoadingProgressChange(CefRefPtr<CefBrowser> browser,
@@ -82,14 +76,14 @@ void MyClient::OnLoadingProgressChange(CefRefPtr<CefBrowser> browser,
 
 // CefLifeSpanHandler methods:
 void MyClient::OnBeforeClose(CefRefPtr<CefBrowser> browser) {
-  if (on_before_close_callback) {
-    on_before_close_callback(cef_interface_add_ref_browser(browser.get()));
+  if (callbacks.on_before_close) {
+    callbacks.on_before_close(cef_interface_add_ref_browser(browser.get()));
   }
 }
 
 void MyClient::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
-  if (on_after_created_callback) {
-    on_after_created_callback(cef_interface_add_ref_browser(browser.get()));
+  if (callbacks.on_after_created) {
+    callbacks.on_after_created(cef_interface_add_ref_browser(browser.get()));
   }
 }
 
@@ -122,9 +116,9 @@ bool MyClient::OnBeforePopup(
 
 // CefRenderHandler methods:
 void MyClient::GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) {
-  if (get_view_rect_callback) {
+  if (callbacks.get_view_rect) {
     auto new_rect =
-        get_view_rect_callback(cef_interface_add_ref_browser(browser.get()));
+        callbacks.get_view_rect(cef_interface_add_ref_browser(browser.get()));
     rect.x = new_rect.x;
     rect.y = new_rect.y;
     rect.width = new_rect.width;
@@ -143,9 +137,9 @@ void MyClient::OnPaint(CefRefPtr<CefBrowser> browser,
                        const void* pixels,
                        int width,
                        int height) {
-  if (on_paint_callback) {
-    on_paint_callback(cef_interface_add_ref_browser(browser.get()), pixels,
-                      width, height);
+  if (callbacks.on_paint) {
+    callbacks.on_paint(cef_interface_add_ref_browser(browser.get()), pixels,
+                       width, height);
   }
 }
 
@@ -154,8 +148,8 @@ void MyClient::OnLoadEnd(CefRefPtr<CefBrowser> browser,
                          CefRefPtr<CefFrame> frame,
                          int httpStatusCode) {
   if (frame->IsMain()) {
-    if (on_load_end_callback) {
-      on_load_end_callback(cef_interface_add_ref_browser(browser.get()));
+    if (callbacks.on_load_end) {
+      callbacks.on_load_end(cef_interface_add_ref_browser(browser.get()));
     }
   }
 }
@@ -181,6 +175,27 @@ CefRefPtr<CefResourceRequestHandler> MyClient::GetResourceRequestHandler(
   }
 
   return NULL;
+}
+
+bool MyClient::OnCertificateError(CefRefPtr<CefBrowser> browser,
+                                  cef_errorcode_t cert_error,
+                                  const CefString& request_url,
+                                  CefRefPtr<CefSSLInfo> ssl_info,
+                                  CefRefPtr<CefRequestCallback> callback) {
+  if (callbacks.on_certificate_error) {
+    bool allow = callbacks.on_certificate_error(
+        cef_interface_add_ref_browser(browser.get()));
+
+    if (allow) {
+      // Return true and call CefRequestCallback::Continue() either in this
+      // method or at a later time to continue or cancel the request.
+      callback->Continue(true);
+      return true;
+    }
+  }
+
+  // Return false to cancel the request immediately.
+  return false;
 }
 
 // CefResourceRequestHandler methods:

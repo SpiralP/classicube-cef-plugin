@@ -75,14 +75,15 @@ impl Cef {
         debug!("initialize cef");
 
         let app = RustRefApp::create(Callbacks {
-            on_context_initialized_callback: Some(on_context_initialized_callback),
-            on_after_created_callback: Some(browser::on_after_created),
-            on_before_close_callback: Some(browser::on_before_close),
-            on_load_end_callback: Some(browser::on_page_loaded),
-            on_title_change_callback: Some(browser::on_title_change),
-            on_paint_callback: Some(cef_paint_callback),
-            get_view_rect_callback: Some(browser::get_view_rect),
-            on_javascript_callback: Some(javascript::on_javascript_callback),
+            on_context_initialized: Some(on_context_initialized_callback),
+            on_after_created: Some(browser::on_after_created),
+            on_before_close: Some(browser::on_before_close),
+            on_load_end: Some(browser::on_page_loaded),
+            on_title_change: Some(browser::on_title_change),
+            on_paint: Some(cef_paint_callback),
+            get_view_rect: Some(browser::get_view_rect),
+            on_javascript: Some(javascript::on_javascript_callback),
+            on_certificate_error: Some(browser::on_certificate_error_callback),
         });
 
         let mut event_receiver = Self::create_event_listener();

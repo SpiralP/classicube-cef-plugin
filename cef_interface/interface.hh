@@ -111,15 +111,18 @@ typedef void (*OnJavascriptCallback)(RustRefBrowser browser,
                                      uint64_t id,
                                      FFIRustV8Response v8_response);
 
+typedef bool (*OnCertificateErrorCallback)(RustRefBrowser browser);
+
 struct Callbacks {
-  OnContextInitializedCallback on_context_initialized_callback;
-  OnAfterCreatedCallback on_after_created_callback;
-  OnBeforeCloseCallback on_before_close_callback;
-  OnPaintCallback on_paint_callback;
-  OnLoadEndCallback on_load_end_callback;
-  OnTitleChangeCallback on_title_change_callback;
-  GetViewRectCallback get_view_rect_callback;
-  OnJavascriptCallback on_javascript_callback;
+  OnContextInitializedCallback on_context_initialized;
+  OnAfterCreatedCallback on_after_created;
+  OnBeforeCloseCallback on_before_close;
+  OnPaintCallback on_paint;
+  OnLoadEndCallback on_load_end;
+  OnTitleChangeCallback on_title_change;
+  GetViewRectCallback get_view_rect;
+  OnJavascriptCallback on_javascript;
+  OnCertificateErrorCallback on_certificate_error;
 };
 
 // functions to rust

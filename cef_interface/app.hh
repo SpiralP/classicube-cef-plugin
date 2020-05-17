@@ -29,7 +29,7 @@ class MyApp : public CefApp,
                                 CefRefPtr<CefProcessMessage> message) OVERRIDE;
 
  private:
-  OnContextInitializedCallback on_context_initialized_callback;
+  Callbacks callbacks;
   CefRefPtr<MyClient> client;
 
   IMPLEMENT_REFCOUNTING(MyApp);

@@ -4,11 +4,9 @@
 
 // Minimal implementation of CefApp for the browser process.
 
-MyApp::MyApp(Callbacks callbacks) {
-  this->on_context_initialized_callback =
-      callbacks.on_context_initialized_callback;
-
-  this->client = new MyClient(callbacks);
+MyApp::MyApp(Callbacks callbacks_) {
+  this->callbacks = callbacks_;
+  this->client = new MyClient(callbacks_);
 }
 
 // CefApp methods:
@@ -37,8 +35,8 @@ void MyApp::OnBeforeCommandLineProcessing(
 
 // CefBrowserProcessHandler methods:
 void MyApp::OnContextInitialized() {
-  if (on_context_initialized_callback) {
-    on_context_initialized_callback(
+  if (callbacks.on_context_initialized) {
+    callbacks.on_context_initialized(
         cef_interface_add_ref_client(this->client.get()));
   }
 }

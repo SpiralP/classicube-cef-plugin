@@ -100,3 +100,8 @@ pub extern "C" fn get_view_rect(browser: RustRefBrowser) -> RustRect {
         }
     })
 }
+
+pub extern "C" fn on_certificate_error_callback(browser: RustRefBrowser) -> bool {
+    // browser.
+    false
+}

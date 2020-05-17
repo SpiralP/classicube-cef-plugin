@@ -2,7 +2,7 @@ mod bindings;
 mod browser;
 mod javascript;
 
-use self::browser::{BROWSERS, BROWSER_SIZES};
+use self::browser::{ALLOW_INSECURE, BROWSERS, BROWSER_SIZES};
 pub use self::{
     bindings::{Callbacks, RustRefApp, RustRefBrowser, RustRefClient},
     javascript::RustV8Value,
@@ -282,5 +282,16 @@ impl Cef {
                 .cloned()
                 .unwrap_or((CEF_DEFAULT_WIDTH, CEF_DEFAULT_HEIGHT))
         })
+    }
+
+    pub fn set_allow_insecure(browser: &RustRefBrowser, allow: bool) -> Result<()> {
+        let browser_id = browser.get_identifier();
+        ALLOW_INSECURE.with(move |cell| {
+            let allow_insecure = &mut *cell.borrow_mut();
+
+            allow_insecure.insert(browser_id, allow);
+        });
+
+        Ok(())
     }
 }

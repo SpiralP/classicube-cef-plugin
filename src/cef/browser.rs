@@ -1,7 +1,7 @@
 use super::{bindings::RustRect, CefEvent, CEF_DEFAULT_HEIGHT, CEF_DEFAULT_WIDTH, EVENT_QUEUE};
 use crate::cef::RustRefBrowser;
 use classicube_helpers::OptionWithInner;
-use log::debug;
+use log::*;
 use std::{
     cell::RefCell,
     collections::HashMap,
@@ -16,6 +16,10 @@ thread_local!(
 
 thread_local!(
     pub static BROWSER_SIZES: RefCell<HashMap<c_int, (c_int, c_int)>> = Default::default();
+);
+
+thread_local!(
+    pub static ALLOW_INSECURE: RefCell<HashMap<c_int, bool>> = Default::default();
 );
 
 // OnAfterCreated
@@ -102,6 +106,17 @@ pub extern "C" fn get_view_rect(browser: RustRefBrowser) -> RustRect {
 }
 
 pub extern "C" fn on_certificate_error_callback(browser: RustRefBrowser) -> bool {
-    // browser.
-    false
+    let browser_id = browser.get_identifier();
+
+    warn!("certificate error for browser {}", browser_id);
+
+    ALLOW_INSECURE.with(move |cell| {
+        let allow_insecure = &mut *cell.borrow_mut();
+
+        if let Some(allow) = allow_insecure.get(&browser_id) {
+            *allow
+        } else {
+            false
+        }
+    })
 }

@@ -20,6 +20,8 @@ pub struct CefEntity {
 
     v_table: Pin<Box<EntityVTABLE>>,
     texture: OwnedGfxTexture,
+
+    browser_attached_callbacks: Vec<Box<dyn FnOnce(RustRefBrowser)>>,
 }
 
 impl CefEntity {
@@ -52,6 +54,7 @@ impl CefEntity {
             texture,
             browser: None,
             player,
+            browser_attached_callbacks: Vec::new(),
         };
 
         unsafe {
@@ -153,5 +156,20 @@ impl CefEntity {
     pub fn get_scale(&self) -> f32 {
         let CefEntity { entity, .. } = self;
         entity.ModelScale.X
+    }
+
+    pub fn on_browser_attached<F: 'static>(&mut self, f: F)
+    where
+        F: FnOnce(RustRefBrowser),
+    {
+        self.browser_attached_callbacks.push(Box::new(f));
+    }
+
+    pub fn attach_browser(&mut self, browser: RustRefBrowser) {
+        self.browser = Some(browser.clone());
+
+        for callback in self.browser_attached_callbacks.drain(..) {
+            callback(browser.clone());
+        }
     }
 }

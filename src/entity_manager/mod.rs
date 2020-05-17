@@ -21,7 +21,7 @@ use futures::{
     prelude::*,
     stream::{FuturesUnordered, StreamExt},
 };
-use log::{debug, warn};
+use log::*;
 use std::{
     cell::{Cell, RefCell},
     collections::HashMap,
@@ -151,9 +151,10 @@ impl EntityManager {
                 let entities = &mut *entities.borrow_mut();
 
                 if let Some(entity) = entities.get_mut(&entity_id) {
-                    entity.browser = Some(browser);
+                    entity.attach_browser(browser);
                 } else {
-                    warn!("couldn't find entity for browser id {}", browser_id);
+                    error!("couldn't find entity for browser id {}", browser_id);
+                    browser.close().unwrap();
                 }
             });
         });
@@ -179,6 +180,31 @@ impl EntityManager {
         Ok(Self::create_entity_player(player, get_frame_rate(), None)?)
     }
 
+    fn create_attach_browser(
+        entity_id: usize,
+        url: String,
+        fps: u16,
+        resolution: Option<(usize, usize)>,
+    ) {
+        AsyncManager::spawn_local_on_main_thread(async move {
+            let result = async move {
+                let browser = Cef::create_browser(url, fps).await?;
+
+                if let Some((width, height)) = resolution {
+                    Cef::resize_browser(&browser, width, height)?;
+                }
+
+                EntityManager::attach_browser_to_entity(entity_id, browser);
+
+                Ok::<_, Error>(())
+            };
+
+            if let Err(e) = result.await {
+                warn!("create_attach_browser: {}", e);
+            }
+        });
+    }
+
     pub fn create_entity_player(
         mut player: Player,
         fps: u16,
@@ -196,23 +222,7 @@ impl EntityManager {
             entities.insert(entity_id, entity);
         });
 
-        AsyncManager::spawn_local_on_main_thread(async move {
-            let result = async move {
-                let browser = Cef::create_browser(url, fps).await?;
-
-                if let Some((width, height)) = resolution {
-                    Cef::resize_browser(&browser, width, height)?;
-                }
-
-                EntityManager::attach_browser_to_entity(entity_id, browser);
-
-                Ok::<_, Error>(())
-            };
-
-            if let Err(e) = result.await {
-                warn!("create_entity_player: {}", e);
-            }
-        });
+        Self::create_attach_browser(entity_id, url, fps, resolution);
 
         Ok(entity_id)
     }
@@ -273,11 +283,7 @@ impl EntityManager {
             e.RotY = info.ang[1];
             entity.set_scale(info.scale);
 
-            AsyncManager::spawn_local_on_main_thread(async move {
-                let browser = Cef::create_browser(url, get_frame_rate()).await.unwrap();
-
-                EntityManager::attach_browser_to_entity(entity_id, browser);
-            });
+            Self::create_attach_browser(entity_id, url, get_frame_rate(), None);
 
             Ok(entity_id)
         })

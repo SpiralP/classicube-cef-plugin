@@ -71,7 +71,7 @@ pub struct Cef {
 }
 
 impl Cef {
-    pub async fn initialize() {
+    pub async fn initialize() -> Result<()> {
         debug!("initialize cef");
 
         let app = RustRefApp::create(Callbacks {
@@ -88,7 +88,7 @@ impl Cef {
 
         let mut event_receiver = Self::create_event_listener();
 
-        app.initialize().unwrap();
+        app.initialize()?;
 
         let client = loop {
             if let CefEvent::ContextInitialized(client) = event_receiver.recv().await.unwrap() {
@@ -115,6 +115,8 @@ impl Cef {
         *global_cef = Some(cef);
 
         Self::warm_up();
+
+        Ok(())
     }
 
     fn warm_up() {
@@ -177,7 +179,7 @@ impl Cef {
         let mut create_browser_mutex = {
             let mut mutex = CEF.with(|mutex| mutex.clone());
             let maybe_cef = mutex.lock().await;
-            let cef = maybe_cef.as_ref().unwrap();
+            let cef = maybe_cef.as_ref().chain_err(|| "no cef")?;
 
             cef.create_browser_mutex.clone()
         };
@@ -190,7 +192,7 @@ impl Cef {
         let (client, mut event_receiver) = {
             let mut mutex = CEF.with(|mutex| mutex.clone());
             let maybe_cef = mutex.lock().await;
-            let cef = maybe_cef.as_ref().unwrap();
+            let cef = maybe_cef.as_ref().chain_err(|| "no cef")?;
 
             let client = cef.client.clone();
             let event_receiver = Self::create_event_listener();

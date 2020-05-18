@@ -30,6 +30,7 @@ fn main() {
 
     let out_dir = env::var("OUT_DIR").unwrap();
 
+    println!("cargo:rerun-if-changed=cef_interface/cef_binary/CMakeLists.txt");
     println!("cargo:rerun-if-changed=cef_interface/CMakeLists.txt");
     println!("cargo:rerun-if-changed=cef_interface/interface.hh");
     println!("cargo:rerun-if-changed=cef_interface/interface.cc");

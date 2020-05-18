@@ -1,9 +1,9 @@
 use crate::{
     async_manager::AsyncManager, cef::Cef, chat::Chat, entity_manager::EntityManager, players,
 };
-use classicube_helpers::OptionWithInner;
+use classicube_helpers::{color, OptionWithInner};
 use classicube_sys::{Server, String_AppendConst};
-use log::debug;
+use log::*;
 use std::{cell::RefCell, ffi::CString};
 
 thread_local!(
@@ -42,7 +42,10 @@ impl Plugin {
             chat.initialize();
 
             AsyncManager::spawn_local_on_main_thread(async {
-                Cef::initialize().await;
+                if let Err(e) = Cef::initialize().await {
+                    error!("Cef::initialize(): {}", e);
+                    Chat::print(format!("{}Cef Initialize failed! {}", color::RED, e));
+                }
             });
 
             let plugin = Self {

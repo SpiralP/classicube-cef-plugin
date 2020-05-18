@@ -139,7 +139,7 @@ extern "C" int cef_interface_initialize(MyApp* app);
 extern "C" int cef_interface_create_browser(MyClient* client,
                                             const char* startup_url,
                                             int frame_rate,
-                                            bool ignore_certificate_errors);
+                                            bool insecure);
 extern "C" int cef_interface_browser_get_identifier(CefBrowser* browser);
 extern "C" int cef_interface_browser_load_url(CefBrowser* browser,
                                               const char* url);

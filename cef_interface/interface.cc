@@ -140,7 +140,7 @@ extern "C" int cef_interface_initialize(MyApp* app) {
 extern "C" int cef_interface_create_browser(MyClient* client,
                                             const char* startup_url,
                                             int frame_rate,
-                                            bool ignore_certificate_errors) {
+                                            bool insecure) {
   // Create the browser window.
   CefWindowInfo window_info;
   window_info.SetAsWindowless(0);

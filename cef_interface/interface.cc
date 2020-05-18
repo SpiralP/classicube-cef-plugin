@@ -2,6 +2,8 @@
 
 #include <include/base/cef_bind.h>
 #include <include/cef_origin_whitelist.h>
+#include <include/cef_request_context.h>
+#include <include/cef_request_context_handler.h>
 #include <include/wrapper/cef_closure_task.h>
 #if defined(OS_MACOSX)
 #include <include/wrapper/cef_library_loader.h>
@@ -137,7 +139,8 @@ extern "C" int cef_interface_initialize(MyApp* app) {
 
 extern "C" int cef_interface_create_browser(MyClient* client,
                                             const char* startup_url,
-                                            int frame_rate) {
+                                            int frame_rate,
+                                            bool ignore_certificate_errors) {
   // Create the browser window.
   CefWindowInfo windowInfo;
   windowInfo.SetAsWindowless(0);
@@ -147,8 +150,18 @@ extern "C" int cef_interface_create_browser(MyClient* client,
 
   settings.windowless_frame_rate = frame_rate;
 
-  bool browser = CefBrowserHost::CreateBrowser(windowInfo, client, url,
-                                               settings, nullptr, nullptr);
+  CefRefPtr<CefDictionaryValue> extra_info = nullptr;
+  CefRefPtr<CefRequestContext> request_context = nullptr;
+
+  if (ignore_certificate_errors) {
+    CefRequestContextSettings request_context_settings;
+    request_context_settings.ignore_certificate_errors = true;
+    request_context =
+        CefRequestContext::CreateContext(request_context_settings, nullptr);
+  }
+
+  bool browser = CefBrowserHost::CreateBrowser(
+      windowInfo, client, url, settings, extra_info, request_context);
 
   if (!browser) {
     return -1;

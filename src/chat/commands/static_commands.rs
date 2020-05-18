@@ -1,7 +1,7 @@
 use super::helpers::*;
 use crate::{
-    async_manager::AsyncManager, cef::Cef, chat::PlayerSnapshot, entity_manager::EntityManager,
-    error::*,
+    async_manager::AsyncManager, chat::PlayerSnapshot, entity_manager::EntityManager, error::*,
+    options::get_frame_rate,
 };
 use clap::{App, Arg, ArgMatches};
 
@@ -41,15 +41,14 @@ pub async fn handle_command(
                 parts.join("")
             };
 
-            let entity_id = EntityManager::create_entity(&url)?;
+            let entity_id = EntityManager::create_entity(
+                &url,
+                get_frame_rate(),
+                matches.is_present("insecure"),
+                None,
+            )?;
             EntityManager::with_by_entity_id(entity_id, |entity| {
                 move_entity(entity, player);
-
-                if matches.is_present("insecure") {
-                    entity.on_browser_attached(|browser| {
-                        Cef::set_allow_insecure(&browser, true).unwrap();
-                    });
-                }
 
                 Ok(())
             })?;

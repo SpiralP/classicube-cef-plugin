@@ -2,7 +2,7 @@ mod bindings;
 mod browser;
 mod javascript;
 
-use self::browser::{ALLOW_INSECURE, BROWSERS, BROWSER_SIZES};
+use self::browser::{BROWSERS, BROWSER_SIZES};
 pub use self::{
     bindings::{Callbacks, RustRefApp, RustRefBrowser, RustRefClient},
     javascript::RustV8Value,
@@ -120,7 +120,9 @@ impl Cef {
     fn warm_up() {
         // load a blank browser so that the next load is quicker
         AsyncManager::spawn_local_on_main_thread(async {
-            let browser = Self::create_browser("data:text/html,", 30).await.unwrap();
+            let browser = Self::create_browser("data:text/html,", 30, false)
+                .await
+                .unwrap();
             Self::close_browser(&browser).await.unwrap();
         });
     }
@@ -167,7 +169,11 @@ impl Cef {
             .unwrap()
     }
 
-    pub async fn create_browser<T: Into<Vec<u8>>>(url: T, fps: u16) -> Result<RustRefBrowser> {
+    pub async fn create_browser<T: Into<Vec<u8>>>(
+        url: T,
+        fps: u16,
+        ignore_certificate_errors: bool,
+    ) -> Result<RustRefBrowser> {
         let mut create_browser_mutex = {
             let mut mutex = CEF.with(|mutex| mutex.clone());
             let maybe_cef = mutex.lock().await;
@@ -192,7 +198,7 @@ impl Cef {
             (client, event_receiver)
         };
 
-        client.create_browser(url, fps as _)?;
+        client.create_browser(url, fps as _, ignore_certificate_errors)?;
 
         let browser = loop {
             if let CefEvent::BrowserCreated(browser) = event_receiver.recv().await.unwrap() {
@@ -282,16 +288,5 @@ impl Cef {
                 .cloned()
                 .unwrap_or((CEF_DEFAULT_WIDTH, CEF_DEFAULT_HEIGHT))
         })
-    }
-
-    pub fn set_allow_insecure(browser: &RustRefBrowser, allow: bool) -> Result<()> {
-        let browser_id = browser.get_identifier();
-        ALLOW_INSECURE.with(move |cell| {
-            let allow_insecure = &mut *cell.borrow_mut();
-
-            allow_insecure.insert(browser_id, allow);
-        });
-
-        Ok(())
     }
 }

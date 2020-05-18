@@ -134,7 +134,7 @@ async fn handle_map_theme_url(message: String) -> Result<()> {
         entity_id
     } else {
         // 1 fps, 1x1 resolution
-        let entity_id = EntityManager::create_entity_player(player, 1, Some((1, 1)))?;
+        let entity_id = EntityManager::create_entity_player(player, 1, false, Some((1, 1)))?;
         EntityManager::with_by_entity_id(entity_id, |entity| {
             entity.set_scale(0.0);
 

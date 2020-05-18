@@ -174,21 +174,32 @@ impl EntityManager {
     }
 
     /// returns entity_id
-    pub fn create_entity(input: &str) -> Result<usize> {
+    pub fn create_entity(
+        input: &str,
+        fps: u16,
+        ignore_certificate_errors: bool,
+        resolution: Option<(usize, usize)>,
+    ) -> Result<usize> {
         let player = Player::from_input(input)?;
 
-        Ok(Self::create_entity_player(player, get_frame_rate(), None)?)
+        Ok(Self::create_entity_player(
+            player,
+            fps,
+            ignore_certificate_errors,
+            resolution,
+        )?)
     }
 
     fn create_attach_browser(
         entity_id: usize,
         url: String,
         fps: u16,
+        ignore_certificate_errors: bool,
         resolution: Option<(usize, usize)>,
     ) {
         AsyncManager::spawn_local_on_main_thread(async move {
             let result = async move {
-                let browser = Cef::create_browser(url, fps).await?;
+                let browser = Cef::create_browser(url, fps, ignore_certificate_errors).await?;
 
                 if let Some((width, height)) = resolution {
                     Cef::resize_browser(&browser, width, height)?;
@@ -208,6 +219,7 @@ impl EntityManager {
     pub fn create_entity_player(
         mut player: Player,
         fps: u16,
+        ignore_certificate_errors: bool,
         resolution: Option<(usize, usize)>,
     ) -> Result<usize> {
         let url = player.on_create();
@@ -222,7 +234,7 @@ impl EntityManager {
             entities.insert(entity_id, entity);
         });
 
-        Self::create_attach_browser(entity_id, url, fps, resolution);
+        Self::create_attach_browser(entity_id, url, fps, ignore_certificate_errors, resolution);
 
         Ok(entity_id)
     }
@@ -283,7 +295,7 @@ impl EntityManager {
             e.RotY = info.ang[1];
             entity.set_scale(info.scale);
 
-            Self::create_attach_browser(entity_id, url, get_frame_rate(), None);
+            Self::create_attach_browser(entity_id, url, get_frame_rate(), false, None);
 
             Ok(entity_id)
         })

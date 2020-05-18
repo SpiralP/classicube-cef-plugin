@@ -94,7 +94,7 @@ impl AsyncManager {
     }
 
     pub async fn sleep(duration: Duration) {
-        let _ = async_std::future::timeout(duration, async_std::future::pending::<()>()).await;
+        let _ = async_std::task::sleep(duration).await;
     }
 
     /// Block thread until future is resolved.

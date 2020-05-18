@@ -142,8 +142,8 @@ extern "C" int cef_interface_create_browser(MyClient* client,
                                             int frame_rate,
                                             bool ignore_certificate_errors) {
   // Create the browser window.
-  CefWindowInfo windowInfo;
-  windowInfo.SetAsWindowless(0);
+  CefWindowInfo window_info;
+  window_info.SetAsWindowless(0);
 
   const CefString& url = startup_url;
   CefBrowserSettings settings;
@@ -161,7 +161,7 @@ extern "C" int cef_interface_create_browser(MyClient* client,
   }
 
   bool browser = CefBrowserHost::CreateBrowser(
-      windowInfo, client, url, settings, extra_info, request_context);
+      window_info, client, url, settings, extra_info, request_context);
 
   if (!browser) {
     return -1;
@@ -258,6 +258,21 @@ extern "C" int cef_interface_browser_reload(CefBrowser* browser) {
 
 extern "C" int cef_interface_browser_was_resized(CefBrowser* browser) {
   browser->GetHost()->WasResized();
+  return 0;
+}
+
+extern "C" int cef_interface_browser_open_dev_tools(CefBrowser* browser) {
+  auto browser_host = browser->GetHost();
+  auto client = browser_host->GetClient();
+
+  CefWindowInfo window_info;
+  window_info.SetAsPopup(0, "devtools");
+
+  CefBrowserSettings settings;
+
+  CefPoint inspect_element_at;
+  browser_host->ShowDevTools(window_info, client, settings, inspect_element_at);
+
   return 0;
 }
 

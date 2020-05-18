@@ -152,12 +152,16 @@ impl RustRefBrowser {
         to_result(unsafe { cef_interface_browser_reload(self.ptr) })
     }
 
-    pub fn close(&self) -> Result<()> {
-        to_result(unsafe { cef_interface_browser_close(self.ptr) })
-    }
-
     pub fn was_resized(&self) -> Result<()> {
         to_result(unsafe { cef_interface_browser_was_resized(self.ptr) })
+    }
+
+    pub fn open_dev_tools(&self) -> Result<()> {
+        to_result(unsafe { cef_interface_browser_open_dev_tools(self.ptr) })
+    }
+
+    pub fn close(&self) -> Result<()> {
+        to_result(unsafe { cef_interface_browser_close(self.ptr) })
     }
 }
 impl Drop for RustRefBrowser {

@@ -93,45 +93,28 @@ impl Chat {
             AsyncManager::spawn_local_on_main_thread(async {
                 AsyncManager::sleep(Duration::from_millis(300)).await;
 
-                Chat::send("/client cef create");
+                Chat::send("/client cef create --insecure https://127.0.0.1:3000/stream.mpd");
 
-                AsyncManager::sleep(Duration::from_millis(1000)).await;
+                // AsyncManager::sleep(Duration::from_millis(1000)).await;
 
-                let browser = crate::entity_manager::EntityManager::with_all_entities(|entities| {
-                    entities
-                        .values()
-                        .next()
-                        .and_then(|e| e.browser.as_ref().cloned())
-                });
+                // let browser = crate::entity_manager::EntityManager::with_all_entities(|entities| {
+                //     entities
+                //         .values()
+                //         .next()
+                //         .and_then(|e| e.browser.as_ref().cloned())
+                // });
 
-                if let Some(browser) = browser {
-                    AsyncManager::spawn_local_on_main_thread(async move {
-                        debug!("eval");
-                        debug!(
-                            "{:#?}",
-                            browser
-                                .eval_javascript("'the world is not anymore the way it used to be'")
-                                .await
-                        );
-
-                        debug!(
-                            "{:#?}",
-                            browser
-                                .eval_javascript(
-                                    r#"
-                                (() => {
-                                    if (typeof window.player !== "undefined") {
-                                        window.player.ag();
-                                    } else {
-                                        return 232;
-                                    }
-                                })();
-                                "#
-                                )
-                                .await
-                        );
-                    });
-                }
+                // if let Some(browser) = browser {
+                //     AsyncManager::spawn_local_on_main_thread(async move {
+                //         debug!("eval");
+                //         debug!(
+                //             "{:#?}",
+                //             browser
+                //                 .eval_javascript("'the world is not anymore the way it used to be'")
+                //                 .await
+                //         );
+                //     });
+                // }
             });
         }
     }

@@ -1,5 +1,5 @@
 use super::{helpers::*, Chat};
-use crate::{chat::PlayerSnapshot, error::*, search};
+use crate::{chat::PlayerSnapshot, entity_manager::EntityManager, error::*, search};
 use clap::{App, Arg, ArgMatches};
 use classicube_sys::{
     Entities, Vec3, ENTITIES_SELF_ID, FACE_CONSTS, FACE_CONSTS_FACE_XMAX, FACE_CONSTS_FACE_XMIN,
@@ -14,10 +14,11 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
             .arg(Arg::with_name("search").required(true).multiple(true)),
     )
     .subcommand(App::new("there").about("Move the closest screen to the block you are aiming at"))
+    .subcommand(App::new("devtools").alias("devtool").about("Open devtools"))
 }
 
 pub async fn handle_command(
-    _player: &PlayerSnapshot,
+    player: &PlayerSnapshot,
     matches: &ArgMatches<'static>,
 ) -> Result<bool> {
     match matches.subcommand() {
@@ -63,6 +64,17 @@ pub async fn handle_command(
                 "cef at {} {} {} {} {}",
                 position.X, position.Y, position.Z, yaw, 0.0
             ));
+
+            Ok(true)
+        }
+
+        ("devtools", Some(_matches)) => {
+            let entity_id = EntityManager::with_closest(player.eye_position, |closest_entity| {
+                Ok(closest_entity.id)
+            })?;
+
+            let browser = EntityManager::get_browser_by_entity_id(entity_id)?;
+            browser.open_dev_tools()?;
 
             Ok(true)
         }

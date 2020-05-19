@@ -329,7 +329,9 @@ extern "C" int cef_interface_browser_open_dev_tools(CefBrowser* browser) {
   auto client = browser_host->GetClient();
 
   CefWindowInfo window_info;
+#ifndef __linux__
   window_info.SetAsPopup(0, "devtools");
+#endif
 
   CefBrowserSettings settings;
 

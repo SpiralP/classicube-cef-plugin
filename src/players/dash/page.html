@@ -49,6 +49,8 @@
         // shakaPlayer.configure("manifest.dash.ignoreMinBufferTime", true);
         // shakaPlayer.configure("streaming.rebufferingGoal", 3 /* seconds */);
 
+        shakaPlayer.configure("streaming.jumpLargeGaps", true);
+
         // Listen for error events.
         shakaPlayer.addEventListener("error", onErrorEvent);
 

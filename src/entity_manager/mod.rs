@@ -177,16 +177,13 @@ impl EntityManager {
     pub fn create_entity(
         input: &str,
         fps: u16,
-        ignore_certificate_errors: bool,
+        insecure: bool,
         resolution: Option<(usize, usize)>,
     ) -> Result<usize> {
         let player = Player::from_input(input)?;
 
         Ok(Self::create_entity_player(
-            player,
-            fps,
-            ignore_certificate_errors,
-            resolution,
+            player, fps, insecure, resolution,
         )?)
     }
 
@@ -194,12 +191,12 @@ impl EntityManager {
         entity_id: usize,
         url: String,
         fps: u16,
-        ignore_certificate_errors: bool,
+        insecure: bool,
         resolution: Option<(usize, usize)>,
     ) {
         AsyncManager::spawn_local_on_main_thread(async move {
             let result = async move {
-                let browser = Cef::create_browser(url, fps, ignore_certificate_errors).await?;
+                let browser = Cef::create_browser(url, fps, insecure).await?;
 
                 if let Some((width, height)) = resolution {
                     Cef::resize_browser(&browser, width, height)?;
@@ -219,7 +216,7 @@ impl EntityManager {
     pub fn create_entity_player(
         mut player: Player,
         fps: u16,
-        ignore_certificate_errors: bool,
+        insecure: bool,
         resolution: Option<(usize, usize)>,
     ) -> Result<usize> {
         let url = player.on_create();
@@ -234,7 +231,7 @@ impl EntityManager {
             entities.insert(entity_id, entity);
         });
 
-        Self::create_attach_browser(entity_id, url, fps, ignore_certificate_errors, resolution);
+        Self::create_attach_browser(entity_id, url, fps, insecure, resolution);
 
         Ok(entity_id)
     }

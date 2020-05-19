@@ -5,6 +5,7 @@
 #include <include/cef_request_context.h>
 #include <include/cef_request_context_handler.h>
 #include <include/wrapper/cef_closure_task.h>
+#include <include/wrapper/cef_stream_resource_handler.h>
 #if defined(OS_MACOSX)
 #include <include/wrapper/cef_library_loader.h>
 #endif
@@ -137,6 +138,53 @@ extern "C" int cef_interface_initialize(MyApp* app) {
 
 // Browser
 
+// class TestSchemeFactory : public CefSchemeHandlerFactory {
+//  public:
+//   TestSchemeFactory();
+
+//   CefRefPtr<CefResourceHandler> Create(CefRefPtr<CefBrowser> browser,
+//                                        CefRefPtr<CefFrame> frame,
+//                                        const CefString& scheme_name,
+//                                        CefRefPtr<CefRequest> request)
+//                                        OVERRIDE;
+
+//  private:
+//   IMPLEMENT_REFCOUNTING(TestSchemeFactory);
+//   DISALLOW_COPY_AND_ASSIGN(TestSchemeFactory);
+// };
+
+// TestSchemeFactory::TestSchemeFactory() {
+//   //
+// }
+
+// CefRefPtr<CefResourceHandler> TestSchemeFactory::Create(
+//     CefRefPtr<CefBrowser> browser,
+//     CefRefPtr<CefFrame> frame,
+//     const CefString& scheme_name,
+//     CefRefPtr<CefRequest> request) {
+//   std::string s("TestSchemeFactory ");
+//   s += scheme_name;
+//   rust_debug(s.c_str());
+
+//   const std::string& html_content =
+//       "<html><body>Hello!<script>fetch('https://127.0.0.1:3000/"
+//       "stream.mpd').then(console.log, console.error)</script></body></"
+//       "html>";
+
+//   // Create a stream reader for |html_content|.
+//   CefRefPtr<CefStreamReader> stream = CefStreamReader::CreateForData(
+//       static_cast<void*>(const_cast<char*>(html_content.c_str())),
+//       html_content.size());
+
+//   // Constructor for HTTP status code 200 and no custom response headers.
+//   // There’s also a version of the constructor for custom status code and
+//   // response headers.
+//   return new CefStreamResourceHandler("text/html", stream);
+
+//   // an empty reference to allow default handling of the request
+//   // return nullptr;
+// }
+
 extern "C" int cef_interface_create_browser(MyClient* client,
                                             const char* startup_url,
                                             int frame_rate,
@@ -147,17 +195,32 @@ extern "C" int cef_interface_create_browser(MyClient* client,
 
   const CefString& url = startup_url;
   CefBrowserSettings settings;
-
+  settings.background_color = 0xFFFFFFFF;
   settings.windowless_frame_rate = frame_rate;
+
+  settings.tab_to_links = STATE_DISABLED;
+  settings.file_access_from_file_urls = STATE_DISABLED;
+  settings.universal_access_from_file_urls = STATE_DISABLED;
+  settings.plugins = STATE_DISABLED;
+  settings.javascript_dom_paste = STATE_DISABLED;
+  settings.javascript_access_clipboard = STATE_DISABLED;
 
   CefRefPtr<CefDictionaryValue> extra_info = nullptr;
   CefRefPtr<CefRequestContext> request_context = nullptr;
 
-  if (ignore_certificate_errors) {
+  if (insecure) {
+    settings.web_security = STATE_DISABLED;
+
     CefRequestContextSettings request_context_settings;
     request_context_settings.ignore_certificate_errors = true;
+
     request_context =
         CefRequestContext::CreateContext(request_context_settings, nullptr);
+
+    // if (!request_context->RegisterSchemeHandlerFactory(
+    //         "test", "", new TestSchemeFactory())) {
+    //   rust_warn("CefRegisterSchemeHandlerFactory");
+    // }
   }
 
   bool browser = CefBrowserHost::CreateBrowser(

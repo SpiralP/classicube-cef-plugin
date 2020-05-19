@@ -174,7 +174,7 @@ impl Cef {
     pub async fn create_browser<T: Into<Vec<u8>>>(
         url: T,
         fps: u16,
-        ignore_certificate_errors: bool,
+        insecure: bool,
     ) -> Result<RustRefBrowser> {
         let mut create_browser_mutex = {
             let mut mutex = CEF.with(|mutex| mutex.clone());
@@ -200,7 +200,7 @@ impl Cef {
             (client, event_receiver)
         };
 
-        client.create_browser(url, fps as _, ignore_certificate_errors)?;
+        client.create_browser(url, fps as _, insecure)?;
 
         let browser = loop {
             if let CefEvent::BrowserCreated(browser) = event_receiver.recv().await.unwrap() {

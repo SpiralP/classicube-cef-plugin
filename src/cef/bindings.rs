@@ -10,7 +10,7 @@ include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 
 use super::{javascript, javascript::RustV8Value};
 use crate::error::*;
-use log::debug;
+use log::*;
 use std::{
     ffi::{CStr, CString},
     mem,
@@ -19,10 +19,17 @@ use std::{
 };
 
 #[no_mangle]
-pub unsafe extern "C" fn rust_print(c_str: *const ::std::os::raw::c_char) {
+pub unsafe extern "C" fn rust_debug(c_str: *const ::std::os::raw::c_char) {
     let s = CStr::from_ptr(c_str).to_string_lossy().to_string();
 
     debug!("{}", s);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn rust_warn(c_str: *const ::std::os::raw::c_char) {
+    let s = CStr::from_ptr(c_str).to_string_lossy().to_string();
+
+    warn!("{}", s);
 }
 
 // #[no_mangle]

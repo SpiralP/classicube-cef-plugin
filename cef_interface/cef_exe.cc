@@ -36,7 +36,7 @@ int main(int argc, char* argv[]) {
   CefMainArgs main_args(argc, argv);
 #endif
 
-  // rust_print("cef_interface_execute_process");
+  // rust_debug("cef_interface_execute_process");
 
   CefRefPtr<CefApp> app(new MyApp({}));
 
@@ -46,17 +46,20 @@ int main(int argc, char* argv[]) {
   int exit_code = CefExecuteProcess(main_args, app, nullptr);
   if (exit_code >= 0) {
     // The sub-process has completed so return here.
-    // rust_print("cef_interface_execute_process sub-process has completed");
+    // rust_debug("cef_interface_execute_process sub-process has completed");
     return cleanup_and_return(exit_code);
   } else {
-    // rust_print("cef_interface_execute_process ???");
+    // rust_debug("cef_interface_execute_process ???");
     return cleanup_and_return(0);
   }
 }
 
-extern "C" void rust_print(const char* c_str) {
-  printf("%s\n", c_str);
-  // CefString str(c_str);
+extern "C" void rust_debug(const char* c_str) {
+  printf("DEBUG: %s\n", c_str);
+  LOG(INFO) << CefString(c_str);
+}
 
-  // LOG(INFO) << str;
+extern "C" void rust_warn(const char* c_str) {
+  printf("WARN: %s\n", c_str);
+  LOG(WARNING) << CefString(c_str);
 }

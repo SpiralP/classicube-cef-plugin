@@ -71,7 +71,7 @@ void MyClient::OnTitleChange(CefRefPtr<CefBrowser> browser,
 void MyClient::OnLoadingProgressChange(CefRefPtr<CefBrowser> browser,
                                        double progress) {
   // auto ag = std::to_string(progress);
-  // rust_print(ag.c_str());
+  // rust_debug(ag.c_str());
 }
 
 // CefLifeSpanHandler methods:
@@ -88,7 +88,7 @@ void MyClient::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
 }
 
 bool MyClient::DoClose(CefRefPtr<CefBrowser> browser) {
-  rust_print("DoClose");
+  rust_debug("DoClose");
 
   return false;
 }
@@ -106,7 +106,7 @@ bool MyClient::OnBeforePopup(
     CefBrowserSettings& settings,
     CefRefPtr<CefDictionaryValue>& extra_info,
     bool* no_javascript_access) {
-  rust_print("popup detected");
+  rust_debug("popup detected");
 
   frame->LoadURL(target_url);
 
@@ -182,6 +182,7 @@ bool MyClient::OnCertificateError(CefRefPtr<CefBrowser> browser,
                                   const CefString& request_url,
                                   CefRefPtr<CefSSLInfo> ssl_info,
                                   CefRefPtr<CefRequestCallback> callback) {
+  rust_warn("OnCertificateError");
   if (callbacks.on_certificate_error) {
     bool allow = callbacks.on_certificate_error(
         cef_interface_add_ref_browser(browser.get()));
@@ -246,13 +247,13 @@ void MyClient::OnBeforeDownload(CefRefPtr<CefBrowser> browser,
                                 const CefString& suggested_name,
                                 CefRefPtr<CefBeforeDownloadCallback> callback) {
   // By default the download will be canceled.
-  rust_print("OnBeforeDownload");
+  rust_debug("OnBeforeDownload");
 }
 
 void MyClient::OnDownloadUpdated(CefRefPtr<CefBrowser> browser,
                                  CefRefPtr<CefDownloadItem> download_item,
                                  CefRefPtr<CefDownloadItemCallback> callback) {
-  rust_print("OnDownloadUpdated");
+  rust_debug("OnDownloadUpdated");
   // Execute |callback| either asynchronously or in this method to cancel the
   // download if desired.
   callback->Cancel();

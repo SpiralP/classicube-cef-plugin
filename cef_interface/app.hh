@@ -19,6 +19,9 @@ class MyApp : public CefApp,
       const CefString& process_type,
       CefRefPtr<CefCommandLine> command_line) OVERRIDE;
 
+  void OnRegisterCustomSchemes(
+      CefRawPtr<CefSchemeRegistrar> registrar) OVERRIDE;
+
   // CefBrowserProcessHandler methods:
   void OnContextInitialized() OVERRIDE;
 

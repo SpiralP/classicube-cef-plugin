@@ -339,6 +339,13 @@ extern "C" int cef_interface_browser_open_dev_tools(CefBrowser* browser) {
   return 0;
 }
 
+extern "C" int cef_interface_browser_set_audio_muted(CefBrowser* browser,
+                                                     bool mute) {
+  auto browser_host = browser->GetHost();
+  browser_host->SetAudioMuted(mute);
+  return 0;
+}
+
 extern "C" int cef_interface_browser_close(CefBrowser* browser) {
   auto browser_host = browser->GetHost();
 

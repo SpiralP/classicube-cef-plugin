@@ -1,13 +1,6 @@
-#![allow(non_upper_case_globals)]
-#![allow(non_camel_case_types)]
-#![allow(non_snake_case)]
-#![allow(dead_code)]
-#![allow(clippy::transmute_ptr_to_ptr)]
+mod generated;
 
-include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
-
-// TODO use a cef_result type and impl Result on it
-
+pub use self::generated::*;
 use super::{javascript, javascript::RustV8Value};
 use crate::error::*;
 use log::*;
@@ -160,6 +153,10 @@ impl RustRefBrowser {
 
     pub fn open_dev_tools(&self) -> Result<()> {
         to_result(unsafe { cef_interface_browser_open_dev_tools(self.ptr) })
+    }
+
+    pub fn set_audio_muted(&self, mute: bool) -> Result<()> {
+        to_result(unsafe { cef_interface_browser_set_audio_muted(self.ptr, mute) })
     }
 
     pub fn close(&self) -> Result<()> {

@@ -157,6 +157,8 @@ extern "C" int cef_interface_browser_reload(CefBrowser* browser);
 
 extern "C" int cef_interface_browser_was_resized(CefBrowser* browser);
 extern "C" int cef_interface_browser_open_dev_tools(CefBrowser* browser);
+extern "C" int cef_interface_browser_set_audio_muted(CefBrowser* browser,
+                                                     bool mute);
 
 /// Tell browser to close, OnBeforeClose will be called soon
 extern "C" int cef_interface_browser_close(CefBrowser* browser);

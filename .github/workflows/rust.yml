@@ -64,6 +64,9 @@ jobs:
       - run: Rename-Item -Path "target\release\classicube_cef_plugin.dll" -NewName "classicube_cef_windows_${{ matrix.config.arch }}.dll"
         if: startsWith(github.ref, 'refs/tags/')
 
+      - run: Rename-Item -Path "target\release\classicube_cef_plugin.pdb" -NewName "classicube_cef_windows_${{ matrix.config.arch }}.pdb"
+        if: startsWith(github.ref, 'refs/tags/')
+
       - run: Get-ChildItem "target\release\build\classicube-cef-plugin-*\out\cef.exe" | Rename-Item -NewName "cef-windows-${{ matrix.config.arch }}.exe"
         if: startsWith(github.ref, 'refs/tags/')
 
@@ -73,6 +76,7 @@ jobs:
         with:
           files: |
             target/release/classicube_cef_windows_${{ matrix.config.arch }}.dll
+            target/release/classicube_cef_windows_${{ matrix.config.arch }}.pdb
             target/release/build/classicube-cef-plugin-*/out/cef-windows-${{ matrix.config.arch }}.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

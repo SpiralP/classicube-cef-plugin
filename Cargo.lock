@@ -351,7 +351,7 @@ dependencies = [
 
 [[package]]
 name = "classicube-cef-plugin"
-version = "0.8.19"
+version = "0.8.20"
 dependencies = [
  "async-dispatcher",
  "async-std",

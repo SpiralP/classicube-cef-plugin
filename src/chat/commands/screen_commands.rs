@@ -3,7 +3,7 @@ use crate::{
     async_manager::AsyncManager,
     cef::Cef,
     chat::{Chat, PlayerSnapshot},
-    entity_manager::{EntityManager, MODEL_HEIGHT, MODEL_WIDTH},
+    entity_manager::EntityManager,
     error::*,
     helpers::format_duration,
     players::PlayerTrait,
@@ -11,8 +11,6 @@ use crate::{
 use clap::{App, Arg, ArgMatches};
 use classicube_helpers::color;
 use log::warn;
-use nalgebra::*;
-use ncollide3d::{query::*, shape::*};
 use std::time::Duration;
 
 // static commands not targetted at a specific entity
@@ -207,7 +205,32 @@ pub async fn handle_command(
                     browser.send_click(x, y)?;
                 }
             } else {
-                click_from_player(player)?;
+                let (entity_id, entity_pos, [entity_pitch, entity_yaw], entity_scale) =
+                    EntityManager::with_closest(player.eye_position, |closest_entity| {
+                        Ok((
+                            closest_entity.id,
+                            closest_entity.entity.Position,
+                            [closest_entity.entity.RotX, closest_entity.entity.RotY],
+                            closest_entity.entity.ModelScale,
+                        ))
+                    })?;
+
+                let browser = EntityManager::get_browser_by_entity_id(entity_id)?;
+                let (browser_width, browser_height) = Cef::get_browser_size(&browser);
+
+                if let Some((x, y)) = get_click_coords(
+                    player.eye_position,
+                    entity_pos,
+                    player.Pitch,
+                    player.Yaw,
+                    entity_pitch,
+                    entity_yaw,
+                    entity_scale,
+                    browser_width as u32,
+                    browser_height as u32,
+                )? {
+                    browser.send_click(x as _, y as _)?;
+                }
             }
 
             Ok(true)
@@ -364,95 +387,4 @@ pub async fn handle_command(
 
         _ => Ok(false),
     }
-}
-
-fn click_from_player(player: &PlayerSnapshot) -> Result<()> {
-    let (entity_id, entity_pos, [entity_pitch, entity_yaw], entity_scale) =
-        EntityManager::with_closest(player.eye_position, |closest_entity| {
-            Ok((
-                closest_entity.id,
-                closest_entity.entity.Position,
-                [closest_entity.entity.RotX, closest_entity.entity.RotY],
-                closest_entity.entity.ModelScale,
-            ))
-        })?;
-
-    fn intersect(
-        eye_pos: Point3<f32>,
-        [aim_pitch, aim_yaw]: [f32; 2],
-        screen_pos: Point3<f32>,
-        [screen_pitch, screen_yaw]: [f32; 2],
-    ) -> Option<(Ray<f32>, Plane<f32>, RayIntersection<f32>)> {
-        // when angles 0 0, aiming towards -z
-        let normal = -Vector3::<f32>::z_axis();
-
-        let aim_dir =
-            Rotation3::from_euler_angles(-aim_pitch.to_radians(), -aim_yaw.to_radians(), 0.0)
-                .transform_vector(&normal);
-
-        // positive pitch is clockwise on the -x axis
-        // positive yaw is clockwise on the -y axis
-        let rot = UnitQuaternion::from_euler_angles(
-            -screen_pitch.to_radians(),
-            -screen_yaw.to_radians(),
-            0.0,
-        );
-        let iso = Isometry3::from_parts(screen_pos.coords.into(), rot);
-
-        let ray = Ray::new(eye_pos, aim_dir);
-        let plane = Plane::new(normal);
-        if let Some(intersection) = plane.toi_and_normal_with_ray(&iso, &ray, 10.0, true) {
-            if intersection.toi == 0.0 {
-                // 0 if aiming from wrong side
-                None
-            } else {
-                Some((ray, plane, intersection))
-            }
-        } else {
-            None
-        }
-    }
-
-    let eye_pos = vec3_to_vector3(&player.eye_position);
-    let screen_pos = vec3_to_vector3(&entity_pos);
-
-    if let Some((ray, _plane, intersection)) = intersect(
-        eye_pos.into(),
-        [player.Pitch, player.Yaw],
-        screen_pos.into(),
-        [entity_pitch, entity_yaw],
-    ) {
-        let intersection_point = ray.point_at(intersection.toi).coords;
-
-        let forward = intersection.normal;
-
-        let tmp = Vector3::y();
-        let right = Vector3::cross(&forward, &tmp);
-        let right = right.normalize();
-        let up = Vector3::cross(&right, &forward);
-        let up = up.normalize();
-        let right = -right;
-
-        let width = entity_scale.X * MODEL_WIDTH as f32;
-        let height = entity_scale.Y * MODEL_HEIGHT as f32;
-
-        let top_left = screen_pos - 0.5 * right * width + up * height;
-
-        let diff = intersection_point - top_left;
-        let x = diff.dot(&right) / width;
-        let y = -(diff.dot(&up) / height);
-
-        if x < 0.0 || x > 1.0 || y < 0.0 || y > 1.0 {
-            return Err("not looking at a screen".into());
-        }
-
-        let browser = EntityManager::get_browser_by_entity_id(entity_id)?;
-        let (browser_width, browser_height) = Cef::get_browser_size(&browser);
-
-        let (x, y) = (x * browser_width as f32, y * browser_height as f32);
-
-        browser.send_click(x as _, y as _)?;
-    }
-
-    Ok(())
 }

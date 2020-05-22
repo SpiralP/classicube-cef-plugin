@@ -3,7 +3,7 @@ use crate::{
     async_manager::AsyncManager,
     entity_manager::EntityManager,
     error::*,
-    options::{get_autoplay_map_themes, get_map_theme_volume},
+    options::{AUTOPLAY_MAP_THEMES, MAP_THEME_VOLUME},
     players::{MediaPlayer, Player, PlayerTrait, YoutubePlayer},
 };
 use async_std::future::timeout;
@@ -95,7 +95,7 @@ pub fn on_new_map_loaded() {
 }
 
 async fn handle_map_theme_url(message: String) -> Result<()> {
-    if !get_autoplay_map_themes() {
+    if !AUTOPLAY_MAP_THEMES.get()? {
         return Ok(());
     }
 
@@ -107,7 +107,7 @@ async fn handle_map_theme_url(message: String) -> Result<()> {
 
     debug!("map_theme got {:?}", url);
 
-    let volume = get_map_theme_volume();
+    let volume = MAP_THEME_VOLUME.get()?;
     let player = match YoutubePlayer::from_url(&url) {
         Ok(mut player) => {
             player.volume = volume;

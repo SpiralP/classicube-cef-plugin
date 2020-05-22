@@ -12,7 +12,7 @@ use crate::{
     cef::{Cef, CefEvent, RustRefBrowser},
     chat::hidden_communication::LightEntity,
     error::*,
-    options::get_frame_rate,
+    options::FRAME_RATE,
     players::{Player, PlayerTrait},
 };
 use classicube_sys::Vec3;
@@ -292,7 +292,7 @@ impl EntityManager {
             e.RotY = info.ang[1];
             entity.set_scale(info.scale);
 
-            Self::create_attach_browser(entity_id, url, get_frame_rate(), false, None);
+            Self::create_attach_browser(entity_id, url, FRAME_RATE.get()?, false, None);
 
             Ok(entity_id)
         })

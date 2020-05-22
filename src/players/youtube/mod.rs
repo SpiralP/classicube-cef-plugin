@@ -4,6 +4,7 @@ use crate::{
     cef::{RustRefBrowser, RustV8Value},
     chat::Chat,
     error::*,
+    options::SUBTITLES,
 };
 use classicube_helpers::{color, CellGetSet};
 use futures::{future::RemoteHandle, prelude::*};
@@ -98,6 +99,7 @@ impl PlayerTrait for YoutubePlayer {
                         "START_VOLUME",
                         &format!("{}", (real_volume * 100f32) as u32)
                     )
+                    .replace("SUBTITLES", &format!("{}", SUBTITLES.get().unwrap()))
             )
         )
     }

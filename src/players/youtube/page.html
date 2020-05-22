@@ -14,6 +14,7 @@
       var videoId = "VIDEO_ID"; // Wimkqo8gDZ0
       var startTime = START_TIME;
       var startVolume = START_VOLUME;
+      var subtitles = SUBTITLES;
 
       // 3. This function creates an <iframe> (and YouTube player)
       //    after the API code downloads.
@@ -30,7 +31,7 @@
             modestbranding: 1,
             rel: 0,
             start: startTime,
-            cc_load_policy: 1,
+            cc_load_policy: subtitles ? 1 : 0,
           },
           events: {
             onReady: onPlayerReady,

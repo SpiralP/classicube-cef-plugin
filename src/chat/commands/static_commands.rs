@@ -1,7 +1,7 @@
 use super::helpers::*;
 use crate::{
     async_manager::AsyncManager, chat::PlayerSnapshot, entity_manager::EntityManager, error::*,
-    options::get_frame_rate,
+    options::FRAME_RATE,
 };
 use clap::{App, Arg, ArgMatches};
 
@@ -43,7 +43,7 @@ pub async fn handle_command(
 
             let entity_id = EntityManager::create_entity(
                 &url,
-                get_frame_rate(),
+                FRAME_RATE.get()?,
                 matches.is_present("insecure"),
                 None,
             )?;

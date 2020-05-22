@@ -3,12 +3,7 @@ use crate::{
     chat::{hidden_communication::CURRENT_MAP_THEME, PlayerSnapshot},
     entity_manager::EntityManager,
     error::*,
-    options::{
-        get_autoplay_map_themes, get_frame_rate, get_map_theme_volume, get_mute_lose_focus,
-        set_autoplay_map_themes, set_frame_rate, set_map_theme_volume, set_mute_lose_focus,
-        AUTOPLAY_MAP_THEMES_DEFAULT, FRAME_RATE_DEFAULT, MAP_THEME_VOLUME_DEFAULT,
-        MUTE_LOSE_FOCUS_DEFAULT,
-    },
+    options::{AUTOPLAY_MAP_THEMES, FRAME_RATE, MAP_THEME_VOLUME, MUTE_LOSE_FOCUS, SUBTITLES},
     players::{PlayerTrait, IS_FOCUSED},
 };
 use clap::{App, AppSettings, Arg, ArgMatches};
@@ -24,22 +19,27 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
             .subcommand(
                 App::new("mute-lose-focus")
                     .about("Mute cef when you alt-tab out of the game")
-                    .arg(Arg::with_name("bool").default_value(MUTE_LOSE_FOCUS_DEFAULT)),
+                    .arg(Arg::with_name("bool").default_value(MUTE_LOSE_FOCUS.default())),
             )
             .subcommand(
                 App::new("autoplay-map-themes")
                     .about("Auto-play map themes")
-                    .arg(Arg::with_name("bool").default_value(AUTOPLAY_MAP_THEMES_DEFAULT)),
+                    .arg(Arg::with_name("bool").default_value(AUTOPLAY_MAP_THEMES.default())),
+            )
+            .subcommand(
+                App::new("subtitles")
+                    .about("Show subtitles/closed captions on YouTube videos")
+                    .arg(Arg::with_name("bool").default_value(SUBTITLES.default())),
             )
             .subcommand(
                 App::new("map-theme-volume")
                     .about("Map theme volume")
-                    .arg(Arg::with_name("percent").default_value(MAP_THEME_VOLUME_DEFAULT)),
+                    .arg(Arg::with_name("percent").default_value(MAP_THEME_VOLUME.default())),
             )
             .subcommand(
                 App::new("frame-rate")
                     .about("Changes default frame rate of newly created browsers")
-                    .arg(Arg::with_name("fps").default_value(FRAME_RATE_DEFAULT)),
+                    .arg(Arg::with_name("fps").default_value(FRAME_RATE.default())),
             ),
     )
 }
@@ -51,37 +51,37 @@ pub async fn handle_command(
     match matches.subcommand() {
         ("config", Some(matches)) => match matches.subcommand() {
             ("mute-lose-focus", Some(matches)) => {
+                let value = MUTE_LOSE_FOCUS.get()?;
                 if matches.occurrences_of("bool") > 0 {
                     let new_value = matches.value_of("bool").unwrap();
                     let new_value = new_value.parse()?;
 
-                    let old_value = get_mute_lose_focus();
-                    set_mute_lose_focus(new_value);
+                    MUTE_LOSE_FOCUS.set(new_value);
                     Chat::print(format!(
                         "mute-lose-focus: {} -> {}",
-                        old_value,
-                        get_mute_lose_focus()
+                        value,
+                        MUTE_LOSE_FOCUS.get()?
                     ));
 
                     IS_FOCUSED.set(true);
                 } else {
-                    Chat::print(format!("mute-lose-focus: {}", get_mute_lose_focus()));
+                    Chat::print(format!("mute-lose-focus: {}", value));
                 }
 
                 Ok(true)
             }
 
             ("autoplay-map-themes", Some(matches)) => {
+                let value = AUTOPLAY_MAP_THEMES.get()?;
                 if matches.occurrences_of("bool") > 0 {
                     let new_value = matches.value_of("bool").unwrap();
                     let new_value = new_value.parse()?;
 
-                    let old_value = get_autoplay_map_themes();
-                    set_autoplay_map_themes(new_value);
+                    AUTOPLAY_MAP_THEMES.set(new_value);
                     Chat::print(format!(
                         "autoplay-map-themes: {} -> {}",
-                        old_value,
-                        get_autoplay_map_themes()
+                        value,
+                        AUTOPLAY_MAP_THEMES.get()?
                     ));
 
                     if let Some(entity_id) = CURRENT_MAP_THEME.get() {
@@ -89,26 +89,38 @@ pub async fn handle_command(
                         let _ignore = EntityManager::remove_entity(entity_id).await;
                     }
                 } else {
-                    Chat::print(format!(
-                        "autoplay-map-themes: {}",
-                        get_autoplay_map_themes()
-                    ));
+                    Chat::print(format!("autoplay-map-themes: {}", value));
+                }
+
+                Ok(true)
+            }
+
+            ("subtitles", Some(matches)) => {
+                let value = SUBTITLES.get()?;
+                if matches.occurrences_of("bool") > 0 {
+                    let new_value = matches.value_of("bool").unwrap();
+                    let new_value = new_value.parse()?;
+
+                    SUBTITLES.set(new_value);
+                    Chat::print(format!("subtitles: {} -> {}", value, SUBTITLES.get()?));
+                } else {
+                    Chat::print(format!("subtitles: {}", value));
                 }
 
                 Ok(true)
             }
 
             ("map-theme-volume", Some(matches)) => {
+                let value = MAP_THEME_VOLUME.get()?;
                 if matches.occurrences_of("percent") > 0 {
                     let volume = matches.value_of("percent").unwrap();
                     let volume = volume.parse()?;
 
-                    let old_value = get_map_theme_volume();
-                    set_map_theme_volume(volume);
+                    MAP_THEME_VOLUME.set(volume);
                     Chat::print(format!(
                         "map-theme-volume: {} -> {}",
-                        old_value,
-                        get_map_theme_volume()
+                        value,
+                        MAP_THEME_VOLUME.get()?
                     ));
 
                     if let Some(entity_id) = CURRENT_MAP_THEME.get() {
@@ -120,22 +132,22 @@ pub async fn handle_command(
                         })?;
                     }
                 } else {
-                    Chat::print(format!("map-theme-volume: {}", get_map_theme_volume()));
+                    Chat::print(format!("map-theme-volume: {}", value));
                 }
 
                 Ok(true)
             }
 
             ("frame-rate", Some(matches)) => {
+                let value = FRAME_RATE.get()?;
                 if matches.occurrences_of("fps") > 0 {
                     let fps = matches.value_of("fps").unwrap();
                     let fps = fps.parse()?;
 
-                    let old_value = get_frame_rate();
-                    set_frame_rate(fps);
-                    Chat::print(format!("frame-rate: {} -> {}", old_value, get_frame_rate()));
+                    FRAME_RATE.set(fps);
+                    Chat::print(format!("frame-rate: {} -> {}", value, FRAME_RATE.get()?));
                 } else {
-                    Chat::print(format!("frame-rate: {}", get_frame_rate()));
+                    Chat::print(format!("frame-rate: {}", value));
                 }
 
                 Ok(true)

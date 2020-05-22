@@ -1,3 +1,5 @@
+#![feature(const_fn)]
+
 mod async_manager;
 mod cef;
 mod chat;

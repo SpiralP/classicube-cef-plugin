@@ -31,9 +31,7 @@ pub fn initialize(debug: bool, other_crates: bool) {
             config.add_filter_allow(my_crate_name);
         }
 
-        if let Some(term_logger) = TermLogger::new(level, config.build(), TerminalMode::Mixed) {
-            loggers.push(term_logger);
-        }
+        loggers.push(TermLogger::new(level, config.build(), TerminalMode::Mixed));
 
         CombinedLogger::init(loggers).unwrap();
     });

@@ -93,7 +93,7 @@ impl Chat {
             AsyncManager::spawn_local_on_main_thread(async {
                 AsyncManager::sleep(Duration::from_millis(300)).await;
 
-                Chat::send("/client cef create --insecure https://127.0.0.1:3000/stream.mpd");
+                Chat::send("/client cef create");
 
                 // AsyncManager::sleep(Duration::from_millis(1000)).await;
 

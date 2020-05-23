@@ -5,7 +5,6 @@ use crate::{
     error::*,
     plugin::APP_NAME,
 };
-use async_std::future::timeout;
 use classicube_helpers::{tab_list::remove_color, CellGetSet, OptionWithInner};
 use classicube_sys::ENTITIES_SELF_ID;
 use futures::{future::RemoteHandle, prelude::*};
@@ -20,14 +19,14 @@ pub fn query() {
     let (f, remote_handle) = async {
         // whole query shouldn't take more than 30 seconds
         // includes whispering and browser creation
-        match timeout(Duration::from_secs(30), do_query()).await {
-            Ok(result) => {
+        match AsyncManager::timeout(Duration::from_secs(30), do_query()).await {
+            Some(result) => {
                 if let Err(e) = result {
                     warn!("clients query failed: {}", e);
                 }
             }
 
-            Err(_timeout) => {
+            None => {
                 warn!("clients query timed out");
             }
         }
@@ -53,7 +52,7 @@ async fn do_query() -> Result<()> {
     debug!("querying /clients");
     Chat::send("/clients");
 
-    timeout(Duration::from_secs(3), async {
+    AsyncManager::timeout(Duration::from_secs(3), async {
         loop {
             let message = wait_for_message().await;
             if message.len() >= 2
@@ -71,7 +70,7 @@ async fn do_query() -> Result<()> {
 
     let mut messages = Vec::new();
 
-    let timeout_result = timeout(Duration::from_secs(3), async {
+    let timeout_result = AsyncManager::timeout(Duration::from_secs(3), async {
         loop {
             let message = wait_for_message().await;
             if message.len() >= 4
@@ -91,7 +90,7 @@ async fn do_query() -> Result<()> {
     })
     .await;
 
-    if timeout_result.is_err() {
+    if timeout_result.is_none() {
         debug!("stopping because of timeout");
     }
 

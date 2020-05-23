@@ -9,16 +9,16 @@ crate-type = ["cdylib"]
 
 [dependencies]
 async-dispatcher = { git = "https://github.com/SpiralP/rust-async-dispatcher.git" }
-async-std = "1.5.0"
 base64 = "0.12.1"
 bincode = "1.2.1"
+clap = { git = "https://github.com/SpiralP/clap-cc.git" }
 classicube-helpers = { git = "https://github.com/SpiralP/rust-classicube-helpers.git", features = ["futures"] }
 classicube-sys = { git = "https://github.com/SpiralP/rust-classicube-sys.git" }
-clap = { git = "https://github.com/SpiralP/clap-cc.git" }
 color-backtrace = { git = "https://github.com/SpiralP/color-backtrace-msgbox.git" }
 deunicode = "1.1.1"
 error-chain = "0.12.2"
-futures = "0.3.4"
+futures = "0.3.5"
+futures-timer = "3.0.2"
 invidious = { git = "https://github.com/SpiralP/rust-invidious.git" }
 lazy_static = "1.4.0"
 log = "0.4.8"
@@ -31,8 +31,6 @@ simplelog = "0.8.0"
 tokio = { version = "0.2.21", features = ["full"] }
 url = "2.1.1"
 widestring = "0.4.0"
-cmake = "0.1.44"
-bindgen = "0.54.0"
 
 [build-dependencies]
 bindgen = "0.54.0"

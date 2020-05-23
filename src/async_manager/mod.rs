@@ -1,5 +1,7 @@
 use async_dispatcher::{Dispatcher, DispatcherHandle, LocalDispatcherHandle};
 use classicube_helpers::{tick::TickEventHandler, OptionWithInner};
+use futures::{future::Either, prelude::*};
+use futures_timer::Delay;
 use lazy_static::lazy_static;
 use log::debug;
 use std::{cell::RefCell, future::Future, sync::Mutex, time::Duration};
@@ -94,7 +96,19 @@ impl AsyncManager {
     }
 
     pub async fn sleep(duration: Duration) {
-        let _ = async_std::task::sleep(duration).await;
+        let _ = Delay::new(duration).await;
+    }
+
+    pub async fn timeout<T, F>(duration: Duration, f: F) -> Option<T>
+    where
+        F: Future<Output = T> + Send,
+    {
+        let delay = Delay::new(duration);
+
+        match future::select(delay, f.boxed()).await {
+            Either::Left((_, _f)) => None,
+            Either::Right((r, _delay)) => Some(r),
+        }
     }
 
     /// Block thread until future is resolved.

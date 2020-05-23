@@ -7,7 +7,6 @@ use crate::{
     },
     error::*,
 };
-use async_std::future::timeout;
 use classicube_helpers::{shared::FutureShared, CellGetSet, OptionWithInner};
 use log::{debug, info, warn};
 use std::time::Duration;
@@ -99,7 +98,7 @@ async fn send_reply(real_name: String) -> Result<()> {
     Chat::send(format!("@{}+ !CEF!{}", real_name, encoded));
 
     // my outgoing whisper
-    timeout(Duration::from_secs(5), async {
+    AsyncManager::timeout(Duration::from_secs(5), async {
         loop {
             let message = wait_for_message().await;
 
@@ -107,7 +106,7 @@ async fn send_reply(real_name: String) -> Result<()> {
                 SHOULD_BLOCK.set(true);
 
                 // also block > continuation messages
-                let timeout_result = timeout(Duration::from_secs(1), async {
+                let timeout_result = AsyncManager::timeout(Duration::from_secs(1), async {
                     loop {
                         let message = wait_for_message().await;
                         if message.starts_with("> &f") {
@@ -121,7 +120,7 @@ async fn send_reply(real_name: String) -> Result<()> {
                 })
                 .await;
 
-                if timeout_result.is_err() {
+                if timeout_result.is_none() {
                     debug!("stopping because of timeout");
                 }
 

@@ -6,7 +6,6 @@ use crate::{
     options::{AUTOPLAY_MAP_THEMES, MAP_THEME_VOLUME},
     players::{MediaPlayer, Player, PlayerTrait, YoutubePlayer},
 };
-use async_std::future::timeout;
 use classicube_helpers::{tab_list::remove_color, CellGetSet};
 use futures::{future::RemoteHandle, prelude::*};
 use log::{debug, info, warn};
@@ -51,7 +50,7 @@ pub async fn listen_loop() {
             let mut parts: Vec<String> = Vec::new();
             parts.push(message);
 
-            let timeout_result = timeout(Duration::from_secs(1), async {
+            let timeout_result = AsyncManager::timeout(Duration::from_secs(1), async {
                 loop {
                     let message = wait_for_message().await;
                     if message.starts_with("> &f") {
@@ -64,7 +63,7 @@ pub async fn listen_loop() {
             })
             .await;
 
-            if timeout_result.is_err() {
+            if timeout_result.is_none() {
                 debug!("stopping because of timeout");
             }
 

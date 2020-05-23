@@ -307,6 +307,7 @@ dependencies = [
  "base64 0.12.1",
  "bincode",
  "bindgen 0.54.0",
+ "chrono",
  "clap 2.33.0",
  "classicube-helpers",
  "classicube-sys",
@@ -325,6 +326,7 @@ dependencies = [
  "regex",
  "serde",
  "simplelog",
+ "sntpc",
  "tokio",
  "url",
  "widestring",
@@ -385,6 +387,17 @@ source = "git+https://github.com/SpiralP/color-backtrace-msgbox.git#44fed268cc4f
 dependencies = [
  "backtrace",
  "msgbox",
+]
+
+[[package]]
+name = "colored"
+version = "1.9.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f4ffc801dacf156c5854b9df4f425a626539c3a6ef7893cc0c5084a23f0b6c59"
+dependencies = [
+ "atty",
+ "lazy_static",
+ "winapi 0.3.8",
 ]
 
 [[package]]
@@ -1820,6 +1833,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "simple_logger"
+version = "1.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fea0c4611f32f4c2bac73754f22dca1f57e6c1945e0590dae4e5f2a077b92367"
+dependencies = [
+ "atty",
+ "chrono",
+ "colored",
+ "log",
+ "winapi 0.3.8",
+]
+
+[[package]]
 name = "simplelog"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1853,6 +1879,18 @@ name = "smallvec"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c7cb5678e1615754284ec264d9bb5b4c27d2018577fd90ac0ceb578591ed5ee4"
+
+[[package]]
+name = "sntpc"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "41e42b19217eaa47591fcf7f434200777c9d9e7b5fda7cbcf64831d318874f3e"
+dependencies = [
+ "chrono",
+ "clap 2.33.1",
+ "log",
+ "simple_logger",
+]
 
 [[package]]
 name = "socket2"

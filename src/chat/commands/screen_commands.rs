@@ -8,9 +8,11 @@ use crate::{
     helpers::format_duration,
     players::PlayerTrait,
 };
+use chrono::{offset::FixedOffset, DateTime, NaiveDateTime, Utc};
 use clap::{App, Arg, ArgMatches};
 use classicube_helpers::color;
-use log::warn;
+use log::*;
+use sntpc::NtpResult;
 use std::time::Duration;
 
 // static commands not targetted at a specific entity
@@ -21,9 +23,17 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
             .about("Move the closest screen to you"),
     )
     .subcommand(
-        App::new("play")
-            .about("Play something on the closest screen")
+        App::new("queue")
+            .alias("play")
+            .alias("load")
+            .about("Add something on the queue of the closest screen")
             .arg(Arg::with_name("url").required(true).multiple(true)),
+    )
+    .subcommand(
+        App::new("skip")
+            .alias("next")
+            .about("Skip to the next video in the queue of the closest screen")
+            .arg(Arg::with_name("hack").required(true)),
     )
     .subcommand(App::new("stop").about("Stop playing the closest screen"))
     .subcommand(
@@ -114,7 +124,8 @@ pub async fn handle_command(
             Ok(true)
         }
 
-        ("play", Some(matches)) => {
+        ("queue", Some(matches)) => {
+            // hack so that newline continuation messages are concated
             let parts = matches.values_of_lossy("url").unwrap_or_default();
             let url: String = parts.join("");
 
@@ -124,6 +135,46 @@ pub async fn handle_command(
             EntityManager::entity_play(&url, entity_id)?;
 
             Ok(true)
+        }
+
+        ("skip", Some(matches)) => {
+            let future_dt = DateTime::parse_from_rfc3339(matches.value_of("hack").unwrap())?;
+
+            AsyncManager::spawn_blocking(move || {
+                let NtpResult {
+                    sec, nsec, offset, ..
+                } = sntpc::request("time.google.com", 123)?;
+                let dt: DateTime<FixedOffset> =
+                    DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp(sec.into(), nsec), Utc)
+                        .into();
+
+                debug!("ntp {}", dt);
+                debug!(
+                    "offset {:?}",
+                    std::time::Duration::from_micros(offset as u64)
+                );
+
+                info!("{}", future_dt - dt);
+                AsyncManager::spawn_on_main_thread(async move {
+                    let a = (future_dt - dt).to_std();
+                    let a = a.map(|a| format!("{:?}", a)).unwrap_or_else(|e| {
+                        warn!("{:#?}", e);
+                        "??".to_string()
+                    });
+                    Chat::send(format!("@SpiralP+ {}", a));
+                });
+
+                Ok::<_, Error>(())
+            })
+            .await???;
+
+            bail!("unimplemented");
+            // let entity_id = EntityManager::with_closest(player.eye_position, |closest_entity| {
+            //     Ok(closest_entity.id)
+            // })?;
+            // EntityManager::entity_play(&url, entity_id)?;
+
+            // Ok(true)
         }
 
         ("stop", Some(_matches)) => {

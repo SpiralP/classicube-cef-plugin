@@ -4,6 +4,7 @@ use error_chain::error_chain;
 error_chain! {
     foreign_links {
         Fmt(::std::fmt::Error);
+        Io(::std::io::Error);
         ParseFloatError(::std::num::ParseFloatError);
         ParseIntError(::std::num::ParseIntError);
         ParseBoolError(::std::str::ParseBoolError);
@@ -12,6 +13,7 @@ error_chain! {
         Bincode(bincode::Error);
         Base64(base64::DecodeError);
         Clap(clap::Error);
+        Chrono(chrono::format::ParseError);
     }
 
     links {

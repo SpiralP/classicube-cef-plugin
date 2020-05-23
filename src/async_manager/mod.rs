@@ -5,7 +5,7 @@ use futures_timer::Delay;
 use lazy_static::lazy_static;
 use log::debug;
 use std::{cell::RefCell, future::Future, sync::Mutex, time::Duration};
-use tokio::task::JoinHandle;
+use tokio::task::{JoinError, JoinHandle};
 
 thread_local!(
     static ASYNC_DISPATCHER: RefCell<Option<Dispatcher>> = RefCell::new(None);
@@ -151,6 +151,14 @@ impl AsyncManager {
         F::Output: Send + 'static,
     {
         TOKIO_RUNTIME.with_inner(|rt| rt.spawn(f)).unwrap()
+    }
+
+    pub fn spawn_blocking<F, R>(f: F) -> JoinHandle<Result<R, JoinError>>
+    where
+        F: FnOnce() -> R + Send + 'static,
+        R: Send + 'static,
+    {
+        AsyncManager::spawn(async { tokio::task::spawn_blocking(f).await })
     }
 
     #[allow(dead_code)]

@@ -91,6 +91,7 @@ async fn send_reply(real_name: String) -> Result<()> {
 
     if message.entities.is_empty() {
         // don't send anything if nothing to send, asker will time out and ask someone else
+        debug!("no entities to send, not responding");
         return Ok(());
     }
 

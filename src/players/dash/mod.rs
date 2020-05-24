@@ -100,7 +100,7 @@ impl PlayerTrait for DashPlayer {
     }
 
     fn on_title_change(&mut self, _entity_id: usize, _browser: &RustRefBrowser, title: String) {
-        if self.last_title == title || title == "Dash Loading" {
+        if self.last_title == title || title == "DASH Stream Loading" {
             return;
         }
 

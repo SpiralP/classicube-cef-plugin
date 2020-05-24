@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Dash Loading</title>
+    <title>DASH Stream Loading</title>
     <style>
       body {
         padding: 0;
@@ -45,11 +45,22 @@
       function initPlayer() {
         // Create a Player instance.
         var shakaPlayer = new shaka.Player(player);
-        // these make the video play right away, but the video skips a bunch :(
-        // shakaPlayer.configure("manifest.dash.ignoreMinBufferTime", true);
-        // shakaPlayer.configure("streaming.rebufferingGoal", 3 /* seconds */);
+        window.shakaPlayer = shakaPlayer;
 
         shakaPlayer.configure("streaming.jumpLargeGaps", true);
+
+        // how much to keep in history behind current time
+        shakaPlayer.configure("streaming.bufferBehind", 1 /* seconds */);
+
+        // doing this causes some short freezes
+        // // ignore field in mpd manifest
+        // shakaPlayer.configure("manifest.dash.ignoreMinBufferTime", true);
+
+        // // amount to have buffered before we actually play
+        // shakaPlayer.configure("streaming.rebufferingGoal", 1 /* seconds */);
+
+        // // amount we try to buffer
+        // shakaPlayer.configure("streaming.bufferingGoal", 2 /* seconds */);
 
         // Listen for error events.
         shakaPlayer.addEventListener("error", onErrorEvent);
@@ -57,22 +68,28 @@
         // Try to load a manifest.
         // This is an asynchronous process.
         // onError is executed if the asynchronous load fails.
-        shakaPlayer.load(manifestUri).catch((error) => {
-          onError(error);
+        shakaPlayer.load(manifestUri).then(
+          () => {
+            var host = window.location.host;
+            document.title = "DASH Stream " + host;
+          },
+          (error) => {
+            onError(error);
 
-          if (error.code === 1001) {
-            // BAD_HTTP_STATUS
-            // error.data[0] is the URI.
-            // error.data[1] is the status code.
-            // error.data[2] is the response text, or null if the response could not be interpretted as text.
-            if (error.data[1] === 404) {
-              // maybe ffmpeg hasn't started yet, let's retry in a few seconds
-              setTimeout(() => {
-                initPlayer();
-              }, 2000);
+            if (error.code === 1001) {
+              // BAD_HTTP_STATUS
+              // error.data[0] is the URI.
+              // error.data[1] is the status code.
+              // error.data[2] is the response text, or null if the response could not be interpretted as text.
+              if (error.data[1] === 404) {
+                // maybe ffmpeg hasn't started yet, let's retry in a few seconds
+                setTimeout(() => {
+                  initPlayer();
+                }, 2000);
+              }
             }
           }
-        });
+        );
       }
 
       function onErrorEvent(event) {

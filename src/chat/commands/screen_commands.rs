@@ -154,8 +154,9 @@ pub async fn handle_command(
                     std::time::Duration::from_micros(offset as u64)
                 );
 
-                info!("{}", future_dt - dt);
                 AsyncManager::spawn_on_main_thread(async move {
+                    Chat::print(format!("{:?}", (future_dt - dt).to_std()));
+
                     let a = (future_dt - dt).to_std();
                     let a = a.map(|a| format!("{:?}", a)).unwrap_or_else(|e| {
                         warn!("{:#?}", e);

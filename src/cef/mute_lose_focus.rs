@@ -1,4 +1,4 @@
-use crate::options::MUTE_LOSE_FOCUS;
+use crate::{cef::Cef, options::MUTE_LOSE_FOCUS};
 use classicube_helpers::{events::window::FocusChangedEventHandler, CellGetSet};
 use classicube_sys::WindowInfo;
 use std::cell::{Cell, RefCell};
@@ -18,12 +18,12 @@ pub fn initialize() {
         if MUTE_LOSE_FOCUS.get().unwrap() {
             let focused = unsafe { WindowInfo.Focused } != 0;
             IS_FOCUSED.set(focused);
+            Cef::set_audio_muted_all(!focused);
         }
     });
 
     FOCUS_HANDLER.with(|cell| {
         let cell = &mut *cell.borrow_mut();
-
         *cell = Some(focus_handler);
     });
 }

@@ -14,7 +14,7 @@ use classicube_helpers::{
 use classicube_sys::{Chat_Send, MsgType, MsgType_MSG_TYPE_NORMAL, OwnedString, Server, Vec3};
 use deunicode::deunicode;
 use futures::{future::RemoteHandle, prelude::*};
-use log::{debug, info};
+use log::*;
 use std::{
     cell::{Cell, RefCell},
     time::Duration,
@@ -91,9 +91,9 @@ impl Chat {
         #[cfg(debug_assertions)]
         if unsafe { Server.IsSinglePlayer } != 0 {
             AsyncManager::spawn_local_on_main_thread(async {
-                AsyncManager::sleep(Duration::from_millis(300)).await;
+                AsyncManager::sleep(Duration::from_millis(3000)).await;
 
-                Chat::send("/client cef create");
+                Chat::send("/client cef create SJyhZ-3Z8A8");
 
                 // AsyncManager::sleep(Duration::from_millis(1000)).await;
 
@@ -226,6 +226,7 @@ fn handle_chat_received(message: String, message_type: MsgType) {
 
                         if let Err(e) = commands::run(player_snapshot, split, is_self).await {
                             if is_self {
+                                warn!("chat command error: {:#?}", e);
                                 Chat::print(format!(
                                     "{}cef command error: {}{}",
                                     classicube_helpers::color::RED,

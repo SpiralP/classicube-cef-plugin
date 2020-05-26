@@ -1,11 +1,15 @@
 mod bindings;
 mod browser;
 mod javascript;
+mod mute_lose_focus;
 
-use self::browser::{BROWSERS, BROWSER_SIZES};
 pub use self::{
     bindings::{Callbacks, RustRefApp, RustRefBrowser, RustRefClient},
     javascript::RustV8Value,
+};
+use self::{
+    browser::{BROWSERS, BROWSER_SIZES},
+    mute_lose_focus::IS_FOCUSED,
 };
 use crate::{
     async_manager::AsyncManager,
@@ -114,6 +118,8 @@ impl Cef {
         let mut global_cef = mutex.lock().await;
         *global_cef = Some(cef);
 
+        mute_lose_focus::initialize();
+
         Self::warm_up();
 
         Ok(())
@@ -130,6 +136,8 @@ impl Cef {
     }
 
     pub async fn shutdown() {
+        mute_lose_focus::shutdown();
+
         let app = {
             let mut mutex = CEF.with(|mutex| mutex.clone());
             let mut global_cef = mutex.lock().await;
@@ -212,6 +220,10 @@ impl Cef {
 
         debug!("Cef::create_browser => {}", browser_id);
 
+        if !IS_FOCUSED.get() {
+            browser.set_audio_muted(true)?;
+        }
+
         drop(mutex);
 
         Ok(browser)
@@ -254,6 +266,15 @@ impl Cef {
         while let Some(id) = ids.next().await {
             debug!("browser {} closed", id);
         }
+    }
+
+    pub fn set_audio_muted_all(mute: bool) {
+        BROWSERS.with(|cell| {
+            let browsers = &mut *cell.borrow_mut();
+            for browser in browsers.values() {
+                browser.set_audio_muted(mute).unwrap();
+            }
+        });
     }
 
     fn set_browser_size(browser_id: c_int, width: usize, height: usize) -> Result<()> {

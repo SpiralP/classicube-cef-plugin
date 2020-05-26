@@ -78,7 +78,6 @@ impl Plugin {
             .with_inner_mut(|plugin| {
                 if !plugin.context_initialized {
                     plugin.entity_manager.initialize();
-                    players::initialize();
 
                     plugin.context_initialized = true;
                 }
@@ -98,7 +97,6 @@ impl Plugin {
             let plugin = &mut *cell.borrow_mut();
             let mut plugin = plugin.take().unwrap();
 
-            players::shutdown();
             plugin.entity_manager.shutdown();
             plugin.chat.shutdown();
 

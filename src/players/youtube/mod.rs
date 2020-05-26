@@ -1,4 +1,4 @@
-use super::{helpers::start_update_loop, mute_lose_focus::IS_FOCUSED, PlayerTrait};
+use super::{helpers::start_update_loop, PlayerTrait};
 use crate::{
     async_manager::AsyncManager,
     cef::{RustRefBrowser, RustV8Value},
@@ -6,7 +6,7 @@ use crate::{
     error::*,
     options::SUBTITLES,
 };
-use classicube_helpers::{color, CellGetSet};
+use classicube_helpers::color;
 use futures::{future::RemoteHandle, prelude::*};
 use log::debug;
 use regex::Regex;
@@ -23,9 +23,6 @@ pub struct YoutubePlayer {
 
     // 0-1
     pub volume: f32,
-
-    #[serde(skip)]
-    real_volume: f32,
 
     pub global_volume: bool,
 
@@ -44,7 +41,6 @@ impl Default for YoutubePlayer {
             id: String::new(),
             time: Duration::from_millis(0),
             volume: 1.0,
-            real_volume: 1.0,
             global_volume: false,
             should_send: true,
             volume_loop_handle: None,
@@ -59,7 +55,6 @@ impl Clone for YoutubePlayer {
             id: self.id.clone(),
             time: self.time,
             volume: self.volume,
-            real_volume: self.real_volume,
             global_volume: self.global_volume,
             should_send: self.should_send,
             ..Default::default()
@@ -86,9 +81,6 @@ impl PlayerTrait for YoutubePlayer {
     fn on_create(&mut self) -> String {
         debug!("YoutubePlayer on_create {}", self.id);
 
-        let real_volume = if IS_FOCUSED.get() { self.volume } else { 0.0 };
-        self.real_volume = real_volume;
-
         format!(
             "data:text/html;base64,{}",
             base64::encode(
@@ -97,7 +89,7 @@ impl PlayerTrait for YoutubePlayer {
                     .replace("START_TIME", &format!("{}", self.time.as_secs()))
                     .replace(
                         "START_VOLUME",
-                        &format!("{}", (real_volume * 100f32) as u32)
+                        &format!("{}", (self.volume * 100f32) as u32)
                     )
                     .replace("SUBTITLES", &format!("{}", SUBTITLES.get().unwrap()))
             )
@@ -145,19 +137,15 @@ impl PlayerTrait for YoutubePlayer {
     }
 
     /// volume is a float between 0-1
-    fn set_volume(&mut self, browser: &RustRefBrowser, percent: f32) -> Result<()> {
-        let real_volume = if IS_FOCUSED.get() { percent } else { 0.0 };
-
-        if (real_volume - self.real_volume).abs() > 0.0001 {
+    fn set_volume(&mut self, browser: &RustRefBrowser, volume: f32) -> Result<()> {
+        if (volume - self.volume).abs() > 0.0001 {
             Self::execute_player_method(
                 browser,
-                &format!("setVolume({})", (real_volume * 100f32) as u32),
+                &format!("setVolume({})", (volume * 100f32) as u32),
             );
-
-            self.real_volume = real_volume;
         }
 
-        self.volume = percent;
+        self.volume = volume;
 
         Ok(())
     }

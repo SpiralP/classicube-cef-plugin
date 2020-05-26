@@ -1,11 +1,11 @@
-use super::{helpers::start_update_loop, mute_lose_focus::IS_FOCUSED, PlayerTrait, WebPlayer};
+use super::{helpers::start_update_loop, PlayerTrait, WebPlayer};
 use crate::{
     async_manager::AsyncManager,
     cef::{RustRefBrowser, RustV8Value},
     chat::Chat,
     error::*,
 };
-use classicube_helpers::{color, CellGetSet};
+use classicube_helpers::color;
 use futures::{future::RemoteHandle, prelude::*};
 use log::debug;
 use serde::{Deserialize, Serialize};
@@ -20,9 +20,6 @@ pub struct DashPlayer {
 
     // 0-1
     pub volume: f32,
-
-    #[serde(skip)]
-    real_volume: f32,
 
     pub global_volume: bool,
 
@@ -41,7 +38,6 @@ impl Default for DashPlayer {
         Self {
             url: String::new(),
             volume: 1.0,
-            real_volume: 1.0,
             global_volume: false,
             should_send: true,
             volume_loop_handle: None,
@@ -55,7 +51,6 @@ impl Clone for DashPlayer {
         Self {
             url: self.url.clone(),
             volume: self.volume,
-            real_volume: self.real_volume,
             global_volume: self.global_volume,
             should_send: self.should_send,
             ..Default::default()
@@ -79,15 +74,12 @@ impl PlayerTrait for DashPlayer {
     fn on_create(&mut self) -> String {
         debug!("DashPlayer on_create {}", self.url);
 
-        let real_volume = if IS_FOCUSED.get() { self.volume } else { 0.0 };
-        self.real_volume = real_volume;
-
         format!(
             "data:text/html;base64,{}",
             base64::encode(
                 PAGE_HTML
                     .replace("DASH_URL", &self.url)
-                    .replace("START_VOLUME", &format!("{}", real_volume))
+                    .replace("START_VOLUME", &format!("{}", self.volume))
             )
         )
     }
@@ -119,16 +111,12 @@ impl PlayerTrait for DashPlayer {
     }
 
     /// volume is a float between 0-1
-    fn set_volume(&mut self, browser: &RustRefBrowser, percent: f32) -> Result<()> {
-        let real_volume = if IS_FOCUSED.get() { percent } else { 0.0 };
-
-        if (real_volume - self.real_volume).abs() > 0.0001 {
-            Self::get_player_field(browser, &format!("volume = {}", real_volume));
-
-            self.real_volume = real_volume;
+    fn set_volume(&mut self, browser: &RustRefBrowser, volume: f32) -> Result<()> {
+        if (volume - self.volume).abs() > 0.0001 {
+            Self::get_player_field(browser, &format!("volume = {}", volume));
         }
 
-        self.volume = percent;
+        self.volume = volume;
 
         Ok(())
     }

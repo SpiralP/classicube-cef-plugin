@@ -1,15 +1,11 @@
 mod dash;
 mod helpers;
 mod media;
-mod mute_lose_focus;
 mod volume_fade;
 mod web;
 mod youtube;
 
-pub use self::{
-    dash::DashPlayer, media::MediaPlayer, mute_lose_focus::IS_FOCUSED, web::WebPlayer,
-    youtube::YoutubePlayer,
-};
+pub use self::{dash::DashPlayer, media::MediaPlayer, web::WebPlayer, youtube::YoutubePlayer};
 use crate::{cef::RustRefBrowser, error::*};
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
@@ -258,18 +254,10 @@ fn test_create_player() {
     }
 }
 
-pub fn initialize() {
-    mute_lose_focus::initialize();
-}
-
 pub fn on_new_map() {
     volume_fade::on_new_map();
 }
 
 pub fn on_new_map_loaded() {
     volume_fade::on_new_map_loaded();
-}
-
-pub fn shutdown() {
-    mute_lose_focus::shutdown();
 }

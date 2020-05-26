@@ -1,6 +1,7 @@
 use super::{commands, Chat};
 use crate::{async_manager::AsyncManager, chat::PlayerSnapshot};
 use classicube_sys::{OwnedChatCommand, ENTITIES_SELF_ID};
+use log::*;
 use std::{os::raw::c_int, slice};
 
 extern "C" fn c_chat_command_callback(args: *const classicube_sys::String, args_count: c_int) {
@@ -11,6 +12,7 @@ extern "C" fn c_chat_command_callback(args: *const classicube_sys::String, args_
 
     AsyncManager::spawn_local_on_main_thread(async move {
         if let Err(e) = commands::run(player_snapshot, args, true).await {
+            warn!("command error: {:#?}", e);
             Chat::print(format!(
                 "{}cef command error: {}{}",
                 classicube_helpers::color::RED,

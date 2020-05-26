@@ -5,11 +5,13 @@ use crate::{
 };
 use log::{debug, warn};
 use serde::{Deserialize, Serialize};
+use std::collections::VecDeque;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct LightEntity {
     pub id: usize,
     pub player: Player,
+    pub queue: VecDeque<Player>,
     pub pos: [f32; 3],
     pub ang: [f32; 2],
     pub scale: f32,
@@ -50,12 +52,14 @@ pub async fn create_message() -> Message {
                 let scale = entity.get_scale();
 
                 let player = entity.player.clone();
+                let queue = entity.queue.clone();
 
                 Some(LightEntity {
                     id,
                     pos,
                     ang,
                     player,
+                    queue,
                     scale,
                 })
             })
@@ -82,6 +86,7 @@ pub async fn received_message(mut message: Message) -> Result<bool> {
 
     for info in message.entities.drain(..) {
         // if it already exists don't do anything
+        // TODO?? use unique ids!
         if EntityManager::with_by_entity_id(info.id, |_| Ok(())).is_ok() {
             warn!("entity {} already exists, skipping", info.id);
             continue;

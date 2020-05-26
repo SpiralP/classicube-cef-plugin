@@ -76,6 +76,7 @@ pub async fn query_whisper(real_name: &str) -> Result<bool> {
     .await
     .chain_err(|| "never found response to my whisper")??;
 
+    debug!("got encoded message length {}", full_message_encoded.len());
     let message = encoding::decode(full_message_encoded)?;
     debug!("decoded {:#?}", message);
     Ok(encoding::received_message(message).await?)

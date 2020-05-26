@@ -2,6 +2,7 @@ use super::{MediaPlayer, Player, PlayerTrait, YoutubePlayer};
 use crate::{async_manager::AsyncManager, chat::ENTITIES, entity_manager::EntityManager, error::*};
 use classicube_helpers::OptionWithInner;
 use classicube_sys::ENTITIES_SELF_ID;
+use log::*;
 use std::time::Duration;
 
 pub async fn start_update_loop(entity_id: usize) {
@@ -54,8 +55,9 @@ async fn start_loop(entity_id: usize) -> Result<()> {
             Youtube,
             Media,
         }
-        // update time
         let opt = EntityManager::with_by_entity_id(entity_id, |entity| {
+            // we have to do this in parts because get_real_time() is async
+            // while with_by_entity_id is not
             Ok(match &entity.player {
                 Player::Media(_) => Some((entity.browser.as_ref().cloned(), Kind::Media)),
                 Player::Youtube(_) => Some((entity.browser.as_ref().cloned(), Kind::Youtube)),
@@ -71,6 +73,7 @@ async fn start_loop(entity_id: usize) -> Result<()> {
                     Kind::Youtube => YoutubePlayer::get_real_time(&browser).await,
                 };
 
+                // update time field for when we sync to someone else
                 if let Ok(time) = time {
                     EntityManager::with_by_entity_id(entity_id, move |entity| {
                         match &mut entity.player {
@@ -88,9 +91,24 @@ async fn start_loop(entity_id: usize) -> Result<()> {
                         Ok(())
                     })?;
                 }
+
+                // check if finished playing
+                let is_finished_playing = match kind {
+                    Kind::Media => unimplemented!(), /* MediaPlayer::is_finished_playing(&browser).await, */
+                    Kind::Youtube => YoutubePlayer::real_is_finished_playing(&browser).await?,
+                };
+
+                if is_finished_playing {
+                    debug!("finished playing!");
+
+                    EntityManager::entity_skip(entity_id)?;
+                    break;
+                }
             }
         }
 
         AsyncManager::sleep(Duration::from_millis(64)).await;
     }
+
+    Ok(())
 }

@@ -78,6 +78,10 @@ impl PlayerTrait for WebPlayer {
     fn get_title(&self) -> String {
         self.last_title.clone()
     }
+
+    fn is_finished_playing(&self) -> bool {
+        false
+    }
 }
 
 impl WebPlayer {

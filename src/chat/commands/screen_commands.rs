@@ -32,8 +32,7 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
     .subcommand(
         App::new("skip")
             .alias("next")
-            .about("Skip to the next video in the queue of the closest screen")
-            .arg(Arg::with_name("hack").required(true)),
+            .about("Skip to the next video in the queue of the closest screen"),
     )
     .subcommand(App::new("stop").about("Stop playing the closest screen"))
     .subcommand(
@@ -107,6 +106,11 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
             .alias("link")
             .about("Get what's playing on the current screen"),
     )
+    .subcommand(
+        App::new("test_time")
+            .about("the hacks")
+            .arg(Arg::with_name("hack").required(true)),
+    )
 }
 
 pub async fn handle_command(
@@ -132,12 +136,23 @@ pub async fn handle_command(
             let entity_id = EntityManager::with_closest(player.eye_position, |closest_entity| {
                 Ok(closest_entity.id)
             })?;
-            EntityManager::entity_play(&url, entity_id)?;
+            if EntityManager::entity_queue(&url, entity_id)? {
+                Chat::print(format!("{}Queued {}{}", color::TEAL, color::SILVER, url));
+            }
 
             Ok(true)
         }
 
-        ("skip", Some(matches)) => {
+        ("skip", Some(_matches)) => {
+            let entity_id = EntityManager::with_closest(player.eye_position, |closest_entity| {
+                Ok(closest_entity.id)
+            })?;
+            EntityManager::entity_skip(entity_id)?;
+
+            Ok(true)
+        }
+
+        ("test_time", Some(matches)) => {
             let future_dt = DateTime::parse_from_rfc3339(matches.value_of("hack").unwrap())?;
 
             AsyncManager::spawn_blocking(move || {
@@ -170,12 +185,6 @@ pub async fn handle_command(
             .await???;
 
             bail!("unimplemented");
-            // let entity_id = EntityManager::with_closest(player.eye_position, |closest_entity| {
-            //     Ok(closest_entity.id)
-            // })?;
-            // EntityManager::entity_play(&url, entity_id)?;
-
-            // Ok(true)
         }
 
         ("stop", Some(_matches)) => {
@@ -183,8 +192,7 @@ pub async fn handle_command(
                 Ok(closest_entity.id)
             })?;
 
-            let browser = EntityManager::get_browser_by_entity_id(entity_id)?;
-            browser.load_url("data:text/html,")?;
+            EntityManager::entity_stop(entity_id)?;
 
             Ok(true)
         }

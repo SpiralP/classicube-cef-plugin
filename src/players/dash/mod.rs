@@ -27,7 +27,7 @@ pub struct DashPlayer {
     should_send: bool,
 
     #[serde(skip)]
-    volume_loop_handle: Option<RemoteHandle<()>>,
+    update_loop_handle: Option<RemoteHandle<()>>,
 
     #[serde(skip)]
     last_title: String,
@@ -40,7 +40,7 @@ impl Default for DashPlayer {
             volume: 1.0,
             global_volume: false,
             should_send: true,
-            volume_loop_handle: None,
+            update_loop_handle: None,
             last_title: String::new(),
         }
     }
@@ -86,7 +86,7 @@ impl PlayerTrait for DashPlayer {
 
     fn on_page_loaded(&mut self, entity_id: usize, _browser: &RustRefBrowser) {
         let (f, remote_handle) = start_update_loop(entity_id).remote_handle();
-        self.volume_loop_handle = Some(remote_handle);
+        self.update_loop_handle = Some(remote_handle);
 
         AsyncManager::spawn_local_on_main_thread(f);
     }
@@ -145,6 +145,10 @@ impl PlayerTrait for DashPlayer {
 
     fn get_title(&self) -> String {
         self.last_title.clone()
+    }
+
+    fn is_finished_playing(&self) -> bool {
+        false
     }
 }
 

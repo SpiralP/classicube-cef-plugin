@@ -29,10 +29,13 @@ pub struct YoutubePlayer {
     should_send: bool,
 
     #[serde(skip)]
-    volume_loop_handle: Option<RemoteHandle<()>>,
+    update_loop_handle: Option<RemoteHandle<()>>,
 
     #[serde(skip)]
     last_title: String,
+
+    #[serde(skip)]
+    finished: bool,
 }
 
 impl Default for YoutubePlayer {
@@ -43,8 +46,9 @@ impl Default for YoutubePlayer {
             volume: 1.0,
             global_volume: false,
             should_send: true,
-            volume_loop_handle: None,
+            update_loop_handle: None,
             last_title: String::new(),
+            finished: false,
         }
     }
 }
@@ -98,7 +102,7 @@ impl PlayerTrait for YoutubePlayer {
 
     fn on_page_loaded(&mut self, entity_id: usize, _browser: &RustRefBrowser) {
         let (f, remote_handle) = start_update_loop(entity_id).remote_handle();
-        self.volume_loop_handle = Some(remote_handle);
+        self.update_loop_handle = Some(remote_handle);
         AsyncManager::spawn_local_on_main_thread(f);
     }
 
@@ -125,8 +129,11 @@ impl PlayerTrait for YoutubePlayer {
         // We recommend that you set this parameter to false while the user drags the
         // mouse along a video progress bar and then set it to true when the user releases
         // the mouse.
-        Self::execute_player_method(browser, &format!("seekTo({}, true)", time.as_secs_f32()));
-        Self::execute_player_method(browser, "playVideo()");
+        Self::execute_method(
+            browser,
+            &format!("player.seekTo({}, true)", time.as_secs_f32()),
+        );
+        Self::execute_method(browser, "player.playVideo()");
         self.time = time;
 
         Ok(())
@@ -139,9 +146,9 @@ impl PlayerTrait for YoutubePlayer {
     /// volume is a float between 0-1
     fn set_volume(&mut self, browser: &RustRefBrowser, volume: f32) -> Result<()> {
         if (volume - self.volume).abs() > 0.0001 {
-            Self::execute_player_method(
+            Self::execute_method(
                 browser,
-                &format!("setVolume({})", (volume * 100f32) as u32),
+                &format!("player.setVolume({})", (volume * 100f32) as u32),
             );
         }
 
@@ -175,11 +182,27 @@ impl PlayerTrait for YoutubePlayer {
     fn get_title(&self) -> String {
         self.last_title.clone()
     }
+
+    fn is_finished_playing(&self) -> bool {
+        self.finished
+    }
 }
 
 impl YoutubePlayer {
+    pub async fn real_is_finished_playing(browser: &RustRefBrowser) -> Result<bool> {
+        let ended = match Self::eval_method(browser, "playerEnded").await? {
+            RustV8Value::Bool(ended) => ended,
+
+            other => {
+                bail!("non-bool js value {:?}", other);
+            }
+        };
+
+        Ok(ended)
+    }
+
     pub async fn get_real_time(browser: &RustRefBrowser) -> Result<Duration> {
-        let seconds = match Self::eval_player_method(browser, "getCurrentTime()").await? {
+        let seconds = match Self::eval_method(browser, "player.getCurrentTime()").await? {
             RustV8Value::Double(seconds) => seconds as f32,
             RustV8Value::Int(seconds) => seconds as f32,
             RustV8Value::UInt(seconds) => seconds as f32,
@@ -194,7 +217,7 @@ impl YoutubePlayer {
 
     #[allow(dead_code)]
     pub async fn get_real_volume(browser: &RustRefBrowser) -> Result<f32> {
-        let volume = match Self::eval_player_method(browser, "getVolume()").await? {
+        let volume = match Self::eval_method(browser, "player.getVolume()").await? {
             RustV8Value::Double(volume) => volume as f32,
             RustV8Value::Int(volume) => volume as f32,
             RustV8Value::UInt(volume) => volume as f32,
@@ -208,33 +231,13 @@ impl YoutubePlayer {
         Ok(percent)
     }
 
-    fn execute_player_method(browser: &RustRefBrowser, method: &str) {
-        let code = format!(
-            r#"
-                if (
-                    typeof window.player !== "undefined" &&
-                    typeof window.player.setVolume !== "undefined"
-                ) {{
-                    window.player.{};
-                }}
-            "#,
-            method
-        );
+    fn execute_method(browser: &RustRefBrowser, method: &str) {
+        let code = format!("window.{};", method);
         browser.execute_javascript(code).unwrap();
     }
 
-    async fn eval_player_method(browser: &RustRefBrowser, method: &str) -> Result<RustV8Value> {
-        let code = format!(
-            r#"
-                if (
-                    typeof window.player !== "undefined" &&
-                    typeof window.player.setVolume !== "undefined"
-                ) {{
-                    window.player.{};
-                }}
-            "#,
-            method
-        );
+    async fn eval_method(browser: &RustRefBrowser, method: &str) -> Result<RustV8Value> {
+        let code = format!("window.{};", method);
         Ok(browser.eval_javascript(code).await?)
     }
 }

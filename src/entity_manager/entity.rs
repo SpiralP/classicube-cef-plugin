@@ -9,7 +9,7 @@ use classicube_sys::{
     Gfx_UpdateTexturePart, LocationUpdate, Model_Render, OwnedGfxTexture, OwnedString, PackedCol,
     Texture, TextureRec, PACKEDCOL_WHITE,
 };
-use std::{mem, pin::Pin};
+use std::{collections::VecDeque, mem, pin::Pin};
 
 pub struct CefEntity {
     pub id: usize,
@@ -17,6 +17,7 @@ pub struct CefEntity {
     pub entity: Pin<Box<Entity>>,
     pub browser: Option<RustRefBrowser>,
     pub player: Player,
+    pub queue: VecDeque<Player>,
 
     v_table: Pin<Box<EntityVTABLE>>,
     texture: OwnedGfxTexture,
@@ -24,7 +25,7 @@ pub struct CefEntity {
 }
 
 impl CefEntity {
-    pub fn register(id: usize, player: Player) -> Self {
+    pub fn register(id: usize, player: Player, queue: VecDeque<Player>) -> Self {
         let entity = Box::pin(unsafe { mem::zeroed() });
 
         let v_table = Box::pin(EntityVTABLE {
@@ -53,6 +54,7 @@ impl CefEntity {
             texture,
             browser: None,
             player,
+            queue,
             // browser_attached_callbacks: Vec::new(),
         };
 

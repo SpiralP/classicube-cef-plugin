@@ -56,6 +56,8 @@ pub trait PlayerTrait {
     fn get_url(&self) -> String;
 
     fn get_title(&self) -> String;
+
+    fn is_finished_playing(&self) -> bool;
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -220,6 +222,15 @@ impl PlayerTrait for Player {
             Player::Dash(player) => player.get_title(),
             Player::Media(player) => player.get_title(),
             Player::Web(player) => player.get_title(),
+        }
+    }
+
+    fn is_finished_playing(&self) -> bool {
+        match self {
+            Player::Youtube(player) => player.is_finished_playing(),
+            Player::Dash(player) => player.is_finished_playing(),
+            Player::Media(player) => player.is_finished_playing(),
+            Player::Web(player) => player.is_finished_playing(),
         }
     }
 }

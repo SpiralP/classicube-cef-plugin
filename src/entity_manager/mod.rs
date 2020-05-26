@@ -24,7 +24,7 @@ use futures::{
 use log::*;
 use std::{
     cell::{Cell, RefCell},
-    collections::HashMap,
+    collections::{HashMap, VecDeque},
     os::raw::*,
 };
 
@@ -226,7 +226,7 @@ impl EntityManager {
         ENTITIES.with(|entities| {
             let entities = &mut *entities.borrow_mut();
 
-            let entity = CefEntity::register(entity_id, player);
+            let entity = CefEntity::register(entity_id, player, VecDeque::new());
             debug!("entity created {}", entity_id);
             entities.insert(entity_id, entity);
         });
@@ -236,15 +236,66 @@ impl EntityManager {
         Ok(entity_id)
     }
 
-    pub fn entity_play(input: &str, entity_id: usize) -> Result<()> {
+    /// add item to queue
+    ///
+    /// returns `true` if player was queued for next,
+    /// `false` if about to play because of an empty queue
+    pub fn entity_queue(input: &str, entity_id: usize) -> Result<bool> {
+        // this needs to determine if the current player was finished,
+        // if it was then we play right away,
+        // else we queue it for next
+
         let player = Player::from_input(input)?;
 
-        Ok(Self::entity_play_player(player, entity_id)?)
+        let mut maybe_player = EntityManager::with_by_entity_id(entity_id, move |entity| {
+            let should_queue = !entity.player.is_finished_playing();
+
+            if should_queue {
+                entity.queue.push_back(player);
+                Ok(None)
+            } else {
+                Ok(Some(player))
+            }
+        })?;
+
+        if let Some(player) = maybe_player.take() {
+            Self::entity_play_player(player, entity_id)?;
+
+            Ok(false)
+        } else {
+            Ok(true)
+        }
+    }
+
+    pub fn entity_skip(entity_id: usize) -> Result<()> {
+        let mut maybe_new_player = EntityManager::with_by_entity_id(entity_id, move |entity| {
+            Ok(entity.queue.pop_front())
+        })?;
+
+        if let Some(new_player) = maybe_new_player.take() {
+            Self::entity_play_player(new_player, entity_id)?;
+        } else {
+            // show blank page
+            Self::entity_stop(entity_id)?;
+        }
+
+        Ok(())
+    }
+
+    pub fn entity_stop(entity_id: usize) -> Result<()> {
+        let browser = EntityManager::get_browser_by_entity_id(entity_id)?;
+        // TODO play() instead of loading url
+        // if coming from youtube/etc with a update loop
+        // [WARN] start_update_loop 0 non-bool js value Undefined
+        browser.load_url("data:text/html,")?;
+
+        Ok(())
     }
 
     pub fn entity_play_player(mut player: Player, entity_id: usize) -> Result<()> {
         let url = player.on_create();
 
+        // TODO move this into the Player enum's on_create
         let browser = EntityManager::with_by_entity_id(entity_id, |entity| {
             let browser = entity.browser.as_ref().chain_err(|| "no browser")?;
 
@@ -274,16 +325,17 @@ impl EntityManager {
     }
 
     /// returns entity_id
-    pub async fn create_entity_from_light_entity(info: LightEntity) -> Result<usize> {
-        let mut player = info.player.clone();
-        let url = player.on_create();
+    pub async fn create_entity_from_light_entity(mut info: LightEntity) -> Result<usize> {
+        let (pos, ang, scale) = (info.pos, info.ang, info.scale);
+
+        let url = info.player.on_create();
 
         let entity_id = Self::get_new_id();
 
         ENTITIES.with(|entities| {
             let entities = &mut *entities.borrow_mut();
 
-            let entity = CefEntity::register(entity_id, player);
+            let entity = CefEntity::register(entity_id, info.player, info.queue);
             debug!("entity {} created", entity_id);
             entities.insert(entity_id, entity);
         });
@@ -291,11 +343,11 @@ impl EntityManager {
         EntityManager::with_by_entity_id(entity_id, |entity| {
             let e = &mut entity.entity;
 
-            e.Position.set(info.pos[0], info.pos[1], info.pos[2]);
+            e.Position.set(pos[0], pos[1], pos[2]);
 
-            e.RotX = info.ang[0];
-            e.RotY = info.ang[1];
-            entity.set_scale(info.scale);
+            e.RotX = ang[0];
+            e.RotY = ang[1];
+            entity.set_scale(scale);
 
             Self::create_attach_browser(entity_id, url, FRAME_RATE.get()?, false, None);
 

@@ -96,6 +96,7 @@ async fn send_reply(real_name: String) -> Result<()> {
     }
 
     let encoded = encoding::encode(&message)?;
+    debug!("sending encoded message length {}", encoded.len());
     Chat::send(format!("@{}+ !CEF!{}", real_name, encoded));
 
     // my outgoing whisper

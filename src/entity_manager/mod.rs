@@ -249,6 +249,11 @@ impl EntityManager {
             let browser = entity.browser.as_ref().chain_err(|| "no browser")?;
 
             if entity.player.type_name() == player.type_name() {
+                // try to persist volume options
+                //
+                // only persist for same-type because if we went from a
+                // Web player which has global volume to a Youtube, it would
+                // make the youtube player global volume too
                 let had_global_volume = entity.player.has_global_volume();
                 let volume = entity.player.get_volume(&browser);
                 entity.player = player;

@@ -26,7 +26,7 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
         App::new("queue")
             .alias("play")
             .alias("load")
-            .about("Add something on the queue of the closest screen")
+            .about("Play or queue something on the closest screen")
             .arg(Arg::with_name("url").required(true).multiple(true)),
     )
     .subcommand(
@@ -92,14 +92,15 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
     )
     .subcommand(
         App::new("at")
-            .usage("cef at <x> <y> <z> [yaw] [pitch]")
+            .usage("cef at <x> <y> <z> [yaw] [pitch] [scale]")
             .alias("tp")
             .about("Move the closest screen to coords x,y,z and optional yaw,pitch")
             .arg(Arg::with_name("x").required(true))
             .arg(Arg::with_name("y").required(true))
             .arg(Arg::with_name("z").required(true))
             .arg(Arg::with_name("yaw"))
-            .arg(Arg::with_name("pitch").requires("yaw")),
+            .arg(Arg::with_name("pitch").requires("yaw"))
+            .arg(Arg::with_name("scale").requires("pitch")),
     )
     .subcommand(
         App::new("info")
@@ -415,6 +416,11 @@ pub async fn handle_command(
                     if let Some(pitch) = matches.value_of("pitch") {
                         let pitch = pitch.parse()?;
                         entity.entity.RotX = pitch;
+
+                        if let Some(scale) = matches.value_of("scale") {
+                            let scale = scale.parse()?;
+                            entity.set_scale(scale);
+                        }
                     }
                 }
 

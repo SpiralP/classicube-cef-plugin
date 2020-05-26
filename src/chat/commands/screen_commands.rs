@@ -136,8 +136,14 @@ pub async fn handle_command(
             let entity_id = EntityManager::with_closest(player.eye_position, |closest_entity| {
                 Ok(closest_entity.id)
             })?;
-            if EntityManager::entity_queue(&url, entity_id)? {
-                Chat::print(format!("{}Queued {}{}", color::TEAL, color::SILVER, url));
+            if let Some(kind) = EntityManager::entity_queue(&url, entity_id)? {
+                Chat::print(format!(
+                    "{}Queued {}{} {}",
+                    color::TEAL,
+                    kind,
+                    color::SILVER,
+                    url
+                ));
             }
 
             Ok(true)

@@ -80,7 +80,9 @@ impl PlayerTrait for WebPlayer {
     }
 
     fn is_finished_playing(&self) -> bool {
-        false
+        // assume true because when someone does "cef play youtubething"
+        // we want to skip the webpage for it
+        true
     }
 }
 
@@ -105,6 +107,13 @@ impl WebPlayer {
             })
         } else {
             None
+        }
+    }
+
+    pub fn blank_page() -> Self {
+        Self {
+            url: "data:text/html,".to_string(),
+            ..Default::default()
         }
     }
 }

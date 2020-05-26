@@ -13,7 +13,7 @@ use crate::{
     chat::hidden_communication::LightEntity,
     error::*,
     options::FRAME_RATE,
-    players::{Player, PlayerTrait},
+    players::{Player, PlayerTrait, WebPlayer},
 };
 use classicube_sys::Vec3;
 use futures::{
@@ -238,32 +238,30 @@ impl EntityManager {
 
     /// add item to queue
     ///
-    /// returns `true` if player was queued for next,
-    /// `false` if about to play because of an empty queue
-    pub fn entity_queue(input: &str, entity_id: usize) -> Result<bool> {
+    /// if item was queued, returns the type-name of player,
+    /// else returns None meaning we're about to play the item
+    pub fn entity_queue(input: &str, entity_id: usize) -> Result<Option<&'static str>> {
         // this needs to determine if the current player was finished,
         // if it was then we play right away,
         // else we queue it for next
 
         let player = Player::from_input(input)?;
 
-        let mut maybe_player = EntityManager::with_by_entity_id(entity_id, move |entity| {
-            let should_queue = !entity.player.is_finished_playing();
-
-            if should_queue {
-                entity.queue.push_back(player);
-                Ok(None)
-            } else {
-                Ok(Some(player))
-            }
+        let should_queue = EntityManager::with_by_entity_id(entity_id, move |entity| {
+            Ok(!entity.player.is_finished_playing())
         })?;
 
-        if let Some(player) = maybe_player.take() {
+        if should_queue {
+            let type_name = EntityManager::with_by_entity_id(entity_id, move |entity| {
+                let type_name = player.type_name();
+                entity.queue.push_back(player);
+                Ok(type_name)
+            })?;
+            Ok(Some(type_name))
+        } else {
             Self::entity_play_player(player, entity_id)?;
 
-            Ok(false)
-        } else {
-            Ok(true)
+            Ok(None)
         }
     }
 
@@ -283,11 +281,7 @@ impl EntityManager {
     }
 
     pub fn entity_stop(entity_id: usize) -> Result<()> {
-        let browser = EntityManager::get_browser_by_entity_id(entity_id)?;
-        // TODO play() instead of loading url
-        // if coming from youtube/etc with a update loop
-        // [WARN] start_update_loop 0 non-bool js value Undefined
-        browser.load_url("data:text/html,")?;
+        Self::entity_play_player(Player::Web(WebPlayer::blank_page()), entity_id)?;
 
         Ok(())
     }

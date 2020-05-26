@@ -247,21 +247,21 @@ impl EntityManager {
 
         let player = Player::from_input(input)?;
 
-        let should_queue = EntityManager::with_by_entity_id(entity_id, move |entity| {
-            Ok(!entity.player.is_finished_playing())
+        let is_finished_playing = EntityManager::with_by_entity_id(entity_id, move |entity| {
+            Ok(entity.player.is_finished_playing())
         })?;
 
-        if should_queue {
+        if is_finished_playing {
+            Self::entity_play_player(player, entity_id)?;
+
+            Ok(None)
+        } else {
             let type_name = EntityManager::with_by_entity_id(entity_id, move |entity| {
                 let type_name = player.type_name();
                 entity.queue.push_back(player);
                 Ok(type_name)
             })?;
             Ok(Some(type_name))
-        } else {
-            Self::entity_play_player(player, entity_id)?;
-
-            Ok(None)
         }
     }
 
@@ -273,8 +273,14 @@ impl EntityManager {
         if let Some(new_player) = maybe_new_player.take() {
             Self::entity_play_player(new_player, entity_id)?;
         } else {
-            // show blank page
-            Self::entity_stop(entity_id)?;
+            let is_finished_playing = EntityManager::with_by_entity_id(entity_id, move |entity| {
+                Ok(entity.player.is_finished_playing())
+            })?;
+
+            if !is_finished_playing {
+                // show blank page
+                Self::entity_stop(entity_id)?;
+            }
         }
 
         Ok(())

@@ -35,7 +35,7 @@ pub struct YoutubePlayer {
     last_title: String,
 
     #[serde(skip)]
-    finished: bool,
+    pub finished: bool,
 }
 
 impl Default for YoutubePlayer {

@@ -148,6 +148,7 @@ impl PlayerTrait for DashPlayer {
     }
 
     fn is_finished_playing(&self) -> bool {
+        // TODO determine when we 404 after host closes stream
         false
     }
 }

@@ -85,7 +85,7 @@ async fn start_loop(entity_id: usize) -> Result<()> {
                             }
 
                             _ => {
-                                bail!("not supported");
+                                bail!("not supported time");
                             }
                         }
                         Ok(())
@@ -94,11 +94,32 @@ async fn start_loop(entity_id: usize) -> Result<()> {
 
                 // check if finished playing
                 let is_finished_playing = match kind {
-                    Kind::Media => unimplemented!(), /* MediaPlayer::is_finished_playing(&browser).await, */
+                    Kind::Media => {
+                        // TODO
+                        false
+                    }
+
                     Kind::Youtube => YoutubePlayer::real_is_finished_playing(&browser).await?,
                 };
 
                 if is_finished_playing {
+                    EntityManager::with_by_entity_id(entity_id, move |entity| {
+                        match &mut entity.player {
+                            Player::Media(_player) => {
+                                //
+                            }
+
+                            Player::Youtube(player) => {
+                                player.finished = is_finished_playing;
+                            }
+
+                            _ => {
+                                bail!("not supported is_finished_playing");
+                            }
+                        }
+                        Ok(())
+                    })?;
+
                     debug!("finished playing!");
 
                     EntityManager::entity_skip(entity_id)?;

@@ -451,6 +451,29 @@ pub async fn handle_command(
 
                 Chat::print(url);
 
+                if !entity.queue.is_empty() {
+                    Chat::print(format!(
+                        "{}{} {}items in queue:",
+                        color::GOLD,
+                        entity.queue.len(),
+                        color::TEAL,
+                    ));
+
+                    for (i, player) in entity.queue.iter().enumerate() {
+                        let url = player.get_url();
+
+                        Chat::print(format!(
+                            "{}{} {}{} {}{}",
+                            color::GOLD,
+                            i + 1,
+                            color::TEAL,
+                            player.type_name(),
+                            color::SILVER,
+                            url
+                        ));
+                    }
+                }
+
                 Ok(())
             })?;
 

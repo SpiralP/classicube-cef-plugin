@@ -70,7 +70,8 @@
         // onError is executed if the asynchronous load fails.
         shakaPlayer.load(manifestUri).then(
           () => {
-            var host = window.location.host;
+            var url = new URL(manifestUri);
+            var host = url.host;
             document.title = "DASH Stream " + host;
           },
           (error) => {

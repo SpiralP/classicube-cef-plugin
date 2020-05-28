@@ -17,6 +17,11 @@ thread_local!(
 
 pub fn query() {
     let (f, remote_handle) = async {
+        // hack so that when query() is called a bunch after Init() from loader,
+        // we won't run /clients more than once
+        // TODO gross
+        async_manager::sleep(Duration::from_millis(100)).await;
+
         // whole query shouldn't take more than 30 seconds
         // includes whispering and browser creation
         match async_manager::timeout(Duration::from_secs(30), do_query()).await {

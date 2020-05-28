@@ -336,7 +336,7 @@ dependencies = [
 [[package]]
 name = "classicube-helpers"
 version = "0.1.0"
-source = "git+https://github.com/SpiralP/rust-classicube-helpers.git#0a48e6e3698c587a50528be8e4c7c11b64a61c90"
+source = "git+https://github.com/SpiralP/rust-classicube-helpers.git#efedaa50aeab5d199bf2a7648f8ce2c8d1e3647e"
 dependencies = [
  "classicube-sys",
  "detour",
@@ -1913,9 +1913,9 @@ checksum = "8ea5119cdb4c55b55d432abb513a0429384878c15dde60cc77b1c99de1a95a6a"
 
 [[package]]
 name = "syn"
-version = "1.0.26"
+version = "1.0.27"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2010dd20d6200209c24f17022e34c73b8e79fb42180f8c9ca970a8dbc44acc8c"
+checksum = "ef781e621ee763a2a40721a8861ec519cb76966aee03bb5d00adb6a31dc1c1de"
 dependencies = [
  "proc-macro2",
  "quote",

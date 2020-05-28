@@ -1,6 +1,6 @@
 use super::{encoding, wait_for_message, SHOULD_BLOCK};
 use crate::{
-    async_manager::AsyncManager,
+    async_manager,
     chat::{
         helpers::{is_incoming_whisper, is_outgoing_whisper},
         Chat, ENTITIES, TAB_LIST,
@@ -21,7 +21,7 @@ pub async fn listen_loop() {
 
             info!("incoming_whisper {:?}", message);
 
-            AsyncManager::spawn_local_on_main_thread(async move {
+            async_manager::spawn_local_on_main_thread(async move {
                 match handle_request(message).await {
                     Ok(_) => {}
 
@@ -76,7 +76,7 @@ async fn handle_request(message: String) -> Result<()> {
         send_reply(real_name).await?;
 
         // don't trigger spam mute
-        AsyncManager::sleep(Duration::from_secs(2)).await;
+        async_manager::sleep(Duration::from_secs(2)).await;
 
         drop(mutex);
     }
@@ -100,7 +100,7 @@ async fn send_reply(real_name: String) -> Result<()> {
     Chat::send(format!("@{}+ !CEF!{}", real_name, encoded));
 
     // my outgoing whisper
-    AsyncManager::timeout(Duration::from_secs(5), async {
+    async_manager::timeout(Duration::from_secs(5), async {
         loop {
             let message = wait_for_message().await;
 
@@ -108,7 +108,7 @@ async fn send_reply(real_name: String) -> Result<()> {
                 SHOULD_BLOCK.set(true);
 
                 // also block > continuation messages
-                let timeout_result = AsyncManager::timeout(Duration::from_secs(1), async {
+                let timeout_result = async_manager::timeout(Duration::from_secs(1), async {
                     loop {
                         let message = wait_for_message().await;
                         if message.starts_with("> &f") {

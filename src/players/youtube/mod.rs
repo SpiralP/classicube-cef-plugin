@@ -1,6 +1,6 @@
 use super::{helpers::start_update_loop, PlayerTrait};
 use crate::{
-    async_manager::AsyncManager,
+    async_manager,
     cef::{RustRefBrowser, RustV8Value},
     chat::Chat,
     error::*,
@@ -103,7 +103,7 @@ impl PlayerTrait for YoutubePlayer {
     fn on_page_loaded(&mut self, entity_id: usize, _browser: &RustRefBrowser) {
         let (f, remote_handle) = start_update_loop(entity_id).remote_handle();
         self.update_loop_handle = Some(remote_handle);
-        AsyncManager::spawn_local_on_main_thread(f);
+        async_manager::spawn_local_on_main_thread(f);
     }
 
     fn on_title_change(&mut self, _entity_id: usize, _browser: &RustRefBrowser, title: String) {

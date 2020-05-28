@@ -1,5 +1,5 @@
 use super::{MediaPlayer, Player, PlayerTrait, YoutubePlayer};
-use crate::{async_manager::AsyncManager, chat::ENTITIES, entity_manager::EntityManager, error::*};
+use crate::{async_manager, chat::ENTITIES, entity_manager::EntityManager, error::*};
 use classicube_helpers::OptionWithInner;
 use classicube_sys::ENTITIES_SELF_ID;
 use log::*;
@@ -128,7 +128,7 @@ async fn start_loop(entity_id: usize) -> Result<()> {
             }
         }
 
-        AsyncManager::sleep(Duration::from_millis(64)).await;
+        async_manager::sleep(Duration::from_millis(64)).await;
     }
 
     Ok(())

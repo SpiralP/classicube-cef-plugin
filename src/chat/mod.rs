@@ -4,7 +4,7 @@ pub mod helpers;
 pub mod hidden_communication;
 
 pub use self::chat_command::CefChatCommand;
-use crate::async_manager::AsyncManager;
+use crate::async_manager;
 use classicube_helpers::{
     entities::{Entities, ENTITY_SELF_ID},
     events::chat::{ChatReceivedEvent, ChatReceivedEventHandler},
@@ -83,6 +83,10 @@ impl Chat {
         commands::initialize();
     }
 
+    pub fn on_new_map(&mut self) {
+        hidden_communication::on_new_map();
+    }
+
     pub fn on_new_map_loaded(&mut self) {
         debug!("on_new_map_loaded chat");
 
@@ -90,12 +94,12 @@ impl Chat {
 
         #[cfg(debug_assertions)]
         if unsafe { Server.IsSinglePlayer } != 0 {
-            AsyncManager::spawn_local_on_main_thread(async {
-                AsyncManager::sleep(Duration::from_millis(3000)).await;
+            async_manager::spawn_local_on_main_thread(async {
+                async_manager::sleep(Duration::from_millis(3000)).await;
 
                 Chat::send("/client cef create SJyhZ-3Z8A8");
 
-                // AsyncManager::sleep(Duration::from_millis(1000)).await;
+                // async_manager::sleep(Duration::from_millis(1000)).await;
 
                 // let browser = crate::entity_manager::EntityManager::with_all_entities(|entities| {
                 //     entities
@@ -105,7 +109,7 @@ impl Chat {
                 // });
 
                 // if let Some(browser) = browser {
-                //     AsyncManager::spawn_local_on_main_thread(async move {
+                //     async_manager::spawn_local_on_main_thread(async move {
                 //         debug!("eval");
                 //         debug!(
                 //             "{:#?}",
@@ -219,7 +223,7 @@ fn handle_chat_received(message: String, message_type: MsgType) {
                 FUTURE_HANDLE.with(|cell| {
                     let (remote, remote_handle) = async move {
                         if unsafe { Server.IsSinglePlayer } == 0 {
-                            AsyncManager::sleep(Duration::from_millis(256)).await;
+                            async_manager::sleep(Duration::from_millis(256)).await;
                         }
 
                         let is_self = id == ENTITY_SELF_ID;
@@ -240,7 +244,7 @@ fn handle_chat_received(message: String, message_type: MsgType) {
 
                     cell.set(Some(remote_handle));
 
-                    AsyncManager::spawn_local_on_main_thread(remote);
+                    async_manager::spawn_local_on_main_thread(remote);
                 });
             }
         }

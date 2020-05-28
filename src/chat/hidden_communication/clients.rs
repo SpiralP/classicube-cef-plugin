@@ -1,6 +1,6 @@
 use super::{wait_for_message, SHOULD_BLOCK};
 use crate::{
-    async_manager::AsyncManager,
+    async_manager,
     chat::{hidden_communication::whispers::start_whispering, Chat, TAB_LIST},
     error::*,
     plugin::APP_NAME,
@@ -9,17 +9,17 @@ use classicube_helpers::{tab_list::remove_color, CellGetSet, OptionWithInner};
 use classicube_sys::ENTITIES_SELF_ID;
 use futures::{future::RemoteHandle, prelude::*};
 use log::{debug, warn};
-use std::{cell::Cell, sync::Once, time::Duration};
+use std::{cell::RefCell, sync::Once, time::Duration};
 
 thread_local!(
-    static CURRENT_RUNNING: Cell<Option<RemoteHandle<()>>> = Default::default();
+    static CURRENT_RUNNING: RefCell<Option<RemoteHandle<()>>> = Default::default();
 );
 
 pub fn query() {
     let (f, remote_handle) = async {
         // whole query shouldn't take more than 30 seconds
         // includes whispering and browser creation
-        match AsyncManager::timeout(Duration::from_secs(30), do_query()).await {
+        match async_manager::timeout(Duration::from_secs(30), do_query()).await {
             Some(result) => {
                 if let Err(e) = result {
                     warn!("clients query failed: {}", e);
@@ -30,14 +30,27 @@ pub fn query() {
                 warn!("clients query timed out");
             }
         }
+
+        CURRENT_RUNNING.with(move |cell| {
+            let opt = &mut *cell.borrow_mut();
+            *opt = None;
+        });
     }
     .remote_handle();
 
-    AsyncManager::spawn_local_on_main_thread(f);
+    async_manager::spawn_local_on_main_thread(f);
 
     CURRENT_RUNNING.with(move |cell| {
-        cell.set(Some(remote_handle));
+        let opt = &mut *cell.borrow_mut();
+        *opt = Some(remote_handle);
     });
+}
+
+pub fn stop_query() {
+    // CURRENT_RUNNING.with(move |cell| {
+    //     let opt = &mut *cell.borrow_mut();
+    //     *opt = None;
+    // });
 }
 
 async fn do_query() -> Result<()> {
@@ -52,7 +65,7 @@ async fn do_query() -> Result<()> {
     debug!("querying /clients");
     Chat::send("/clients");
 
-    AsyncManager::timeout(Duration::from_secs(3), async {
+    async_manager::timeout(Duration::from_secs(3), async {
         loop {
             let message = wait_for_message().await;
             if message.len() >= 2
@@ -70,7 +83,7 @@ async fn do_query() -> Result<()> {
 
     let mut messages = Vec::new();
 
-    let timeout_result = AsyncManager::timeout(Duration::from_secs(3), async {
+    let timeout_result = async_manager::timeout(Duration::from_secs(3), async {
         loop {
             let message = wait_for_message().await;
             if message.len() >= 4

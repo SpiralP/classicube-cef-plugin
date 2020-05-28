@@ -1,6 +1,6 @@
 use super::{encoding, wait_for_message, SHOULD_BLOCK};
 use crate::{
-    async_manager::AsyncManager,
+    async_manager,
     chat::{
         helpers::{is_incoming_whisper, is_outgoing_whisper},
         Chat,
@@ -20,7 +20,7 @@ pub async fn query_whisper(real_name: &str) -> Result<bool> {
     // &9[>] &uSpiralP: &f?CEF?
 
     // my outgoing whisper
-    AsyncManager::timeout(Duration::from_secs(3), async {
+    async_manager::timeout(Duration::from_secs(3), async {
         loop {
             let message = wait_for_message().await;
 
@@ -34,7 +34,7 @@ pub async fn query_whisper(real_name: &str) -> Result<bool> {
     .chain_err(|| "never found my outgoing whisper")?;
 
     // incoming whisper from them
-    let full_message_encoded = AsyncManager::timeout(Duration::from_secs(5), async {
+    let full_message_encoded = async_manager::timeout(Duration::from_secs(5), async {
         loop {
             let message = wait_for_message().await;
             if is_incoming_whisper(&message) && message.contains(": &f!CEF!") {
@@ -47,7 +47,7 @@ pub async fn query_whisper(real_name: &str) -> Result<bool> {
                 let first_encoded = first_parts[1].to_string();
                 parts.push(first_encoded);
 
-                let timeout_result = AsyncManager::timeout(Duration::from_secs(1), async {
+                let timeout_result = async_manager::timeout(Duration::from_secs(1), async {
                     loop {
                         let message = wait_for_message().await;
                         if message.starts_with("> &f") {

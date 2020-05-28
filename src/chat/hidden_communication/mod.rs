@@ -5,7 +5,7 @@ mod whispers;
 
 pub use self::{encoding::LightEntity, map_themes::CURRENT_MAP_THEME};
 use super::SIMULATING;
-use crate::async_manager::AsyncManager;
+use crate::async_manager;
 use classicube_helpers::{detour::static_detour, CellGetSet};
 use classicube_sys::{Chat_AddOf, MsgType_MSG_TYPE_NORMAL, Server};
 use futures::channel::oneshot;
@@ -51,6 +51,12 @@ pub fn initialize() {
 
     whispers::start_listening();
     map_themes::start_listening();
+}
+
+pub fn on_new_map() {
+    if unsafe { Server.IsSinglePlayer } == 0 {
+        clients::stop_query();
+    }
 }
 
 pub fn on_new_map_loaded() {
@@ -100,7 +106,7 @@ fn handle_chat_message(message: String) -> bool {
         let _ignore_error = sender.send(message.to_string());
     }
 
-    AsyncManager::step();
+    async_manager::step();
 
     // check SHOULD_BLOCK to see if any futures said to block
     let should_block = SHOULD_BLOCK.get();

@@ -1,6 +1,6 @@
 use super::helpers::*;
 use crate::{
-    async_manager::AsyncManager,
+    async_manager,
     cef::Cef,
     chat::{Chat, PlayerSnapshot},
     entity_manager::EntityManager,
@@ -162,7 +162,7 @@ pub async fn handle_command(
         ("test_time", Some(matches)) => {
             let future_dt = DateTime::parse_from_rfc3339(matches.value_of("hack").unwrap())?;
 
-            AsyncManager::spawn_blocking(move || {
+            async_manager::spawn_blocking(move || {
                 let NtpResult {
                     sec, nsec, offset, ..
                 } = sntpc::request("time.google.com", 123)?;
@@ -176,7 +176,7 @@ pub async fn handle_command(
                     std::time::Duration::from_micros(offset as u64)
                 );
 
-                AsyncManager::spawn_on_main_thread(async move {
+                async_manager::spawn_on_main_thread(async move {
                     Chat::print(format!("{:?}", (future_dt - dt).to_std()));
 
                     let a = (future_dt - dt).to_std();
@@ -209,7 +209,7 @@ pub async fn handle_command(
                 Ok(closest_entity.id)
             })?;
 
-            AsyncManager::spawn_local_on_main_thread(async move {
+            async_manager::spawn_local_on_main_thread(async move {
                 if let Err(e) = EntityManager::remove_entity(entity_id).await {
                     warn!("{}", e);
                 }

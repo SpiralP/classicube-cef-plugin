@@ -1,6 +1,6 @@
 use super::helpers::*;
 use crate::{
-    async_manager::AsyncManager, chat::PlayerSnapshot, entity_manager::EntityManager, error::*,
+    async_manager, chat::PlayerSnapshot, entity_manager::EntityManager, error::*,
     options::FRAME_RATE,
 };
 use clap::{App, Arg, ArgMatches};
@@ -57,7 +57,7 @@ pub async fn handle_command(
         }
 
         ("closeall", Some(_matches)) => {
-            AsyncManager::spawn_local_on_main_thread(async {
+            async_manager::spawn_local_on_main_thread(async {
                 let _ignore_error = EntityManager::remove_all_entities().await;
             });
 

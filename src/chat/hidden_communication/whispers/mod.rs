@@ -2,7 +2,7 @@ mod incoming;
 mod outgoing;
 
 use super::{encoding, wait_for_message, SHOULD_BLOCK};
-use crate::{async_manager::AsyncManager, chat::ENTITIES, error::*};
+use crate::{async_manager, chat::ENTITIES, error::*};
 use classicube_helpers::OptionWithInner;
 use futures::{future::RemoteHandle, prelude::*};
 use log::{debug, warn};
@@ -55,7 +55,7 @@ pub fn start_listening() {
     }
     .remote_handle();
 
-    AsyncManager::spawn_local_on_main_thread(f);
+    async_manager::spawn_local_on_main_thread(f);
 
     LISTENER.with(move |cell| {
         cell.set(Some(remote_handle));

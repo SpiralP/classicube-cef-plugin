@@ -1,6 +1,4 @@
-use crate::{
-    async_manager::AsyncManager, cef::Cef, chat::Chat, entity_manager::EntityManager, players,
-};
+use crate::{async_manager, cef::Cef, chat::Chat, entity_manager::EntityManager, players};
 use classicube_helpers::{color, OptionWithInner};
 use classicube_sys::{Server, String_AppendConst};
 use log::*;
@@ -11,7 +9,6 @@ thread_local!(
 );
 
 pub struct Plugin {
-    async_manager: AsyncManager,
     chat: Chat,
     entity_manager: EntityManager,
     context_initialized: bool,
@@ -35,13 +32,12 @@ impl Plugin {
                 String_AppendConst(&mut Server.AppName, c_str);
             }
 
-            let mut async_manager = AsyncManager::new();
             let mut chat = Chat::new();
 
-            async_manager.initialize();
+            async_manager::initialize();
             chat.initialize();
 
-            AsyncManager::spawn_local_on_main_thread(async {
+            async_manager::spawn_local_on_main_thread(async {
                 if let Err(e) = Cef::initialize().await {
                     error!("Cef::initialize(): {}", e);
                     Chat::print(format!("{}Cef Initialize failed! {}", color::RED, e));
@@ -49,7 +45,6 @@ impl Plugin {
             });
 
             let plugin = Self {
-                async_manager,
                 chat,
                 entity_manager: EntityManager::new(),
                 context_initialized: false,
@@ -62,8 +57,9 @@ impl Plugin {
         debug!("plugin on_new_map_loaded");
 
         PLUGIN
-            .with_inner_mut(|_plugin| {
+            .with_inner_mut(|plugin| {
                 players::on_new_map();
+                plugin.chat.on_new_map();
             })
             .unwrap();
     }
@@ -100,12 +96,12 @@ impl Plugin {
             plugin.entity_manager.shutdown();
             plugin.chat.shutdown();
 
-            AsyncManager::block_on_local(async {
+            async_manager::block_on_local(async {
                 Cef::shutdown().await;
             });
 
             // this will stop all tasks immediately
-            plugin.async_manager.shutdown();
+            async_manager::shutdown();
         });
     }
 }

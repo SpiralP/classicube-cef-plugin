@@ -1,6 +1,6 @@
 use super::wait_for_message;
 use crate::{
-    async_manager::AsyncManager,
+    async_manager,
     entity_manager::EntityManager,
     error::*,
     options::{AUTOPLAY_MAP_THEMES, MAP_THEME_VOLUME},
@@ -22,7 +22,7 @@ pub fn start_listening() {
     }
     .remote_handle();
 
-    AsyncManager::spawn_local_on_main_thread(f);
+    async_manager::spawn_local_on_main_thread(f);
 
     LISTENER.with(move |cell| {
         cell.set(Some(remote_handle));
@@ -50,7 +50,7 @@ pub async fn listen_loop() {
             let mut parts: Vec<String> = Vec::new();
             parts.push(message);
 
-            let timeout_result = AsyncManager::timeout(Duration::from_secs(1), async {
+            let timeout_result = async_manager::timeout(Duration::from_secs(1), async {
                 loop {
                     let message = wait_for_message().await;
                     if message.starts_with("> &f") {
@@ -72,7 +72,7 @@ pub async fn listen_loop() {
 
             info!("map_theme {:?}", full_message);
 
-            AsyncManager::spawn_local_on_main_thread(async move {
+            async_manager::spawn_local_on_main_thread(async move {
                 match handle_map_theme_url(full_message).await {
                     Ok(_) => {}
 

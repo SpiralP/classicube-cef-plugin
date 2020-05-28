@@ -1,11 +1,11 @@
-use crate::{async_manager::AsyncManager, error::*};
+use crate::{async_manager, error::*};
 use invidious::api::search;
 use log::debug;
 
 pub async fn search(input: &str) -> Result<String> {
     let input = input.to_string();
 
-    AsyncManager::spawn(async move {
+    async_manager::spawn(async move {
         debug!("searching {:?}", input);
         let schema = search::request(search::Parameters {
             q: Some(input),

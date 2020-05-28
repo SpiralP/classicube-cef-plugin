@@ -8,7 +8,7 @@ mod render_model_hook;
 pub use self::{cef_paint::cef_paint_callback, entity::CefEntity};
 use self::{context_handler::ContextHandler, model::CefModel};
 use crate::{
-    async_manager::AsyncManager,
+    async_manager,
     cef::{Cef, CefEvent, RustRefBrowser},
     chat::hidden_communication::LightEntity,
     error::*,
@@ -94,7 +94,7 @@ impl EntityManager {
             }
         }
         .remote_handle();
-        AsyncManager::spawn_local_on_main_thread(f);
+        async_manager::spawn_local_on_main_thread(f);
         self.cef_event_page_loaded = Some(remote_handle);
 
         let mut event_listener = Cef::create_event_listener();
@@ -113,14 +113,14 @@ impl EntityManager {
             }
         }
         .remote_handle();
-        AsyncManager::spawn_local_on_main_thread(f);
+        async_manager::spawn_local_on_main_thread(f);
         self.cef_event_title_change = Some(remote_handle);
     }
 
     pub fn on_new_map_loaded(&mut self) {
         debug!("on_new_map_loaded entity_manager");
 
-        AsyncManager::block_on_local(async {
+        async_manager::block_on_local(async {
             let _ignore_error = Self::remove_all_entities().await;
         });
     }
@@ -134,7 +134,7 @@ impl EntityManager {
         self.cef_event_page_loaded.take();
         self.cef_event_title_change.take();
 
-        AsyncManager::block_on_local(async {
+        async_manager::block_on_local(async {
             Self::remove_all_entities().await.unwrap();
         });
     }
@@ -194,7 +194,7 @@ impl EntityManager {
         insecure: bool,
         resolution: Option<(usize, usize)>,
     ) {
-        AsyncManager::spawn_local_on_main_thread(async move {
+        async_manager::spawn_local_on_main_thread(async move {
             let result = async move {
                 let browser = Cef::create_browser(url, fps, insecure).await?;
 

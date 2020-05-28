@@ -1,6 +1,4 @@
-use crate::{
-    async_manager::AsyncManager, entity_manager::EntityManager, error::*, players::PlayerTrait,
-};
+use crate::{async_manager, entity_manager::EntityManager, error::*, players::PlayerTrait};
 use futures::{future::RemoteHandle, prelude::*};
 use log::{debug, warn};
 use std::{cell::Cell, time::Duration};
@@ -24,7 +22,7 @@ pub fn on_new_map() {
     FADING_HANDLE.with(move |cell| {
         cell.set(Some(remote_handle));
     });
-    AsyncManager::spawn_local_on_main_thread(f);
+    async_manager::spawn_local_on_main_thread(f);
 }
 
 pub fn on_new_map_loaded() {
@@ -52,6 +50,6 @@ async fn fade_all() -> Result<()> {
             Ok::<_, Error>(())
         })?;
 
-        AsyncManager::sleep(Duration::from_millis(64)).await;
+        async_manager::sleep(Duration::from_millis(64)).await;
     }
 }

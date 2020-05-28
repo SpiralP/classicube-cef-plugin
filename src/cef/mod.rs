@@ -12,7 +12,7 @@ use self::{
     mute_lose_focus::IS_FOCUSED,
 };
 use crate::{
-    async_manager::AsyncManager,
+    async_manager,
     entity_manager::{cef_paint_callback, TEXTURE_HEIGHT, TEXTURE_WIDTH},
     error::*,
 };
@@ -102,9 +102,9 @@ impl Cef {
 
         IS_INITIALIZED.set(true);
 
-        AsyncManager::spawn_local_on_main_thread(async move {
+        async_manager::spawn_local_on_main_thread(async move {
             while crate::time_silent!("Cef::try_step()", 100, { Cef::try_step() }) {
-                AsyncManager::sleep(CEF_RATE).await;
+                async_manager::sleep(CEF_RATE).await;
             }
         });
 
@@ -127,7 +127,7 @@ impl Cef {
 
     fn warm_up() {
         // load a blank browser so that the next load is quicker
-        AsyncManager::spawn_local_on_main_thread(async {
+        async_manager::spawn_local_on_main_thread(async {
             let browser = Self::create_browser("data:text/html,", 30, false)
                 .await
                 .unwrap();

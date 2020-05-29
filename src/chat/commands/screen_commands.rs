@@ -8,6 +8,7 @@ use crate::{
     helpers::format_duration,
     players::PlayerTrait,
 };
+use async_recursion::async_recursion;
 use chrono::{offset::FixedOffset, DateTime, NaiveDateTime, Utc};
 use clap::{App, Arg, ArgMatches};
 use classicube_helpers::color;
@@ -114,6 +115,7 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
     )
 }
 
+#[async_recursion(?Send)]
 pub async fn handle_command(
     player: &PlayerSnapshot,
     matches: &ArgMatches<'static>,
@@ -402,6 +404,10 @@ pub async fn handle_command(
         }
 
         ("at", Some(matches)) => {
+            if EntityManager::with_closest(player.eye_position, |_| Ok(())).is_err() {
+                super::run(player.clone(), vec!["create".to_string()], false).await?;
+            }
+
             EntityManager::with_closest(player.eye_position, |entity| {
                 let x = matches.value_of("x").unwrap().parse()?;
                 let y = matches.value_of("y").unwrap().parse()?;

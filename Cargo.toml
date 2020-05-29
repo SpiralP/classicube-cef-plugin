@@ -9,6 +9,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 async-dispatcher = { git = "https://github.com/SpiralP/rust-async-dispatcher.git" }
+async-recursion = "0.3.1"
 base64 = "0.12.1"
 bincode = "1.2.1"
 chrono = { version = "0.4.11", features = ["serde"] }

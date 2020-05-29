@@ -51,6 +51,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "async-recursion"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e5444eec77a9ec2bfe4524139e09195862e981400c4358d3b760cae634e4c4ee"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "atk-sys"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -305,6 +316,7 @@ name = "classicube-cef-plugin"
 version = "0.9.3"
 dependencies = [
  "async-dispatcher",
+ "async-recursion",
  "base64 0.12.1",
  "bincode",
  "bindgen 0.54.0",

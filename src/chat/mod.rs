@@ -254,6 +254,7 @@ fn handle_chat_received(message: String, message_type: MsgType) {
 }
 
 #[allow(non_snake_case)]
+#[derive(Debug, Clone)]
 pub struct PlayerSnapshot {
     pub id: u8,
     pub eye_position: Vec3,

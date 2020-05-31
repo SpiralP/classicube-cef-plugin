@@ -21,6 +21,7 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
     app.subcommand(
         App::new("here")
             .alias("move")
+            .alias("summon")
             .about("Move the closest screen to you"),
     )
     .subcommand(

@@ -9,7 +9,7 @@ use classicube_helpers::{tab_list::remove_color, CellGetSet, OptionWithInner};
 use classicube_sys::ENTITIES_SELF_ID;
 use futures::{future::RemoteHandle, prelude::*};
 use log::{debug, warn};
-use std::{cell::RefCell, sync::Once, time::Duration};
+use std::{cell::RefCell, collections::HashSet, sync::Once, time::Duration};
 
 thread_local!(
     static CURRENT_RUNNING: RefCell<Option<RemoteHandle<()>>> = Default::default();
@@ -70,13 +70,14 @@ async fn do_query() -> Result<()> {
     debug!("querying /clients");
     Chat::send("/clients");
 
+    fn is_clients_start_message(bytes: &[u8]) -> bool {
+        bytes.len() >= 14 && (&bytes[0..1] == b"&" && &bytes[2..] == b"Players using:")
+    }
+
     async_manager::timeout(Duration::from_secs(3), async {
         loop {
             let message = wait_for_message().await;
-            if message.len() >= 2
-                && (&message.as_bytes()[0..1] == b"&"
-                    && &message.as_bytes()[2..] == b"Players using:")
-            {
+            if is_clients_start_message(message.as_bytes()) {
                 SHOULD_BLOCK.set(true);
                 break;
             }
@@ -86,24 +87,28 @@ async fn do_query() -> Result<()> {
     .await
     .chain_err(|| "never found start of clients response")?;
 
-    let mut messages = Vec::new();
+    fn is_clients_message(bytes: &[u8]) -> bool {
+        // &7  ClassiCube 1.1.6 + cef0.9.4 + Ponies v2.1: &f¿ Mew, ┌ Glim
+        // &7  ClassiCube 1.1.6 + cef0.9.4 +cs3.4.5 + More Models v1.2.4 +
+        // > &7Poni: &fSpiralP
+        bytes.len() >= 14
+            && ((&bytes[0..1] == b"&" && &bytes[2..14] == b"  ClassiCube")
+                || &bytes[0..3] == b"> &")
+    }
 
+    let mut messages = Vec::new();
     let timeout_result = async_manager::timeout(Duration::from_secs(3), async {
         loop {
             let message = wait_for_message().await;
-            if message.len() >= 4
-                && ((&message.as_bytes()[0..1] == b"&" && &message.as_bytes()[2..4] == b"  ")
-                    || &message.as_bytes()[0..3] == b"> &")
-            {
+            if is_clients_message(message.as_bytes()) {
                 // probably a /clients response
                 messages.push(message.to_string());
 
                 // don't show this message!
                 SHOULD_BLOCK.set(true);
-            } else {
-                debug!("stopping because of other message {:?}", message);
-                break;
             }
+            // keep checking because other messages can be shown in the middle of
+            // the /clients response
         }
     })
     .await;
@@ -139,7 +144,7 @@ async fn process_clients_response(messages: Vec<String>) -> Result<()> {
 
     debug!("{:#?}", full_lines);
 
-    let mut names_with_cef: Vec<String> = Vec::new();
+    let mut names_with_cef: HashSet<String> = HashSet::new();
     for message in &full_lines {
         let pos = message.find(": &f").chain_err(|| "couldn't find colon")?;
 
@@ -150,18 +155,20 @@ async fn process_clients_response(messages: Vec<String>) -> Result<()> {
         let left = remove_color(left);
         let right = remove_color(right);
 
-        let mut names: Vec<String> = right.split(", ").map(|a| a.to_string()).collect();
+        let names: HashSet<String> = right.split(", ").map(|a| a.to_string()).collect();
 
         let app_name_without_last_number = APP_NAME.rsplitn(2, '.').nth(1).unwrap();
         if left.contains(app_name_without_last_number) {
-            names_with_cef.append(&mut names);
+            for name in names {
+                names_with_cef.insert(name);
+            }
         }
     }
 
     debug!("{:#?}", names_with_cef);
 
     let players_with_cef: Vec<(u8, String)> = names_with_cef
-        .drain(..)
+        .drain()
         .filter_map(|name| {
             TAB_LIST.with_inner(|tab_list| {
                 tab_list.find_entry_by_nick_name(&name).and_then(|entry| {

@@ -87,14 +87,22 @@ async fn do_query() -> Result<()> {
     .await
     .chain_err(|| "never found start of clients response")?;
 
-    fn is_clients_message(bytes: &[u8]) -> bool {
+    let mut was_clients_message = false;
+    let mut is_clients_message = move |bytes: &[u8]| -> bool {
         // &7  ClassiCube 1.1.6 + cef0.9.4 + Ponies v2.1: &f¿ Mew, ┌ Glim
         // &7  ClassiCube 1.1.6 + cef0.9.4 +cs3.4.5 + More Models v1.2.4 +
         // > &7Poni: &fSpiralP
-        bytes.len() >= 14
-            && ((&bytes[0..1] == b"&" && &bytes[2..14] == b"  ClassiCube")
-                || &bytes[0..3] == b"> &")
-    }
+        let is = if bytes.len() >= 14 && (&bytes[0..1] == b"&" && &bytes[2..14] == b"  ClassiCube")
+        {
+            true
+        } else {
+            was_clients_message && bytes.len() >= 3 && &bytes[0..3] == b"> &"
+        };
+
+        was_clients_message = is;
+
+        is
+    };
 
     let mut messages = Vec::new();
     let timeout_result = async_manager::timeout(Duration::from_secs(3), async {

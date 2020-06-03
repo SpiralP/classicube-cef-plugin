@@ -4,7 +4,7 @@ pub mod helpers;
 pub mod hidden_communication;
 
 pub use self::chat_command::CefChatCommand;
-use crate::async_manager;
+use crate::{async_manager, error::*};
 use classicube_helpers::{
     entities::{Entities, ENTITY_SELF_ID},
     events::chat::{ChatReceivedEvent, ChatReceivedEventHandler},
@@ -195,7 +195,8 @@ fn handle_chat_received(message: String, message_type: MsgType) {
     }
 
     // TODO if it wasn't a > message, fire the command of the last
-    if let Some((id, _name, message)) = find_player_from_message(message.clone()) {
+    if let Some((mut id, real_name, message)) = find_player_from_message(message.clone()) {
+        // debug!("{:?} {:?} {:?}", id, real_name, message);
         // let name: String = remove_color(name).trim().to_string();
 
         // don't remove colors because & might be part of url!
@@ -217,9 +218,38 @@ fn handle_chat_received(message: String, message_type: MsgType) {
             // remove "cef"
             split.remove(0);
 
-            let player_snapshot = PlayerSnapshot::from_entity_id(id);
+            let mut opt = PlayerSnapshot::from_entity_id(id);
 
-            if let Some(player_snapshot) = player_snapshot {
+            if opt.is_none() {
+                // try searching all entitys' display-name
+                warn!(
+                    "player_snapshot lookup failed for id {:?}, trying direct entity DisplayName \
+                     lookup",
+                    id
+                );
+
+                let (id2, opt2) = ENTITIES
+                    .with(|cell| {
+                        let entities = &*cell.borrow();
+                        let entities = entities.as_ref().unwrap();
+                        for (new_id, e) in entities.get_all() {
+                            if real_name == remove_color(e.get_display_name()) {
+                                return Ok::<_, Error>((
+                                    *new_id,
+                                    PlayerSnapshot::from_entity_id(*new_id),
+                                ));
+                            }
+                        }
+
+                        Ok::<_, Error>((id, None))
+                    })
+                    .unwrap();
+
+                id = id2;
+                opt = opt2;
+            }
+
+            if let Some(player_snapshot) = opt {
                 FUTURE_HANDLE.with(|cell| {
                     let (remote, remote_handle) = async move {
                         if unsafe { Server.IsSinglePlayer } == 0 {
@@ -246,10 +276,14 @@ fn handle_chat_received(message: String, message_type: MsgType) {
 
                     async_manager::spawn_local_on_main_thread(remote);
                 });
+            } else {
+                warn!("player_snapshot all lookups failed for id {:?}", id);
             }
         }
-    } else if message.contains(": ") && !message.starts_with("&5Discord: &f[") {
-        log::warn!("couldn't match player for {:?}", message);
+    } else if (message.contains(": ") || message.contains("> "))
+        && !message.starts_with("&5Discord: &f[")
+    {
+        warn!("couldn't match player for {:?}", message);
     }
 }
 
@@ -326,7 +360,15 @@ fn find_player_from_message(mut full_msg: String) -> Option<(u8, String, String)
         // nickname_resolver_handle_message(full_msg.to_string());
 
         // find colon from the left
-        if let Some(pos) = full_msg.find(": ") {
+        let opt = full_msg
+            .find(": ")
+            .and_then(|pos| if pos > 4 { Some(pos) } else { None })
+            .or_else(|| full_msg.find("> "))
+            .and_then(|pos| if pos > 4 { Some(pos) } else { None });
+
+        if let Some(pos) = opt {
+            // > &fasdfasdf
+
             // &]SpiralP
             let left = &full_msg[..pos]; // left without colon
                                          // &faaa

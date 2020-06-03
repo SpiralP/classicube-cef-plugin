@@ -12,7 +12,6 @@
         display: block;
         margin-left: auto;
         margin-right: auto;
-        height: 100vh;
       }
     </style>
   </head>
@@ -62,6 +61,16 @@
           document.title = host;
         }
       });
+
+      function updateSize() {
+        player.width = window.innerWidth;
+        player.height = window.innerHeight;
+      }
+
+      window.addEventListener("resize", () => {
+        updateSize();
+      });
+      updateSize();
     </script>
   </body>
 </html>

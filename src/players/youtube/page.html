@@ -41,6 +41,15 @@
         });
 
         window.player = player;
+
+        function updateSize() {
+          player.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        window.addEventListener("resize", () => {
+          updateSize();
+        });
+        updateSize();
       }
 
       // 4. The API will call this function when the video player is ready.
@@ -96,12 +105,6 @@
           window.playerEnded = true;
         }
       }
-
-      window.addEventListener("resize", () => {
-        if (typeof window.player !== "undefined") {
-          window.player.setSize(window.innerWidth, window.innerHeight);
-        }
-      });
     </script>
 
     <script src="https://www.youtube.com/iframe_api"></script>

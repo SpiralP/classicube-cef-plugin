@@ -1,9 +1,15 @@
 # [CEF](https://bitbucket.org/chromiumembedded/cef) (Chromium Embedded Framework) in [ClassiCube](https://www.classicube.net/)
 
+A ClassiCube plugin that allows placing web browser screens in-game!
+
+<!-- ![Image of Yaktocat](https://octodex.github.com/images/yaktocat.png) -->
+
+You probably want [the loader plugin](https://github.com/SpiralP/classicube-cef-loader-plugin) that installs and updates this plugin instead of compiling it yourself.
+
 ## Prerequisites
 
 - [Rust](https://www.rust-lang.org/) **nightly**
-- Some other stuff, you can look in [the GitHub Actions script](.github/workflows/rust.yml) for platform-specific dependencies
+- Some other stuff; you can look in [the GitHub Actions script](.github/workflows/rust.yml) for platform-specific dependencies
 
 ## Compiling
 

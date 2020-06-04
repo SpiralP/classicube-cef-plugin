@@ -29,7 +29,13 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
             .alias("play")
             .alias("load")
             .about("Play or queue something on the closest screen")
-            .arg(Arg::with_name("url").required(true).multiple(true)),
+            .arg(Arg::with_name("url").required(true).multiple(true))
+            .arg(
+                Arg::with_name("skip")
+                    .short("s")
+                    .long("skip")
+                    .help("Skip currently playing song and go to the next"),
+            ),
     )
     .subcommand(
         App::new("skip")
@@ -83,7 +89,12 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
     .subcommand(
         App::new("volume")
             .about("Set volume of the closest screen")
-            .arg(Arg::with_name("global").long("global").short("g"))
+            .arg(
+                Arg::with_name("global")
+                    .long("global")
+                    .short("g")
+                    .help("Use global volume, don't use distance for volume"),
+            )
             .arg(Arg::with_name("volume").required(true)),
     )
     .subcommand(
@@ -137,9 +148,16 @@ pub async fn handle_command(
             let parts = matches.values_of_lossy("url").unwrap_or_default();
             let url: String = parts.join("");
 
+            let skip = matches.is_present("skip");
+
             let entity_id = EntityManager::with_closest(player.eye_position, |closest_entity| {
                 Ok(closest_entity.id)
             })?;
+
+            if skip {
+                EntityManager::entity_skip(entity_id)?;
+            }
+
             if let Some(kind) = EntityManager::entity_queue(&url, entity_id)? {
                 Chat::print(format!(
                     "{}Queued {}{} {}",

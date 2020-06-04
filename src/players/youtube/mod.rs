@@ -8,10 +8,13 @@ use crate::{
 };
 use classicube_helpers::color;
 use futures::{future::RemoteHandle, prelude::*};
-use log::debug;
+use log::*;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, time::Duration};
+use std::{
+    collections::HashMap,
+    time::{Duration, Instant},
+};
 use url::Url;
 
 const PAGE_HTML: &str = include_str!("page.html");
@@ -36,6 +39,9 @@ pub struct YoutubePlayer {
 
     #[serde(skip)]
     pub finished: bool,
+
+    #[serde(skip)]
+    pub create_time: Option<Instant>,
 }
 
 impl Default for YoutubePlayer {
@@ -49,6 +55,7 @@ impl Default for YoutubePlayer {
             update_loop_handle: None,
             last_title: String::new(),
             finished: false,
+            create_time: None,
         }
     }
 }
@@ -84,6 +91,7 @@ impl PlayerTrait for YoutubePlayer {
 
     fn on_create(&mut self) -> String {
         debug!("YoutubePlayer on_create {}", self.id);
+        self.create_time = Some(Instant::now());
 
         format!(
             "data:text/html;base64,{}",
@@ -106,7 +114,7 @@ impl PlayerTrait for YoutubePlayer {
         async_manager::spawn_local_on_main_thread(f);
     }
 
-    fn on_title_change(&mut self, _entity_id: usize, _browser: &RustRefBrowser, title: String) {
+    fn on_title_change(&mut self, _entity_id: usize, browser: &RustRefBrowser, title: String) {
         if self.last_title == title || title == "YouTube Loading" {
             return;
         }
@@ -119,6 +127,19 @@ impl PlayerTrait for YoutubePlayer {
         ));
 
         self.last_title = title;
+
+        let now = Instant::now();
+        if let Some(create_time) = self.create_time {
+            // if it took a long time to load
+            let lag = now - create_time;
+            debug!("video started playing after loading {:?}", lag);
+            if lag > Duration::from_secs(5) {
+                warn!("slow video load, seeking to {:?}", lag);
+                // seek to current time
+                let current_time = self.time + lag;
+                self.set_current_time(browser, current_time).unwrap();
+            }
+        }
     }
 
     fn get_current_time(&self) -> Result<Duration> {

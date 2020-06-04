@@ -92,8 +92,8 @@ async fn do_query() -> Result<()> {
         // &7  ClassiCube 1.1.6 + cef0.9.4 + Ponies v2.1: &f¿ Mew, ┌ Glim
         // &7  ClassiCube 1.1.6 + cef0.9.4 +cs3.4.5 + More Models v1.2.4 +
         // > &7Poni: &fSpiralP
-        let is = if bytes.len() >= 14 && (&bytes[0..1] == b"&" && &bytes[2..14] == b"  ClassiCube")
-        {
+        // &7  ClassiCraft 1.1.3: &fFaeEmpress
+        let is = if bytes.len() >= 5 && (&bytes[0..1] == b"&" && &bytes[2..4] == b"  ") {
             true
         } else {
             was_clients_message && bytes.len() >= 3 && &bytes[0..3] == b"> &"

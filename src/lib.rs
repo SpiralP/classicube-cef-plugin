@@ -7,13 +7,13 @@ mod entity_manager;
 mod error;
 mod helpers;
 mod logger;
-mod macros;
 mod options;
 mod players;
 mod plugin;
 mod search;
 
 use self::plugin::Plugin;
+use classicube_helpers::{time, time_silent};
 use classicube_sys::*;
 use log::debug;
 use std::{os::raw::c_int, ptr};

@@ -16,7 +16,7 @@ use std::{
 };
 
 static_detour! {
-    static DETOUR: unsafe extern "C" fn(*const  classicube_sys:: String, c_int);
+    static DETOUR: unsafe extern "C" fn(*const classicube_sys:: String, c_int);
 }
 
 thread_local!(

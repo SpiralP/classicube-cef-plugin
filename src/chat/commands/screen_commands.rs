@@ -10,7 +10,7 @@ use crate::{
 };
 use async_recursion::async_recursion;
 use chrono::{offset::FixedOffset, DateTime, NaiveDateTime, Utc};
-use clap::{App, Arg, ArgMatches};
+use clap::{App, AppSettings, Arg, ArgMatches};
 use classicube_helpers::color;
 use log::*;
 use sntpc::NtpResult;
@@ -29,13 +29,14 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
             .alias("play")
             .alias("load")
             .about("Play or queue something on the closest screen")
-            .arg(Arg::with_name("url").required(true).multiple(true))
+            .setting(AppSettings::AllowLeadingHyphen)
             .arg(
                 Arg::with_name("skip")
                     .short("s")
                     .long("skip")
                     .help("Skip currently playing song and go to the next"),
-            ),
+            )
+            .arg(Arg::with_name("url").required(true).multiple(true)),
     )
     .subcommand(
         App::new("skip")
@@ -51,6 +52,7 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
     .subcommand(
         App::new("scale")
             .about("Scale the closest screen")
+            .setting(AppSettings::AllowLeadingHyphen)
             .arg(Arg::with_name("scale").required(true)),
     )
     .subcommand(

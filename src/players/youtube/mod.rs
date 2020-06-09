@@ -133,6 +133,7 @@ impl PlayerTrait for YoutubePlayer {
             // if it took a long time to load
             let lag = now - create_time;
             debug!("video started playing after loading {:?}", lag);
+            // TODO delay everyone a couple seconds then start playing video!
             if lag > Duration::from_secs(10) {
                 warn!("slow video load, seeking to {:?}", lag);
                 // seek to current time

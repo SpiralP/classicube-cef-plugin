@@ -41,3 +41,8 @@ cmake = "0.1.44"
 
 [features]
 ci = []
+
+
+# remove when 1.1.7 releases
+[patch."https://github.com/SpiralP/rust-classicube-sys.git"]
+classicube-sys = { git = "https://github.com/SpiralP/rust-classicube-sys//", branch = "next" }

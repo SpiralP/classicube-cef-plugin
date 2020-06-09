@@ -1,6 +1,6 @@
 use super::helpers::*;
 use classicube_helpers::events::gfx::{ContextLostEventHandler, ContextRecreatedEventHandler};
-use classicube_sys::{OwnedGfxVertexBuffer, VertexFormat__VERTEX_FORMAT_P3FT2FC4B};
+use classicube_sys::{OwnedGfxVertexBuffer, VertexFormat__VERTEX_FORMAT_TEXTURED};
 use log::debug;
 
 pub struct ContextHandler {
@@ -21,7 +21,7 @@ impl ContextHandler {
 
         TEX_VB.with(|cell| {
             *cell.borrow_mut() = Some(OwnedGfxVertexBuffer::create(
-                VertexFormat__VERTEX_FORMAT_P3FT2FC4B,
+                VertexFormat__VERTEX_FORMAT_TEXTURED,
                 4,
             ));
         });

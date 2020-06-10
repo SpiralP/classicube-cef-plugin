@@ -22,10 +22,15 @@
     <script src="https://ajax.googleapis.com/ajax/libs/shaka-player/2.5.11/shaka-player.compiled.js"></script>
     <script>
       var player = document.getElementById("player");
+      var manifestUri = "DASH_URL";
       player.volume = START_VOLUME;
       window.player = player;
 
-      var manifestUri = "DASH_URL";
+      player.addEventListener("play", (event) => {
+        // seek to live time
+        // chunks are 2 seconds, so go back 1 chunk
+        player.currentTime = shakaPlayer.seekRange().end - 3;
+      });
 
       function initApp() {
         // Install built-in polyfills to patch browser incompatibilities.
@@ -72,6 +77,18 @@
             var url = new URL(manifestUri);
             var host = url.host;
             document.title = "DASH Stream " + host;
+
+            setInterval(() => {
+              var delay = shakaPlayer.seekRange().end - player.currentTime;
+              // if we fall behind the amount of video, try to catch up
+              // (window_size+extra_window_size) * seg_duration = (5+2)*2 = 14 seconds
+              if (delay > 20) {
+                console.warn(
+                  "trying to catch up, " + delay + " seconds behind!"
+                );
+                player.currentTime = shakaPlayer.seekRange().end - 3;
+              }
+            }, 1000);
           },
           (error) => {
             onError(error);

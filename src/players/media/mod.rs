@@ -28,7 +28,7 @@ pub struct MediaPlayer {
     should_send: bool,
 
     #[serde(skip)]
-    update_loop_handle: Option<RemoteHandle<()>>,
+    pub update_loop_handle: Option<RemoteHandle<()>>,
 
     #[serde(skip)]
     last_title: String,

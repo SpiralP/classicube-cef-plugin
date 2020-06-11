@@ -1,4 +1,9 @@
-use crate::{async_manager, entity_manager::EntityManager, error::*, players::PlayerTrait};
+use crate::{
+    async_manager,
+    entity_manager::EntityManager,
+    error::*,
+    players::{Player, PlayerTrait},
+};
 use futures::{future::RemoteHandle, prelude::*};
 use log::{debug, warn};
 use std::{cell::Cell, time::Duration};
@@ -36,6 +41,19 @@ pub fn on_new_map_loaded() {
 async fn fade_all() -> Result<()> {
     debug!("fade_all");
 
+    EntityManager::with_all_entities(|entities| {
+        for entity in entities.values_mut() {
+            match &mut entity.player {
+                Player::Youtube(player) => drop(player.update_loop_handle.take()),
+                Player::Dash(player) => drop(player.update_loop_handle.take()),
+                Player::Media(player) => drop(player.update_loop_handle.take()),
+                Player::Web(_player) => {}
+            }
+        }
+
+        Ok::<_, Error>(())
+    })?;
+
     loop {
         EntityManager::with_all_entities(|entities| {
             for entity in entities.values_mut() {
@@ -50,6 +68,6 @@ async fn fade_all() -> Result<()> {
             Ok::<_, Error>(())
         })?;
 
-        async_manager::sleep(Duration::from_millis(64)).await;
+        async_manager::sleep(Duration::from_millis(32)).await;
     }
 }

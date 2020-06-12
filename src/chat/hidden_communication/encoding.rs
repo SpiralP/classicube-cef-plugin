@@ -84,13 +84,18 @@ pub async fn create_message() -> Message {
 pub async fn received_message(mut message: Message) -> Result<bool> {
     let mut had_data = false;
 
-    for info in message.entities.drain(..) {
+    for mut info in message.entities.drain(..) {
         // if it already exists don't do anything
         // TODO?? use unique ids!
         if EntityManager::with_by_entity_id(info.id, |_| Ok(())).is_ok() {
             warn!("entity {} already exists, skipping", info.id);
             continue;
         }
+
+        // don't know why should_send is false when receiving,
+        // when default is true?
+        // oh well, just always make sure it's true
+        info.player.set_should_send(true);
 
         debug!("creating {:#?}", info);
 

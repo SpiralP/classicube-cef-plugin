@@ -148,30 +148,22 @@ impl PlayerTrait for YoutubePlayer {
     }
 
     fn set_current_time(&mut self, browser: &RustRefBrowser, time: Duration) -> Result<()> {
-        // We recommend that you set this parameter to false while the user drags the
-        // mouse along a video progress bar and then set it to true when the user releases
-        // the mouse.
-        Self::execute_method(
-            browser,
-            &format!("player.seekTo({}, true)", time.as_secs_f32()),
-        );
-        Self::execute_method(browser, "player.playVideo()");
+        Self::execute_method(browser, &format!("setCurrentTime({})", time.as_secs_f32()));
         self.time = time;
+
+        Self::execute_method(browser, "player.playVideo()");
 
         Ok(())
     }
 
-    fn get_volume(&self, _browser: &RustRefBrowser) -> Result<f32> {
+    fn get_volume(&self) -> Result<f32> {
         Ok(self.volume)
     }
 
     /// volume is a float between 0-1
     fn set_volume(&mut self, browser: &RustRefBrowser, volume: f32) -> Result<()> {
         if (volume - self.volume).abs() > 0.0001 {
-            Self::execute_method(
-                browser,
-                &format!("player.setVolume({})", (volume * 100f32) as u32),
-            );
+            Self::execute_method(browser, &format!("setVolume({})", (volume * 100f32) as u32));
         }
 
         self.volume = volume;
@@ -224,7 +216,7 @@ impl YoutubePlayer {
     }
 
     pub async fn get_real_time(browser: &RustRefBrowser) -> Result<Duration> {
-        let seconds = match Self::eval_method(browser, "player.getCurrentTime()").await? {
+        let seconds = match Self::eval_method(browser, "getCurrentTime()").await? {
             RustV8Value::Double(seconds) => seconds as f32,
             RustV8Value::Int(seconds) => seconds as f32,
             RustV8Value::UInt(seconds) => seconds as f32,
@@ -239,7 +231,7 @@ impl YoutubePlayer {
 
     #[allow(dead_code)]
     pub async fn get_real_volume(browser: &RustRefBrowser) -> Result<f32> {
-        let volume = match Self::eval_method(browser, "player.getVolume()").await? {
+        let volume = match Self::eval_method(browser, "getVolume()").await? {
             RustV8Value::Double(volume) => volume as f32,
             RustV8Value::Int(volume) => volume as f32,
             RustV8Value::UInt(volume) => volume as f32,

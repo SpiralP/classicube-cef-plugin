@@ -33,7 +33,7 @@ pub trait PlayerTrait {
         bail!("setting time not supported");
     }
 
-    fn get_volume(&self, _browser: &RustRefBrowser) -> Result<f32> {
+    fn get_volume(&self) -> Result<f32> {
         Ok(1.0)
     }
 
@@ -153,12 +153,12 @@ impl PlayerTrait for Player {
         }
     }
 
-    fn get_volume(&self, browser: &RustRefBrowser) -> Result<f32> {
+    fn get_volume(&self) -> Result<f32> {
         match self {
-            Player::Youtube(player) => player.get_volume(browser),
-            Player::Dash(player) => player.get_volume(browser),
-            Player::Media(player) => player.get_volume(browser),
-            Player::Web(player) => player.get_volume(browser),
+            Player::Youtube(player) => player.get_volume(),
+            Player::Dash(player) => player.get_volume(),
+            Player::Media(player) => player.get_volume(),
+            Player::Web(player) => player.get_volume(),
         }
     }
 

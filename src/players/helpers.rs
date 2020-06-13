@@ -1,5 +1,10 @@
 use super::{MediaPlayer, Player, PlayerTrait, YoutubePlayer};
-use crate::{async_manager, chat::ENTITIES, entity_manager::EntityManager, error::*};
+use crate::{
+    async_manager,
+    chat::ENTITIES,
+    entity_manager::{CefEntity, EntityManager},
+    error::*,
+};
 use classicube_helpers::OptionWithInner;
 use classicube_sys::ENTITIES_SELF_ID;
 use log::*;
@@ -13,36 +18,39 @@ pub async fn start_update_loop(entity_id: usize) {
     }
 }
 
+pub fn compute_real_volume(entity: &CefEntity) -> Option<f32> {
+    let current_volume = entity.player.get_volume().ok()?;
+    if entity.player.has_global_volume() {
+        // global volume
+
+        Some(current_volume)
+    } else {
+        // use distance volume
+
+        let my_pos = ENTITIES
+            .with_inner(|entities| {
+                let me = entities.get(ENTITIES_SELF_ID as _)?;
+
+                Some(me.get_position())
+            })
+            .flatten()?;
+
+        let entity_pos = entity.entity.Position;
+
+        let percent = (entity_pos - my_pos).length_squared().sqrt() / 30f32;
+        let percent = (1.0 - percent).max(0.0).min(1.0);
+
+        Some(percent)
+    }
+}
+
 async fn start_loop(entity_id: usize) -> Result<()> {
     loop {
         // update volume
         EntityManager::with_by_entity_id(entity_id, |entity| {
             if let Some(browser) = &entity.browser {
-                let current_volume = entity.player.get_volume(&browser)?;
-
-                if !entity.player.has_global_volume() {
-                    // use distance
-
-                    let maybe_my_pos = ENTITIES
-                        .with_inner(|entities| {
-                            let me = entities.get(ENTITIES_SELF_ID as _)?;
-
-                            Some(me.get_position())
-                        })
-                        .flatten();
-
-                    if let Some(my_pos) = maybe_my_pos {
-                        let entity_pos = entity.entity.Position;
-
-                        let percent = (entity_pos - my_pos).length_squared().sqrt() / 30f32;
-                        let percent = (1.0 - percent).max(0.0).min(1.0);
-
-                        entity.player.set_volume(&browser, percent)?;
-                    }
-                } else {
-                    // global volume
-
-                    entity.player.set_volume(&browser, current_volume)?;
+                if let Some(volume) = compute_real_volume(entity) {
+                    entity.player.set_volume(&browser, volume)?;
                 }
             }
 

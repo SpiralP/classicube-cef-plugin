@@ -20,9 +20,52 @@
       // window["START" + "_" + "VOLUME"] = 10;
 
       var videoId = "VIDEO_ID"; // Wimkqo8gDZ0
-      var startTime = START_TIME;
       var startVolume = START_VOLUME;
+      var startTime = START_TIME;
       var subtitles = SUBTITLES;
+
+      function setVolume(volume) {
+        if (
+          typeof window.player !== "undefined" &&
+          typeof window.player.setVolume !== "undefined"
+        ) {
+          window.player.setVolume(volume);
+        }
+        startVolume = volume;
+      }
+      function getVolume() {
+        if (
+          typeof window.player !== "undefined" &&
+          typeof window.player.getVolume !== "undefined"
+        ) {
+          return window.player.getVolume();
+        } else {
+          return startVolume;
+        }
+      }
+
+      function setCurrentTime(time) {
+        if (
+          typeof window.player !== "undefined" &&
+          typeof window.player.seekTo !== "undefined"
+        ) {
+          // We recommend that you set this parameter to false while the user drags the
+          // mouse along a video progress bar and then set it to true when the user releases
+          // the mouse.
+          window.player.seekTo(time, true);
+        }
+        startTime = time;
+      }
+      function getCurrentTime() {
+        if (
+          typeof window.player !== "undefined" &&
+          typeof window.player.getCurrentTime !== "undefined"
+        ) {
+          return window.player.getCurrentTime();
+        } else {
+          return startTime;
+        }
+      }
 
       // 3. This function creates an <iframe> (and YouTube player)
       //    after the API code downloads.

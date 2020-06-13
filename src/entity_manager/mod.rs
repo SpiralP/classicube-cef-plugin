@@ -306,7 +306,7 @@ impl EntityManager {
                 // Web player which has global volume to a Youtube, it would
                 // make the youtube player global volume too
                 let had_global_volume = entity.player.has_global_volume();
-                let volume = entity.player.get_volume(&browser);
+                let volume = entity.player.get_volume();
                 entity.player = player;
                 let _ignore = entity.player.set_global_volume(had_global_volume);
                 if let Ok(volume) = volume {

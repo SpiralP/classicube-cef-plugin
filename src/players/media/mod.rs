@@ -122,7 +122,7 @@ impl PlayerTrait for MediaPlayer {
         Ok(())
     }
 
-    fn get_volume(&self, _browser: &RustRefBrowser) -> Result<f32> {
+    fn get_volume(&self) -> Result<f32> {
         Ok(self.volume)
     }
 

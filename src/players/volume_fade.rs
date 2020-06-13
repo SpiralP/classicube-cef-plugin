@@ -58,7 +58,7 @@ async fn fade_all() -> Result<()> {
         EntityManager::with_all_entities(|entities| {
             for entity in entities.values_mut() {
                 if let Some(browser) = &entity.browser {
-                    if let Ok(current_volume) = entity.player.get_volume(&browser) {
+                    if let Ok(current_volume) = entity.player.get_volume() {
                         let next_volume = (current_volume - 0.025).max(0.0);
                         let _ignore = entity.player.set_volume(&browser, next_volume);
                     }

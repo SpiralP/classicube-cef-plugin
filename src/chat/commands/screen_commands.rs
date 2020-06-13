@@ -64,6 +64,7 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
         App::new("angles")
             .alias("angle")
             .about("Change angles of the closest screen")
+            .setting(AppSettings::AllowLeadingHyphen)
             .arg(Arg::with_name("yaw").required(true))
             .arg(Arg::with_name("pitch")),
     )
@@ -80,6 +81,7 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
     .subcommand(
         App::new("type")
             .about("Type text on the closest screen")
+            .setting(AppSettings::AllowLeadingHyphen)
             .arg(Arg::with_name("words").required(true).multiple(true)),
     )
     .subcommand(
@@ -110,6 +112,7 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
             .usage("cef at <x> <y> <z> [yaw] [pitch] [scale]")
             .alias("tp")
             .about("Move the closest screen to coords x,y,z and optional yaw,pitch")
+            .setting(AppSettings::AllowLeadingHyphen)
             .arg(Arg::with_name("x").required(true))
             .arg(Arg::with_name("y").required(true))
             .arg(Arg::with_name("z").required(true))
@@ -125,6 +128,7 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
     .subcommand(
         App::new("test_time")
             .about("the hacks")
+            .setting(AppSettings::AllowLeadingHyphen)
             .arg(Arg::with_name("hack").required(true)),
     )
 }

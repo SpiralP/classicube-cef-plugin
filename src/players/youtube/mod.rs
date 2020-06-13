@@ -190,7 +190,12 @@ impl PlayerTrait for YoutubePlayer {
     }
 
     fn get_url(&self) -> String {
-        format!("https://youtu.be/{}?t={}", self.id, self.time.as_secs())
+        let secs = self.time.as_secs();
+        if secs == 0 {
+            format!("https://youtu.be/{}", self.id)
+        } else {
+            format!("https://youtu.be/{}?t={}", self.id, secs)
+        }
     }
 
     fn get_title(&self) -> String {

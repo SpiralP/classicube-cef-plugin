@@ -320,6 +320,7 @@ dependencies = [
  "classicube-sys",
  "cmake",
  "color-backtrace",
+ "detour",
  "deunicode",
  "error-chain",
  "futures",
@@ -342,10 +343,9 @@ dependencies = [
 [[package]]
 name = "classicube-helpers"
 version = "0.1.0"
-source = "git+https://github.com/SpiralP/rust-classicube-helpers.git#1f60e7d0cb01dc5523805c66617f82232a266e29"
+source = "git+https://github.com/SpiralP/rust-classicube-helpers.git#534fa827800660a7640ae979d132580d4130c701"
 dependencies = [
  "classicube-sys",
- "detour",
  "futures",
  "log",
  "paste",
@@ -354,7 +354,7 @@ dependencies = [
 [[package]]
 name = "classicube-sys"
 version = "0.1.0"
-source = "git+https://github.com/SpiralP/rust-classicube-sys//?branch=next#6707f385d8d62c48ba73697dc894597ea3cffd71"
+source = "git+https://github.com/SpiralP/rust-classicube-sys.git#d27050f85f73ed4478ddfb634d00e5dff65efa60"
 dependencies = [
  "bindgen 0.54.0",
  "cc 1.0.54",

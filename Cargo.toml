@@ -17,6 +17,7 @@ clap = { git = "https://github.com/SpiralP/clap-cc.git" }
 classicube-helpers = { git = "https://github.com/SpiralP/rust-classicube-helpers.git", features = ["futures"] }
 classicube-sys = { git = "https://github.com/SpiralP/rust-classicube-sys.git" }
 color-backtrace = { git = "https://github.com/SpiralP/color-backtrace-msgbox.git" }
+detour = { git = "https://github.com/SpiralP/detour-rs.git" }
 deunicode = "1.1.1"
 error-chain = "0.12.2"
 futures = "0.3.5"
@@ -41,8 +42,3 @@ cmake = "0.1.44"
 
 [features]
 ci = []
-
-
-# remove when 1.1.7 releases
-[patch."https://github.com/SpiralP/rust-classicube-sys.git"]
-classicube-sys = { git = "https://github.com/SpiralP/rust-classicube-sys//", branch = "next" }

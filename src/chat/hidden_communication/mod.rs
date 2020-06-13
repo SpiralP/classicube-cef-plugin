@@ -6,8 +6,9 @@ mod whispers;
 pub use self::{encoding::LightEntity, map_themes::CURRENT_MAP_THEME};
 use super::SIMULATING;
 use crate::async_manager;
-use classicube_helpers::{detour::static_detour, CellGetSet};
+use classicube_helpers::CellGetSet;
 use classicube_sys::{Chat_AddOf, MsgType_MSG_TYPE_NORMAL, Server};
+use detour::static_detour;
 use futures::channel::oneshot;
 use log::debug;
 use std::{

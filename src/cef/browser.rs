@@ -15,7 +15,7 @@ thread_local!(
 );
 
 thread_local!(
-    pub static BROWSER_SIZES: RefCell<HashMap<c_int, (c_int, c_int)>> = Default::default();
+    pub static BROWSER_SIZES: RefCell<HashMap<c_int, (u16, u16)>> = Default::default();
 );
 
 thread_local!(
@@ -99,8 +99,8 @@ pub extern "C" fn get_view_rect(browser: RustRefBrowser) -> RustRect {
         RustRect {
             x: 0,
             y: 0,
-            width: *width,
-            height: *height,
+            width: *width as c_int,
+            height: *height as c_int,
         }
     })
 }

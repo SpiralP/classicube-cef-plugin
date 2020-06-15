@@ -37,7 +37,7 @@ impl CefEntity {
             RenderName: Some(Self::render_name),
         });
 
-        let mut pixels: Vec<u8> = vec![255; 4 * TEXTURE_WIDTH * TEXTURE_HEIGHT];
+        let mut pixels: Vec<u8> = vec![255; 4 * TEXTURE_WIDTH as usize * TEXTURE_HEIGHT as usize];
 
         let mut bmp = Bitmap {
             Scan0: pixels.as_mut_ptr(),
@@ -113,6 +113,7 @@ impl CefEntity {
 
         // hack so that Model can see browser resolution sizes
         // that are updated in update_texture
+        // used in CefModel::draw
         entity.NameTex = Texture {
             ID: entity.TextureId,
             X: -(MODEL_WIDTH as cc_int16 / 2),
@@ -157,6 +158,19 @@ impl CefEntity {
     pub fn get_scale(&self) -> f32 {
         let CefEntity { entity, .. } = self;
         entity.ModelScale.X
+    }
+
+    pub fn set_size(&mut self, width: u16, height: u16) {
+        let CefEntity { entity, .. } = self;
+        entity.NameTex.X = -(width as cc_int16 / 2);
+        entity.NameTex.Y = -(height as cc_int16);
+        entity.NameTex.Width = width;
+        entity.NameTex.Height = height;
+    }
+
+    pub fn get_size(&self) -> (u16, u16) {
+        let CefEntity { entity, .. } = self;
+        (entity.NameTex.Width, entity.NameTex.Height)
     }
 
     // pub fn on_browser_attached<F: 'static>(&mut self, f: F)

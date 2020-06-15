@@ -28,8 +28,8 @@ use std::{
     os::raw::*,
 };
 
-pub const TEXTURE_WIDTH: usize = 2048;
-pub const TEXTURE_HEIGHT: usize = 2048;
+pub const TEXTURE_WIDTH: u16 = 2048;
+pub const TEXTURE_HEIGHT: u16 = 2048;
 
 pub const MODEL_WIDTH: u8 = 16;
 pub const MODEL_HEIGHT: u8 = 9;
@@ -178,7 +178,7 @@ impl EntityManager {
         input: &str,
         fps: u16,
         insecure: bool,
-        resolution: Option<(usize, usize)>,
+        resolution: Option<(u16, u16)>,
     ) -> Result<usize> {
         let player = Player::from_input(input)?;
 
@@ -192,7 +192,7 @@ impl EntityManager {
         url: String,
         fps: u16,
         insecure: bool,
-        resolution: Option<(usize, usize)>,
+        resolution: Option<(u16, u16)>,
     ) {
         async_manager::spawn_local_on_main_thread(async move {
             let result = async move {
@@ -217,7 +217,7 @@ impl EntityManager {
         mut player: Player,
         fps: u16,
         insecure: bool,
-        resolution: Option<(usize, usize)>,
+        resolution: Option<(u16, u16)>,
     ) -> Result<usize> {
         let url = player.on_create();
 
@@ -326,7 +326,8 @@ impl EntityManager {
 
     /// returns entity_id
     pub async fn create_entity_from_light_entity(mut info: LightEntity) -> Result<usize> {
-        let (pos, ang, scale) = (info.pos, info.ang, info.scale);
+        let (pos, ang, scale, size, resolution) =
+            (info.pos, info.ang, info.scale, info.size, info.resolution);
 
         let url = info.player.on_create();
 
@@ -348,8 +349,9 @@ impl EntityManager {
             e.RotX = ang[0];
             e.RotY = ang[1];
             entity.set_scale(scale);
+            entity.set_size(size.0, size.1);
 
-            Self::create_attach_browser(entity_id, url, FRAME_RATE.get()?, false, None);
+            Self::create_attach_browser(entity_id, url, FRAME_RATE.get()?, false, resolution);
 
             Ok(entity_id)
         })

@@ -27,8 +27,8 @@ use std::{
 };
 use tokio::sync::broadcast;
 
-pub const CEF_DEFAULT_WIDTH: c_int = 1920;
-pub const CEF_DEFAULT_HEIGHT: c_int = 1080;
+pub const CEF_DEFAULT_WIDTH: u16 = 1920;
+pub const CEF_DEFAULT_HEIGHT: u16 = 1080;
 
 // we've set cef to render at 60 fps
 // (1/60)*1000 = 16.6666666667
@@ -277,7 +277,7 @@ impl Cef {
         });
     }
 
-    fn set_browser_size(browser_id: c_int, width: usize, height: usize) -> Result<()> {
+    fn set_browser_size(browser_id: c_int, width: u16, height: u16) -> Result<()> {
         // 0 size crashes
         if width < 1 || height < 1 || width > TEXTURE_WIDTH || height > TEXTURE_HEIGHT {
             bail!("size not within {}x{}", TEXTURE_WIDTH, TEXTURE_HEIGHT);
@@ -292,7 +292,7 @@ impl Cef {
         Ok(())
     }
 
-    pub fn resize_browser(browser: &RustRefBrowser, width: usize, height: usize) -> Result<()> {
+    pub fn resize_browser(browser: &RustRefBrowser, width: u16, height: u16) -> Result<()> {
         let browser_id = browser.get_identifier();
 
         Self::set_browser_size(browser_id, width, height)?;
@@ -301,7 +301,7 @@ impl Cef {
         Ok(())
     }
 
-    pub fn get_browser_size(browser: &RustRefBrowser) -> (c_int, c_int) {
+    pub fn get_browser_size(browser: &RustRefBrowser) -> (u16, u16) {
         let browser_id = browser.get_identifier();
         BROWSER_SIZES.with(move |cell| {
             let sizes = &*cell.borrow();

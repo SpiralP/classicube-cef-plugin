@@ -51,7 +51,7 @@ impl CefModel {
 impl CefModel {
     unsafe fn register_gfx_texture(&mut self) {
         // must be a vec or else we try to fit huge array onto stack and crash!
-        let mut pixels: Vec<u8> = vec![255; 4 * TEXTURE_WIDTH * TEXTURE_HEIGHT];
+        let mut pixels: Vec<u8> = vec![255; 4 * TEXTURE_WIDTH as usize * TEXTURE_HEIGHT as usize];
 
         let mut bmp = Bitmap {
             Scan0: pixels.as_mut_ptr(),

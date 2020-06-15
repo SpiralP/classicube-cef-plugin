@@ -1,4 +1,5 @@
 use crate::{
+    cef::Cef,
     entity_manager::EntityManager,
     error::*,
     players::{Player, PlayerTrait},
@@ -15,6 +16,8 @@ pub struct LightEntity {
     pub pos: [f32; 3],
     pub ang: [f32; 2],
     pub scale: f32,
+    pub size: (u16, u16),
+    pub resolution: Option<(u16, u16)>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -50,6 +53,8 @@ pub async fn create_message() -> Message {
                 let pos = [e.Position.X, e.Position.Y, e.Position.Z];
                 let ang = [e.RotX, e.RotY];
                 let scale = entity.get_scale();
+                let size = entity.get_size();
+                let resolution = entity.browser.as_ref().map(Cef::get_browser_size);
 
                 let player = entity.player.clone();
                 let queue = entity.queue.clone();
@@ -61,6 +66,8 @@ pub async fn create_message() -> Message {
                     player,
                     queue,
                     scale,
+                    size,
+                    resolution,
                 })
             })
             .collect()

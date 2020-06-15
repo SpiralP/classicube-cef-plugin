@@ -56,6 +56,13 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
             .arg(Arg::with_name("scale").required(true)),
     )
     .subcommand(
+        App::new("size")
+            .alias("resize")
+            .about("Resizes the closest screen")
+            .arg(Arg::with_name("width").required(true))
+            .arg(Arg::with_name("height").required(true)),
+    )
+    .subcommand(
         App::new("reload")
             .alias("refresh")
             .about("Reload the closest screen"),
@@ -250,6 +257,19 @@ pub async fn handle_command(
 
             EntityManager::with_closest(player.eye_position, move |entity| {
                 entity.set_scale(scale);
+
+                Ok(())
+            })?;
+
+            Ok(true)
+        }
+
+        ("size", Some(matches)) => {
+            let width = matches.value_of("width").unwrap().parse()?;
+            let height = matches.value_of("height").unwrap().parse()?;
+
+            EntityManager::with_closest(player.eye_position, move |entity| {
+                entity.set_size(width, height);
 
                 Ok(())
             })?;

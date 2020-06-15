@@ -215,6 +215,17 @@ CefResourceRequestHandler::ReturnValue MyClient::OnBeforeResourceLoad(
 }
 
 // CefJSDialogHandler methods:
+bool MyClient::OnBeforeUnloadDialog(CefRefPtr<CefBrowser> browser,
+                                    const CefString& message_text,
+                                    bool is_reload,
+                                    CefRefPtr<CefJSDialogCallback> callback) {
+  CefString user_input;
+  callback->Continue(true, user_input);
+  // Return true if the application will use a custom dialog or if the callback
+  // has been executed immediately.
+  return true;
+}
+
 bool MyClient::OnJSDialog(CefRefPtr<CefBrowser> browser,
                           const CefString& origin_url,
                           CefJSDialogHandler::JSDialogType dialog_type,

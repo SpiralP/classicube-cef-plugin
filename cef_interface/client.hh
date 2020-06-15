@@ -98,6 +98,11 @@ class MyClient : public CefClient,
       CefRefPtr<CefRequestCallback> callback) OVERRIDE;
 
   // CefJSDialogHandler methods:
+  bool OnBeforeUnloadDialog(CefRefPtr<CefBrowser> browser,
+                            const CefString& message_text,
+                            bool is_reload,
+                            CefRefPtr<CefJSDialogCallback> callback) OVERRIDE;
+
   bool OnJSDialog(CefRefPtr<CefBrowser> browser,
                   const CefString& origin_url,
                   CefJSDialogHandler::JSDialogType dialog_type,

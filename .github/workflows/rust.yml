@@ -43,21 +43,20 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/') != true
         with:
           command: build
-          args: --target ${{ matrix.config.arch }}-pc-windows-msvc
 
       - name: Test
         uses: actions-rs/cargo@v1
         if: startsWith(github.ref, 'refs/tags/') != true
         with:
           command: test
-          args: --target ${{ matrix.config.arch }}-pc-windows-msvc --features ci -- --nocapture
+          args: --features ci -- --nocapture
 
       - name: Build Release
         uses: actions-rs/cargo@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
           command: build
-          args: --target ${{ matrix.config.arch }}-pc-windows-msvc --release
+          args: --release
 
       - run: Rename-Item -Path "target\release\classicube_cef_plugin.dll" -NewName "classicube_cef_windows_${{ matrix.config.arch }}.dll"
         if: startsWith(github.ref, 'refs/tags/')
@@ -124,21 +123,20 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/') != true
         with:
           command: build
-          args: --target ${{ matrix.config.arch }}-unknown-linux-gnu
 
       - name: Test
         uses: actions-rs/cargo@v1
         if: startsWith(github.ref, 'refs/tags/') != true
         with:
           command: test
-          args: --target ${{ matrix.config.arch }}-unknown-linux-gnu --features ci -- --nocapture
+          args: --features ci -- --nocapture
 
       - name: Build Release
         uses: actions-rs/cargo@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
           command: build
-          args: --target ${{ matrix.config.arch }}-unknown-linux-gnu --release
+          args: --release
 
       - run: mv target/release/libclassicube_cef_plugin.so "classicube_cef_linux_${{ matrix.config.arch }}.so"
         if: startsWith(github.ref, 'refs/tags/')
@@ -188,21 +186,20 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/') != true
         with:
           command: build
-          args: --target ${{ matrix.config.arch }}-apple-darwin
 
       - name: Test
         uses: actions-rs/cargo@v1
         if: startsWith(github.ref, 'refs/tags/') != true
         with:
           command: test
-          args: --target ${{ matrix.config.arch }}-apple-darwin --features ci -- --nocapture
+          args: --features ci -- --nocapture
 
       - name: Build Release
         uses: actions-rs/cargo@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
           command: build
-          args: --target ${{ matrix.config.arch }}-apple-darwin --release
+          args: --release
 
       - run: mv target/release/libclassicube_cef_plugin.dylib "classicube_cef_macos_${{ matrix.config.arch }}.dylib"
         if: startsWith(github.ref, 'refs/tags/')

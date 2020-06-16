@@ -151,8 +151,6 @@ impl PlayerTrait for YoutubePlayer {
         Self::execute_method(browser, &format!("setCurrentTime({})", time.as_secs_f32()));
         self.time = time;
 
-        Self::execute_method(browser, "player.playVideo()");
-
         Ok(())
     }
 

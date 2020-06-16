@@ -24,6 +24,8 @@
       var startTime = START_TIME;
       var subtitles = SUBTITLES;
 
+      window.playerEnded = false;
+
       function setVolume(volume) {
         if (
           typeof window.player !== "undefined" &&
@@ -53,10 +55,16 @@
           // mouse along a video progress bar and then set it to true when the user releases
           // the mouse.
           window.player.seekTo(time, true);
+          window.player.playVideo();
+          window.playerEnded = false;
         }
         startTime = time;
       }
       function getCurrentTime() {
+        if (window.playerEnded) {
+          return window.playerEndedTime;
+        }
+
         if (
           typeof window.player !== "undefined" &&
           typeof window.player.getCurrentTime !== "undefined"
@@ -133,8 +141,6 @@
         }
       }
 
-      window.playerEnded = false;
-
       // 5. The API calls this function when the player's state changes.
       //    The function indicates that when playing a video (state=1),
       //    the player should play for six seconds and then stop.
@@ -154,6 +160,7 @@
           }
         } else if (event.data == YT.PlayerState.ENDED) {
           window.playerEnded = true;
+          window.playerEndedTime = window.player.getCurrentTime();
           window.player.stopVideo();
         }
       }

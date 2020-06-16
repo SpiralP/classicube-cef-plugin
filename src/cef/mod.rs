@@ -23,16 +23,11 @@ use std::{
     cell::{Cell, RefCell},
     collections::HashMap,
     os::raw::c_int,
-    time::Duration,
 };
 use tokio::sync::broadcast;
 
 pub const CEF_DEFAULT_WIDTH: u16 = 1920;
 pub const CEF_DEFAULT_HEIGHT: u16 = 1080;
-
-// we've set cef to render at 60 fps
-// (1/60)*1000 = 16.6666666667
-const CEF_RATE: Duration = Duration::from_millis(16);
 
 #[derive(Debug, Clone)]
 pub enum CefEvent {
@@ -104,7 +99,7 @@ impl Cef {
 
         async_manager::spawn_local_on_main_thread(async move {
             while crate::time_silent!("Cef::try_step()", 100, { Cef::try_step() }) {
-                async_manager::sleep(CEF_RATE).await;
+                async_manager::yield_now().await;
             }
         });
 

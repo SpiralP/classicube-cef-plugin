@@ -4,7 +4,15 @@ use futures::{future::Either, prelude::*};
 use futures_timer::Delay;
 use lazy_static::lazy_static;
 use log::debug;
-use std::{cell::RefCell, future::Future, sync::Mutex, time::Duration};
+use std::{
+    cell::{Cell, RefCell},
+    future::Future,
+    pin::Pin,
+    rc::Rc,
+    sync::Mutex,
+    task::{Context, Poll},
+    time::Duration,
+};
 use tokio::task::{JoinError, JoinHandle};
 
 thread_local!(
@@ -94,7 +102,18 @@ pub fn shutdown() {
     }
 }
 
+thread_local!(
+    static YIELDED_WAKERS: RefCell<Vec<Rc<Cell<bool>>>> = Default::default();
+);
+
 pub fn step() {
+    YIELDED_WAKERS.with(move |cell| {
+        let vec = &mut *cell.borrow_mut();
+        for waker in vec.drain(..) {
+            waker.set(true);
+        }
+    });
+
     // process futures
     ASYNC_DISPATCHER
         .with_inner_mut(|async_dispatcher| {
@@ -105,6 +124,35 @@ pub fn step() {
 
 pub async fn sleep(duration: Duration) {
     let _ = Delay::new(duration).await;
+}
+
+pub async fn yield_now() {
+    struct YieldNow {
+        waker: Rc<Cell<bool>>,
+    }
+
+    impl Future for YieldNow {
+        type Output = ();
+
+        fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+            cx.waker().wake_by_ref();
+            if self.waker.get() {
+                Poll::Ready(())
+            } else {
+                Poll::Pending
+            }
+        }
+    }
+
+    let waker = Rc::new(Cell::new(false));
+    {
+        let waker = waker.clone();
+        YIELDED_WAKERS.with(move |cell| {
+            let vec = &mut *cell.borrow_mut();
+            vec.push(waker);
+        });
+    }
+    YieldNow { waker }.await
 }
 
 pub async fn timeout<T, F>(duration: Duration, f: F) -> Option<T>

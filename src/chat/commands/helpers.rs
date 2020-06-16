@@ -1,8 +1,4 @@
-use crate::{
-    chat::PlayerSnapshot,
-    entity_manager::{CefEntity, MODEL_HEIGHT, MODEL_WIDTH},
-    error::*,
-};
+use crate::{chat::PlayerSnapshot, entity_manager::CefEntity, error::*};
 use classicube_sys::{Camera, Entities, LocalPlayer, RayTracer, Vec3, ENTITIES_SELF_ID};
 use nalgebra::*;
 use ncollide3d::{query::*, shape::*};
@@ -64,6 +60,7 @@ pub fn get_click_coords(
     entity_pitch: f32,
     entity_yaw: f32,
     entity_scale: Vec3,
+    entity_size: (u16, u16),
     browser_width: u32,
     browser_height: u32,
 ) -> Result<Option<(f32, f32)>> {
@@ -123,8 +120,8 @@ pub fn get_click_coords(
         let up = up.normalize();
         let right = -right;
 
-        let width = entity_scale.X * MODEL_WIDTH as f32;
-        let height = entity_scale.Y * MODEL_HEIGHT as f32;
+        let width = entity_scale.X * entity_size.0 as f32;
+        let height = entity_scale.Y * entity_size.1 as f32;
 
         let top_left = screen_pos - 0.5 * right * width + up * height;
 

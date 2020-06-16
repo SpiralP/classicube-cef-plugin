@@ -1,7 +1,7 @@
 use super::{TEXTURE_HEIGHT, TEXTURE_WIDTH};
 use crate::{
     cef::RustRefBrowser,
-    entity_manager::{MODEL_HEIGHT, MODEL_WIDTH},
+    entity_manager::{DEFAULT_MODEL_HEIGHT, DEFAULT_MODEL_WIDTH},
     players::Player,
 };
 use classicube_sys::{
@@ -116,10 +116,10 @@ impl CefEntity {
         // used in CefModel::draw
         entity.NameTex = Texture {
             ID: entity.TextureId,
-            X: -(MODEL_WIDTH as cc_int16 / 2),
-            Y: -(MODEL_HEIGHT as cc_int16),
-            Width: MODEL_WIDTH as _,
-            Height: MODEL_HEIGHT as _,
+            X: -(DEFAULT_MODEL_WIDTH as cc_int16 / 2),
+            Y: -(DEFAULT_MODEL_HEIGHT as cc_int16),
+            Width: DEFAULT_MODEL_WIDTH as _,
+            Height: DEFAULT_MODEL_HEIGHT as _,
             uv: TextureRec {
                 U1: 0.0,
                 V1: 0.0,

@@ -31,8 +31,8 @@ use std::{
 pub const TEXTURE_WIDTH: u16 = 2048;
 pub const TEXTURE_HEIGHT: u16 = 2048;
 
-pub const MODEL_WIDTH: u8 = 16;
-pub const MODEL_HEIGHT: u8 = 9;
+pub const DEFAULT_MODEL_WIDTH: u8 = 16;
+pub const DEFAULT_MODEL_HEIGHT: u8 = 9;
 
 thread_local!(
     static ENTITY_ID: Cell<usize> = Cell::new(0);

@@ -319,13 +319,14 @@ pub async fn handle_command(
                     browser.send_click(x, y)?;
                 }
             } else {
-                let (entity_id, entity_pos, [entity_pitch, entity_yaw], entity_scale) =
+                let (entity_id, entity_pos, [entity_pitch, entity_yaw], entity_scale, entity_size) =
                     EntityManager::with_closest(player.eye_position, |closest_entity| {
                         Ok((
                             closest_entity.id,
                             closest_entity.entity.Position,
                             [closest_entity.entity.RotX, closest_entity.entity.RotY],
                             closest_entity.entity.ModelScale,
+                            closest_entity.get_size(),
                         ))
                     })?;
 
@@ -340,6 +341,7 @@ pub async fn handle_command(
                     entity_pitch,
                     entity_yaw,
                     entity_scale,
+                    entity_size,
                     browser_width as u32,
                     browser_height as u32,
                 )? {

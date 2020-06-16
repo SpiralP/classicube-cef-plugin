@@ -75,7 +75,7 @@
           height: window.innerHeight,
           videoId: videoId,
           playerVars: {
-            autoplay: 1,
+            autoplay: 0,
             controls: 0,
             disablekb: 1,
             fs: 0,
@@ -154,6 +154,7 @@
           }
         } else if (event.data == YT.PlayerState.ENDED) {
           window.playerEnded = true;
+          window.player.stopVideo();
         }
       }
     </script>

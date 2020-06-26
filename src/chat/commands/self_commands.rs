@@ -1,12 +1,17 @@
 use super::{helpers::*, Chat};
-use crate::{chat::PlayerSnapshot, entity_manager::EntityManager, error::*, search};
+use crate::{
+    chat::{hidden_communication::whispers, PlayerSnapshot},
+    entity_manager::EntityManager,
+    error::*,
+    search,
+};
 use clap::{App, Arg, ArgMatches};
 use classicube_sys::{
     Entities, Vec3, ENTITIES_SELF_ID, FACE_CONSTS, FACE_CONSTS_FACE_XMAX, FACE_CONSTS_FACE_XMIN,
     FACE_CONSTS_FACE_YMAX, FACE_CONSTS_FACE_YMIN, FACE_CONSTS_FACE_ZMAX, FACE_CONSTS_FACE_ZMIN,
 };
 
-// static commands not targetted at a specific entity
+// commands that should only run on the person who said them
 pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
     app.subcommand(
         App::new("search")
@@ -15,6 +20,11 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
     )
     .subcommand(App::new("there").about("Move the closest screen to the block you are aiming at"))
     .subcommand(App::new("devtools").alias("devtool").about("Open devtools"))
+    .subcommand(
+        App::new("sync")
+            .about("Re-sync all screens from someone else")
+            .arg(Arg::with_name("player-name")),
+    )
 }
 
 pub async fn handle_command(
@@ -75,6 +85,25 @@ pub async fn handle_command(
 
             let browser = EntityManager::get_browser_by_entity_id(entity_id)?;
             browser.open_dev_tools()?;
+
+            Ok(true)
+        }
+
+        ("sync", Some(matches)) => {
+            let _ignore_error = EntityManager::remove_all_entities().await;
+
+            // TODO realname search
+            if let Some(name) = matches.value_of("player-name") {
+                let had_data = whispers::outgoing::query_whisper(name).await?;
+                if had_data {
+                    Chat::print("sync yes");
+                } else {
+                    Chat::print("sync no");
+                }
+            } else {
+                // TODO randomly chosen
+                bail!("TODO");
+            }
 
             Ok(true)
         }

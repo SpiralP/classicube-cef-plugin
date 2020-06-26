@@ -1,7 +1,7 @@
-mod clients;
-mod encoding;
-mod map_themes;
-mod whispers;
+pub mod clients;
+pub mod encoding;
+pub mod map_themes;
+pub mod whispers;
 
 pub use self::{encoding::LightEntity, map_themes::CURRENT_MAP_THEME};
 use super::SIMULATING;

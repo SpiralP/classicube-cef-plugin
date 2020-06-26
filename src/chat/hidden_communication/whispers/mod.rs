@@ -1,5 +1,5 @@
-mod incoming;
-mod outgoing;
+pub mod incoming;
+pub mod outgoing;
 
 use super::{encoding, wait_for_message, SHOULD_BLOCK};
 use crate::{async_manager, chat::ENTITIES, error::*};

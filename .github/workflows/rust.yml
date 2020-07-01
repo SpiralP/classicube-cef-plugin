@@ -23,7 +23,7 @@ jobs:
           scoop install aria2
           scoop install --arch ${{ matrix.config.bits }}bit llvm
           echo "::set-env name=LIBCLANG_PATH::$HOME\scoop\apps\llvm\current\bin"
-          aria2c 'http://opensource.spotify.com/cefbuilds/cef_binary_81.2.17%2Bgb382c62%2Bchromium-81.0.4044.113_windows${{ matrix.config.bits }}.tar.bz2' -o cef_binary.tar.bz2
+          aria2c 'http://opensource.spotify.com/cefbuilds/cef_binary_83.4.0%2Bgfd6631b%2Bchromium-83.0.4103.106_windows${{ matrix.config.bits }}.tar.bz2' -o cef_binary.tar.bz2
           7z x -y 'cef_binary.tar.bz2'
           Remove-Item 'cef_binary.tar.bz2'
           7z x -y 'cef_binary.tar'
@@ -98,7 +98,7 @@ jobs:
           sudo apt-get update \
           && sudo apt-get install -y git curl gcc g++ build-essential libssl-dev pkg-config libglib2.0-dev libpango1.0-dev \
             libatk1.0-dev libgdk-pixbuf2.0-dev libgtk-3-dev cmake clang libnss3 libasound2 libxss1 libnspr4 \
-          && curl 'http://opensource.spotify.com/cefbuilds/cef_binary_81.2.17%2Bgb382c62%2Bchromium-81.0.4044.113_linux${{ matrix.config.bits }}.tar.bz2' | tar -xjf - \
+          && curl 'http://opensource.spotify.com/cefbuilds/cef_binary_83.4.0%2Bgfd6631b%2Bchromium-83.0.4103.106_linux${{ matrix.config.bits }}.tar.bz2' | tar -xjf - \
           && mv cef_binary_* cef_interface/cef_binary
 
       - name: Install 32 bit deps
@@ -108,7 +108,7 @@ jobs:
           && sudo apt-get update \
           && sudo apt-get install -y git curl gcc g++ build-essential libssl-dev:i386 pkg-config libglib2.0-dev libpango1.0-dev \
             libatk1.0-dev libgdk-pixbuf2.0-dev libgtk-3-dev cmake libclang-dev libnss3 libasound2 libxss1 libnspr4 \
-          && curl 'http://opensource.spotify.com/cefbuilds/cef_binary_81.2.17%2Bgb382c62%2Bchromium-81.0.4044.113_linux${{ matrix.config.bits }}.tar.bz2' | tar -xjf - \
+          && curl 'http://opensource.spotify.com/cefbuilds/cef_binary_83.4.0%2Bgfd6631b%2Bchromium-83.0.4103.106_linux${{ matrix.config.bits }}.tar.bz2' | tar -xjf - \
           && mv cef_binary_* cef_interface/cef_binary
 
       - name: Install nightly
@@ -171,7 +171,7 @@ jobs:
       - name: Install deps
         run: |
           brew install cmake \
-          && curl 'http://opensource.spotify.com/cefbuilds/cef_binary_81.2.17%2Bgb382c62%2Bchromium-81.0.4044.113_macosx${{ matrix.config.bits }}.tar.bz2' | tar -xjf - \
+          && curl 'http://opensource.spotify.com/cefbuilds/cef_binary_83.4.0%2Bgfd6631b%2Bchromium-83.0.4103.106_macosx${{ matrix.config.bits }}.tar.bz2' | tar -xjf - \
           && mv cef_binary_* cef_interface/cef_binary
 
       - name: Install nightly

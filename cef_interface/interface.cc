@@ -10,6 +10,12 @@
 #include <include/wrapper/cef_library_loader.h>
 #endif
 
+#ifdef _WIN32
+#include <direct.h>  // getcwd
+#define getcwd _getcwd
+#else
+#include <unistd.h>  // getcwd
+#endif
 #include <chrono>    // std::chrono::seconds
 #include <iostream>  // std::cout, std::endl
 #include <thread>    // std::this_thread::sleep_for
@@ -104,30 +110,47 @@ extern "C" int cef_interface_initialize(MyApp* app) {
 
   CefString(&settings.log_file).FromASCII("cef-binary.log");
 
+  char* c_cwd = getcwd(NULL, 0);
+  std::string cwd(c_cwd);
+  free(c_cwd);
+
+  std::string cef_dir_path(cwd);
+
 #if defined(_WIN64) || defined(_WIN32)
-  const char* cef_exe_path = "cef.exe";
+  cef_dir_path += "\\cef";
+
+  std::string browser_subprocess_path(cef_dir_path);
+  browser_subprocess_path += "/cef.exe";
 #elif defined(OS_MACOSX)
-  const char* cef_exe_path = "./cef/cef.app/Contents/MacOS/cef";
+  cef_dir_path += "/cef";
 
-  CefString(&settings.main_bundle_path).FromASCII("./cef");
+  std::string browser_subprocess_path(cef_dir_path);
+  browser_subprocess_path += "/cef.app";
+  browser_subprocess_path += "/Contents";
+  browser_subprocess_path += "/MacOS";
+  browser_subprocess_path += "/cef";
 
-  // this needs full path or crashes!
-  char cwd[PATH_MAX + 1];
-  if (!getcwd(cwd, sizeof(cwd))) {
-    return -1;
-  }
-  std::string full_path(cwd);
-  full_path += "/cef/Chromium Embedded Framework.framework";
-  CefString(&settings.framework_dir_path).FromASCII(full_path.c_str());
+  CefString(&settings.main_bundle_path).FromString(cef_dir_path);
+
+  std::string framework_dir_path(cef_dir_path);
+  framework_dir_path += "/Chromium Embedded Framework.framework";
+  CefString(&settings.framework_dir_path).FromString(framework_dir_path);
 #else
-  const char* cef_exe_path = "cef";
+  cef_dir_path += "/cef";
+
+  std::string browser_subprocess_path(cef_dir_path);
+  browser_subprocess_path += "/cef";
 
   // linux had trouble finding locales
-  CefString(&settings.locales_dir_path).FromASCII("./cef/cef_binary/locales");
+  std::string locales_dir_path(cef_dir_path);
+  locales_dir_path += "/cef_binary";
+  locales_dir_path += "/locales";
+  CefString(&settings.locales_dir_path).FromString(locales_dir_path);
 #endif
 
   // Specify the path for the sub-process executable.
-  CefString(&settings.browser_subprocess_path).FromASCII(cef_exe_path);
+  CefString(&settings.browser_subprocess_path)
+      .FromString(browser_subprocess_path);
 
   // Initialize CEF in the main process.
   if (!CefInitialize(main_args, settings, app, NULL)) {

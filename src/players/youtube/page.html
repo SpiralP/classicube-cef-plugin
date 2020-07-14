@@ -55,7 +55,6 @@
           // mouse along a video progress bar and then set it to true when the user releases
           // the mouse.
           window.player.seekTo(time, true);
-          window.player.playVideo();
           window.playerEnded = false;
         }
         startTime = time;
@@ -74,6 +73,13 @@
           return startTime;
         }
       }
+      function setPlaying(playing) {
+        if (playing) {
+          window.player.playVideo();
+        } else {
+          window.player.pauseVideo();
+        }
+      }
 
       // 3. This function creates an <iframe> (and YouTube player)
       //    after the API code downloads.
@@ -83,6 +89,7 @@
           height: window.innerHeight,
           videoId: videoId,
           playerVars: {
+            // setting to 0 will cause ads to play
             autoplay: 1,
             controls: 0,
             disablekb: 1,
@@ -115,7 +122,11 @@
       function onPlayerReady(event) {
         var player = event.target;
         player.setVolume(startVolume);
-        player.playVideo();
+        if (AUTOPLAY) {
+          player.playVideo();
+        } else {
+          player.pauseVideo();
+        }
       }
 
       // https://stackoverflow.com/a/6313008
@@ -146,8 +157,16 @@
       //    the player should play for six seconds and then stop.
       // var done = false;
 
+      var first = true;
       function onPlayerStateChange(event) {
-        if (event.data == YT.PlayerState.PLAYING) {
+        if (event.data === YT.PlayerState.BUFFERING) {
+          // if (first) {
+          //   first = false;
+          //   // if (!AUTOPLAY) {
+          //   window.player.pauseVideo();
+          //   // }
+          // }
+        } else if (event.data === YT.PlayerState.PLAYING) {
           var player = event.target;
           var videoData = player.getVideoData();
 
@@ -158,7 +177,7 @@
           } else {
             document.title = videoData.title;
           }
-        } else if (event.data == YT.PlayerState.ENDED) {
+        } else if (event.data === YT.PlayerState.ENDED) {
           window.playerEnded = true;
           window.playerEndedTime = window.player.getCurrentTime();
           window.player.stopVideo();

@@ -47,7 +47,7 @@ pub fn compute_real_volume(entity: &CefEntity) -> Option<f32> {
 async fn start_loop(entity_id: usize) -> Result<()> {
     loop {
         // update volume
-        EntityManager::with_by_entity_id(entity_id, |entity| {
+        EntityManager::with_entity(entity_id, |entity| {
             if let Some(browser) = &entity.browser {
                 if let Some(volume) = compute_real_volume(entity) {
                     entity.player.set_volume(&browser, volume)?;
@@ -63,9 +63,9 @@ async fn start_loop(entity_id: usize) -> Result<()> {
             Youtube,
             Media,
         }
-        let opt = EntityManager::with_by_entity_id(entity_id, |entity| {
+        let opt = EntityManager::with_entity(entity_id, |entity| {
             // we have to do this in parts because get_real_time() is async
-            // while with_by_entity_id is not
+            // while with_entity is not
             Ok(match &entity.player {
                 Player::Media(_) => Some((entity.browser.as_ref().cloned(), Kind::Media)),
                 Player::Youtube(_) => Some((entity.browser.as_ref().cloned(), Kind::Youtube)),
@@ -83,7 +83,7 @@ async fn start_loop(entity_id: usize) -> Result<()> {
 
                 // update time field for when we sync to someone else
                 if let Ok(time) = time {
-                    EntityManager::with_by_entity_id(entity_id, move |entity| {
+                    EntityManager::with_entity(entity_id, move |entity| {
                         match &mut entity.player {
                             Player::Media(player) => {
                                 player.time = time;
@@ -111,7 +111,7 @@ async fn start_loop(entity_id: usize) -> Result<()> {
                 };
 
                 if is_finished_playing {
-                    EntityManager::with_by_entity_id(entity_id, move |entity| {
+                    EntityManager::with_entity(entity_id, move |entity| {
                         match &mut entity.player {
                             Player::Media(_player) => {
                                 //

@@ -18,6 +18,7 @@ pub struct LightEntity {
     pub scale: f32,
     pub size: (u16, u16),
     pub resolution: Option<(u16, u16)>,
+    pub silent: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -58,6 +59,7 @@ pub async fn create_message() -> Message {
 
                 let player = entity.player.clone();
                 let queue = entity.queue.clone();
+                let silent = entity.silent;
 
                 Some(LightEntity {
                     id,
@@ -68,6 +70,7 @@ pub async fn create_message() -> Message {
                     scale,
                     size,
                     resolution,
+                    silent,
                 })
             })
             .collect()
@@ -94,7 +97,7 @@ pub async fn received_message(mut message: Message) -> Result<bool> {
     for mut info in message.entities.drain(..) {
         // if it already exists don't do anything
         // TODO?? use unique ids!
-        if EntityManager::with_by_entity_id(info.id, |_| Ok(())).is_ok() {
+        if EntityManager::with_entity(info.id, |_| Ok(())).is_ok() {
             warn!("entity {} already exists, skipping", info.id);
             continue;
         }

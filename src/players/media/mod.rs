@@ -27,6 +27,8 @@ pub struct MediaPlayer {
     #[serde(skip)]
     should_send: bool,
 
+    autoplay: bool,
+
     #[serde(skip)]
     pub update_loop_handle: Option<RemoteHandle<()>>,
 
@@ -42,6 +44,7 @@ impl Default for MediaPlayer {
             volume: 1.0,
             global_volume: false,
             should_send: true,
+            autoplay: true,
             update_loop_handle: None,
             last_title: String::new(),
         }
@@ -55,7 +58,7 @@ impl Clone for MediaPlayer {
             time: self.time,
             volume: self.volume,
             global_volume: self.global_volume,
-            should_send: self.should_send,
+            autoplay: self.autoplay,
             ..Default::default()
         }
     }
@@ -84,6 +87,7 @@ impl PlayerTrait for MediaPlayer {
                     .replace("MEDIA_URL", &self.url)
                     .replace("START_TIME", &format!("{}", self.time.as_secs()))
                     .replace("START_VOLUME", &format!("{}", self.volume))
+                    .replace("AUTOPLAY", &format!("{}", self.autoplay))
             )
         )
     }
@@ -95,17 +99,25 @@ impl PlayerTrait for MediaPlayer {
         async_manager::spawn_local_on_main_thread(f);
     }
 
-    fn on_title_change(&mut self, _entity_id: usize, _browser: &RustRefBrowser, title: String) {
+    fn on_title_change(
+        &mut self,
+        _entity_id: usize,
+        _browser: &RustRefBrowser,
+        title: String,
+        silent: bool,
+    ) {
         if self.last_title == title || title == "Media Loading" {
             return;
         }
 
-        Chat::print(format!(
-            "{}Now playing {}{}",
-            color::TEAL,
-            color::SILVER,
-            title,
-        ));
+        if !silent {
+            Chat::print(format!(
+                "{}Now playing {}{}",
+                color::TEAL,
+                color::SILVER,
+                title,
+            ));
+        }
 
         self.last_title = title;
     }
@@ -115,8 +127,7 @@ impl PlayerTrait for MediaPlayer {
     }
 
     fn set_current_time(&mut self, browser: &RustRefBrowser, time: Duration) -> Result<()> {
-        Self::get_player_field(browser, &format!("currentTime = {}", time.as_secs_f32()));
-        Self::get_player_field(browser, "play()");
+        Self::execute_with_player_field(browser, &format!("currentTime = {}", time.as_secs_f32()));
         self.time = time;
 
         Ok(())
@@ -129,7 +140,7 @@ impl PlayerTrait for MediaPlayer {
     /// volume is a float between 0-1
     fn set_volume(&mut self, browser: &RustRefBrowser, volume: f32) -> Result<()> {
         if (volume - self.volume).abs() > 0.0001 {
-            Self::get_player_field(browser, &format!("volume = {}", volume));
+            Self::execute_with_player_field(browser, &format!("volume = {}", volume));
         }
 
         self.volume = volume;
@@ -155,6 +166,14 @@ impl PlayerTrait for MediaPlayer {
         self.should_send = should_send;
     }
 
+    fn get_autoplay(&self) -> bool {
+        self.autoplay
+    }
+
+    fn set_autoplay(&mut self, autoplay: bool) {
+        self.autoplay = autoplay;
+    }
+
     fn get_url(&self) -> String {
         self.url.clone()
     }
@@ -166,6 +185,15 @@ impl PlayerTrait for MediaPlayer {
     fn is_finished_playing(&self) -> bool {
         // TODO
         false
+    }
+
+    fn set_playing(&mut self, browser: &RustRefBrowser, playing: bool) -> Result<()> {
+        if playing {
+            Self::execute_with_player_field(browser, "play()");
+        } else {
+            Self::execute_with_player_field(browser, "pause()");
+        }
+        Ok(())
     }
 }
 
@@ -198,7 +226,7 @@ impl MediaPlayer {
         Ok(percent)
     }
 
-    fn get_player_field(browser: &RustRefBrowser, field: &str) {
+    fn execute_with_player_field(browser: &RustRefBrowser, field: &str) {
         let code = format!(
             r#"if (typeof window.player !== "undefined") {{
                 window.player.{};

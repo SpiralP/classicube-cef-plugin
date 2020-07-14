@@ -18,7 +18,7 @@
   </head>
 
   <body>
-    <video autoplay id="player" src="MEDIA_URL"></video>
+    <video id="player" src="MEDIA_URL"></video>
     <script>
       var player = document.getElementById("player");
       window.player = player;
@@ -72,6 +72,10 @@
         updateSize();
       });
       updateSize();
+
+      if (AUTOPLAY) {
+        player.play();
+      }
     </script>
   </body>
 </html>

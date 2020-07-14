@@ -209,6 +209,7 @@ where
     TOKIO_RUNTIME.with_inner(|rt| rt.spawn(f)).unwrap()
 }
 
+#[allow(dead_code)]
 pub fn spawn_blocking<F, R>(f: F) -> JoinHandle<Result<R, JoinError>>
 where
     F: FnOnce() -> R + Send + 'static,

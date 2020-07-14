@@ -13,7 +13,6 @@ error_chain! {
         Bincode(bincode::Error);
         Base64(base64::DecodeError);
         Clap(clap::Error);
-        Chrono(chrono::format::ParseError);
     }
 
     links {

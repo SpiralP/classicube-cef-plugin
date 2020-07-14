@@ -48,7 +48,13 @@ impl PlayerTrait for WebPlayer {
         self.url.to_string()
     }
 
-    fn on_title_change(&mut self, _entity_id: usize, _browser: &RustRefBrowser, title: String) {
+    fn on_title_change(
+        &mut self,
+        _entity_id: usize,
+        _browser: &RustRefBrowser,
+        title: String,
+        _silent: bool,
+    ) {
         if self.last_title == title {
             return;
         }

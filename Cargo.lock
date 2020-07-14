@@ -272,7 +272,6 @@ checksum = "80094f509cf8b5ae86a4966a39b3ff66cd7e2a3e594accec3743ff3fabeab5b2"
 dependencies = [
  "num-integer",
  "num-traits",
- "serde",
  "time",
 ]
 
@@ -324,7 +323,6 @@ dependencies = [
  "base64",
  "bincode",
  "bindgen 0.54.0",
- "chrono",
  "clap 2.33.0",
  "classicube-helpers",
  "classicube-sys",
@@ -344,10 +342,8 @@ dependencies = [
  "regex",
  "serde",
  "simplelog",
- "sntpc",
  "tokio",
  "url",
- "widestring",
 ]
 
 [[package]]
@@ -404,17 +400,6 @@ source = "git+https://github.com/SpiralP/color-backtrace-msgbox.git#44fed268cc4f
 dependencies = [
  "backtrace",
  "msgbox",
-]
-
-[[package]]
-name = "colored"
-version = "1.9.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f4ffc801dacf156c5854b9df4f425a626539c3a6ef7893cc0c5084a23f0b6c59"
-dependencies = [
- "atty",
- "lazy_static",
- "winapi 0.3.9",
 ]
 
 [[package]]
@@ -1909,19 +1894,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "simple_logger"
-version = "1.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fea0c4611f32f4c2bac73754f22dca1f57e6c1945e0590dae4e5f2a077b92367"
-dependencies = [
- "atty",
- "chrono",
- "colored",
- "log",
- "winapi 0.3.9",
-]
-
-[[package]]
 name = "simplelog"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1955,18 +1927,6 @@ name = "smallvec"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c7cb5678e1615754284ec264d9bb5b4c27d2018577fd90ac0ceb578591ed5ee4"
-
-[[package]]
-name = "sntpc"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "41e42b19217eaa47591fcf7f434200777c9d9e7b5fda7cbcf64831d318874f3e"
-dependencies = [
- "chrono",
- "clap 2.33.1",
- "log",
- "simple_logger",
-]
 
 [[package]]
 name = "socket2"
@@ -2301,12 +2261,6 @@ checksum = "d011071ae14a2f6671d0b74080ae0cd8ebf3a6f8c9589a2cd45f23126fe29724"
 dependencies = [
  "libc",
 ]
-
-[[package]]
-name = "widestring"
-version = "0.4.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a763e303c0e0f23b0da40888724762e802a8ffefbc22de4127ef42493c2ea68c"
 
 [[package]]
 name = "winapi"

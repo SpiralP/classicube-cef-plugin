@@ -1,9 +1,9 @@
 pub mod clients;
 pub mod encoding;
-pub mod map_themes;
+pub mod global_control;
 pub mod whispers;
 
-pub use self::{encoding::LightEntity, map_themes::CURRENT_MAP_THEME};
+pub use self::{encoding::LightEntity, global_control::CURRENT_MAP_THEME};
 use super::SIMULATING;
 use crate::async_manager;
 use classicube_helpers::CellGetSet;
@@ -51,7 +51,7 @@ pub fn initialize() {
     }
 
     whispers::start_listening();
-    map_themes::start_listening();
+    global_control::start_listening();
 }
 
 pub fn on_new_map() {
@@ -63,14 +63,14 @@ pub fn on_new_map() {
 pub fn on_new_map_loaded() {
     if unsafe { Server.IsSinglePlayer } == 0 {
         clients::query();
-        map_themes::on_new_map_loaded();
+        global_control::on_new_map_loaded();
     }
 }
 
 pub fn shutdown() {
     debug!("shutdown hidden_communication");
 
-    map_themes::stop_listening();
+    global_control::stop_listening();
     whispers::stop_listening();
 
     unsafe {

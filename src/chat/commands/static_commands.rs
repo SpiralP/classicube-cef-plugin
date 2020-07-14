@@ -1,7 +1,7 @@
 use super::helpers::*;
 use crate::{
     async_manager, chat::PlayerSnapshot, entity_manager::EntityManager, error::*,
-    options::FRAME_RATE,
+    options::FRAME_RATE, players::PlayerTrait,
 };
 use clap::{App, Arg, ArgMatches};
 
@@ -18,6 +18,37 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
                     .long("insecure")
                     .short("i")
                     .help("allow insecure https connections"),
+            )
+            .arg(
+                Arg::with_name("no-autoplay")
+                    .long("no-autoplay")
+                    .short("a")
+                    .help("start paused"),
+            )
+            .arg(
+                Arg::with_name("no-send")
+                    .long("no-send")
+                    .short("s")
+                    .help("don't sync this screen to other players"),
+            )
+            .arg(
+                Arg::with_name("global")
+                    .long("global")
+                    .short("g")
+                    .help("create global, hidden screen"),
+            )
+            .arg(
+                Arg::with_name("silent")
+                    .long("silent")
+                    .short("q")
+                    .help("don't show Now Playing messages"),
+            )
+            .arg(
+                Arg::with_name("name")
+                    .long("name")
+                    .short("n")
+                    .help("name the screen")
+                    .takes_value(true),
             )
             .arg(Arg::with_name("url").multiple(true)),
     )
@@ -41,14 +72,34 @@ pub async fn handle_command(
                 parts.join("")
             };
 
-            let entity_id = EntityManager::create_entity(
-                &url,
-                FRAME_RATE.get()?,
-                matches.is_present("insecure"),
-                None,
-            )?;
-            EntityManager::with_by_entity_id(entity_id, |entity| {
-                move_entity(entity, player);
+            let insecure = matches.is_present("insecure");
+            let autoplay = !matches.is_present("no-autoplay");
+            let send = !matches.is_present("no-send");
+            let global = matches.is_present("global");
+            let silent = matches.is_present("silent");
+
+            // 1 fps, 1x1 resolution
+            let frame_rate = if global { 1 } else { FRAME_RATE.get()? };
+            let resolution = if global { Some((1, 1)) } else { None };
+
+            let entity_id = if let Some(name) = matches.value_of("name") {
+                EntityManager::create_named_entity(
+                    name, &url, frame_rate, insecure, resolution, autoplay, silent,
+                )?
+            } else {
+                EntityManager::create_entity(
+                    &url, frame_rate, insecure, resolution, autoplay, silent,
+                )?
+            };
+
+            EntityManager::with_entity(entity_id, |entity| {
+                if global {
+                    entity.set_scale(0.0);
+                    entity.player.set_global_volume(true)?;
+                } else {
+                    move_entity(entity, player);
+                }
+                entity.player.set_should_send(send);
 
                 Ok(())
             })?;

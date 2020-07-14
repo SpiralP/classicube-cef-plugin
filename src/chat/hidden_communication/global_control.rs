@@ -1,19 +1,34 @@
 use super::wait_for_message;
 use crate::{
     async_manager,
+    chat::{hidden_communication::SHOULD_BLOCK, Chat, PlayerSnapshot},
     entity_manager::EntityManager,
     error::*,
     options::{AUTOPLAY_MAP_THEMES, MAP_THEME_VOLUME},
     players::{MediaPlayer, Player, PlayerTrait, YoutubePlayer},
 };
 use classicube_helpers::{tab_list::remove_color, CellGetSet};
-use futures::{future::RemoteHandle, prelude::*};
+use classicube_sys::ENTITIES_SELF_ID;
+use futures::{channel::mpsc, future::RemoteHandle, prelude::*};
 use log::{debug, info, warn};
-use std::{cell::Cell, time::Duration};
+use std::{
+    cell::{Cell, RefCell},
+    pin::Pin,
+    time::Duration,
+};
 use url::Url;
 
 thread_local!(
     static LISTENER: Cell<Option<RemoteHandle<()>>> = Default::default();
+);
+
+thread_local!(
+    static WORKER: Cell<Option<RemoteHandle<()>>> = Default::default();
+);
+
+type Item = Pin<Box<dyn Future<Output = ()>>>;
+thread_local!(
+    static WORKER_SENDER: RefCell<Option<mpsc::UnboundedSender<Item>>> = Default::default();
 );
 
 pub fn start_listening() {
@@ -27,12 +42,47 @@ pub fn start_listening() {
     LISTENER.with(move |cell| {
         cell.set(Some(remote_handle));
     });
+
+    let (sender, receiver) = mpsc::unbounded();
+
+    let (f, remote_handle) = async move {
+        worker_loop(receiver).await;
+    }
+    .remote_handle();
+
+    async_manager::spawn_local_on_main_thread(f);
+
+    WORKER.with(move |cell| {
+        cell.set(Some(remote_handle));
+    });
+
+    WORKER_SENDER.with(move |cell| {
+        let option = &mut *cell.borrow_mut();
+        *option = Some(sender);
+    });
 }
 
 pub fn stop_listening() {
+    WORKER_SENDER.with(move |cell| {
+        let option = &mut *cell.borrow_mut();
+        *option = None;
+    });
+
+    WORKER.with(move |cell| {
+        cell.set(None);
+    });
+
     LISTENER.with(move |cell| {
         cell.set(None);
     });
+}
+
+// we need to execute commands from scripts synchronously
+async fn worker_loop(mut receiver: mpsc::UnboundedReceiver<impl Future<Output = ()>>) {
+    while let Some(f) = receiver.next().await {
+        f.await;
+    }
+    warn!("global message worker stopped?");
 }
 
 fn is_map_theme_message(message: &str) -> bool {
@@ -41,10 +91,59 @@ fn is_map_theme_message(message: &str) -> bool {
     m.starts_with("map theme: ") || m.starts_with("map theme song: ")
 }
 
+fn is_global_cef_message(mut m: &str) -> Option<String> {
+    if m.len() < 4 {
+        return None;
+    }
+
+    if &m[0..1] == "&" {
+        m = &m[2..];
+    }
+
+    if m.starts_with("cef ") || m.starts_with("cef: ") {
+        Some(m[4..].to_string())
+    } else {
+        None
+    }
+}
+
 pub async fn listen_loop() {
     loop {
         let message = wait_for_message().await;
-        if is_map_theme_message(&message) {
+        if let Some(global_cef_message) = is_global_cef_message(&message) {
+            debug!("got global cef message {:?}", message);
+            SHOULD_BLOCK.set(true);
+
+            let args = global_cef_message
+                .split(' ')
+                .map(|a| a.to_string())
+                .collect::<Vec<String>>();
+
+            let player_snapshot = PlayerSnapshot::from_entity_id(ENTITIES_SELF_ID as _).unwrap();
+
+            WORKER_SENDER.with(move |cell| {
+                let option = &mut *cell.borrow_mut();
+
+                if let Some(worker_sender) = option {
+                    let _ignore = worker_sender.unbounded_send(
+                        async move {
+                            if let Err(e) =
+                                crate::chat::commands::run(player_snapshot, args, false).await
+                            {
+                                warn!("command error: {:#?}", e);
+                                Chat::print(format!(
+                                    "{}cef command error: {}{}",
+                                    classicube_helpers::color::RED,
+                                    classicube_helpers::color::WHITE,
+                                    e
+                                ));
+                            }
+                        }
+                        .boxed_local(),
+                    );
+                }
+            });
+        } else if is_map_theme_message(&message) {
             debug!("got map_theme url first part {:?}", message);
 
             let mut parts: Vec<String> = Vec::new();
@@ -133,8 +232,8 @@ async fn handle_map_theme_url(message: String) -> Result<()> {
         entity_id
     } else {
         // 1 fps, 1x1 resolution
-        let entity_id = EntityManager::create_entity_player(player, 1, false, Some((1, 1)))?;
-        EntityManager::with_by_entity_id(entity_id, |entity| {
+        let entity_id = EntityManager::create_entity_player(player, 1, false, Some((1, 1)), true)?;
+        EntityManager::with_entity(entity_id, |entity| {
             entity.set_scale(0.0);
 
             Ok(())
@@ -146,7 +245,7 @@ async fn handle_map_theme_url(message: String) -> Result<()> {
     CURRENT_MAP_THEME.set(Some(entity_id));
 
     // set quiet volume, and don't send to other players
-    EntityManager::with_by_entity_id(entity_id, |entity| {
+    EntityManager::with_entity(entity_id, |entity| {
         entity.player.set_should_send(false);
         entity.player.set_global_volume(true)?;
 

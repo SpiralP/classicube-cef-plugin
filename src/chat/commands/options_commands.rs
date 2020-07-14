@@ -130,7 +130,7 @@ pub async fn handle_command(
 
                     if let Some(entity_id) = CURRENT_MAP_THEME.get() {
                         let browser = EntityManager::get_browser_by_entity_id(entity_id)?;
-                        EntityManager::with_by_entity_id(entity_id, |entity| {
+                        EntityManager::with_entity(entity_id, |entity| {
                             entity.player.set_volume(&browser, volume)?;
 
                             Ok(())

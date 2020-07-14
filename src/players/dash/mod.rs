@@ -91,17 +91,25 @@ impl PlayerTrait for DashPlayer {
         async_manager::spawn_local_on_main_thread(f);
     }
 
-    fn on_title_change(&mut self, _entity_id: usize, _browser: &RustRefBrowser, title: String) {
+    fn on_title_change(
+        &mut self,
+        _entity_id: usize,
+        _browser: &RustRefBrowser,
+        title: String,
+        silent: bool,
+    ) {
         if self.last_title == title || title == "DASH Stream Loading" {
             return;
         }
 
-        Chat::print(format!(
-            "{}Now playing {}{}",
-            color::TEAL,
-            color::SILVER,
-            title,
-        ));
+        if !silent {
+            Chat::print(format!(
+                "{}Now playing {}{}",
+                color::TEAL,
+                color::SILVER,
+                title,
+            ));
+        }
 
         self.last_title = title;
     }

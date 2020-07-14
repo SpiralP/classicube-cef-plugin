@@ -23,12 +23,18 @@ pub trait PlayerTrait {
     /// Called after page is loaded
     fn on_page_loaded(&mut self, _entity_id: usize, _browser: &RustRefBrowser) {}
 
-    fn on_title_change(&mut self, _entity_id: usize, _browser: &RustRefBrowser, _title: String) {}
+    fn on_title_change(
+        &mut self,
+        _entity_id: usize,
+        _browser: &RustRefBrowser,
+        _title: String,
+        _silent: bool,
+    ) {
+    }
 
     fn get_current_time(&self) -> Result<Duration> {
         bail!("getting time not supported");
     }
-
     fn set_current_time(&mut self, _browser: &RustRefBrowser, _time: Duration) -> Result<()> {
         bail!("setting time not supported");
     }
@@ -36,7 +42,6 @@ pub trait PlayerTrait {
     fn get_volume(&self) -> Result<f32> {
         Ok(1.0)
     }
-
     fn set_volume(&mut self, _browser: &RustRefBrowser, _percent: f32) -> Result<()> {
         bail!("setting volume not supported");
     }
@@ -44,20 +49,27 @@ pub trait PlayerTrait {
     fn has_global_volume(&self) -> bool {
         true
     }
-
     fn set_global_volume(&mut self, _global_volume: bool) -> Result<()> {
         bail!("setting global volume not supported");
     }
 
     fn get_should_send(&self) -> bool;
-
     fn set_should_send(&mut self, _should_send: bool);
+
+    fn get_autoplay(&self) -> bool {
+        true
+    }
+    fn set_autoplay(&mut self, _autoplay: bool) {}
 
     fn get_url(&self) -> String;
 
     fn get_title(&self) -> String;
 
     fn is_finished_playing(&self) -> bool;
+
+    fn set_playing(&mut self, _browser: &RustRefBrowser, _playing: bool) -> Result<()> {
+        bail!("pausing/playing not supported");
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -126,12 +138,18 @@ impl PlayerTrait for Player {
         }
     }
 
-    fn on_title_change(&mut self, entity_id: usize, browser: &RustRefBrowser, title: String) {
+    fn on_title_change(
+        &mut self,
+        entity_id: usize,
+        browser: &RustRefBrowser,
+        title: String,
+        silent: bool,
+    ) {
         match self {
-            Player::Youtube(player) => player.on_title_change(entity_id, browser, title),
-            Player::Dash(player) => player.on_title_change(entity_id, browser, title),
-            Player::Media(player) => player.on_title_change(entity_id, browser, title),
-            Player::Web(player) => player.on_title_change(entity_id, browser, title),
+            Player::Youtube(player) => player.on_title_change(entity_id, browser, title, silent),
+            Player::Dash(player) => player.on_title_change(entity_id, browser, title, silent),
+            Player::Media(player) => player.on_title_change(entity_id, browser, title, silent),
+            Player::Web(player) => player.on_title_change(entity_id, browser, title, silent),
         }
     }
 
@@ -207,6 +225,24 @@ impl PlayerTrait for Player {
         }
     }
 
+    fn get_autoplay(&self) -> bool {
+        match self {
+            Player::Youtube(player) => player.get_autoplay(),
+            Player::Dash(player) => player.get_autoplay(),
+            Player::Media(player) => player.get_autoplay(),
+            Player::Web(player) => player.get_autoplay(),
+        }
+    }
+
+    fn set_autoplay(&mut self, autoplay: bool) {
+        match self {
+            Player::Youtube(player) => player.set_autoplay(autoplay),
+            Player::Dash(player) => player.set_autoplay(autoplay),
+            Player::Media(player) => player.set_autoplay(autoplay),
+            Player::Web(player) => player.set_autoplay(autoplay),
+        }
+    }
+
     fn get_url(&self) -> String {
         match self {
             Player::Youtube(player) => player.get_url(),
@@ -231,6 +267,15 @@ impl PlayerTrait for Player {
             Player::Dash(player) => player.is_finished_playing(),
             Player::Media(player) => player.is_finished_playing(),
             Player::Web(player) => player.is_finished_playing(),
+        }
+    }
+
+    fn set_playing(&mut self, browser: &RustRefBrowser, playing: bool) -> Result<()> {
+        match self {
+            Player::Youtube(player) => player.set_playing(browser, playing),
+            Player::Dash(player) => player.set_playing(browser, playing),
+            Player::Media(player) => player.set_playing(browser, playing),
+            Player::Web(player) => player.set_playing(browser, playing),
         }
     }
 }

@@ -29,7 +29,10 @@ pub struct YoutubePlayer {
 
     pub global_volume: bool,
 
+    #[serde(skip)]
     should_send: bool,
+
+    autoplay: bool,
 
     #[serde(skip)]
     pub update_loop_handle: Option<RemoteHandle<()>>,
@@ -52,6 +55,7 @@ impl Default for YoutubePlayer {
             volume: 1.0,
             global_volume: false,
             should_send: true,
+            autoplay: true,
             update_loop_handle: None,
             last_title: String::new(),
             finished: false,
@@ -67,7 +71,7 @@ impl Clone for YoutubePlayer {
             time: self.time,
             volume: self.volume,
             global_volume: self.global_volume,
-            should_send: self.should_send,
+            autoplay: self.autoplay,
             ..Default::default()
         }
     }
@@ -104,6 +108,7 @@ impl PlayerTrait for YoutubePlayer {
                         &format!("{}", (self.volume * 100f32) as u32)
                     )
                     .replace("SUBTITLES", &format!("{}", SUBTITLES.get().unwrap()))
+                    .replace("AUTOPLAY", &format!("{}", self.autoplay))
             )
         )
     }
@@ -114,31 +119,41 @@ impl PlayerTrait for YoutubePlayer {
         async_manager::spawn_local_on_main_thread(f);
     }
 
-    fn on_title_change(&mut self, _entity_id: usize, browser: &RustRefBrowser, title: String) {
+    fn on_title_change(
+        &mut self,
+        _entity_id: usize,
+        browser: &RustRefBrowser,
+        title: String,
+        silent: bool,
+    ) {
         if self.last_title == title || title == "YouTube Loading" {
             return;
         }
 
-        Chat::print(format!(
-            "{}Now playing {}{}",
-            color::TEAL,
-            color::SILVER,
-            title,
-        ));
+        if !silent {
+            Chat::print(format!(
+                "{}Now playing {}{}",
+                color::TEAL,
+                color::SILVER,
+                title,
+            ));
+        }
 
         self.last_title = title;
 
-        let now = Instant::now();
-        if let Some(create_time) = self.create_time {
-            // if it took a long time to load
-            let lag = now - create_time;
-            debug!("video started playing after loading {:?}", lag);
-            // TODO delay everyone a couple seconds then start playing video!
-            if lag > Duration::from_secs(10) {
-                warn!("slow video load, seeking to {:?}", lag);
-                // seek to current time
-                let current_time = self.time + lag;
-                self.set_current_time(browser, current_time).unwrap();
+        if self.autoplay {
+            let now = Instant::now();
+            if let Some(create_time) = self.create_time {
+                // if it took a long time to load
+                let lag = now - create_time;
+                debug!("video started playing after loading {:?}", lag);
+                // TODO delay everyone a couple seconds then start playing video!
+                if lag > Duration::from_secs(10) {
+                    warn!("slow video load, seeking to {:?}", lag);
+                    // seek to current time
+                    let current_time = self.time + lag;
+                    self.set_current_time(browser, current_time).unwrap();
+                }
             }
         }
     }
@@ -148,7 +163,7 @@ impl PlayerTrait for YoutubePlayer {
     }
 
     fn set_current_time(&mut self, browser: &RustRefBrowser, time: Duration) -> Result<()> {
-        Self::execute_method(browser, &format!("setCurrentTime({})", time.as_secs_f32()));
+        Self::execute_function(browser, &format!("setCurrentTime({})", time.as_secs_f32()));
         self.time = time;
 
         Ok(())
@@ -161,7 +176,7 @@ impl PlayerTrait for YoutubePlayer {
     /// volume is a float between 0-1
     fn set_volume(&mut self, browser: &RustRefBrowser, volume: f32) -> Result<()> {
         if (volume - self.volume).abs() > 0.0001 {
-            Self::execute_method(browser, &format!("setVolume({})", (volume * 100f32) as u32));
+            Self::execute_function(browser, &format!("setVolume({})", (volume * 100f32) as u32));
         }
 
         self.volume = volume;
@@ -187,6 +202,14 @@ impl PlayerTrait for YoutubePlayer {
         self.should_send = should_send;
     }
 
+    fn get_autoplay(&self) -> bool {
+        self.autoplay
+    }
+
+    fn set_autoplay(&mut self, autoplay: bool) {
+        self.autoplay = autoplay;
+    }
+
     fn get_url(&self) -> String {
         let secs = self.time.as_secs();
         if secs == 0 {
@@ -202,6 +225,12 @@ impl PlayerTrait for YoutubePlayer {
 
     fn is_finished_playing(&self) -> bool {
         self.finished
+    }
+
+    fn set_playing(&mut self, browser: &RustRefBrowser, playing: bool) -> Result<()> {
+        Self::execute_function(browser, &format!("setPlaying({})", playing));
+
+        Ok(())
     }
 }
 
@@ -248,7 +277,7 @@ impl YoutubePlayer {
         Ok(percent)
     }
 
-    fn execute_method(browser: &RustRefBrowser, method: &str) {
+    fn execute_function(browser: &RustRefBrowser, method: &str) {
         let code = format!("window.{};", method);
         browser.execute_javascript(code).unwrap();
     }

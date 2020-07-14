@@ -37,7 +37,7 @@ url = "2.1.1"
 # widestring = "0.4.2"
 
 [build-dependencies]
-bindgen = "0.54.0"
+bindgen = "0.54.1"
 cmake = "0.1.44"
 
 [features]

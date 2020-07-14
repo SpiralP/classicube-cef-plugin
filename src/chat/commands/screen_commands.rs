@@ -490,7 +490,7 @@ pub async fn handle_command(
         ("time", Some(matches)) => {
             let time = matches.value_of("time").unwrap();
 
-            let seconds: u64 = if let Ok(seconds) = time.parse() {
+            let seconds: f32 = if let Ok(seconds) = time.parse() {
                 seconds
             } else {
                 // try 12:34 mm:ss format
@@ -498,18 +498,18 @@ pub async fn handle_command(
                 let parts: Vec<_> = time.split(':').collect();
                 match parts.as_slice() {
                     [hours, minutes, seconds] => {
-                        let hours: u64 = hours.parse()?;
-                        let minutes: u64 = minutes.parse()?;
-                        let seconds: u64 = seconds.parse()?;
+                        let hours: f32 = hours.parse()?;
+                        let minutes: f32 = minutes.parse()?;
+                        let seconds: f32 = seconds.parse()?;
 
-                        seconds + minutes * 60 + hours * 60 * 60
+                        seconds + minutes * 60.0 + hours * 60.0 * 60.0
                     }
 
                     [minutes, seconds] => {
-                        let minutes: u64 = minutes.parse()?;
-                        let seconds: u64 = seconds.parse()?;
+                        let minutes: f32 = minutes.parse()?;
+                        let seconds: f32 = seconds.parse()?;
 
-                        seconds + minutes * 60
+                        seconds + minutes * 60.0
                     }
 
                     _ => {
@@ -521,12 +521,15 @@ pub async fn handle_command(
                 }
             };
 
+            ensure!(seconds.is_finite(), "not finite");
+            ensure!(seconds.is_sign_positive(), "not positive");
+
             EntityManager::with_entity((matches, player), |entity| {
                 let browser = entity.browser.as_ref().chain_err(|| "no browser")?;
 
                 entity
                     .player
-                    .set_current_time(&browser, Duration::from_secs(seconds))?;
+                    .set_current_time(&browser, Duration::from_secs_f32(seconds))?;
 
                 if !matches.is_present("no-autoplay") {
                     entity.player.set_playing(&browser, true)?;

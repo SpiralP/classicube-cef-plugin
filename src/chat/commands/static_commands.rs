@@ -35,7 +35,7 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
                 Arg::with_name("global")
                     .long("global")
                     .short("g")
-                    .help("create global, hidden screen"),
+                    .help("hidden screen with unchanging volume"),
             )
             .arg(
                 Arg::with_name("silent")

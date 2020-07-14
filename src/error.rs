@@ -1,5 +1,5 @@
-pub use error_chain::bail;
 use error_chain::error_chain;
+pub use error_chain::{bail, ensure};
 
 error_chain! {
     foreign_links {

@@ -510,7 +510,7 @@ impl EntityManager {
             if let Some(entity) = EntityManager::get_by_browser_id(browser_id, entities) {
                 f(entity)
             } else {
-                bail!("No entity for browser id {}!", browser_id);
+                bail!("No entity found with browser id {}!", browser_id);
             }
         })
     }
@@ -544,7 +544,7 @@ impl EntityManager {
             if let Some(entity) = EntityManager::get_by_entity_id(entity_id, entities) {
                 f(entity)
             } else {
-                bail!("No entity for entity id {}!", entity_id);
+                bail!("No entity found with id {}!", entity_id);
             }
         })
     }
@@ -625,7 +625,7 @@ impl TargetEntity for &str {
             if let Some(entity_id) = name_to_id.get(*self) {
                 Ok::<_, Error>(*entity_id)
             } else {
-                bail!("No entity for entity named {:?}!", self);
+                bail!("No entity found with name {:?}!", self);
             }
         })
     }

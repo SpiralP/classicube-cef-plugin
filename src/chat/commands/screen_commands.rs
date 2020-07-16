@@ -50,13 +50,13 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
                 Arg::with_name("no-autoplay")
                     .long("no-autoplay")
                     .short("a")
-                    .help("don't resume after setting time"),
+                    .help("Don't resume after setting time"),
             )
             .arg(
                 Arg::with_name("loop")
                     .long("loop")
                     .short("l")
-                    .help("loop after track finishes playing"),
+                    .help("Loop after track finishes playing"),
             )
             .arg(Arg::with_name("url").required(true).multiple(true)),
     )
@@ -201,7 +201,7 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
                 Arg::with_name("no-autoplay")
                     .long("no-autoplay")
                     .short("a")
-                    .help("don't resume after setting time"),
+                    .help("Don't resume after setting time"),
             )
             .arg(Arg::with_name("time").required(true)),
     )
@@ -250,6 +250,18 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
                 .short("n")
                 .takes_value(true),
         ),
+    )
+    .subcommand(
+        App::new("speed")
+            .alias("rate")
+            .about("Set playback rate")
+            .arg(
+                Arg::with_name("name")
+                    .long("name")
+                    .short("n")
+                    .takes_value(true),
+            )
+            .arg(Arg::with_name("speed").required(true)),
     )
     // .subcommand(
     //     App::new("test_time")
@@ -673,6 +685,16 @@ pub async fn handle_command(
                 let browser = entity.browser.as_ref().chain_err(|| "no browser")?;
 
                 entity.player.set_playing(&browser, false)?;
+                Ok(())
+            })?;
+
+            Ok(true)
+        }
+
+        ("speed", Some(matches)) => {
+            let speed = matches.value_of("speed").unwrap().parse()?;
+            EntityManager::with_entity((matches, player), |entity| {
+                entity.player.set_speed(entity.browser.as_ref(), speed)?;
                 Ok(())
             })?;
 

@@ -10,6 +10,7 @@ use classicube_sys::{
     Gfx_UpdateTexturePart, LocationUpdate, Model_Render, OwnedGfxTexture, OwnedString, PackedCol,
     Texture, TextureRec, PACKEDCOL_WHITE,
 };
+use futures::channel::oneshot;
 use std::{collections::VecDeque, mem, pin::Pin};
 
 pub struct CefEntity {
@@ -23,6 +24,8 @@ pub struct CefEntity {
 
     v_table: Pin<Box<EntityVTABLE>>,
     texture: OwnedGfxTexture,
+
+    browser_attach_senders: Option<Vec<oneshot::Sender<()>>>,
 }
 
 impl CefEntity {
@@ -57,6 +60,7 @@ impl CefEntity {
             player,
             queue,
             should_send,
+            browser_attach_senders: Some(Vec::new()),
         };
 
         unsafe {
@@ -251,5 +255,19 @@ impl CefEntity {
             ids.insert(browser_id, self.id);
             self.browser = Some(browser);
         });
+
+        let mut browser_attach_senders = self.browser_attach_senders.take().unwrap();
+
+        for sender in browser_attach_senders.drain(..) {
+            let _ignore = sender.send(());
+        }
+    }
+
+    pub fn on_attach_browser(&mut self) -> oneshot::Receiver<()> {
+        let (sender, receiver) = oneshot::channel();
+
+        self.browser_attach_senders.as_mut().unwrap().push(sender);
+
+        receiver
     }
 }

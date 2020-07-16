@@ -96,6 +96,14 @@
           window.player.pauseVideo();
         }
       }
+      function setPlaybackRate(rate) {
+        if (
+          typeof window.player !== "undefined" &&
+          typeof window.player.setPlaybackRate !== "undefined"
+        ) {
+          window.player.setPlaybackRate(rate);
+        }
+      }
 
       // 3. This function creates an <iframe> (and YouTube player)
       //    after the API code downloads.

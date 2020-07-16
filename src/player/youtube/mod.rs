@@ -29,6 +29,7 @@ pub struct YoutubePlayer {
     autoplay: bool,
     should_loop: bool,
     silent: bool,
+    speed: f32,
 
     #[serde(skip)]
     pub update_loop_handle: Option<RemoteHandle<()>>,
@@ -53,6 +54,7 @@ impl Default for YoutubePlayer {
             autoplay: true,
             should_loop: false,
             silent: false,
+            speed: 1.0,
             update_loop_handle: None,
             last_title: String::new(),
             finished: false,
@@ -71,6 +73,7 @@ impl Clone for YoutubePlayer {
             autoplay: self.autoplay,
             should_loop: self.should_loop,
             silent: self.silent,
+            speed: self.speed,
             ..Default::default()
         }
     }
@@ -118,10 +121,14 @@ impl PlayerTrait for YoutubePlayer {
             .into_string()
     }
 
-    fn on_page_loaded(&mut self, entity_id: usize, _browser: &RustRefBrowser) {
+    fn on_page_loaded(&mut self, entity_id: usize, browser: &RustRefBrowser) {
         let (f, remote_handle) = start_update_loop(entity_id).remote_handle();
         self.update_loop_handle = Some(remote_handle);
         async_manager::spawn_local_on_main_thread(f);
+
+        if (self.speed - 1.0).abs() > 0.01 {
+            let _ignore = self.set_speed(Some(browser), self.speed);
+        }
     }
 
     fn on_title_change(&mut self, _entity_id: usize, browser: &RustRefBrowser, title: String) {
@@ -272,6 +279,15 @@ impl PlayerTrait for YoutubePlayer {
 
     fn set_silent(&mut self, silent: bool) -> Result<()> {
         self.silent = silent;
+        Ok(())
+    }
+
+    fn set_speed(&mut self, browser: Option<&RustRefBrowser>, speed: f32) -> Result<()> {
+        if let Some(browser) = browser {
+            Self::execute_function(browser, &format!("setPlaybackRate({})", speed))?;
+        }
+
+        self.speed = speed;
         Ok(())
     }
 }

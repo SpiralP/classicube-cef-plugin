@@ -20,44 +20,44 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
                 Arg::with_name("name")
                     .long("name")
                     .short("n")
-                    .help("name the screen")
+                    .help("Name the screen")
                     .takes_value(true),
             )
             .arg(
                 Arg::with_name("insecure")
                     .long("insecure")
                     .short("i")
-                    .help("allow insecure https connections"),
+                    .help("Allow insecure https connections"),
             )
             .arg(
                 Arg::with_name("no-autoplay")
                     .long("no-autoplay")
                     .short("a")
-                    .help("start paused"),
+                    .help("Start paused"),
             )
             .arg(
                 Arg::with_name("no-send")
                     .long("no-send")
                     .short("s")
-                    .help("don't sync this screen to other players"),
+                    .help("Don't sync this screen to other players"),
             )
             .arg(
                 Arg::with_name("global")
                     .long("global")
                     .short("g")
-                    .help("hidden screen with unchanging volume"),
+                    .help("Hidden screen with unchanging volume"),
             )
             .arg(
                 Arg::with_name("silent")
                     .long("silent")
                     .short("q")
-                    .help("don't show Now Playing messages"),
+                    .help("Don't show Now Playing messages"),
             )
             .arg(
                 Arg::with_name("loop")
                     .long("loop")
                     .short("l")
-                    .help("loop after track finishes playing"),
+                    .help("Loop after track finishes playing"),
             )
             .arg(Arg::with_name("url").multiple(true)),
     )
@@ -106,7 +106,7 @@ pub async fn handle_command(
 
             if global {
                 // 1 fps, 1x1 resolution
-                entity_builder = entity_builder.resolution(1, 1).frame_rate(1);
+                entity_builder = entity_builder.resolution(1, 1).frame_rate(1).scale(0.0);
             }
 
             if let Some(name) = matches.value_of("name") {
@@ -115,15 +115,18 @@ pub async fn handle_command(
 
             let entity_id = entity_builder.create()?;
 
-            EntityManager::with_entity(entity_id, |entity| {
-                if global {
-                    entity.set_scale(0.0);
-                } else {
+            let f = EntityManager::with_entity(entity_id, |entity| {
+                if !global {
                     move_entity(entity, player_snapshot);
                 }
 
-                Ok(())
+                Ok(entity.on_attach_browser())
             })?;
+
+            // wait for browser to be created
+            if f.await.is_err() {
+                bail!("cancelled");
+            }
 
             Ok(true)
         }

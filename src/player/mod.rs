@@ -97,6 +97,14 @@ pub trait PlayerTrait: Clone {
             Ok(())
         }
     }
+
+    fn set_speed(&mut self, _browser: Option<&RustRefBrowser>, speed: f32) -> Result<()> {
+        if (speed - 1.0).abs() > 0.01 {
+            bail!("setting speed unsupported");
+        } else {
+            Ok(())
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Copy, Clone)]
@@ -317,6 +325,15 @@ impl PlayerTrait for Player {
             Player::Dash(player) => player.set_silent(silent),
             Player::Media(player) => player.set_silent(silent),
             Player::Web(player) => player.set_silent(silent),
+        }
+    }
+
+    fn set_speed(&mut self, browser: Option<&RustRefBrowser>, speed: f32) -> Result<()> {
+        match self {
+            Player::Youtube(player) => player.set_speed(browser, speed),
+            Player::Dash(player) => player.set_speed(browser, speed),
+            Player::Media(player) => player.set_speed(browser, speed),
+            Player::Web(player) => player.set_speed(browser, speed),
         }
     }
 }

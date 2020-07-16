@@ -12,7 +12,7 @@ use async_recursion::async_recursion;
 use clap::{App, AppSettings, Arg, ArgMatches};
 use classicube_helpers::color;
 use log::*;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 // static commands not targetted at a specific entity
 pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
@@ -262,6 +262,19 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
                     .takes_value(true),
             )
             .arg(Arg::with_name("speed").required(true)),
+    )
+    .subcommand(
+        App::new("fade")
+            .about("Fade volume")
+            .arg(
+                Arg::with_name("name")
+                    .long("name")
+                    .short("n")
+                    .takes_value(true),
+            )
+            .arg(Arg::with_name("from").required(true))
+            .arg(Arg::with_name("to").required(true))
+            .arg(Arg::with_name("seconds").required(true)),
     )
     // .subcommand(
     //     App::new("test_time")
@@ -696,6 +709,52 @@ pub async fn handle_command(
             EntityManager::with_entity((matches, player), |entity| {
                 entity.player.set_speed(entity.browser.as_ref(), speed)?;
                 Ok(())
+            })?;
+
+            Ok(true)
+        }
+
+        ("fade", Some(matches)) => {
+            let from: f32 = matches.value_of("from").unwrap().parse()?;
+            ensure!(from.is_finite(), "from not finite");
+            ensure!(from.is_sign_positive(), "from not positive");
+
+            let to: f32 = matches.value_of("to").unwrap().parse()?;
+            ensure!(to.is_finite(), "to not finite");
+            ensure!(to.is_sign_positive(), "to not positive");
+
+            let seconds: f32 = matches.value_of("seconds").unwrap().parse()?;
+            ensure!(seconds.is_finite(), "seconds not finite");
+            ensure!(seconds.is_sign_positive(), "seconds not positive");
+
+            let entity_id =
+                EntityManager::with_entity((matches, player), move |entity| Ok(entity.id))?;
+            EntityManager::with_entity(entity_id, move |entity| {
+                entity
+                    .player
+                    .set_volume_mode(entity.browser.as_ref(), VolumeMode::Global)
+            })?;
+
+            let start_time = Instant::now();
+            loop {
+                let now = Instant::now();
+                let secs_from_start = (now - start_time).as_secs_f32();
+
+                let percent = secs_from_start / seconds;
+                if percent > 1.0 {
+                    break;
+                }
+
+                let volume = from + (to - from) * percent;
+                EntityManager::with_entity(entity_id, move |entity| {
+                    entity.player.set_volume(entity.browser.as_ref(), volume)
+                })?;
+
+                async_manager::sleep(Duration::from_millis(32)).await;
+            }
+
+            EntityManager::with_entity(entity_id, move |entity| {
+                entity.player.set_volume(entity.browser.as_ref(), to)
             })?;
 
             Ok(true)

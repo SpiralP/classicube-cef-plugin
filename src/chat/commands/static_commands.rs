@@ -115,17 +115,17 @@ pub async fn handle_command(
 
             let entity_id = entity_builder.create()?;
 
-            let f = EntityManager::with_entity(entity_id, |entity| {
+            let page_load = EntityManager::with_entity(entity_id, |entity| {
                 if !global {
                     move_entity(entity, player_snapshot);
                 }
 
-                Ok(entity.on_attach_browser())
+                Ok(entity.wait_for_page_load())
             })?;
 
-            // wait for browser to be created
-            if f.await.is_err() {
-                bail!("cancelled");
+            // wait for browser to load
+            if page_load.await.is_err() {
+                bail!("wait_for_page_load cancelled");
             }
 
             Ok(true)

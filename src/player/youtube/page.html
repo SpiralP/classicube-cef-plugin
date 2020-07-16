@@ -39,6 +39,7 @@
       var subtitles = parseInt(getQueryVariable("subtitles")) === 1;
       var autoplay = parseInt(getQueryVariable("autoplay")) === 1;
       var should_loop = parseInt(getQueryVariable("loop")) === 1;
+      var speed = 1.0;
 
       window.playerEnded = false;
 
@@ -103,6 +104,7 @@
         ) {
           window.player.setPlaybackRate(rate);
         }
+        speed = rate;
       }
 
       // 3. This function creates an <iframe> (and YouTube player)
@@ -148,6 +150,10 @@
       function onPlayerReady(event) {
         var player = event.target;
         player.setVolume(startVolume * 100.0);
+        if (speed !== 1.0) {
+          console.log("speeeed");
+          player.setPlaybackRate(speed);
+        }
         if (autoplay) {
           player.playVideo();
         } else {

@@ -89,7 +89,7 @@ impl EntityManager {
                     let browser_id = browser.get_identifier();
 
                     if let Err(e) = EntityManager::with_by_browser_id(browser_id, |entity| {
-                        entity.player.on_page_loaded(entity.id, &browser);
+                        entity.on_page_loaded(&browser);
                         Ok(())
                     }) {
                         warn!("{}", e);

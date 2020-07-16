@@ -315,10 +315,6 @@ pub async fn handle_command(
                 .build(&url)?;
 
             EntityManager::with_entity((matches, player), move |entity| {
-                if skip {
-                    entity.skip()?;
-                }
-
                 if let Some(kind) = entity.queue(p)? {
                     Chat::print(format!(
                         "{}Queued {}{} {}",
@@ -327,6 +323,10 @@ pub async fn handle_command(
                         color::SILVER,
                         url
                     ));
+                }
+
+                if skip {
+                    entity.skip()?;
                 }
 
                 Ok(())

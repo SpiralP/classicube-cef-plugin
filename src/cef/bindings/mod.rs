@@ -26,7 +26,7 @@ pub unsafe extern "C" fn rust_warn(c_str: *const ::std::os::raw::c_char) {
     warn!("{}", s);
 }
 
-const YOUTUBE_HTML: &[u8] = include_bytes!("../../players/youtube/page.html");
+const YOUTUBE_HTML: &[u8] = include_bytes!("../../player/youtube/page.html");
 
 fn handle_scheme_create(
     _browser: RustRefBrowser,

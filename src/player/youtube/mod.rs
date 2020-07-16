@@ -27,6 +27,8 @@ pub struct YoutubePlayer {
     volume_mode: VolumeMode,
 
     autoplay: bool,
+    should_loop: bool,
+    silent: bool,
 
     #[serde(skip)]
     pub update_loop_handle: Option<RemoteHandle<()>>,
@@ -49,6 +51,8 @@ impl Default for YoutubePlayer {
             volume: 1.0,
             volume_mode: VolumeMode::Distance { distance: 28.0 },
             autoplay: true,
+            should_loop: false,
+            silent: false,
             update_loop_handle: None,
             last_title: String::new(),
             finished: false,
@@ -65,6 +69,8 @@ impl Clone for YoutubePlayer {
             volume: self.volume,
             volume_mode: self.volume_mode,
             autoplay: self.autoplay,
+            should_loop: self.should_loop,
+            silent: self.silent,
             ..Default::default()
         }
     }
@@ -103,6 +109,10 @@ impl PlayerTrait for YoutubePlayer {
             params.push(("autoplay", "1".to_string()));
         }
 
+        if self.should_loop {
+            params.push(("loop", "1".to_string()));
+        }
+
         Url::parse_with_params(&format!("local://youtube/{}", self.id), &params)
             .unwrap()
             .into_string()
@@ -114,18 +124,12 @@ impl PlayerTrait for YoutubePlayer {
         async_manager::spawn_local_on_main_thread(f);
     }
 
-    fn on_title_change(
-        &mut self,
-        _entity_id: usize,
-        browser: &RustRefBrowser,
-        title: String,
-        silent: bool,
-    ) {
+    fn on_title_change(&mut self, _entity_id: usize, browser: &RustRefBrowser, title: String) {
         if self.last_title == title || title == "YouTube Loading" {
             return;
         }
 
-        if !silent {
+        if !self.silent {
             Chat::print(format!(
                 "{}Now playing {}{}",
                 color::TEAL,
@@ -230,8 +234,18 @@ impl PlayerTrait for YoutubePlayer {
         self.autoplay
     }
 
-    fn set_autoplay(&mut self, autoplay: bool) {
+    fn set_autoplay(&mut self, _browser: Option<&RustRefBrowser>, autoplay: bool) -> Result<()> {
         self.autoplay = autoplay;
+        Ok(())
+    }
+
+    fn get_loop(&self) -> bool {
+        self.should_loop
+    }
+
+    fn set_loop(&mut self, _browser: Option<&RustRefBrowser>, should_loop: bool) -> Result<()> {
+        self.should_loop = should_loop;
+        Ok(())
     }
 
     fn get_url(&self) -> String {
@@ -253,7 +267,11 @@ impl PlayerTrait for YoutubePlayer {
 
     fn set_playing(&mut self, browser: &RustRefBrowser, playing: bool) -> Result<()> {
         Self::execute_function(browser, &format!("setPlaying({})", playing))?;
+        Ok(())
+    }
 
+    fn set_silent(&mut self, silent: bool) -> Result<()> {
+        self.silent = silent;
         Ok(())
     }
 }

@@ -38,6 +38,7 @@
       var startVolume = parseFloat(getQueryVariable("volume") || 1.0);
       var subtitles = parseInt(getQueryVariable("subtitles")) === 1;
       var autoplay = parseInt(getQueryVariable("autoplay")) === 1;
+      var should_loop = parseInt(getQueryVariable("loop")) === 1;
 
       window.playerEnded = false;
 
@@ -104,6 +105,7 @@
           height: window.innerHeight,
           videoId: videoId,
           playerVars: {
+            playlist: videoId,
             // setting to 0 will cause ads to play
             autoplay: 1,
             controls: 0,
@@ -114,6 +116,7 @@
             start: startTime,
             cc_load_policy: subtitles ? 1 : 0,
             cc_lang_pref: "en",
+            loop: should_loop ? 1 : 0,
           },
           events: {
             onReady: onPlayerReady,
@@ -185,9 +188,11 @@
             document.title = videoData.title;
           }
         } else if (event.data === YT.PlayerState.ENDED) {
-          window.playerEnded = true;
-          window.playerEndedTime = window.player.getCurrentTime();
-          window.player.stopVideo();
+          if (!should_loop) {
+            window.playerEnded = true;
+            window.playerEndedTime = window.player.getCurrentTime();
+            window.player.stopVideo();
+          }
         }
       }
     </script>

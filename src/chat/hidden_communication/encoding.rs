@@ -1,19 +1,22 @@
-use crate::{cef::Cef, entity_manager::EntityManager, error::*, players::Player};
-use log::{debug, warn};
+use crate::{
+    cef::Cef,
+    entity_manager::{EntityBuilder, EntityManager},
+    error::*,
+    player::Player,
+};
+use log::debug;
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct LightEntity {
-    pub id: usize,
     pub player: Player,
     pub queue: VecDeque<Player>,
-    pub pos: [f32; 3],
-    pub ang: [f32; 2],
+    pub pos: (f32, f32, f32),
+    pub ang: (f32, f32),
     pub scale: f32,
     pub size: (u16, u16),
     pub resolution: Option<(u16, u16)>,
-    pub silent: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -39,25 +42,23 @@ pub async fn create_message() -> Message {
     let light_entities: Vec<_> = EntityManager::with_all_entities(|entities| {
         entities
             .iter()
-            .filter_map(|(&id, entity)| {
-                if !entity.should_send {
+            .filter_map(|(&_id, entity)| {
+                if !entity.should_send() {
                     return None;
                 }
 
                 let e = &entity.entity;
 
-                let pos = [e.Position.X, e.Position.Y, e.Position.Z];
-                let ang = [e.RotX, e.RotY];
+                let pos = (e.Position.X, e.Position.Y, e.Position.Z);
+                let ang = (e.RotX, e.RotY);
                 let scale = entity.get_scale();
                 let size = entity.get_size();
                 let resolution = entity.browser.as_ref().map(Cef::get_browser_size);
 
                 let player = entity.player.clone();
                 let queue = entity.queue.clone();
-                let silent = entity.silent;
 
                 Some(LightEntity {
-                    id,
                     pos,
                     ang,
                     player,
@@ -65,7 +66,6 @@ pub async fn create_message() -> Message {
                     scale,
                     size,
                     resolution,
-                    silent,
                 })
             })
             .collect()
@@ -90,16 +90,20 @@ pub async fn received_message(mut message: Message) -> Result<bool> {
     let mut had_data = false;
 
     for info in message.entities.drain(..) {
-        // if it already exists don't do anything
-        // TODO?? use unique ids!
-        if EntityManager::with_entity(info.id, |_| Ok(())).is_ok() {
-            warn!("entity {} already exists, skipping", info.id);
-            continue;
-        }
-
         debug!("creating {:#?}", info);
 
-        EntityManager::create_entity_from_light_entity(info).await?;
+        let mut builder = EntityBuilder::new(info.player)
+            .queue(info.queue)
+            .position(info.pos.0, info.pos.1, info.pos.2)
+            .rotation(info.ang.0, info.ang.1)
+            .scale(info.scale)
+            .size(info.size.0, info.size.1);
+
+        if let Some(res) = info.resolution {
+            builder = builder.resolution(res.0, res.1);
+        }
+
+        builder.create()?;
 
         had_data = true;
     }

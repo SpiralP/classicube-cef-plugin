@@ -1,8 +1,9 @@
-use super::{TEXTURE_HEIGHT, TEXTURE_WIDTH};
+use super::{BROWSER_ID_TO_ENTITY_ID, TEXTURE_HEIGHT, TEXTURE_WIDTH};
 use crate::{
     cef::RustRefBrowser,
     entity_manager::{DEFAULT_MODEL_HEIGHT, DEFAULT_MODEL_WIDTH},
-    players::Player,
+    error::*,
+    player::{Player, PlayerTrait, WebPlayer},
 };
 use classicube_sys::{
     cc_bool, cc_int16, Bitmap, Entity, EntityVTABLE, Entity_Init, Entity_SetModel,
@@ -18,22 +19,14 @@ pub struct CefEntity {
     pub browser: Option<RustRefBrowser>,
     pub player: Player,
     pub queue: VecDeque<Player>,
-    pub should_send: bool,
-    pub silent: bool,
+    should_send: bool,
 
     v_table: Pin<Box<EntityVTABLE>>,
     texture: OwnedGfxTexture,
-    // browser_attached_callbacks: Vec<Box<dyn FnOnce(RustRefBrowser)>>,
 }
 
 impl CefEntity {
-    pub fn register(
-        id: usize,
-        player: Player,
-        queue: VecDeque<Player>,
-        should_send: bool,
-        silent: bool,
-    ) -> Self {
+    pub fn register(id: usize, player: Player, queue: VecDeque<Player>, should_send: bool) -> Self {
         let entity = Box::pin(unsafe { mem::zeroed() });
 
         let v_table = Box::pin(EntityVTABLE {
@@ -62,16 +55,13 @@ impl CefEntity {
             texture,
             browser: None,
             player,
-            should_send,
             queue,
-            silent, // browser_attached_callbacks: Vec::new(),
+            should_send,
         };
 
         unsafe {
             this.register_entity();
         }
-
-        this.set_scale(0.25);
 
         this
     }
@@ -182,18 +172,84 @@ impl CefEntity {
         (entity.NameTex.Width, entity.NameTex.Height)
     }
 
-    // pub fn on_browser_attached<F: 'static>(&mut self, f: F)
-    // where
-    //     F: FnOnce(RustRefBrowser),
-    // {
-    //     self.browser_attached_callbacks.push(Box::new(f));
-    // }
+    pub fn should_send(&self) -> bool {
+        self.should_send
+    }
+}
+
+impl CefEntity {
+    /// add item to queue
+    ///
+    /// if item was queued, returns the type-name of player,
+    /// else returns None meaning we're about to play the item
+    pub fn queue(&mut self, player: Player) -> Result<Option<&'static str>> {
+        // this needs to determine if the current player was finished,
+        // if it was then we play right away,
+        // else we queue it for next
+
+        if self.player.is_finished_playing() {
+            self.play(player)?;
+
+            Ok(None)
+        } else {
+            let type_name = player.type_name();
+            self.queue.push_back(player);
+
+            Ok(Some(type_name))
+        }
+    }
+
+    pub fn stop(&mut self) -> Result<()> {
+        self.play(Player::Web(WebPlayer::blank_page()))
+    }
+
+    pub fn play(&mut self, mut player: Player) -> Result<()> {
+        let url = player.on_create();
+
+        // TODO move this into the Player enum's on_create
+
+        let browser = self.browser.as_ref().chain_err(|| "no browser")?;
+
+        if self.player.type_name() == player.type_name() {
+            // try to persist volume options
+            //
+            // only persist for same-type because if we went from a
+            // Web player which has global volume to a Youtube, it would
+            // make the youtube player global volume too
+            let volume = self.player.get_volume();
+            let volume_mode = self.player.get_volume_mode();
+            self.player = player;
+
+            let _ignore = self.player.set_volume(Some(browser), volume);
+            let _ignore = self.player.set_volume_mode(Some(browser), volume_mode);
+        } else {
+            self.player = player;
+        }
+
+        browser.load_url(url)?;
+
+        Ok(())
+    }
+
+    pub fn skip(&mut self) -> Result<()> {
+        if let Some(new_player) = self.queue.pop_front().take() {
+            self.play(new_player)?;
+        } else if !self.player.is_finished_playing() {
+            // show blank page
+            self.stop()?;
+        }
+
+        Ok(())
+    }
 
     pub fn attach_browser(&mut self, browser: RustRefBrowser) {
-        self.browser = Some(browser);
+        let browser_id = browser.get_identifier();
 
-        // for callback in self.browser_attached_callbacks.drain(..) {
-        //     callback(browser.clone());
-        // }
+        BROWSER_ID_TO_ENTITY_ID.with(|ids| {
+            let ids = &mut *ids.borrow_mut();
+
+            ids.insert(browser_id, self.id);
+            self.browser = Some(browser);
+        });
     }
 }

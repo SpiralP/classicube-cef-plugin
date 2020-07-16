@@ -9,21 +9,18 @@ use classicube_helpers::color;
 use futures::{future::RemoteHandle, prelude::*};
 use log::debug;
 use serde::{Deserialize, Serialize};
-use std::{path::Path, time::Duration};
+use std::path::Path;
 use url::Url;
 
 const PAGE_HTML: &str = include_str!("page.html");
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct MediaPlayer {
+pub struct DashPlayer {
     pub url: String,
-    pub time: Duration,
 
     // 0-1
     volume: f32,
     volume_mode: VolumeMode,
-
-    autoplay: bool,
 
     #[serde(skip)]
     pub update_loop_handle: Option<RemoteHandle<()>>,
@@ -32,36 +29,32 @@ pub struct MediaPlayer {
     last_title: String,
 }
 
-impl Default for MediaPlayer {
+impl Default for DashPlayer {
     fn default() -> Self {
         Self {
             url: String::new(),
-            time: Duration::from_millis(0),
             volume: 1.0,
             volume_mode: VolumeMode::Distance { distance: 28.0 },
-            autoplay: true,
             update_loop_handle: None,
             last_title: String::new(),
         }
     }
 }
 
-impl Clone for MediaPlayer {
+impl Clone for DashPlayer {
     fn clone(&self) -> Self {
         Self {
             url: self.url.clone(),
-            time: self.time,
             volume: self.volume,
             volume_mode: self.volume_mode,
-            autoplay: self.autoplay,
             ..Default::default()
         }
     }
 }
 
-impl PlayerTrait for MediaPlayer {
+impl PlayerTrait for DashPlayer {
     fn type_name(&self) -> &'static str {
-        "Media"
+        "Dash"
     }
 
     fn from_input(url: &str) -> Result<Self> {
@@ -73,16 +66,14 @@ impl PlayerTrait for MediaPlayer {
     }
 
     fn on_create(&mut self) -> String {
-        debug!("MediaPlayer on_create {}", self.url);
+        debug!("DashPlayer on_create {}", self.url);
 
         format!(
             "data:text/html;base64,{}",
             base64::encode(
                 PAGE_HTML
-                    .replace("MEDIA_URL", &self.url)
-                    .replace("START_TIME", &format!("{}", self.time.as_secs()))
+                    .replace("DASH_URL", &self.url)
                     .replace("START_VOLUME", &format!("{}", self.volume))
-                    .replace("AUTOPLAY", &format!("{}", self.autoplay))
             )
         )
     }
@@ -90,42 +81,22 @@ impl PlayerTrait for MediaPlayer {
     fn on_page_loaded(&mut self, entity_id: usize, _browser: &RustRefBrowser) {
         let (f, remote_handle) = start_update_loop(entity_id).remote_handle();
         self.update_loop_handle = Some(remote_handle);
-
         async_manager::spawn_local_on_main_thread(f);
     }
 
-    fn on_title_change(
-        &mut self,
-        _entity_id: usize,
-        _browser: &RustRefBrowser,
-        title: String,
-        silent: bool,
-    ) {
-        if self.last_title == title || title == "Media Loading" {
+    fn on_title_change(&mut self, _entity_id: usize, _browser: &RustRefBrowser, title: String) {
+        if self.last_title == title || title == "DASH Stream Loading" {
             return;
         }
 
-        if !silent {
-            Chat::print(format!(
-                "{}Now playing {}{}",
-                color::TEAL,
-                color::SILVER,
-                title,
-            ));
-        }
+        Chat::print(format!(
+            "{}Now playing {}{}",
+            color::TEAL,
+            color::SILVER,
+            title,
+        ));
 
         self.last_title = title;
-    }
-
-    fn get_current_time(&self) -> Result<Duration> {
-        Ok(self.time)
-    }
-
-    fn set_current_time(&mut self, browser: &RustRefBrowser, time: Duration) -> Result<()> {
-        Self::execute_with_player_field(browser, &format!("currentTime = {}", time.as_secs_f32()));
-        self.time = time;
-
-        Ok(())
     }
 
     fn get_volume(&self) -> f32 {
@@ -136,7 +107,7 @@ impl PlayerTrait for MediaPlayer {
     fn set_volume(&mut self, browser: Option<&RustRefBrowser>, volume: f32) -> Result<()> {
         if let Some(browser) = browser {
             if (volume - self.volume).abs() > 0.0001 {
-                Self::execute_with_player_field(browser, &format!("volume = {}", volume));
+                Self::get_player_field(browser, &format!("volume = {}", volume));
             }
         }
 
@@ -157,17 +128,8 @@ impl PlayerTrait for MediaPlayer {
         if let VolumeMode::Panning { .. } = mode {
             bail!("panning is TODO");
         }
-
         self.volume_mode = mode;
         Ok(())
-    }
-
-    fn get_autoplay(&self) -> bool {
-        self.autoplay
-    }
-
-    fn set_autoplay(&mut self, autoplay: bool) {
-        self.autoplay = autoplay;
     }
 
     fn get_url(&self) -> String {
@@ -179,34 +141,12 @@ impl PlayerTrait for MediaPlayer {
     }
 
     fn is_finished_playing(&self) -> bool {
-        // TODO
+        // TODO determine when we 404 after host closes stream
         false
-    }
-
-    fn set_playing(&mut self, browser: &RustRefBrowser, playing: bool) -> Result<()> {
-        if playing {
-            Self::execute_with_player_field(browser, "play()");
-        } else {
-            Self::execute_with_player_field(browser, "pause()");
-        }
-        Ok(())
     }
 }
 
-impl MediaPlayer {
-    pub async fn get_real_time(browser: &RustRefBrowser) -> Result<Duration> {
-        let seconds = match Self::eval_player_field(browser, "currentTime").await? {
-            RustV8Value::Double(seconds) => seconds as f32,
-            RustV8Value::Int(seconds) => seconds as f32,
-            RustV8Value::UInt(seconds) => seconds as f32,
-            _ => {
-                bail!("non-number js value");
-            }
-        };
-
-        Ok(Duration::from_secs_f32(seconds))
-    }
-
+impl DashPlayer {
     #[allow(dead_code)]
     pub async fn get_real_volume(browser: &RustRefBrowser) -> Result<f32> {
         let percent = match Self::eval_player_field(browser, "volume").await? {
@@ -222,7 +162,7 @@ impl MediaPlayer {
         Ok(percent)
     }
 
-    fn execute_with_player_field(browser: &RustRefBrowser, field: &str) {
+    fn get_player_field(browser: &RustRefBrowser, field: &str) {
         let code = format!(
             r#"if (typeof window.player !== "undefined") {{
                 window.player.{};
@@ -247,7 +187,7 @@ impl MediaPlayer {
     }
 }
 
-impl MediaPlayer {
+impl DashPlayer {
     pub fn from_url(url: &Url) -> Result<Self> {
         if url.scheme() != "http" && url.scheme() != "https" {
             Err("not http/https".into())
@@ -263,14 +203,12 @@ impl MediaPlayer {
                 .chain_err(|| "to_str")?;
 
             match ext {
-                "mp3" | "wav" | "ogg" | "aac" | "mp4" | "webm" | "avi" | "3gp" | "mov" => {
-                    Ok(Self {
-                        url: url.to_string(),
-                        ..Default::default()
-                    })
-                }
+                "mpd" => Ok(Self {
+                    url: url.to_string(),
+                    ..Default::default()
+                }),
 
-                _ => Err("url didn't end with a audio/video file extension".into()),
+                _ => Err("url didn't end with a dash .mpd file extension".into()),
             }
         }
     }

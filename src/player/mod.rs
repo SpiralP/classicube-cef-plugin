@@ -1,3 +1,4 @@
+mod builder;
 mod dash;
 mod helpers;
 mod media;
@@ -5,7 +6,10 @@ mod volume_fade;
 mod web;
 mod youtube;
 
-pub use self::{dash::DashPlayer, media::MediaPlayer, web::WebPlayer, youtube::YoutubePlayer};
+pub use self::{
+    builder::PlayerBuilder, dash::DashPlayer, media::MediaPlayer, web::WebPlayer,
+    youtube::YoutubePlayer,
+};
 use crate::{cef::RustRefBrowser, error::*};
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
@@ -23,14 +27,7 @@ pub trait PlayerTrait: Clone {
     /// Called after page is loaded
     fn on_page_loaded(&mut self, _entity_id: usize, _browser: &RustRefBrowser) {}
 
-    fn on_title_change(
-        &mut self,
-        _entity_id: usize,
-        _browser: &RustRefBrowser,
-        _title: String,
-        _silent: bool,
-    ) {
-    }
+    fn on_title_change(&mut self, _entity_id: usize, _browser: &RustRefBrowser, _title: String) {}
 
     fn get_current_time(&self) -> Result<Duration> {
         bail!("getting time not supported");
@@ -60,7 +57,24 @@ pub trait PlayerTrait: Clone {
     fn get_autoplay(&self) -> bool {
         true
     }
-    fn set_autoplay(&mut self, _autoplay: bool) {}
+    fn set_autoplay(&mut self, _browser: Option<&RustRefBrowser>, autoplay: bool) -> Result<()> {
+        if !autoplay {
+            bail!("unsetting autoplay not supported");
+        } else {
+            Ok(())
+        }
+    }
+
+    fn get_loop(&self) -> bool {
+        false
+    }
+    fn set_loop(&mut self, _browser: Option<&RustRefBrowser>, should_loop: bool) -> Result<()> {
+        if should_loop {
+            bail!("looping unsupported");
+        } else {
+            Ok(())
+        }
+    }
 
     fn get_url(&self) -> String;
 
@@ -68,8 +82,20 @@ pub trait PlayerTrait: Clone {
 
     fn is_finished_playing(&self) -> bool;
 
-    fn set_playing(&mut self, _browser: &RustRefBrowser, _playing: bool) -> Result<()> {
-        bail!("pausing/playing not supported");
+    fn set_playing(&mut self, _browser: &RustRefBrowser, playing: bool) -> Result<()> {
+        if !playing {
+            bail!("pausing not supported");
+        } else {
+            Ok(())
+        }
+    }
+
+    fn set_silent(&mut self, silent: bool) -> Result<()> {
+        if silent {
+            bail!("setting silent unsupported");
+        } else {
+            Ok(())
+        }
     }
 }
 
@@ -146,18 +172,12 @@ impl PlayerTrait for Player {
         }
     }
 
-    fn on_title_change(
-        &mut self,
-        entity_id: usize,
-        browser: &RustRefBrowser,
-        title: String,
-        silent: bool,
-    ) {
+    fn on_title_change(&mut self, entity_id: usize, browser: &RustRefBrowser, title: String) {
         match self {
-            Player::Youtube(player) => player.on_title_change(entity_id, browser, title, silent),
-            Player::Dash(player) => player.on_title_change(entity_id, browser, title, silent),
-            Player::Media(player) => player.on_title_change(entity_id, browser, title, silent),
-            Player::Web(player) => player.on_title_change(entity_id, browser, title, silent),
+            Player::Youtube(player) => player.on_title_change(entity_id, browser, title),
+            Player::Dash(player) => player.on_title_change(entity_id, browser, title),
+            Player::Media(player) => player.on_title_change(entity_id, browser, title),
+            Player::Web(player) => player.on_title_change(entity_id, browser, title),
         }
     }
 
@@ -228,12 +248,30 @@ impl PlayerTrait for Player {
         }
     }
 
-    fn set_autoplay(&mut self, autoplay: bool) {
+    fn set_autoplay(&mut self, browser: Option<&RustRefBrowser>, autoplay: bool) -> Result<()> {
         match self {
-            Player::Youtube(player) => player.set_autoplay(autoplay),
-            Player::Dash(player) => player.set_autoplay(autoplay),
-            Player::Media(player) => player.set_autoplay(autoplay),
-            Player::Web(player) => player.set_autoplay(autoplay),
+            Player::Youtube(player) => player.set_autoplay(browser, autoplay),
+            Player::Dash(player) => player.set_autoplay(browser, autoplay),
+            Player::Media(player) => player.set_autoplay(browser, autoplay),
+            Player::Web(player) => player.set_autoplay(browser, autoplay),
+        }
+    }
+
+    fn get_loop(&self) -> bool {
+        match self {
+            Player::Youtube(player) => player.get_loop(),
+            Player::Dash(player) => player.get_loop(),
+            Player::Media(player) => player.get_loop(),
+            Player::Web(player) => player.get_loop(),
+        }
+    }
+
+    fn set_loop(&mut self, browser: Option<&RustRefBrowser>, should_loop: bool) -> Result<()> {
+        match self {
+            Player::Youtube(player) => player.set_loop(browser, should_loop),
+            Player::Dash(player) => player.set_loop(browser, should_loop),
+            Player::Media(player) => player.set_loop(browser, should_loop),
+            Player::Web(player) => player.set_loop(browser, should_loop),
         }
     }
 
@@ -270,6 +308,15 @@ impl PlayerTrait for Player {
             Player::Dash(player) => player.set_playing(browser, playing),
             Player::Media(player) => player.set_playing(browser, playing),
             Player::Web(player) => player.set_playing(browser, playing),
+        }
+    }
+
+    fn set_silent(&mut self, silent: bool) -> Result<()> {
+        match self {
+            Player::Youtube(player) => player.set_silent(silent),
+            Player::Dash(player) => player.set_silent(silent),
+            Player::Media(player) => player.set_silent(silent),
+            Player::Web(player) => player.set_silent(silent),
         }
     }
 }

@@ -2,10 +2,9 @@ use super::helpers::*;
 use crate::{
     async_manager,
     chat::PlayerSnapshot,
-    entity_manager::EntityManager,
+    entity_manager::{EntityBuilder, EntityManager},
     error::*,
-    options::FRAME_RATE,
-    players::{PlayerTrait, VolumeMode},
+    player::{PlayerBuilder, VolumeMode},
 };
 use clap::{App, Arg, ArgMatches};
 
@@ -17,6 +16,13 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
     app.subcommand(
         App::new("create")
             .about("Creates a new screen")
+            .arg(
+                Arg::with_name("name")
+                    .long("name")
+                    .short("n")
+                    .help("name the screen")
+                    .takes_value(true),
+            )
             .arg(
                 Arg::with_name("insecure")
                     .long("insecure")
@@ -48,11 +54,10 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
                     .help("don't show Now Playing messages"),
             )
             .arg(
-                Arg::with_name("name")
-                    .long("name")
-                    .short("n")
-                    .help("name the screen")
-                    .takes_value(true),
+                Arg::with_name("loop")
+                    .long("loop")
+                    .short("l")
+                    .help("loop after track finishes playing"),
             )
             .arg(Arg::with_name("url").multiple(true)),
     )
@@ -64,7 +69,7 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
 }
 
 pub async fn handle_command(
-    player: &PlayerSnapshot,
+    player_snapshot: &PlayerSnapshot,
     matches: &ArgMatches<'static>,
 ) -> Result<bool> {
     match matches.subcommand() {
@@ -79,43 +84,42 @@ pub async fn handle_command(
             let insecure = matches.is_present("insecure");
             let autoplay = !matches.is_present("no-autoplay");
             let global = matches.is_present("global");
+            let should_loop = matches.is_present("loop");
 
             let should_send = !matches.is_present("no-send");
             let silent = matches.is_present("silent");
 
-            // 1 fps, 1x1 resolution
-            let frame_rate = if global { 1 } else { FRAME_RATE.get()? };
-            let resolution = if global { Some((1, 1)) } else { None };
+            let mut player_builder = PlayerBuilder::new()
+                .autoplay(autoplay)
+                .should_loop(should_loop)
+                .silent(silent);
 
-            let entity_id = if let Some(name) = matches.value_of("name") {
-                EntityManager::create_named_entity(
-                    name,
-                    &url,
-                    frame_rate,
-                    insecure,
-                    resolution,
-                    autoplay,
-                    should_send,
-                    silent,
-                )?
-            } else {
-                EntityManager::create_entity(
-                    &url,
-                    frame_rate,
-                    insecure,
-                    resolution,
-                    autoplay,
-                    should_send,
-                    silent,
-                )?
-            };
+            if global {
+                player_builder = player_builder.volume_mode(VolumeMode::Global);
+            }
+
+            let player = player_builder.build(&url)?;
+
+            let mut entity_builder = EntityBuilder::new(player)
+                .insecure(insecure)
+                .should_send(should_send);
+
+            if global {
+                // 1 fps, 1x1 resolution
+                entity_builder = entity_builder.resolution(1, 1).frame_rate(1);
+            }
+
+            if let Some(name) = matches.value_of("name") {
+                entity_builder = entity_builder.name(name);
+            }
+
+            let entity_id = entity_builder.create()?;
 
             EntityManager::with_entity(entity_id, |entity| {
                 if global {
                     entity.set_scale(0.0);
-                    entity.player.set_volume_mode(None, VolumeMode::Global)?;
                 } else {
-                    move_entity(entity, player);
+                    move_entity(entity, player_snapshot);
                 }
 
                 Ok(())

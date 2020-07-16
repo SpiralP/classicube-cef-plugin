@@ -139,6 +139,8 @@ async fn start_loop(entity_id: usize) -> Result<()> {
                 };
 
                 if is_finished_playing {
+                    debug!("finished playing!");
+
                     EntityManager::with_entity(entity_id, move |entity| {
                         match &mut entity.player {
                             Player::Media(_player) => {
@@ -147,18 +149,16 @@ async fn start_loop(entity_id: usize) -> Result<()> {
 
                             Player::Youtube(player) => {
                                 player.finished = is_finished_playing;
+                                entity.skip()?;
                             }
 
                             _ => {
-                                bail!("not supported is_finished_playing");
+                                bail!("is_finished_playing not supported");
                             }
                         }
                         Ok(())
                     })?;
 
-                    debug!("finished playing!");
-
-                    EntityManager::entity_skip(entity_id)?;
                     break;
                 }
             }

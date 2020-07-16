@@ -6,7 +6,7 @@ use crate::{
     entity_manager::EntityManager,
     error::*,
     helpers::format_duration,
-    players::{PlayerTrait, VolumeMode},
+    player::{PlayerBuilder, PlayerTrait, VolumeMode},
 };
 use async_recursion::async_recursion;
 use clap::{App, AppSettings, Arg, ArgMatches};
@@ -51,6 +51,12 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
                     .long("no-autoplay")
                     .short("a")
                     .help("don't resume after setting time"),
+            )
+            .arg(
+                Arg::with_name("loop")
+                    .long("loop")
+                    .short("l")
+                    .help("loop after track finishes playing"),
             )
             .arg(Arg::with_name("url").required(true).multiple(true)),
     )
@@ -276,29 +282,36 @@ pub async fn handle_command(
 
             let skip = matches.is_present("skip");
             let autoplay = !matches.is_present("no-autoplay");
+            let should_loop = matches.is_present("loop");
 
-            let entity_id = EntityManager::with_entity((matches, player), |entity| Ok(entity.id))?;
+            let p = PlayerBuilder::new()
+                .autoplay(autoplay)
+                .should_loop(should_loop)
+                .build(&url)?;
 
-            if skip {
-                EntityManager::entity_skip(entity_id)?;
-            }
+            EntityManager::with_entity((matches, player), move |entity| {
+                if skip {
+                    entity.skip()?;
+                }
 
-            if let Some(kind) = EntityManager::entity_queue(&url, entity_id, autoplay)? {
-                Chat::print(format!(
-                    "{}Queued {}{} {}",
-                    color::TEAL,
-                    kind,
-                    color::SILVER,
-                    url
-                ));
-            }
+                if let Some(kind) = entity.queue(p)? {
+                    Chat::print(format!(
+                        "{}Queued {}{} {}",
+                        color::TEAL,
+                        kind,
+                        color::SILVER,
+                        url
+                    ));
+                }
+
+                Ok(())
+            })?;
 
             Ok(true)
         }
 
         ("skip", Some(matches)) => {
-            let entity_id = EntityManager::with_entity((matches, player), |entity| Ok(entity.id))?;
-            EntityManager::entity_skip(entity_id)?;
+            EntityManager::with_entity((matches, player), |entity| entity.skip())?;
 
             Ok(true)
         }
@@ -338,9 +351,7 @@ pub async fn handle_command(
         // bail!("unimplemented");
         // }
         ("stop", Some(matches)) => {
-            let entity_id = EntityManager::with_entity((matches, player), |entity| Ok(entity.id))?;
-
-            EntityManager::entity_stop(entity_id)?;
+            EntityManager::with_entity((matches, player), |entity| entity.stop())?;
 
             Ok(true)
         }

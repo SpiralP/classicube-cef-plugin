@@ -4,7 +4,7 @@ use crate::{
     entity_manager::EntityManager,
     error::*,
     options,
-    players::PlayerTrait,
+    player::PlayerTrait,
 };
 use clap::{App, AppSettings, Arg, ArgMatches};
 use classicube_helpers::CellGetSet;

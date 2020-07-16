@@ -2,10 +2,10 @@ use super::wait_for_message;
 use crate::{
     async_manager,
     chat::{hidden_communication::SHOULD_BLOCK, Chat, PlayerSnapshot},
-    entity_manager::EntityManager,
+    entity_manager::{EntityBuilder, EntityManager},
     error::*,
     options::{AUTOPLAY_MAP_THEMES, MAP_THEME_VOLUME},
-    players::{MediaPlayer, Player, PlayerTrait, VolumeMode, YoutubePlayer},
+    player::{MediaPlayer, Player, PlayerTrait, VolumeMode, YoutubePlayer},
 };
 use classicube_helpers::{tab_list::remove_color, CellGetSet};
 use classicube_sys::ENTITIES_SELF_ID;
@@ -220,32 +220,24 @@ async fn handle_map_theme_url(message: String) -> Result<()> {
             }
         },
     };
+    player.set_silent(true)?;
     player.set_volume(None, volume)?;
+    player.set_volume_mode(None, VolumeMode::Global)?;
 
-    let entity_id = if let Some(entity_id) = CURRENT_MAP_THEME.get() {
-        EntityManager::entity_play_player(player, entity_id)?;
-        entity_id
+    if let Some(entity_id) = CURRENT_MAP_THEME.get() {
+        EntityManager::with_entity(entity_id, |entity| entity.play(player))?;
     } else {
         // 1 fps, 1x1 resolution, don't send to other players, don't print "Now Playing"
-        let entity_id =
-            EntityManager::create_entity_player(player, 1, false, Some((1, 1)), false, true)?;
-        EntityManager::with_entity(entity_id, |entity| {
-            entity.set_scale(0.0);
+        let entity_id = EntityBuilder::new(player)
+            .frame_rate(1)
+            .resolution(1, 1)
+            .should_send(false)
+            .scale(0.0)
+            .position(0.0, 0.0, 0.0)
+            .create()?;
 
-            Ok(())
-        })?;
-
-        entity_id
-    };
-
-    CURRENT_MAP_THEME.set(Some(entity_id));
-
-    // set quiet volume
-    EntityManager::with_entity(entity_id, |entity| {
-        entity.player.set_volume_mode(None, VolumeMode::Global)?;
-
-        Ok(())
-    })?;
+        CURRENT_MAP_THEME.set(Some(entity_id));
+    }
 
     Ok(())
 }

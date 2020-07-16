@@ -97,7 +97,7 @@ impl Chat {
             async_manager::spawn_local_on_main_thread(async {
                 async_manager::sleep(Duration::from_millis(2000)).await;
 
-                Chat::send("/client cef create https://youtu.be/keF7n1eVKzE?t=273");
+                Chat::send("/client cef create --loop https://youtu.be/keF7n1eVKzE?t=273");
                 Chat::send("/client cef volume -p 10.0");
 
                 // async_manager::sleep(Duration::from_millis(1000)).await;

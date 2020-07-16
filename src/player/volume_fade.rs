@@ -2,7 +2,7 @@ use crate::{
     async_manager,
     entity_manager::EntityManager,
     error::*,
-    players::{Player, PlayerTrait},
+    player::{Player, PlayerTrait},
 };
 use futures::{future::RemoteHandle, prelude::*};
 use log::{debug, warn};

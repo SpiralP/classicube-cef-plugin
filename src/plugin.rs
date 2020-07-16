@@ -1,4 +1,4 @@
-use crate::{async_manager, cef::Cef, chat::Chat, entity_manager::EntityManager, players};
+use crate::{async_manager, cef::Cef, chat::Chat, entity_manager::EntityManager, player};
 use classicube_helpers::{color, OptionWithInner};
 use classicube_sys::{Server, String_AppendConst};
 use log::*;
@@ -58,7 +58,7 @@ impl Plugin {
 
         PLUGIN
             .with_inner_mut(|plugin| {
-                players::on_new_map();
+                player::on_new_map();
                 plugin.chat.on_new_map();
             })
             .unwrap();
@@ -80,7 +80,7 @@ impl Plugin {
 
                 plugin.entity_manager.on_new_map_loaded();
                 plugin.chat.on_new_map_loaded();
-                players::on_new_map_loaded();
+                player::on_new_map_loaded();
             })
             .unwrap();
     }

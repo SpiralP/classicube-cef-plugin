@@ -8,7 +8,7 @@ mod error;
 mod helpers;
 mod logger;
 mod options;
-mod players;
+mod player;
 mod plugin;
 mod search;
 

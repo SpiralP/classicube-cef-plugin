@@ -223,6 +223,7 @@ async fn handle_map_theme_url(message: String) -> Result<()> {
     player.set_silent(true)?;
     player.set_volume(None, volume)?;
     player.set_volume_mode(None, VolumeMode::Global)?;
+    player.set_loop(None, true)?;
 
     if let Some(entity_id) = CURRENT_MAP_THEME.get() {
         EntityManager::with_entity(entity_id, |entity| entity.play(player))?;

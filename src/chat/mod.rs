@@ -110,10 +110,10 @@ impl Chat {
                     .unwrap();
                 }
 
-                run(&["create", "-n", "lime", "-sq", "youtu.be/keF7n1eVKzE?t=273"]).await;
-                run(&["here"]).await;
-                run(&["volume", "-n", "lime", "10.0"]).await;
-                run(&["speed", "-n", "lime", "1.1"]).await;
+                run(&["create", "-n", "ag", "-sq", "youtu.be/keF7n1eVKzE?t=273"]).await;
+                run(&["here", "-n", "ag"]).await;
+                run(&["volume", "-n", "ag", "-p", "10.0"]).await;
+                // run(&["speed", "-n", "ag", "1.1"]).await;
 
                 // async_manager::sleep(Duration::from_millis(1000)).await;
 

@@ -155,6 +155,7 @@ impl PlayerTrait for YoutubePlayer {
                 debug!("video started playing after loading {:?}", lag);
                 // TODO delay everyone a couple seconds then start playing video!
                 if lag > Duration::from_secs(10) {
+                    // TODO don't do this if longer than video duration
                     warn!("slow video load, seeking to {:?}", lag);
                     // seek to current time
                     let current_time = self.time + lag;
@@ -215,8 +216,13 @@ impl PlayerTrait for YoutubePlayer {
                                 source.connect(panner);
                                 panner.connect(context.destination);
                                 window.panner = panner;
+                                window.context = context;
                             }}
-                            window.panner.pan.value = {};
+                            window.panner.pan.setValueCurveAtTime(
+                                [window.panner.pan.value, {}],
+                                window.context.currentTime,
+                                0.02
+                            );
                         "#,
                         pan
                     ),

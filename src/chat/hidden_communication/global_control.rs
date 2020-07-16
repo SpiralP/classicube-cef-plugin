@@ -100,7 +100,7 @@ fn is_global_cef_message(mut m: &str) -> Option<String> {
         m = &m[2..];
     }
 
-    if m.starts_with("cef ") || m.starts_with("cef: ") {
+    if m.starts_with("cef ") {
         Some(m[4..].to_string())
     } else {
         None

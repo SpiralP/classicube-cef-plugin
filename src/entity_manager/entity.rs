@@ -25,7 +25,7 @@ pub struct CefEntity {
     v_table: Pin<Box<EntityVTABLE>>,
     texture: OwnedGfxTexture,
 
-    page_loaded_senders: Option<Vec<oneshot::Sender<()>>>,
+    page_loaded_senders: Vec<oneshot::Sender<()>>,
 }
 
 impl CefEntity {
@@ -60,7 +60,7 @@ impl CefEntity {
             player,
             queue,
             should_send,
-            page_loaded_senders: Some(Vec::new()),
+            page_loaded_senders: Vec::new(),
         };
 
         unsafe {
@@ -260,15 +260,14 @@ impl CefEntity {
     pub fn on_page_loaded(&mut self, browser: &RustRefBrowser) {
         self.player.on_page_loaded(self.id, browser);
 
-        let mut page_loaded_senders = self.page_loaded_senders.take().unwrap();
-        for sender in page_loaded_senders.drain(..) {
+        for sender in self.page_loaded_senders.drain(..) {
             let _ignore = sender.send(());
         }
     }
 
     pub fn wait_for_page_load(&mut self) -> oneshot::Receiver<()> {
         let (sender, receiver) = oneshot::channel();
-        self.page_loaded_senders.as_mut().unwrap().push(sender);
+        self.page_loaded_senders.push(sender);
 
         receiver
     }

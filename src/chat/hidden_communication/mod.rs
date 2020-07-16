@@ -57,6 +57,7 @@ pub fn initialize() {
 pub fn on_new_map() {
     if unsafe { Server.IsSinglePlayer } == 0 {
         clients::stop_query();
+        global_control::on_new_map();
     }
 }
 

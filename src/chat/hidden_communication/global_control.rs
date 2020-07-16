@@ -19,6 +19,10 @@ use std::{
 use url::Url;
 
 thread_local!(
+    pub static CURRENT_MAP_THEME: Cell<Option<usize>> = Default::default();
+);
+
+thread_local!(
     static LISTENER: Cell<Option<RemoteHandle<()>>> = Default::default();
 );
 
@@ -42,6 +46,21 @@ pub fn start_listening() {
     LISTENER.with(move |cell| {
         cell.set(Some(remote_handle));
     });
+}
+
+pub fn on_new_map() {
+    WORKER_SENDER.with(move |cell| {
+        let option = &mut *cell.borrow_mut();
+        *option = None;
+    });
+
+    WORKER.with(move |cell| {
+        cell.set(None);
+    });
+}
+
+pub fn on_new_map_loaded() {
+    CURRENT_MAP_THEME.set(None);
 
     let (sender, receiver) = mpsc::unbounded();
 
@@ -182,14 +201,6 @@ pub async fn listen_loop() {
             });
         }
     }
-}
-
-thread_local!(
-    pub static CURRENT_MAP_THEME: Cell<Option<usize>> = Default::default();
-);
-
-pub fn on_new_map_loaded() {
-    CURRENT_MAP_THEME.set(None);
 }
 
 async fn handle_map_theme_url(message: String) -> Result<()> {

@@ -196,7 +196,7 @@ impl PlayerTrait for YoutubePlayer {
     ) -> Result<()> {
         if let Some(browser) = browser {
             if let VolumeMode::Panning { pan, .. } = mode {
-                browser.execute_javascript_on_frame(
+                let _ignore = browser.execute_javascript_on_frame(
                     "https://www.youtube.com",
                     format!(
                         r#"
@@ -213,16 +213,16 @@ impl PlayerTrait for YoutubePlayer {
                         "#,
                         pan
                     ),
-                )?;
+                );
             } else {
-                browser.execute_javascript_on_frame(
+                let _ignore = browser.execute_javascript_on_frame(
                     "https://www.youtube.com",
                     r#"
                         if (typeof window.panner !== "undefined") {
                             window.panner.pan.value = 0.0;
                         }
                     "#,
-                )?;
+                );
             }
         }
 

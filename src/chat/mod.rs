@@ -97,8 +97,22 @@ impl Chat {
             async_manager::spawn_local_on_main_thread(async {
                 async_manager::sleep(Duration::from_millis(2000)).await;
 
-                Chat::send("/client cef create --loop https://youtu.be/keF7n1eVKzE?t=273");
-                Chat::send("/client cef volume -p 10.0");
+                async fn run(args: &[&str]) {
+                    let player_snapshot =
+                        PlayerSnapshot::from_entity_id(classicube_sys::ENTITIES_SELF_ID as _)
+                            .unwrap();
+                    crate::chat::commands::run(
+                        player_snapshot,
+                        args.iter().map(ToString::to_string).collect(),
+                        false,
+                    )
+                    .await
+                    .unwrap();
+                }
+
+                run(&["create", "-n", "lime", "-sq", "youtu.be/keF7n1eVKzE?t=273"]).await;
+                run(&["here"]).await;
+                run(&["volume", "-n", "lime", "10.0"]).await;
 
                 // async_manager::sleep(Duration::from_millis(1000)).await;
 

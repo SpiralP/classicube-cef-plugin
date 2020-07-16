@@ -1,4 +1,4 @@
-use super::{helpers::start_update_loop, PlayerTrait, WebPlayer};
+use super::{helpers::start_update_loop, PlayerTrait, VolumeMode, WebPlayer};
 use crate::{
     async_manager,
     cef::{RustRefBrowser, RustV8Value},
@@ -20,12 +20,8 @@ pub struct MediaPlayer {
     pub time: Duration,
 
     // 0-1
-    pub volume: f32,
-
-    pub global_volume: bool,
-
-    #[serde(skip)]
-    should_send: bool,
+    volume: f32,
+    volume_mode: VolumeMode,
 
     autoplay: bool,
 
@@ -42,8 +38,7 @@ impl Default for MediaPlayer {
             url: String::new(),
             time: Duration::from_millis(0),
             volume: 1.0,
-            global_volume: false,
-            should_send: true,
+            volume_mode: VolumeMode::Distance { distance: 28.0 },
             autoplay: true,
             update_loop_handle: None,
             last_title: String::new(),
@@ -57,7 +52,7 @@ impl Clone for MediaPlayer {
             url: self.url.clone(),
             time: self.time,
             volume: self.volume,
-            global_volume: self.global_volume,
+            volume_mode: self.volume_mode,
             autoplay: self.autoplay,
             ..Default::default()
         }
@@ -133,14 +128,16 @@ impl PlayerTrait for MediaPlayer {
         Ok(())
     }
 
-    fn get_volume(&self) -> Result<f32> {
-        Ok(self.volume)
+    fn get_volume(&self) -> f32 {
+        self.volume
     }
 
     /// volume is a float between 0-1
-    fn set_volume(&mut self, browser: &RustRefBrowser, volume: f32) -> Result<()> {
-        if (volume - self.volume).abs() > 0.0001 {
-            Self::execute_with_player_field(browser, &format!("volume = {}", volume));
+    fn set_volume(&mut self, browser: Option<&RustRefBrowser>, volume: f32) -> Result<()> {
+        if let Some(browser) = browser {
+            if (volume - self.volume).abs() > 0.0001 {
+                Self::execute_with_player_field(browser, &format!("volume = {}", volume));
+            }
         }
 
         self.volume = volume;
@@ -148,22 +145,21 @@ impl PlayerTrait for MediaPlayer {
         Ok(())
     }
 
-    fn has_global_volume(&self) -> bool {
-        self.global_volume
+    fn get_volume_mode(&self) -> VolumeMode {
+        self.volume_mode
     }
 
-    fn set_global_volume(&mut self, global_volume: bool) -> Result<()> {
-        self.global_volume = global_volume;
+    fn set_volume_mode(
+        &mut self,
+        _browser: Option<&RustRefBrowser>,
+        mode: VolumeMode,
+    ) -> Result<()> {
+        if let VolumeMode::Panning { .. } = mode {
+            bail!("panning is TODO");
+        }
 
+        self.volume_mode = mode;
         Ok(())
-    }
-
-    fn get_should_send(&self) -> bool {
-        self.should_send
-    }
-
-    fn set_should_send(&mut self, should_send: bool) {
-        self.should_send = should_send;
     }
 
     fn get_autoplay(&self) -> bool {

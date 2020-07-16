@@ -186,16 +186,24 @@ impl EntityManager {
         insecure: bool,
         resolution: Option<(u16, u16)>,
         autoplay: bool,
+        should_send: bool,
         silent: bool,
     ) -> Result<usize> {
         let mut player = Player::from_input(input)?;
         player.set_autoplay(autoplay);
 
         Ok(Self::create_entity_player(
-            player, fps, insecure, resolution, silent,
+            player,
+            fps,
+            insecure,
+            resolution,
+            should_send,
+            silent,
         )?)
     }
 
+    // TODO make a higher ScreenEntity class, and have a builder for these flags
+    #[allow(clippy::too_many_arguments)]
     pub fn create_named_entity<S: Into<String>>(
         name: S,
         input: &str,
@@ -203,11 +211,20 @@ impl EntityManager {
         insecure: bool,
         resolution: Option<(u16, u16)>,
         autoplay: bool,
+        should_send: bool,
         silent: bool,
     ) -> Result<usize> {
         let name = name.into();
 
-        let entity_id = Self::create_entity(input, fps, insecure, resolution, autoplay, silent)?;
+        let entity_id = Self::create_entity(
+            input,
+            fps,
+            insecure,
+            resolution,
+            autoplay,
+            should_send,
+            silent,
+        )?;
         debug!("created named entity {:?} with id {}", name, entity_id);
 
         NAME_TO_ID.with(|cell| {
@@ -249,16 +266,18 @@ impl EntityManager {
         fps: u16,
         insecure: bool,
         resolution: Option<(u16, u16)>,
+        should_send: bool,
         silent: bool,
     ) -> Result<usize> {
         let url = player.on_create();
 
         let entity_id = Self::get_new_id();
 
-        ENTITIES.with(|cell| {
+        ENTITIES.with(move |cell| {
             let entities = &mut *cell.borrow_mut();
 
-            let entity = CefEntity::register(entity_id, player, VecDeque::new(), silent);
+            let entity =
+                CefEntity::register(entity_id, player, VecDeque::new(), should_send, silent);
             debug!("entity created {}", entity_id);
             entities.insert(entity_id, entity);
         });
@@ -341,13 +360,12 @@ impl EntityManager {
                 // only persist for same-type because if we went from a
                 // Web player which has global volume to a Youtube, it would
                 // make the youtube player global volume too
-                let had_global_volume = entity.player.has_global_volume();
                 let volume = entity.player.get_volume();
+                let volume_mode = entity.player.get_volume_mode();
                 entity.player = player;
-                let _ignore = entity.player.set_global_volume(had_global_volume);
-                if let Ok(volume) = volume {
-                    let _ignore = entity.player.set_volume(&browser, volume);
-                }
+
+                let _ignore = entity.player.set_volume(Some(browser), volume);
+                let _ignore = entity.player.set_volume_mode(Some(browser), volume_mode);
             } else {
                 entity.player = player;
             }
@@ -372,7 +390,7 @@ impl EntityManager {
         ENTITIES.with(|cell| {
             let entities = &mut *cell.borrow_mut();
 
-            let entity = CefEntity::register(entity_id, info.player, info.queue, info.silent);
+            let entity = CefEntity::register(entity_id, info.player, info.queue, true, info.silent);
             debug!("entity {} created", entity_id);
             entities.insert(entity_id, entity);
         });

@@ -98,6 +98,7 @@ impl Chat {
                 async_manager::sleep(Duration::from_millis(2000)).await;
 
                 Chat::send("/client cef create https://youtu.be/keF7n1eVKzE?t=273");
+                Chat::send("/client cef volume -p 10.0");
 
                 // async_manager::sleep(Duration::from_millis(1000)).await;
 

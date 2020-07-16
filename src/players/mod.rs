@@ -10,12 +10,12 @@ use crate::{cef::RustRefBrowser, error::*};
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
-pub trait PlayerTrait {
+pub trait PlayerTrait: Clone {
     fn type_name(&self) -> &'static str;
 
     fn from_input(input: &str) -> Result<Self>
     where
-        Self: Sized + Clone;
+        Self: Sized;
 
     /// Called before creating the browser, returns a url
     fn on_create(&mut self) -> String;
@@ -39,22 +39,23 @@ pub trait PlayerTrait {
         bail!("setting time not supported");
     }
 
-    fn get_volume(&self) -> Result<f32> {
-        Ok(1.0)
+    fn get_volume(&self) -> f32 {
+        1.0
     }
-    fn set_volume(&mut self, _browser: &RustRefBrowser, _percent: f32) -> Result<()> {
+    fn set_volume(&mut self, _browser: Option<&RustRefBrowser>, _percent: f32) -> Result<()> {
         bail!("setting volume not supported");
     }
 
-    fn has_global_volume(&self) -> bool {
-        true
+    fn get_volume_mode(&self) -> VolumeMode {
+        VolumeMode::Global
     }
-    fn set_global_volume(&mut self, _global_volume: bool) -> Result<()> {
-        bail!("setting global volume not supported");
+    fn set_volume_mode(
+        &mut self,
+        _browser: Option<&RustRefBrowser>,
+        _mode: VolumeMode,
+    ) -> Result<()> {
+        bail!("setting volume mode not supported");
     }
-
-    fn get_should_send(&self) -> bool;
-    fn set_should_send(&mut self, _should_send: bool);
 
     fn get_autoplay(&self) -> bool {
         true
@@ -72,7 +73,14 @@ pub trait PlayerTrait {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Copy, Clone)]
+pub enum VolumeMode {
+    Global,
+    Distance { distance: f32 },
+    Panning { distance: f32, pan: f32 },
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum Player {
     Youtube(YoutubePlayer),
     Dash(DashPlayer),
@@ -171,7 +179,7 @@ impl PlayerTrait for Player {
         }
     }
 
-    fn get_volume(&self) -> Result<f32> {
+    fn get_volume(&self) -> f32 {
         match self {
             Player::Youtube(player) => player.get_volume(),
             Player::Dash(player) => player.get_volume(),
@@ -180,7 +188,7 @@ impl PlayerTrait for Player {
         }
     }
 
-    fn set_volume(&mut self, browser: &RustRefBrowser, percent: f32) -> Result<()> {
+    fn set_volume(&mut self, browser: Option<&RustRefBrowser>, percent: f32) -> Result<()> {
         match self {
             Player::Youtube(player) => player.set_volume(browser, percent),
             Player::Dash(player) => player.set_volume(browser, percent),
@@ -189,39 +197,25 @@ impl PlayerTrait for Player {
         }
     }
 
-    fn has_global_volume(&self) -> bool {
+    fn get_volume_mode(&self) -> VolumeMode {
         match self {
-            Player::Youtube(player) => player.has_global_volume(),
-            Player::Dash(player) => player.has_global_volume(),
-            Player::Media(player) => player.has_global_volume(),
-            Player::Web(player) => player.has_global_volume(),
+            Player::Youtube(player) => player.get_volume_mode(),
+            Player::Dash(player) => player.get_volume_mode(),
+            Player::Media(player) => player.get_volume_mode(),
+            Player::Web(player) => player.get_volume_mode(),
         }
     }
 
-    fn set_global_volume(&mut self, global_volume: bool) -> Result<()> {
+    fn set_volume_mode(
+        &mut self,
+        browser: Option<&RustRefBrowser>,
+        mode: VolumeMode,
+    ) -> Result<()> {
         match self {
-            Player::Youtube(player) => player.set_global_volume(global_volume),
-            Player::Dash(player) => player.set_global_volume(global_volume),
-            Player::Media(player) => player.set_global_volume(global_volume),
-            Player::Web(player) => player.set_global_volume(global_volume),
-        }
-    }
-
-    fn get_should_send(&self) -> bool {
-        match self {
-            Player::Youtube(player) => player.get_should_send(),
-            Player::Dash(player) => player.get_should_send(),
-            Player::Media(player) => player.get_should_send(),
-            Player::Web(player) => player.get_should_send(),
-        }
-    }
-
-    fn set_should_send(&mut self, should_send: bool) {
-        match self {
-            Player::Youtube(player) => player.set_should_send(should_send),
-            Player::Dash(player) => player.set_should_send(should_send),
-            Player::Media(player) => player.set_should_send(should_send),
-            Player::Web(player) => player.set_should_send(should_send),
+            Player::Youtube(player) => player.set_volume_mode(browser, mode),
+            Player::Dash(player) => player.set_volume_mode(browser, mode),
+            Player::Media(player) => player.set_volume_mode(browser, mode),
+            Player::Web(player) => player.set_volume_mode(browser, mode),
         }
     }
 

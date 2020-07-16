@@ -5,7 +5,7 @@ use crate::{
     entity_manager::EntityManager,
     error::*,
     options::{AUTOPLAY_MAP_THEMES, MAP_THEME_VOLUME},
-    players::{MediaPlayer, Player, PlayerTrait, YoutubePlayer},
+    players::{MediaPlayer, Player, PlayerTrait, VolumeMode, YoutubePlayer},
 };
 use classicube_helpers::{tab_list::remove_color, CellGetSet};
 use classicube_sys::ENTITIES_SELF_ID;
@@ -206,16 +206,10 @@ async fn handle_map_theme_url(message: String) -> Result<()> {
     debug!("map_theme got {:?}", url);
 
     let volume = MAP_THEME_VOLUME.get()?;
-    let player = match YoutubePlayer::from_url(&url) {
-        Ok(mut player) => {
-            player.volume = volume;
-            Player::Youtube(player)
-        }
+    let mut player = match YoutubePlayer::from_url(&url) {
+        Ok(player) => Player::Youtube(player),
         Err(youtube_error) => match MediaPlayer::from_url(&url) {
-            Ok(mut player) => {
-                player.volume = volume;
-                Player::Media(player)
-            }
+            Ok(player) => Player::Media(player),
             Err(media_error) => {
                 bail!(
                     "couldn't create any player for url {:?}: {}, {}",
@@ -226,13 +220,15 @@ async fn handle_map_theme_url(message: String) -> Result<()> {
             }
         },
     };
+    player.set_volume(None, volume)?;
 
     let entity_id = if let Some(entity_id) = CURRENT_MAP_THEME.get() {
         EntityManager::entity_play_player(player, entity_id)?;
         entity_id
     } else {
-        // 1 fps, 1x1 resolution
-        let entity_id = EntityManager::create_entity_player(player, 1, false, Some((1, 1)), true)?;
+        // 1 fps, 1x1 resolution, don't send to other players, don't print "Now Playing"
+        let entity_id =
+            EntityManager::create_entity_player(player, 1, false, Some((1, 1)), false, true)?;
         EntityManager::with_entity(entity_id, |entity| {
             entity.set_scale(0.0);
 
@@ -244,10 +240,9 @@ async fn handle_map_theme_url(message: String) -> Result<()> {
 
     CURRENT_MAP_THEME.set(Some(entity_id));
 
-    // set quiet volume, and don't send to other players
+    // set quiet volume
     EntityManager::with_entity(entity_id, |entity| {
-        entity.player.set_should_send(false);
-        entity.player.set_global_volume(true)?;
+        entity.player.set_volume_mode(None, VolumeMode::Global)?;
 
         Ok(())
     })?;

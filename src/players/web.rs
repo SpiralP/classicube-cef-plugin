@@ -11,9 +11,6 @@ pub struct WebPlayer {
 
     #[serde(skip)]
     last_title: String,
-
-    #[serde(skip)]
-    should_send: bool,
 }
 
 impl Default for WebPlayer {
@@ -21,7 +18,6 @@ impl Default for WebPlayer {
         Self {
             url: String::new(),
             last_title: String::new(),
-            should_send: true,
         }
     }
 }
@@ -67,14 +63,6 @@ impl PlayerTrait for WebPlayer {
         ));
 
         self.last_title = title;
-    }
-
-    fn get_should_send(&self) -> bool {
-        self.should_send
-    }
-
-    fn set_should_send(&mut self, should_send: bool) {
-        self.should_send = should_send;
     }
 
     fn get_url(&self) -> String {

@@ -1,7 +1,11 @@
 use super::helpers::*;
 use crate::{
-    async_manager, chat::PlayerSnapshot, entity_manager::EntityManager, error::*,
-    options::FRAME_RATE, players::PlayerTrait,
+    async_manager,
+    chat::PlayerSnapshot,
+    entity_manager::EntityManager,
+    error::*,
+    options::FRAME_RATE,
+    players::{PlayerTrait, VolumeMode},
 };
 use clap::{App, Arg, ArgMatches};
 
@@ -74,8 +78,9 @@ pub async fn handle_command(
 
             let insecure = matches.is_present("insecure");
             let autoplay = !matches.is_present("no-autoplay");
-            let send = !matches.is_present("no-send");
             let global = matches.is_present("global");
+
+            let should_send = !matches.is_present("no-send");
             let silent = matches.is_present("silent");
 
             // 1 fps, 1x1 resolution
@@ -84,22 +89,34 @@ pub async fn handle_command(
 
             let entity_id = if let Some(name) = matches.value_of("name") {
                 EntityManager::create_named_entity(
-                    name, &url, frame_rate, insecure, resolution, autoplay, silent,
+                    name,
+                    &url,
+                    frame_rate,
+                    insecure,
+                    resolution,
+                    autoplay,
+                    should_send,
+                    silent,
                 )?
             } else {
                 EntityManager::create_entity(
-                    &url, frame_rate, insecure, resolution, autoplay, silent,
+                    &url,
+                    frame_rate,
+                    insecure,
+                    resolution,
+                    autoplay,
+                    should_send,
+                    silent,
                 )?
             };
 
             EntityManager::with_entity(entity_id, |entity| {
                 if global {
                     entity.set_scale(0.0);
-                    entity.player.set_global_volume(true)?;
+                    entity.player.set_volume_mode(None, VolumeMode::Global)?;
                 } else {
                     move_entity(entity, player);
                 }
-                entity.player.set_should_send(send);
 
                 Ok(())
             })?;

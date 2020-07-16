@@ -1,4 +1,4 @@
-use super::{helpers::start_update_loop, PlayerTrait, WebPlayer};
+use super::{helpers::start_update_loop, PlayerTrait, VolumeMode, WebPlayer};
 use crate::{
     async_manager,
     cef::{RustRefBrowser, RustV8Value},
@@ -19,12 +19,8 @@ pub struct DashPlayer {
     pub url: String,
 
     // 0-1
-    pub volume: f32,
-
-    pub global_volume: bool,
-
-    #[serde(skip)]
-    should_send: bool,
+    volume: f32,
+    volume_mode: VolumeMode,
 
     #[serde(skip)]
     pub update_loop_handle: Option<RemoteHandle<()>>,
@@ -38,8 +34,7 @@ impl Default for DashPlayer {
         Self {
             url: String::new(),
             volume: 1.0,
-            global_volume: false,
-            should_send: true,
+            volume_mode: VolumeMode::Distance { distance: 28.0 },
             update_loop_handle: None,
             last_title: String::new(),
         }
@@ -51,8 +46,7 @@ impl Clone for DashPlayer {
         Self {
             url: self.url.clone(),
             volume: self.volume,
-            global_volume: self.global_volume,
-            should_send: self.should_send,
+            volume_mode: self.volume_mode,
             ..Default::default()
         }
     }
@@ -87,7 +81,6 @@ impl PlayerTrait for DashPlayer {
     fn on_page_loaded(&mut self, entity_id: usize, _browser: &RustRefBrowser) {
         let (f, remote_handle) = start_update_loop(entity_id).remote_handle();
         self.update_loop_handle = Some(remote_handle);
-
         async_manager::spawn_local_on_main_thread(f);
     }
 
@@ -114,14 +107,16 @@ impl PlayerTrait for DashPlayer {
         self.last_title = title;
     }
 
-    fn get_volume(&self) -> Result<f32> {
-        Ok(self.volume)
+    fn get_volume(&self) -> f32 {
+        self.volume
     }
 
     /// volume is a float between 0-1
-    fn set_volume(&mut self, browser: &RustRefBrowser, volume: f32) -> Result<()> {
-        if (volume - self.volume).abs() > 0.0001 {
-            Self::get_player_field(browser, &format!("volume = {}", volume));
+    fn set_volume(&mut self, browser: Option<&RustRefBrowser>, volume: f32) -> Result<()> {
+        if let Some(browser) = browser {
+            if (volume - self.volume).abs() > 0.0001 {
+                Self::get_player_field(browser, &format!("volume = {}", volume));
+            }
         }
 
         self.volume = volume;
@@ -129,22 +124,20 @@ impl PlayerTrait for DashPlayer {
         Ok(())
     }
 
-    fn has_global_volume(&self) -> bool {
-        self.global_volume
+    fn get_volume_mode(&self) -> VolumeMode {
+        self.volume_mode
     }
 
-    fn set_global_volume(&mut self, global_volume: bool) -> Result<()> {
-        self.global_volume = global_volume;
-
+    fn set_volume_mode(
+        &mut self,
+        _browser: Option<&RustRefBrowser>,
+        mode: VolumeMode,
+    ) -> Result<()> {
+        if let VolumeMode::Panning { .. } = mode {
+            bail!("panning is TODO");
+        }
+        self.volume_mode = mode;
         Ok(())
-    }
-
-    fn get_should_send(&self) -> bool {
-        self.should_send
-    }
-
-    fn set_should_send(&mut self, should_send: bool) {
-        self.should_send = should_send;
     }
 
     fn get_url(&self) -> String {

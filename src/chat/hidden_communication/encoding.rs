@@ -1,9 +1,4 @@
-use crate::{
-    cef::Cef,
-    entity_manager::EntityManager,
-    error::*,
-    players::{Player, PlayerTrait},
-};
+use crate::{cef::Cef, entity_manager::EntityManager, error::*, players::Player};
 use log::{debug, warn};
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
@@ -45,7 +40,7 @@ pub async fn create_message() -> Message {
         entities
             .iter()
             .filter_map(|(&id, entity)| {
-                if !entity.player.get_should_send() {
+                if !entity.should_send {
                     return None;
                 }
 
@@ -94,18 +89,13 @@ pub async fn create_message() -> Message {
 pub async fn received_message(mut message: Message) -> Result<bool> {
     let mut had_data = false;
 
-    for mut info in message.entities.drain(..) {
+    for info in message.entities.drain(..) {
         // if it already exists don't do anything
         // TODO?? use unique ids!
         if EntityManager::with_entity(info.id, |_| Ok(())).is_ok() {
             warn!("entity {} already exists, skipping", info.id);
             continue;
         }
-
-        // don't know why should_send is false when receiving,
-        // when default is true?
-        // oh well, just always make sure it's true
-        info.player.set_should_send(true);
 
         debug!("creating {:#?}", info);
 

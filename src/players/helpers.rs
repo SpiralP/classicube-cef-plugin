@@ -1,11 +1,10 @@
-use super::{MediaPlayer, Player, PlayerTrait, YoutubePlayer};
+use super::{MediaPlayer, Player, PlayerTrait, VolumeMode, YoutubePlayer};
 use crate::{
     async_manager,
     chat::ENTITIES,
     entity_manager::{CefEntity, EntityManager},
     error::*,
     helpers::vec3_to_vector3,
-    players::RustRefBrowser,
 };
 use classicube_helpers::OptionWithInner;
 use classicube_sys::{Vec3, ENTITIES_SELF_ID};
@@ -21,49 +20,53 @@ pub async fn start_update_loop(entity_id: usize) {
     }
 }
 
-pub fn compute_real_volume(browser: &RustRefBrowser, entity: &CefEntity) -> Option<f32> {
-    let current_volume = entity.player.get_volume().ok()?;
-    if entity.player.has_global_volume() {
-        // global volume
+pub fn compute_real_volume(entity: &CefEntity) -> Option<(f32, VolumeMode)> {
+    let volume_mode = entity.player.get_volume_mode();
 
-        Some(current_volume)
+    if volume_mode == VolumeMode::Global {
+        let current_volume = entity.player.get_volume();
+        return Some((current_volume, volume_mode));
+    }
+
+    // use distance or panning volume
+
+    let (my_pos, my_forward) = ENTITIES
+        .with_inner(|entities| {
+            let me = entities.get(ENTITIES_SELF_ID as _)?;
+
+            let [pitch, yaw] = me.get_head();
+            Some((
+                vec3_to_vector3(&me.get_eye_position()),
+                vec3_to_vector3(&Vec3::get_dir_vector(yaw.to_radians(), pitch.to_radians())),
+            ))
+        })
+        .flatten()?;
+
+    let ent_pos = vec3_to_vector3(&entity.entity.Position);
+
+    let (panning, distance) = match volume_mode {
+        VolumeMode::Global => unreachable!(),
+
+        VolumeMode::Distance { distance } => (false, distance),
+        VolumeMode::Panning { distance, .. } => (true, distance),
+    };
+
+    let diff = my_pos - ent_pos;
+    let percent = diff.magnitude() / distance;
+    let percent = (1.0 - percent).max(0.0).min(1.0);
+
+    if panning {
+        let up = Vector3::y();
+
+        let left = Vector3::cross(&my_forward, &up);
+        let left = left.normalize();
+
+        let pan = (ent_pos - my_pos).normalize().dot(&left);
+        let pan = pan.max(-0.95).min(0.95);
+
+        Some((percent, VolumeMode::Panning { distance, pan }))
     } else {
-        // use distance volume
-
-        let (my_pos, my_forward) = ENTITIES
-            .with_inner(|entities| {
-                let me = entities.get(ENTITIES_SELF_ID as _)?;
-
-                let [pitch, yaw] = me.get_head();
-                Some((
-                    vec3_to_vector3(&me.get_eye_position()),
-                    vec3_to_vector3(&Vec3::get_dir_vector(yaw.to_radians(), pitch.to_radians())),
-                ))
-            })
-            .flatten()?;
-
-        let ent_pos = vec3_to_vector3(&entity.entity.Position);
-
-        if true {
-            let up = Vector3::y();
-
-            let left = Vector3::cross(&my_forward, &up);
-            let left = left.normalize();
-
-            let pan = (ent_pos - my_pos).normalize().dot(&left);
-            let pan = pan.max(-0.95).min(0.95);
-
-            let _ignore = browser.execute_javascript_on_frame(
-                "https://www.youtube.com",
-                format!("window.panner.pan.value = {}", pan),
-            );
-        }
-
-        let diff = my_pos - ent_pos;
-        let percent = diff.magnitude() / 30f32;
-        let percent = (1.0 - percent).max(0.0).min(1.0);
-
-        Some(percent)
+        Some((percent, volume_mode))
     }
 }
 
@@ -71,10 +74,12 @@ async fn start_loop(entity_id: usize) -> Result<()> {
     loop {
         // update volume
         EntityManager::with_entity(entity_id, |entity| {
-            if let Some(browser) = &entity.browser {
-                if let Some(volume) = compute_real_volume(browser, entity) {
-                    entity.player.set_volume(browser, volume)?;
-                }
+            if let Some((volume, volume_mode)) = compute_real_volume(entity) {
+                let _ignore = entity.player.set_volume(entity.browser.as_ref(), volume);
+
+                let _ignore = entity
+                    .player
+                    .set_volume_mode(entity.browser.as_ref(), volume_mode);
             }
 
             Ok(())

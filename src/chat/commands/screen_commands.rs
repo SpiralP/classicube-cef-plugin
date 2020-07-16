@@ -6,7 +6,7 @@ use crate::{
     entity_manager::EntityManager,
     error::*,
     helpers::format_duration,
-    players::PlayerTrait,
+    players::{PlayerTrait, VolumeMode},
 };
 use async_recursion::async_recursion;
 use clap::{App, AppSettings, Arg, ArgMatches};
@@ -160,6 +160,7 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
     .subcommand(
         App::new("volume")
             .about("Set volume")
+            .long_about("If --global is specified, distance acts as a volume decimal percent.")
             .arg(
                 Arg::with_name("name")
                     .long("name")
@@ -172,7 +173,13 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
                     .short("g")
                     .help("Use global volume, don't use distance for volume"),
             )
-            .arg(Arg::with_name("volume").required(true)),
+            .arg(
+                Arg::with_name("panning")
+                    .long("panning")
+                    .short("p")
+                    .help("Use panning/3D volume"),
+            )
+            .arg(Arg::with_name("distance").required(true)),
     )
     .subcommand(
         App::new("time")
@@ -472,15 +479,30 @@ pub async fn handle_command(
         }
 
         ("volume", Some(matches)) => {
-            let volume = matches.value_of("volume").unwrap().parse()?;
+            let volume = matches.value_of("distance").unwrap().parse()?;
             let global = matches.is_present("global");
+            let panning = matches.is_present("panning");
 
-            let entity_id = EntityManager::with_entity((matches, player), |entity| Ok(entity.id))?;
-
-            let browser = EntityManager::get_browser_by_entity_id(entity_id)?;
             EntityManager::with_entity((matches, player), |entity| {
-                entity.player.set_volume(&browser, volume)?;
-                entity.player.set_global_volume(global)?;
+                if global {
+                    entity.player.set_volume(entity.browser.as_ref(), volume)?;
+                    entity
+                        .player
+                        .set_volume_mode(entity.browser.as_ref(), VolumeMode::Global)?;
+                } else if panning {
+                    entity.player.set_volume_mode(
+                        entity.browser.as_ref(),
+                        VolumeMode::Panning {
+                            distance: volume,
+                            pan: 0.0,
+                        },
+                    )?;
+                } else {
+                    entity.player.set_volume_mode(
+                        entity.browser.as_ref(),
+                        VolumeMode::Distance { distance: volume },
+                    )?;
+                }
                 Ok(())
             })?;
 

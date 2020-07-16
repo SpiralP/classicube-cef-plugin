@@ -18,6 +18,7 @@ pub struct CefEntity {
     pub browser: Option<RustRefBrowser>,
     pub player: Player,
     pub queue: VecDeque<Player>,
+    pub should_send: bool,
     pub silent: bool,
 
     v_table: Pin<Box<EntityVTABLE>>,
@@ -26,7 +27,13 @@ pub struct CefEntity {
 }
 
 impl CefEntity {
-    pub fn register(id: usize, player: Player, queue: VecDeque<Player>, silent: bool) -> Self {
+    pub fn register(
+        id: usize,
+        player: Player,
+        queue: VecDeque<Player>,
+        should_send: bool,
+        silent: bool,
+    ) -> Self {
         let entity = Box::pin(unsafe { mem::zeroed() });
 
         let v_table = Box::pin(EntityVTABLE {
@@ -55,6 +62,7 @@ impl CefEntity {
             texture,
             browser: None,
             player,
+            should_send,
             queue,
             silent, // browser_attached_callbacks: Vec::new(),
         };

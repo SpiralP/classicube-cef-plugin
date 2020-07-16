@@ -63,3 +63,10 @@ extern "C" void rust_warn(const char* c_str) {
   printf("WARN: %s\n", c_str);
   LOG(WARNING) << CefString(c_str);
 }
+
+RustSchemeReturn rust_handle_scheme_create(RustRefBrowser browser,
+                                           const char* scheme_name,
+                                           const char* url) {
+  RustSchemeReturn ret = {0};
+  return ret;
+}

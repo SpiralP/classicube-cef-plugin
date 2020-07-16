@@ -274,18 +274,9 @@ dependencies = [
 
 [[package]]
 name = "clang-sys"
-version = "0.29.4"
+version = "0.29.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2b14a9b9fadc5fabb63ceb60e8c2d833bcc97d19d8eb1e229f452d07fe2001e0"
-dependencies = [
- "clang-sys-linkage",
-]
-
-[[package]]
-name = "clang-sys-linkage"
-version = "1.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "720a18d5e5b09e70856c278d2fcf64917db370987beb78bf569fde9adba4ea63"
+checksum = "fe6837df1d5cba2397b835c8530f51723267e16abbf83892e9e5af4f0e5dd10a"
 dependencies = [
  "glob",
  "libc",
@@ -366,7 +357,7 @@ dependencies = [
 [[package]]
 name = "classicube-sys"
 version = "0.1.0"
-source = "git+https://github.com/SpiralP/rust-classicube-sys.git#69912e04b866d0b23a13dbc2e3783c956f80d372"
+source = "git+https://github.com/SpiralP//rust-classicube-sys?branch=next#19f049f3ec2dfaf67e960a9f3510ca5e0e38daac"
 dependencies = [
  "bindgen 0.54.1",
  "cc 1.0.58",

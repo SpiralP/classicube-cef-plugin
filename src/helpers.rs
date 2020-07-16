@@ -1,4 +1,14 @@
+use classicube_sys::Vec3;
+use nalgebra::*;
 use std::time::Duration;
+
+pub fn vec3_to_vector3(v: &Vec3) -> Vector3<f32> {
+    Vector3::new(v.X, v.Y, v.Z)
+}
+
+// fn vector3_to_vec3(v: &Vector3<f32>) -> Vec3 {
+//     Vec3::new(v.x, v.y, v.z)
+// }
 
 pub fn format_duration(duration: Duration) -> String {
     let seconds = duration.as_secs();

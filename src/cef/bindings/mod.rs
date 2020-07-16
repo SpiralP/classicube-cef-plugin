@@ -8,8 +8,9 @@ use std::{
     ffi::{CStr, CString},
     mem,
     os::raw::c_int,
-    slice,
+    ptr, slice,
 };
+use url::Url;
 
 #[no_mangle]
 pub unsafe extern "C" fn rust_debug(c_str: *const ::std::os::raw::c_char) {
@@ -23,6 +24,54 @@ pub unsafe extern "C" fn rust_warn(c_str: *const ::std::os::raw::c_char) {
     let s = CStr::from_ptr(c_str).to_string_lossy().to_string();
 
     warn!("{}", s);
+}
+
+const YOUTUBE_HTML: &[u8] = include_bytes!("../../players/youtube/page.html");
+
+fn handle_scheme_create(
+    _browser: RustRefBrowser,
+    _scheme_name: *const ::std::os::raw::c_char,
+    url: *const ::std::os::raw::c_char,
+) -> Result<&'static [u8]> {
+    // let scheme_name = unsafe { CStr::from_ptr(scheme_name) }.to_str()?;
+    let url = unsafe { CStr::from_ptr(url) }.to_str()?;
+    let url = Url::parse(url)?;
+    let host = url.host_str().chain_err(|| "no host part on url")?;
+
+    debug!("rust_handle_scheme_create {:?}", host);
+
+    match host {
+        "youtube" => Ok(YOUTUBE_HTML),
+
+        _ => {
+            bail!("no such local scheme for {:?}", host);
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn rust_handle_scheme_create(
+    browser: RustRefBrowser,
+    scheme_name: *const ::std::os::raw::c_char,
+    url: *const ::std::os::raw::c_char,
+) -> RustSchemeReturn {
+    match handle_scheme_create(browser, scheme_name, url) {
+        Ok(data) => RustSchemeReturn {
+            data: data.as_ptr() as *mut std::os::raw::c_void,
+            data_size: data.len() as _,
+            mime_type: b"text/html\0".as_ptr() as *mut std::os::raw::c_char,
+        },
+
+        Err(e) => {
+            warn!("{}", e);
+
+            RustSchemeReturn {
+                data: ptr::null_mut(),
+                data_size: 0,
+                mime_type: ptr::null_mut(),
+            }
+        }
+    }
 }
 
 // #[no_mangle]
@@ -113,6 +162,23 @@ impl RustRefBrowser {
         to_result(unsafe { cef_interface_browser_execute_javascript(self.ptr, code.as_ptr()) })
     }
 
+    pub fn execute_javascript_on_frame<T: Into<Vec<u8>>, U: Into<Vec<u8>>>(
+        &self,
+        frame_name: T,
+        code: U,
+    ) -> Result<()> {
+        let frame_name = CString::new(frame_name).unwrap();
+        let code = CString::new(code).unwrap();
+
+        to_result(unsafe {
+            cef_interface_browser_execute_javascript_on_frame(
+                self.ptr,
+                frame_name.as_ptr(),
+                code.as_ptr(),
+            )
+        })
+    }
+
     pub async fn eval_javascript<T: Into<Vec<u8>>>(&self, code: T) -> Result<RustV8Value> {
         let code = CString::new(code).unwrap();
 
@@ -120,6 +186,38 @@ impl RustRefBrowser {
 
         to_result(unsafe {
             cef_interface_browser_eval_javascript(self.ptr, task_id, code.as_ptr())
+        })?;
+
+        let response = receiver.await.unwrap();
+
+        if response.success {
+            let ffi_v8_value = unsafe { response.__bindgen_anon_1.result.as_ref() };
+            let v8_value = ffi_v8_value.to_v8_value();
+
+            Ok(v8_value)
+        } else {
+            Err("javascript error".into())
+        }
+    }
+
+    #[allow(dead_code)]
+    pub async fn eval_javascript_on_frame<T: Into<Vec<u8>>, U: Into<Vec<u8>>>(
+        &self,
+        frame_name: T,
+        code: U,
+    ) -> Result<RustV8Value> {
+        let frame_name = CString::new(frame_name).unwrap();
+        let code = CString::new(code).unwrap();
+
+        let (receiver, task_id) = javascript::create_task();
+
+        to_result(unsafe {
+            cef_interface_browser_eval_javascript_on_frame(
+                self.ptr,
+                frame_name.as_ptr(),
+                task_id,
+                code.as_ptr(),
+            )
         })?;
 
         let response = receiver.await.unwrap();

@@ -145,9 +145,18 @@ extern "C" int cef_interface_browser_load_url(CefBrowser* browser,
                                               const char* url);
 extern "C" int cef_interface_browser_execute_javascript(CefBrowser* browser,
                                                         const char* code);
+extern "C" int cef_interface_browser_execute_javascript_on_frame(
+    CefBrowser* browser,
+    const char* frame_name,
+    const char* code);
 extern "C" int cef_interface_browser_eval_javascript(CefBrowser* browser,
                                                      uint64_t task_id,
-                                                     const char* c_code);
+                                                     const char* code);
+extern "C" int cef_interface_browser_eval_javascript_on_frame(
+    CefBrowser* browser,
+    const char* frame_name,
+    uint64_t task_id,
+    const char* code);
 extern "C" int cef_interface_browser_send_click(CefBrowser* browser,
                                                 int x,
                                                 int y);
@@ -166,6 +175,15 @@ extern "C" int cef_interface_browser_close(CefBrowser* browser);
 // functions from rust
 
 extern "C" void rust_debug(const char* c_str);
-// extern "C" void rust_wprint(const wchar_t* c_str);
-
 extern "C" void rust_warn(const char* c_str);
+
+struct RustSchemeReturn {
+  /// must be a static data
+  void* data;
+  size_t data_size;
+
+  const char* mime_type;
+};
+extern "C" RustSchemeReturn rust_handle_scheme_create(RustRefBrowser browser,
+                                                      const char* scheme_name,
+                                                      const char* url);

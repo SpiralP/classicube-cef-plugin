@@ -8,6 +8,7 @@ error_chain! {
         ParseFloatError(::std::num::ParseFloatError);
         ParseIntError(::std::num::ParseIntError);
         ParseBoolError(::std::str::ParseBoolError);
+        Utf8Error(::std::str::Utf8Error);
         Url(url::ParseError);
         Tokio(tokio::task::JoinError);
         Bincode(bincode::Error);

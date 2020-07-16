@@ -167,6 +167,19 @@ where
     }
 }
 
+#[allow(dead_code)]
+pub async fn timeout_local<T, F>(duration: Duration, f: F) -> Option<T>
+where
+    F: Future<Output = T>,
+{
+    let delay = Delay::new(duration);
+
+    match future::select(delay, f.boxed_local()).await {
+        Either::Left((_, _f)) => None,
+        Either::Right((r, _delay)) => Some(r),
+    }
+}
+
 /// Block thread until future is resolved.
 ///
 /// This will continue to call the same executor so cef_step() will still be called!

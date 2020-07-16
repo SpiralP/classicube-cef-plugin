@@ -111,6 +111,7 @@ fn main() {
         // included header files changed.
         .parse_callbacks(Box::new(bindgen::CargoCallbacks))
         .whitelist_function("cef_interface_.*")
+        .whitelist_type("RustSchemeReturn")
         .rustified_enum("FFIRustV8Value_Tag")
         // Finish the builder and generate the bindings.
         .generate()

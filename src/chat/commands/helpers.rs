@@ -1,15 +1,7 @@
-use crate::{chat::PlayerSnapshot, entity_manager::CefEntity, error::*};
+use crate::{chat::PlayerSnapshot, entity_manager::CefEntity, error::*, helpers::vec3_to_vector3};
 use classicube_sys::{Camera, Entities, LocalPlayer, RayTracer, Vec3, ENTITIES_SELF_ID};
 use nalgebra::*;
 use ncollide3d::{query::*, shape::*};
-
-pub fn vec3_to_vector3(v: &Vec3) -> Vector3<f32> {
-    Vector3::new(v.X, v.Y, v.Z)
-}
-
-// fn vector3_to_vec3(v: &Vector3<f32>) -> Vec3 {
-//     Vec3::new(v.x, v.y, v.z)
-// }
 
 pub fn move_entity(entity: &mut CefEntity, player: &PlayerSnapshot) {
     let dir = Vec3::get_dir_vector(player.Yaw.to_radians(), player.Pitch.to_radians());
@@ -114,11 +106,11 @@ pub fn get_click_coords(
         let forward = intersection.normal;
 
         let tmp = Vector3::y();
-        let right = Vector3::cross(&forward, &tmp);
-        let right = right.normalize();
-        let up = Vector3::cross(&right, &forward);
+        let left = Vector3::cross(&forward, &tmp);
+        let left = left.normalize();
+        let up = Vector3::cross(&left, &forward);
         let up = up.normalize();
-        let right = -right;
+        let right = -left;
 
         let width = entity_scale.X * entity_size.0 as f32;
         let height = entity_scale.Y * entity_size.1 as f32;

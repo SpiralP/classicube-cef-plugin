@@ -17,8 +17,6 @@ use std::{
 };
 use url::Url;
 
-const PAGE_HTML: &str = include_str!("page.html");
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct YoutubePlayer {
     pub id: String,
@@ -97,20 +95,22 @@ impl PlayerTrait for YoutubePlayer {
         debug!("YoutubePlayer on_create {}", self.id);
         self.create_time = Some(Instant::now());
 
-        format!(
-            "data:text/html;base64,{}",
-            base64::encode(
-                PAGE_HTML
-                    .replace("VIDEO_ID", &self.id)
-                    .replace("START_TIME", &format!("{}", self.time.as_secs()))
-                    .replace(
-                        "START_VOLUME",
-                        &format!("{}", (self.volume * 100f32) as u32)
-                    )
-                    .replace("SUBTITLES", &format!("{}", SUBTITLES.get().unwrap()))
-                    .replace("AUTOPLAY", &format!("{}", self.autoplay))
-            )
-        )
+        let mut params = vec![
+            ("time", format!("{}", self.time.as_secs())),
+            ("volume", format!("{}", self.volume)),
+        ];
+
+        if SUBTITLES.get().unwrap() {
+            params.push(("subtitles", "1".to_string()));
+        }
+
+        if self.autoplay {
+            params.push(("autoplay", "1".to_string()));
+        }
+
+        Url::parse_with_params(&format!("local://youtube/{}", self.id), &params)
+            .unwrap()
+            .into_string()
     }
 
     fn on_page_loaded(&mut self, entity_id: usize, _browser: &RustRefBrowser) {
@@ -156,6 +156,22 @@ impl PlayerTrait for YoutubePlayer {
                 }
             }
         }
+
+        if true {
+            let _ignore = browser.execute_javascript_on_frame(
+                "https://www.youtube.com",
+                r#"
+                        var video = document.getElementsByTagName("video")[0];
+
+                        var context = new AudioContext();
+                        var source = context.createMediaElementSource(video);
+                        var panner = context.createStereoPanner();
+                        source.connect(panner);
+                        panner.connect(context.destination);
+                        window.panner = panner;
+                    "#,
+            );
+        }
     }
 
     fn get_current_time(&self) -> Result<Duration> {
@@ -163,7 +179,7 @@ impl PlayerTrait for YoutubePlayer {
     }
 
     fn set_current_time(&mut self, browser: &RustRefBrowser, time: Duration) -> Result<()> {
-        Self::execute_function(browser, &format!("setCurrentTime({})", time.as_secs_f32()));
+        Self::execute_function(browser, &format!("setCurrentTime({})", time.as_secs_f32()))?;
         self.time = time;
 
         Ok(())
@@ -176,7 +192,7 @@ impl PlayerTrait for YoutubePlayer {
     /// volume is a float between 0-1
     fn set_volume(&mut self, browser: &RustRefBrowser, volume: f32) -> Result<()> {
         if (volume - self.volume).abs() > 0.0001 {
-            Self::execute_function(browser, &format!("setVolume({})", (volume * 100f32) as u32));
+            Self::execute_function(browser, &format!("setVolume({})", volume))?;
         }
 
         self.volume = volume;
@@ -228,7 +244,7 @@ impl PlayerTrait for YoutubePlayer {
     }
 
     fn set_playing(&mut self, browser: &RustRefBrowser, playing: bool) -> Result<()> {
-        Self::execute_function(browser, &format!("setPlaying({})", playing));
+        Self::execute_function(browser, &format!("setPlaying({})", playing))?;
 
         Ok(())
     }
@@ -273,13 +289,14 @@ impl YoutubePlayer {
             }
         };
 
-        let percent = volume as f32 / 100.0;
+        let percent = volume as f32;
         Ok(percent)
     }
 
-    fn execute_function(browser: &RustRefBrowser, method: &str) {
+    fn execute_function(browser: &RustRefBrowser, method: &str) -> Result<()> {
         let code = format!("window.{};", method);
-        browser.execute_javascript(code).unwrap();
+        browser.execute_javascript(code)?;
+        Ok(())
     }
 
     async fn eval_method(browser: &RustRefBrowser, method: &str) -> Result<RustV8Value> {

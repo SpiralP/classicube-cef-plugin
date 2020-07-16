@@ -4,10 +4,13 @@ use crate::{
     chat::ENTITIES,
     entity_manager::{CefEntity, EntityManager},
     error::*,
+    helpers::vec3_to_vector3,
+    players::RustRefBrowser,
 };
 use classicube_helpers::OptionWithInner;
-use classicube_sys::ENTITIES_SELF_ID;
+use classicube_sys::{Vec3, ENTITIES_SELF_ID};
 use log::*;
+use nalgebra::Vector3;
 use std::time::Duration;
 
 pub async fn start_update_loop(entity_id: usize) {
@@ -18,7 +21,7 @@ pub async fn start_update_loop(entity_id: usize) {
     }
 }
 
-pub fn compute_real_volume(entity: &CefEntity) -> Option<f32> {
+pub fn compute_real_volume(browser: &RustRefBrowser, entity: &CefEntity) -> Option<f32> {
     let current_volume = entity.player.get_volume().ok()?;
     if entity.player.has_global_volume() {
         // global volume
@@ -27,17 +30,37 @@ pub fn compute_real_volume(entity: &CefEntity) -> Option<f32> {
     } else {
         // use distance volume
 
-        let my_pos = ENTITIES
+        let (my_pos, my_forward) = ENTITIES
             .with_inner(|entities| {
                 let me = entities.get(ENTITIES_SELF_ID as _)?;
 
-                Some(me.get_position())
+                let [pitch, yaw] = me.get_head();
+                Some((
+                    vec3_to_vector3(&me.get_eye_position()),
+                    vec3_to_vector3(&Vec3::get_dir_vector(yaw.to_radians(), pitch.to_radians())),
+                ))
             })
             .flatten()?;
 
-        let entity_pos = entity.entity.Position;
+        let ent_pos = vec3_to_vector3(&entity.entity.Position);
 
-        let percent = (entity_pos - my_pos).length_squared().sqrt() / 30f32;
+        if true {
+            let up = Vector3::y();
+
+            let left = Vector3::cross(&my_forward, &up);
+            let left = left.normalize();
+
+            let pan = (ent_pos - my_pos).normalize().dot(&left);
+            let pan = pan.max(-0.95).min(0.95);
+
+            let _ignore = browser.execute_javascript_on_frame(
+                "https://www.youtube.com",
+                format!("window.panner.pan.value = {}", pan),
+            );
+        }
+
+        let diff = my_pos - ent_pos;
+        let percent = diff.magnitude() / 30f32;
         let percent = (1.0 - percent).max(0.0).min(1.0);
 
         Some(percent)
@@ -49,8 +72,8 @@ async fn start_loop(entity_id: usize) -> Result<()> {
         // update volume
         EntityManager::with_entity(entity_id, |entity| {
             if let Some(browser) = &entity.browser {
-                if let Some(volume) = compute_real_volume(entity) {
-                    entity.player.set_volume(&browser, volume)?;
+                if let Some(volume) = compute_real_volume(browser, entity) {
+                    entity.player.set_volume(browser, volume)?;
                 }
             }
 
@@ -136,7 +159,7 @@ async fn start_loop(entity_id: usize) -> Result<()> {
             }
         }
 
-        async_manager::sleep(Duration::from_millis(64)).await;
+        async_manager::sleep(Duration::from_millis(32)).await;
     }
 
     Ok(())

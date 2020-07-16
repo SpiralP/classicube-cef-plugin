@@ -80,6 +80,38 @@ extern "C" RustRefApp cef_interface_create_app(Callbacks callbacks) {
   return cef_interface_add_ref_app(app);
 }
 
+// Implementation of the factory for for creating schema handlers.
+class LocalSchemeHandlerFactory : public CefSchemeHandlerFactory {
+ public:
+  LocalSchemeHandlerFactory() {}
+
+  // Return a new scheme handler instance to handle the request.
+  CefRefPtr<CefResourceHandler> Create(CefRefPtr<CefBrowser> browser,
+                                       CefRefPtr<CefFrame> frame,
+                                       const CefString& scheme_name,
+                                       CefRefPtr<CefRequest> request) OVERRIDE {
+    CEF_REQUIRE_IO_THREAD();
+
+    std::string scheme_name_utf8 = scheme_name.ToString();
+    std::string url_utf8 = request->GetURL().ToString();
+    auto ret =
+        rust_handle_scheme_create(cef_interface_add_ref_browser(browser.get()),
+                                  scheme_name_utf8.c_str(), url_utf8.c_str());
+
+    if (!ret.mime_type) {
+      // an empty reference to allow default handling of the request
+      return nullptr;
+    } else {
+      return new CefStreamResourceHandler(
+          ret.mime_type,
+          CefStreamReader::CreateForData(ret.data, ret.data_size));
+    }
+  }
+
+  IMPLEMENT_REFCOUNTING(LocalSchemeHandlerFactory);
+  DISALLOW_COPY_AND_ASSIGN(LocalSchemeHandlerFactory);
+};
+
 extern "C" int cef_interface_initialize(MyApp* app) {
 #if defined(OS_MACOSX)
   if (!cef_load_library("./cef/Chromium Embedded Framework.framework/Chromium "
@@ -154,59 +186,32 @@ extern "C" int cef_interface_initialize(MyApp* app) {
 
   // Initialize CEF in the main process.
   if (!CefInitialize(main_args, settings, app, NULL)) {
+    rust_warn("CefInitialize failed!");
     return -1;
   }
+
+  if (!CefRegisterSchemeHandlerFactory("local", "",
+                                       new LocalSchemeHandlerFactory())) {
+    rust_warn("CefRegisterSchemeHandlerFactory failed!");
+    return -1;
+  }
+
+  // if (!CefAddCrossOriginWhitelistEntry("local://youtube", "https", "", true))
+  // {
+  //   rust_warn("CefAddCrossOriginWhitelistEntry failed!");
+  //   return -1;
+  // }
+
+  // if (!CefAddCrossOriginWhitelistEntry("local://youtube", "http", "", true))
+  // {
+  //   rust_warn("CefAddCrossOriginWhitelistEntry failed!");
+  //   return -1;
+  // }
+
   return 0;
 }
 
 // Browser
-
-// class TestSchemeFactory : public CefSchemeHandlerFactory {
-//  public:
-//   TestSchemeFactory();
-
-//   CefRefPtr<CefResourceHandler> Create(CefRefPtr<CefBrowser> browser,
-//                                        CefRefPtr<CefFrame> frame,
-//                                        const CefString& scheme_name,
-//                                        CefRefPtr<CefRequest> request)
-//                                        OVERRIDE;
-
-//  private:
-//   IMPLEMENT_REFCOUNTING(TestSchemeFactory);
-//   DISALLOW_COPY_AND_ASSIGN(TestSchemeFactory);
-// };
-
-// TestSchemeFactory::TestSchemeFactory() {
-//   //
-// }
-
-// CefRefPtr<CefResourceHandler> TestSchemeFactory::Create(
-//     CefRefPtr<CefBrowser> browser,
-//     CefRefPtr<CefFrame> frame,
-//     const CefString& scheme_name,
-//     CefRefPtr<CefRequest> request) {
-//   std::string s("TestSchemeFactory ");
-//   s += scheme_name;
-//   rust_debug(s.c_str());
-
-//   const std::string& html_content =
-//       "<html><body>Hello!<script>fetch('https://127.0.0.1:3000/"
-//       "stream.mpd').then(console.log, console.error)</script></body></"
-//       "html>";
-
-//   // Create a stream reader for |html_content|.
-//   CefRefPtr<CefStreamReader> stream = CefStreamReader::CreateForData(
-//       static_cast<void*>(const_cast<char*>(html_content.c_str())),
-//       html_content.size());
-
-//   // Constructor for HTTP status code 200 and no custom response headers.
-//   // There’s also a version of the constructor for custom status code and
-//   // response headers.
-//   return new CefStreamResourceHandler("text/html", stream);
-
-//   // an empty reference to allow default handling of the request
-//   // return nullptr;
-// }
 
 extern "C" int cef_interface_create_browser(MyClient* client,
                                             const char* startup_url,
@@ -231,14 +236,18 @@ extern "C" int cef_interface_create_browser(MyClient* client,
   CefRefPtr<CefDictionaryValue> extra_info = nullptr;
   CefRefPtr<CefRequestContext> request_context = nullptr;
 
+  // settings.web_security = STATE_DISABLED;
+  // settings.file_access_from_file_urls = STATE_ENABLED;
+  // settings.universal_access_from_file_urls = STATE_ENABLED;
+
   if (insecure) {
     settings.web_security = STATE_DISABLED;
 
-    CefRequestContextSettings request_context_settings;
-    request_context_settings.ignore_certificate_errors = true;
+    // CefRequestContextSettings request_context_settings;
+    // request_context_settings.ignore_certificate_errors = true;
 
-    request_context =
-        CefRequestContext::CreateContext(request_context_settings, nullptr);
+    // request_context =
+    //     CefRequestContext::CreateContext(request_context_settings, nullptr);
 
     // if (!request_context->RegisterSchemeHandlerFactory(
     //         "test", "", new TestSchemeFactory())) {
@@ -280,12 +289,33 @@ extern "C" int cef_interface_browser_execute_javascript(CefBrowser* browser,
   return 0;
 }
 
+extern "C" int cef_interface_browser_execute_javascript_on_frame(
+    CefBrowser* browser,
+    const char* frame_name,
+    const char* code) {
+  std::vector<int64> ids;
+  browser->GetFrameIdentifiers(ids);
+
+  for (auto id : ids) {
+    auto frame = browser->GetFrame(id);
+    if (frame) {
+      std::string url = frame->GetURL().ToString();
+      if (url.rfind(frame_name, 0) == 0) {
+        frame->ExecuteJavaScript(code, frame->GetURL(), 0);
+        return 0;
+      }
+    }
+  }
+
+  return -1;
+}
+
 extern "C" int cef_interface_browser_eval_javascript(CefBrowser* browser,
                                                      uint64_t task_id,
-                                                     const char* c_code) {
+                                                     const char* code) {
   auto frame = browser->GetMainFrame();
 
-  CefString script(c_code);
+  CefString script(code);
   CefString script_url(frame->GetURL());
   int start_line = 0;
 
@@ -299,6 +329,39 @@ extern "C" int cef_interface_browser_eval_javascript(CefBrowser* browser,
   frame->SendProcessMessage(PID_RENDERER, message);
 
   return 0;
+}
+
+extern "C" int cef_interface_browser_eval_javascript_on_frame(
+    CefBrowser* browser,
+    const char* frame_name,
+    uint64_t task_id,
+    const char* code) {
+  std::vector<int64> ids;
+  browser->GetFrameIdentifiers(ids);
+
+  for (auto id : ids) {
+    auto frame = browser->GetFrame(id);
+    if (frame) {
+      std::string url = frame->GetURL().ToString();
+      if (url.rfind(frame_name, 0) == 0) {
+        CefString script(code);
+        CefString script_url(frame->GetURL());
+        int start_line = 0;
+
+        auto message = CefProcessMessage::Create("EvalJavascript");
+        CefRefPtr<CefListValue> args = message->GetArgumentList();
+        args->SetBinary(0, CefBinaryValue::Create(&task_id, sizeof(uint64_t)));
+        args->SetString(1, script);
+        args->SetString(2, script_url);
+        args->SetInt(3, start_line);
+
+        frame->SendProcessMessage(PID_RENDERER, message);
+        return 0;
+      }
+    }
+  }
+
+  return -1;
 }
 
 extern "C" int cef_interface_browser_send_click(CefBrowser* browser,

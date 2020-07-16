@@ -23,7 +23,9 @@ void MyApp::OnBeforeCommandLineProcessing(
   command_line->AppendSwitchWithValue("autoplay-policy",
                                       "no-user-gesture-required");
   command_line->AppendSwitch("disable-extensions");
+  // command_line->AppendSwitch("disable-web-security");
   // command_line->AppendSwitch("ignore-certificate-errors");
+  command_line->AppendSwitch("disable-site-isolation-trials");
 
   std::string new_value("HardwareMediaKeyHandling");
   if (command_line->HasSwitch("disable-features")) {
@@ -35,14 +37,9 @@ void MyApp::OnBeforeCommandLineProcessing(
 }
 
 void MyApp::OnRegisterCustomSchemes(CefRawPtr<CefSchemeRegistrar> registrar) {
-  // bool ok = registrar->AddCustomScheme(
-  //     "test", CEF_SCHEME_OPTION_FETCH_ENABLED |
-  //     CEF_SCHEME_OPTION_CORS_ENABLED |
-  //                 CEF_SCHEME_OPTION_SECURE |
-  //                 CEF_SCHEME_OPTION_CSP_BYPASSING);
-  // if (!ok) {
-  //   rust_warn("AddCustomScheme");
-  // }
+  if (!registrar->AddCustomScheme("local", CEF_SCHEME_OPTION_STANDARD)) {
+    rust_warn("AddCustomScheme local failed!");
+  }
 }
 
 // CefBrowserProcessHandler methods:

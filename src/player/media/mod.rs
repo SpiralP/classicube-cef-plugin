@@ -216,13 +216,14 @@ impl MediaPlayer {
     }
 
     fn execute_with_player_field(browser: &RustRefBrowser, field: &str) {
-        let code = format!(
-            r#"if (typeof window.player !== "undefined") {{
-                window.player.{};
-            }}"#,
+        let _ignore = browser.execute_javascript(format!(
+            r#"
+                if (typeof window.player !== "undefined") {{
+                    window.player.{};
+                }}
+            "#,
             field
-        );
-        browser.execute_javascript(code).unwrap();
+        ));
     }
 
     async fn eval_player_field(browser: &RustRefBrowser, field: &str) -> Result<RustV8Value> {

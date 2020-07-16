@@ -119,30 +119,30 @@ pub async fn listen_loop() {
                 .map(|a| a.to_string())
                 .collect::<Vec<String>>();
 
-            let player_snapshot = PlayerSnapshot::from_entity_id(ENTITIES_SELF_ID as _).unwrap();
+            if let Some(player_snapshot) = PlayerSnapshot::from_entity_id(ENTITIES_SELF_ID as _) {
+                WORKER_SENDER.with(move |cell| {
+                    let option = &mut *cell.borrow_mut();
 
-            WORKER_SENDER.with(move |cell| {
-                let option = &mut *cell.borrow_mut();
-
-                if let Some(worker_sender) = option {
-                    let _ignore = worker_sender.unbounded_send(
-                        async move {
-                            if let Err(e) =
-                                crate::chat::commands::run(player_snapshot, args, false).await
-                            {
-                                warn!("command error: {:#?}", e);
-                                Chat::print(format!(
-                                    "{}cef command error: {}{}",
-                                    classicube_helpers::color::RED,
-                                    classicube_helpers::color::WHITE,
-                                    e
-                                ));
+                    if let Some(worker_sender) = option {
+                        let _ignore = worker_sender.unbounded_send(
+                            async move {
+                                if let Err(e) =
+                                    crate::chat::commands::run(player_snapshot, args, false).await
+                                {
+                                    warn!("command error: {:#?}", e);
+                                    Chat::print(format!(
+                                        "{}cef command error: {}{}",
+                                        classicube_helpers::color::RED,
+                                        classicube_helpers::color::WHITE,
+                                        e
+                                    ));
+                                }
                             }
-                        }
-                        .boxed_local(),
-                    );
-                }
-            });
+                            .boxed_local(),
+                        );
+                    }
+                });
+            }
         } else if is_map_theme_message(&message) {
             debug!("got map_theme url first part {:?}", message);
 

@@ -55,3 +55,4 @@ classicube-sys = { git = "https://github.com/SpiralP//rust-classicube-sys", bran
 disable-publish = true
 pre-release-commit-message = "Release {{version}}"
 post-release-commit-message = "Begin {{next_version}}"
+tag-message = "Release version {{version}}"

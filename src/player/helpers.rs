@@ -62,7 +62,7 @@ pub fn compute_real_volume(entity: &CefEntity) -> Option<(f32, VolumeMode)> {
         let left = left.normalize();
 
         let pan = (ent_pos - my_pos).normalize().dot(&left);
-        let pan = pan.max(-0.95).min(0.95);
+        let pan = pan.max(-0.9).min(0.9);
 
         Some((percent, VolumeMode::Panning { distance, pan }))
     } else {

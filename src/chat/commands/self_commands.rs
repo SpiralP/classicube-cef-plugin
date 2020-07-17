@@ -19,7 +19,17 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
             .arg(Arg::with_name("search").required(true).multiple(true)),
     )
     .subcommand(App::new("there").about("Move the closest screen to the block you are aiming at"))
-    .subcommand(App::new("devtools").alias("devtool").about("Open devtools"))
+    .subcommand(
+        App::new("devtools")
+            .alias("devtool")
+            .about("Open devtools")
+            .arg(
+                Arg::with_name("name")
+                    .long("name")
+                    .short("n")
+                    .takes_value(true),
+            ),
+    )
     .subcommand(
         App::new("sync")
             .about("Re-sync all screens from someone else")
@@ -78,13 +88,14 @@ pub async fn handle_command(
             Ok(true)
         }
 
-        ("devtools", Some(_matches)) => {
-            let entity_id = EntityManager::with_closest(player.eye_position, |closest_entity| {
-                Ok(closest_entity.id)
+        ("devtools", Some(matches)) => {
+            EntityManager::with_entity((matches, player), |entity| {
+                entity
+                    .browser
+                    .as_ref()
+                    .chain_err(|| "no browser")?
+                    .open_dev_tools()
             })?;
-
-            let browser = EntityManager::get_browser_by_entity_id(entity_id)?;
-            browser.open_dev_tools()?;
 
             Ok(true)
         }

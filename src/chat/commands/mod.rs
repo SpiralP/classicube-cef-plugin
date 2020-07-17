@@ -8,6 +8,7 @@ use super::{Chat, PlayerSnapshot};
 use crate::error::*;
 use clap::{App, AppSettings, ArgMatches};
 use classicube_helpers::OptionWithInner;
+use log::{debug, warn};
 use std::cell::RefCell;
 
 thread_local!(
@@ -52,7 +53,7 @@ pub fn get_matches(args: &[String]) -> Result<ArgMatches<'static>> {
 pub async fn run(player: PlayerSnapshot, mut args: Vec<String>, is_self: bool) -> Result<()> {
     args.insert(0, "cef".to_string());
 
-    log::debug!("command {:?}", args);
+    debug!("command {:?}", args);
 
     match get_matches(&args) {
         Ok(matches) => {
@@ -68,7 +69,7 @@ pub async fn run(player: PlayerSnapshot, mut args: Vec<String>, is_self: bool) -
         }
 
         Err(e) => {
-            log::warn!("{:#?}", e);
+            warn!("{:#?}", e);
 
             if is_self {
                 chat_print_lines(format!("{}", e));

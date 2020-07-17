@@ -50,7 +50,12 @@ pub fn get_matches(args: &[String]) -> Result<ArgMatches<'static>> {
         .unwrap()?)
 }
 
-pub async fn run(player: PlayerSnapshot, mut args: Vec<String>, is_self: bool) -> Result<()> {
+pub async fn run(
+    player: PlayerSnapshot,
+    mut args: Vec<String>,
+    is_self: bool,
+    show_errors: bool,
+) -> Result<()> {
     args.insert(0, "cef".to_string());
 
     debug!("command {:?}", args);
@@ -71,7 +76,7 @@ pub async fn run(player: PlayerSnapshot, mut args: Vec<String>, is_self: bool) -
         Err(e) => {
             warn!("{:#?}", e);
 
-            if is_self {
+            if show_errors || is_self {
                 chat_print_lines(format!("{}", e));
             }
 
@@ -126,11 +131,17 @@ async fn test_commands() {
         unsafe { std::mem::zeroed() },
         vec!["--".into(), "help".into()],
         true,
+        true,
     )
     .await
     .unwrap();
 
-    run(unsafe { std::mem::zeroed() }, vec!["help".into()], true)
-        .await
-        .unwrap();
+    run(
+        unsafe { std::mem::zeroed() },
+        vec!["help".into()],
+        true,
+        true,
+    )
+    .await
+    .unwrap();
 }

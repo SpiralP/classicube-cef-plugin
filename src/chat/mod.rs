@@ -104,7 +104,8 @@ impl Chat {
                     crate::chat::commands::run(
                         player_snapshot,
                         args.iter().map(ToString::to_string).collect(),
-                        false,
+                        true,
+                        true,
                     )
                     .await
                     .unwrap();
@@ -274,7 +275,8 @@ fn handle_chat_received(message: String, message_type: MsgType) {
 
                         let is_self = id == ENTITY_SELF_ID;
 
-                        if let Err(e) = commands::run(player_snapshot, split, is_self).await {
+                        if let Err(e) = commands::run(player_snapshot, split, is_self, false).await
+                        {
                             if is_self {
                                 warn!("chat command error: {:#?}", e);
                                 Chat::print(format!(

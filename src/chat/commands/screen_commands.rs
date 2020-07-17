@@ -617,7 +617,7 @@ pub async fn handle_command(
 
         ("at", Some(matches)) => {
             if EntityManager::with_entity((matches, player), |_| Ok(())).is_err() {
-                super::run(player.clone(), vec!["create".to_string()], false).await?;
+                super::run(player.clone(), vec!["create".to_string()], true, true).await?;
             }
 
             EntityManager::with_entity((matches, player), |entity| {

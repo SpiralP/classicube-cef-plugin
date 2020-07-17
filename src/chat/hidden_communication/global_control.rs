@@ -146,7 +146,8 @@ pub async fn listen_loop() {
                         let _ignore = worker_sender.unbounded_send(
                             async move {
                                 if let Err(e) =
-                                    crate::chat::commands::run(player_snapshot, args, false).await
+                                    crate::chat::commands::run(player_snapshot, args, false, true)
+                                        .await
                                 {
                                     warn!("command error: {:#?}", e);
                                     Chat::print(format!(

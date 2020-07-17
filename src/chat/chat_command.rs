@@ -11,7 +11,7 @@ extern "C" fn c_chat_command_callback(args: *const classicube_sys::String, args_
     let player_snapshot = PlayerSnapshot::from_entity_id(ENTITIES_SELF_ID as _).unwrap();
 
     async_manager::spawn_local_on_main_thread(async move {
-        if let Err(e) = commands::run(player_snapshot, args, true).await {
+        if let Err(e) = commands::run(player_snapshot, args, true, true).await {
             warn!("command error: {:#?}", e);
             Chat::print(format!(
                 "{}cef command error: {}{}",

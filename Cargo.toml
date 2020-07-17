@@ -1,8 +1,9 @@
 [package]
 name = "classicube-cef-plugin"
-version = "0.12.7"
+version = "0.12.8-alpha.0"
 authors = ["SpiralP <spiral.palmer@gmail.com>"]
 edition = "2018"
+publish = false
 
 [lib]
 crate-type = ["cdylib"]
@@ -48,3 +49,9 @@ ci = []
 # remove when 1.1.8 releases
 [patch."https://github.com/SpiralP/rust-classicube-sys.git"]
 classicube-sys = { git = "https://github.com/SpiralP//rust-classicube-sys", branch = "next" }
+
+
+[package.metadata.release]
+disable-publish = true
+pre-release-commit-message = "Release {{version}}"
+post-release-commit-message = "Begin {{next_version}}"

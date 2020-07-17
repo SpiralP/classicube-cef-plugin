@@ -222,11 +222,8 @@ impl EntityManager {
 
     pub async fn remove_all_entities() -> Result<()> {
         // don't drain here because we remove them in remove_entity()
-        let entity_ids: Vec<usize> = ENTITIES.with(|cell| {
-            let entities = &*cell.borrow();
-
-            entities.keys().copied().collect()
-        });
+        let entity_ids: Vec<usize> =
+            Self::with_all_entities(|entities| entities.keys().copied().collect());
 
         let mut entity_ids: FuturesUnordered<_> = entity_ids
             .iter()

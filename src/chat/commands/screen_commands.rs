@@ -166,7 +166,7 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
     .subcommand(
         App::new("volume")
             .about("Set volume")
-            .long_about("If --global is specified, distance acts as a volume decimal percent.")
+            .long_about("If --global is specified, distance acts as volume.")
             .arg(
                 Arg::with_name("name")
                     .long("name")
@@ -177,7 +177,7 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
                 Arg::with_name("global")
                     .long("global")
                     .short("g")
-                    .help("Use global volume, don't use distance for volume"),
+                    .help("Use global (consistant) volume"),
             )
             .arg(
                 Arg::with_name("panning")
@@ -185,7 +185,8 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
                     .short("p")
                     .help("Use panning/3D volume"),
             )
-            .arg(Arg::with_name("distance").required(true)),
+            .arg(Arg::with_name("distance").required(true))
+            .arg(Arg::with_name("multiplier").conflicts_with("global")),
     )
     .subcommand(
         App::new("time")
@@ -323,10 +324,10 @@ pub async fn handle_command(
                         color::SILVER,
                         url
                     ));
-                }
 
-                if skip {
-                    entity.skip()?;
+                    if skip {
+                        entity.skip()?;
+                    }
                 }
 
                 Ok(())
@@ -515,29 +516,44 @@ pub async fn handle_command(
         }
 
         ("volume", Some(matches)) => {
-            let volume = matches.value_of("distance").unwrap().parse()?;
             let global = matches.is_present("global");
             let panning = matches.is_present("panning");
 
+            let distance = matches.value_of("distance").unwrap().parse()?;
+
             EntityManager::with_entity((matches, player), |entity| {
                 if global {
-                    entity.player.set_volume(entity.browser.as_ref(), volume)?;
+                    entity
+                        .player
+                        .set_volume(entity.browser.as_ref(), distance)?;
                     entity
                         .player
                         .set_volume_mode(entity.browser.as_ref(), VolumeMode::Global)?;
-                } else if panning {
-                    entity.player.set_volume_mode(
-                        entity.browser.as_ref(),
-                        VolumeMode::Panning {
-                            distance: volume,
-                            pan: 0.0,
-                        },
-                    )?;
                 } else {
-                    entity.player.set_volume_mode(
-                        entity.browser.as_ref(),
-                        VolumeMode::Distance { distance: volume },
-                    )?;
+                    let multiplier = if let Some(volume) = matches.value_of("multiplier") {
+                        volume.parse()?
+                    } else {
+                        1.0
+                    };
+
+                    if panning {
+                        entity.player.set_volume_mode(
+                            entity.browser.as_ref(),
+                            VolumeMode::Panning {
+                                multiplier,
+                                distance,
+                                pan: 0.0,
+                            },
+                        )?;
+                    } else {
+                        entity.player.set_volume_mode(
+                            entity.browser.as_ref(),
+                            VolumeMode::Distance {
+                                multiplier,
+                                distance,
+                            },
+                        )?;
+                    }
                 }
                 Ok(())
             })?;

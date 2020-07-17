@@ -110,8 +110,15 @@ pub trait PlayerTrait: Clone {
 #[derive(Debug, Serialize, Deserialize, PartialEq, Copy, Clone)]
 pub enum VolumeMode {
     Global,
-    Distance { distance: f32 },
-    Panning { distance: f32, pan: f32 },
+    Distance {
+        multiplier: f32,
+        distance: f32,
+    },
+    Panning {
+        multiplier: f32,
+        distance: f32,
+        pan: f32,
+    },
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

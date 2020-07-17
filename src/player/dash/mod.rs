@@ -34,7 +34,10 @@ impl Default for DashPlayer {
         Self {
             url: String::new(),
             volume: 1.0,
-            volume_mode: VolumeMode::Distance { distance: 28.0 },
+            volume_mode: VolumeMode::Distance {
+                multiplier: 1.0,
+                distance: 28.0,
+            },
             update_loop_handle: None,
             last_title: String::new(),
         }

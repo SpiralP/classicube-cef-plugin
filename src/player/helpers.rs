@@ -44,16 +44,23 @@ pub fn compute_real_volume(entity: &CefEntity) -> Option<(f32, VolumeMode)> {
 
     let ent_pos = vec3_to_vector3(&entity.entity.Position);
 
-    let (panning, distance) = match volume_mode {
+    let (panning, multiplier, distance) = match volume_mode {
         VolumeMode::Global => unreachable!(),
 
-        VolumeMode::Distance { distance } => (false, distance),
-        VolumeMode::Panning { distance, .. } => (true, distance),
+        VolumeMode::Distance {
+            multiplier,
+            distance,
+        } => (false, multiplier, distance),
+        VolumeMode::Panning {
+            multiplier,
+            distance,
+            ..
+        } => (true, multiplier, distance),
     };
 
     let diff = my_pos - ent_pos;
     let percent = diff.magnitude() / distance;
-    let percent = (1.0 - percent).max(0.0).min(1.0);
+    let percent = (1.0 - percent).max(0.0).min(1.0) * multiplier;
 
     if panning {
         let up = Vector3::y();
@@ -64,7 +71,14 @@ pub fn compute_real_volume(entity: &CefEntity) -> Option<(f32, VolumeMode)> {
         let pan = (ent_pos - my_pos).normalize().dot(&left);
         let pan = pan.max(-0.9).min(0.9);
 
-        Some((percent, VolumeMode::Panning { distance, pan }))
+        Some((
+            percent,
+            VolumeMode::Panning {
+                multiplier,
+                distance,
+                pan,
+            },
+        ))
     } else {
         Some((percent, volume_mode))
     }

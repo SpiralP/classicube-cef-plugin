@@ -50,7 +50,10 @@ impl Default for YoutubePlayer {
             id: String::new(),
             time: Duration::from_millis(0),
             volume: 1.0,
-            volume_mode: VolumeMode::Distance { distance: 28.0 },
+            volume_mode: VolumeMode::Distance {
+                multiplier: 1.0,
+                distance: 28.0,
+            },
             autoplay: true,
             should_loop: false,
             silent: false,

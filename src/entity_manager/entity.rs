@@ -41,12 +41,12 @@ impl CefEntity {
             RenderName: Some(Self::render_name),
         });
 
-        let mut pixels: Vec<u8> = vec![255; 4 * TEXTURE_WIDTH as usize * TEXTURE_HEIGHT as usize];
+        let mut pixels: Vec<u32> = vec![255; TEXTURE_WIDTH as usize * TEXTURE_HEIGHT as usize];
 
         let mut bmp = Bitmap {
-            Scan0: pixels.as_mut_ptr(),
-            Width: TEXTURE_WIDTH as i32,
-            Height: TEXTURE_HEIGHT as i32,
+            scan0: pixels.as_mut_ptr(),
+            width: TEXTURE_WIDTH as i32,
+            height: TEXTURE_HEIGHT as i32,
         };
 
         let texture = OwnedGfxTexture::create(&mut bmp, true, false);
@@ -134,8 +134,8 @@ impl CefEntity {
 
     pub fn update_texture(&mut self, mut part: Bitmap) {
         // update uv's
-        self.entity.NameTex.uv.U2 = part.Width as f32 / TEXTURE_WIDTH as f32;
-        self.entity.NameTex.uv.V2 = part.Height as f32 / TEXTURE_HEIGHT as f32;
+        self.entity.NameTex.uv.U2 = part.width as f32 / TEXTURE_WIDTH as f32;
+        self.entity.NameTex.uv.V2 = part.height as f32 / TEXTURE_HEIGHT as f32;
 
         unsafe {
             Gfx_UpdateTexturePart(self.texture.resource_id, 0, 0, &mut part, 0);

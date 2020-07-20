@@ -34,10 +34,13 @@ pub fn compute_real_volume(entity: &CefEntity) -> Option<(f32, VolumeMode)> {
         .with_inner(|entities| {
             let me = entities.get(ENTITIES_SELF_ID as _)?;
 
-            let [pitch, yaw] = me.get_head();
+            // ignore pitch, not really needed
+            // also when looking straight down, it swaps ears?
+            let [_pitch, yaw] = me.get_head();
+
             Some((
                 vec3_to_vector3(&me.get_eye_position()),
-                vec3_to_vector3(&Vec3::get_dir_vector(yaw.to_radians(), pitch.to_radians())),
+                vec3_to_vector3(&Vec3::get_dir_vector(yaw.to_radians(), 0.0)),
             ))
         })
         .flatten()?;
@@ -69,7 +72,7 @@ pub fn compute_real_volume(entity: &CefEntity) -> Option<(f32, VolumeMode)> {
         let left = left.normalize();
 
         let pan = (ent_pos - my_pos).normalize().dot(&left);
-        let pan = pan.max(-0.9).min(0.9);
+        let pan = pan.max(-0.7).min(0.7);
 
         Some((
             percent,

@@ -648,51 +648,53 @@ pub async fn handle_command(
             Ok(true)
         }
 
-        ("info", Some(matches)) => {
+        ("info", Some(_matches)) => {
             // let's have it print for everyone
-            EntityManager::with_entity((matches, player), |entity| {
-                let url = entity.player.get_url();
-                let title = entity.player.get_title();
+            EntityManager::with_all_entities(|entities| {
+                for entity in entities.values() {
+                    let url = entity.player.get_url();
+                    let title = entity.player.get_title();
 
-                if !title.is_empty() {
-                    Chat::print(format!(
-                        "{}Playing {}{} ",
-                        color::TEAL,
-                        color::SILVER,
-                        title
-                    ));
-                }
-
-                if let Ok(time) = entity.player.get_current_time() {
-                    Chat::print(format!("At time {}", format_duration(time)));
-                }
-
-                Chat::print(url);
-
-                if !entity.queue.is_empty() {
-                    Chat::print(format!(
-                        "{}{} {}items in queue:",
-                        color::GOLD,
-                        entity.queue.len(),
-                        color::TEAL,
-                    ));
-
-                    for (i, player) in entity.queue.iter().enumerate() {
-                        let url = player.get_url();
-
+                    if !title.is_empty() {
                         Chat::print(format!(
-                            "{}{} {}{} {}{}",
-                            color::GOLD,
-                            i + 1,
+                            "{}Playing {}{} ",
                             color::TEAL,
-                            player.type_name(),
                             color::SILVER,
-                            url
+                            title
                         ));
+                    }
+
+                    if let Ok(time) = entity.player.get_current_time() {
+                        Chat::print(format!("At time {}", format_duration(time)));
+                    }
+
+                    Chat::print(url);
+
+                    if !entity.queue.is_empty() {
+                        Chat::print(format!(
+                            "{}{} {}items in queue:",
+                            color::GOLD,
+                            entity.queue.len(),
+                            color::TEAL,
+                        ));
+
+                        for (i, player) in entity.queue.iter().enumerate() {
+                            let url = player.get_url();
+
+                            Chat::print(format!(
+                                "{}{} {}{} {}{}",
+                                color::GOLD,
+                                i + 1,
+                                color::TEAL,
+                                player.type_name(),
+                                color::SILVER,
+                                url
+                            ));
+                        }
                     }
                 }
 
-                Ok(())
+                Ok::<_, Error>(())
             })?;
 
             Ok(true)

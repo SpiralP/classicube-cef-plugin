@@ -90,13 +90,22 @@
           return startTime;
         }
       }
+
       function setPlaying(playing) {
-        if (playing) {
-          window.player.playVideo();
-        } else {
-          window.player.pauseVideo();
+        if (
+          typeof window.player !== "undefined" &&
+          typeof window.player.playVideo !== "undefined"
+        ) {
+          if (playing) {
+            window.player.playVideo();
+          } else {
+            window.player.pauseVideo();
+          }
         }
+
+        autoplay = playing;
       }
+
       function setPlaybackRate(rate) {
         if (
           typeof window.player !== "undefined" &&

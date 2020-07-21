@@ -5,8 +5,8 @@ mod self_commands;
 mod static_commands;
 
 use super::{Chat, PlayerSnapshot};
-use crate::error::*;
-use clap::{App, AppSettings, ArgMatches};
+use crate::{async_manager, error::*};
+use clap::{App, AppSettings, Arg, ArgMatches};
 use classicube_helpers::OptionWithInner;
 use log::{debug, warn};
 use std::cell::RefCell;
@@ -19,7 +19,13 @@ pub fn initialize() {
     let app = App::new("cef")
         .setting(AppSettings::SubcommandRequiredElseHelp)
         .global_setting(AppSettings::DisableVersion)
-        .global_setting(AppSettings::ColoredHelp);
+        .global_setting(AppSettings::ColoredHelp)
+        .arg(
+            Arg::with_name("background")
+                .long("background")
+                .short("b")
+                .help("Run task in background/spawn it"),
+        );
 
     #[cfg(not(test))]
     let app = app.global_setting(AppSettings::ColorAlways);
@@ -62,14 +68,28 @@ pub async fn run(
 
     match get_matches(&args) {
         Ok(matches) => {
-            if static_commands::handle_command(&player, &matches).await?
-                || (is_self && self_commands::handle_command(&player, &matches).await?)
-                || (is_self && options_commands::handle_command(&player, &matches).await?)
-                || screen_commands::handle_command(&player, &matches).await?
-            {
-                Ok(())
+            let background = matches.is_present("background");
+
+            let fut = async move {
+                if static_commands::handle_command(&player, &matches).await?
+                    || (is_self && self_commands::handle_command(&player, &matches).await?)
+                    || (is_self && options_commands::handle_command(&player, &matches).await?)
+                    || screen_commands::handle_command(&player, &matches).await?
+                {
+                    Ok::<_, Error>(())
+                } else {
+                    bail!("command not handled? {:?}", args);
+                }
+            };
+
+            if background {
+                async_manager::spawn_local_on_main_thread(async move {
+                    if let Err(e) = fut.await {
+                        warn!("backgrounded command: {}", e);
+                    }
+                });
             } else {
-                bail!("command not handled? {:?}", args);
+                fut.await?;
             }
         }
 
@@ -80,9 +100,12 @@ pub async fn run(
                 chat_print_lines(format!("{}", e));
             }
 
-            Ok(())
+            // TODO
+            // don't error here because we already printed the error
         }
     }
+
+    Ok(())
 }
 
 /// needs to keep same color code from last line

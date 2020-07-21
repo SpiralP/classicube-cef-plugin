@@ -748,44 +748,34 @@ pub async fn handle_command(
             let entity_id =
                 EntityManager::with_entity((matches, player), move |entity| Ok(entity.id))?;
 
-            async_manager::spawn_local_on_main_thread(async move {
-                let result = EntityManager::with_entity(entity_id, move |entity| {
-                    entity
-                        .player
-                        .set_volume_mode(entity.browser.as_ref(), VolumeMode::Global)
-                });
-                if result.is_err() {
-                    return;
+            EntityManager::with_entity(entity_id, move |entity| {
+                entity.player.set_volume(entity.browser.as_ref(), from)?;
+                entity
+                    .player
+                    .set_volume_mode(entity.browser.as_ref(), VolumeMode::Global)
+            })?;
+
+            let start_time = Instant::now();
+            loop {
+                let now = Instant::now();
+                let secs_from_start = (now - start_time).as_secs_f32();
+
+                let percent = secs_from_start / seconds;
+                if percent > 1.0 {
+                    break;
                 }
 
-                let start_time = Instant::now();
-                loop {
-                    let now = Instant::now();
-                    let secs_from_start = (now - start_time).as_secs_f32();
+                let volume = from + (to - from) * percent;
+                EntityManager::with_entity(entity_id, move |entity| {
+                    entity.player.set_volume(entity.browser.as_ref(), volume)
+                })?;
 
-                    let percent = secs_from_start / seconds;
-                    if percent > 1.0 {
-                        break;
-                    }
+                async_manager::sleep(Duration::from_millis(32)).await;
+            }
 
-                    let volume = from + (to - from) * percent;
-                    let result = EntityManager::with_entity(entity_id, move |entity| {
-                        entity.player.set_volume(entity.browser.as_ref(), volume)
-                    });
-                    if result.is_err() {
-                        return;
-                    }
-
-                    async_manager::sleep(Duration::from_millis(32)).await;
-                }
-
-                let result = EntityManager::with_entity(entity_id, move |entity| {
-                    entity.player.set_volume(entity.browser.as_ref(), to)
-                });
-                if result.is_err() {
-                    return;
-                }
-            });
+            EntityManager::with_entity(entity_id, move |entity| {
+                entity.player.set_volume(entity.browser.as_ref(), to)
+            })?;
 
             Ok(true)
         }

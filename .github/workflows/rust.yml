@@ -86,8 +86,7 @@ jobs:
       matrix:
         config:
           - { arch: x86_64, bits: 64 }
-          # I don't want to figure out the dependencies on 32 bit linux
-          # - { arch: i686, bits: 32 }
+          - { arch: i686, bits: 32 }
 
     steps:
       - uses: actions/checkout@v2
@@ -95,9 +94,10 @@ jobs:
       - name: Install 64 bit deps
         if: matrix.config.bits == 64
         run: |
-          sudo apt-get update \
-          && sudo apt-get install -y git curl gcc g++ build-essential libssl-dev pkg-config libglib2.0-dev libpango1.0-dev \
-            libatk1.0-dev libgdk-pixbuf2.0-dev libgtk-3-dev cmake clang libnss3 libasound2 libxss1 libnspr4 \
+          sudo apt-get -y update \
+          && sudo apt-get -y install git curl gcc g++ build-essential pkg-config cmake clang \
+          libssl-dev libglib2.0-dev libpango1.0-dev libatk1.0-dev libgtk-3-dev libgdk-pixbuf2.0-dev \
+            libnss3 libasound2 libxss1 libnspr4 \
           && curl 'http://opensource.spotify.com/cefbuilds/cef_binary_81.3.10%2Bgb223419%2Bchromium-81.0.4044.138_linux${{ matrix.config.bits }}.tar.bz2' | tar -xjf - \
           && mv cef_binary_* cef_interface/cef_binary
 
@@ -105,9 +105,11 @@ jobs:
         if: matrix.config.bits == 32
         run: |
           sudo dpkg --add-architecture i386 \
-          && sudo apt-get update \
-          && sudo apt-get install -y git curl gcc g++ build-essential libssl-dev:i386 pkg-config libglib2.0-dev libpango1.0-dev \
-            libatk1.0-dev libgdk-pixbuf2.0-dev libgtk-3-dev cmake libclang-dev libnss3 libasound2 libxss1 libnspr4 \
+          && sudo apt-get -y update \
+          && sudo apt-get -y install git curl gcc g++ build-essential pkg-config:i386 cmake \
+            libssl-dev:i386 libglib2.0-dev:i386 libpango1.0-dev:i386 libatk1.0-dev:i386 libgtk-3-dev:i386 libgdk-pixbuf2.0-dev:i386 \
+            gcc-multilib g++-multilib libclang1-10:i386 libclang-common-10-dev \
+            libnss3:i386 libasound2:i386 libxss1:i386 libnspr4:i386 \
           && curl 'http://opensource.spotify.com/cefbuilds/cef_binary_81.3.10%2Bgb223419%2Bchromium-81.0.4044.138_linux${{ matrix.config.bits }}.tar.bz2' | tar -xjf - \
           && mv cef_binary_* cef_interface/cef_binary
 

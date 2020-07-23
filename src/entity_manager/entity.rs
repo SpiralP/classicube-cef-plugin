@@ -41,7 +41,7 @@ impl CefEntity {
             RenderName: Some(Self::render_name),
         });
 
-        let mut pixels: Vec<u32> = vec![255; TEXTURE_WIDTH as usize * TEXTURE_HEIGHT as usize];
+        let mut pixels: Vec<u32> = vec![u32::MAX; TEXTURE_WIDTH as usize * TEXTURE_HEIGHT as usize];
 
         let mut bmp = Bitmap {
             scan0: pixels.as_mut_ptr(),

@@ -188,7 +188,7 @@ jobs:
       - name: Install armhf deps
         if: matrix.config.arch == 'armhf'
         run: |
-          docker build -t cross-armhf -f cross-armhf.Dockerfile . \
+          docker build -t cross-armhf -f .github/cross-armhf.Dockerfile . \
           && aria2c 'http://opensource.spotify.com/cefbuilds/cef_binary_84.3.3%2Bgffc2f0e%2Bchromium-84.0.4147.89_linuxarm.tar.bz2' -o cef_binary.tar.bz2 --max-connection-per-server=4 \
           && tar -xjf cef_binary.tar.bz2 \
           && rm cef_binary.tar.bz2 \
@@ -197,7 +197,7 @@ jobs:
       - name: Install aarch64 deps
         if: matrix.config.arch == 'aarch64'
         run: |
-          docker build -t cross-aarch64 -f cross-aarch64.Dockerfile . \
+          docker build -t cross-aarch64 -f .github/cross-aarch64.Dockerfile . \
           && aria2c 'http://opensource.spotify.com/cefbuilds/cef_binary_84.3.3%2Bgffc2f0e%2Bchromium-84.0.4147.89_linuxarm64.tar.bz2' -o cef_binary.tar.bz2 --max-connection-per-server=4 \
           && tar -xjf cef_binary.tar.bz2 \
           && rm cef_binary.tar.bz2 \

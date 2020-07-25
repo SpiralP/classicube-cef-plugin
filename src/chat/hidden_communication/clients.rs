@@ -150,7 +150,16 @@ async fn process_clients_response(messages: Vec<String>) -> Result<()> {
         }
     }
 
-    debug!("{:#?}", full_lines);
+    // cef0.13.2-alpha.0
+    let app_name_without_last_number = format!(
+        "{}.",
+        APP_NAME
+            .splitn(3, '.')
+            .take(2)
+            .collect::<Vec<_>>()
+            .join(".")
+    );
+    debug!("{:#?} {:?}", full_lines, app_name_without_last_number);
 
     let mut names_with_cef: HashSet<String> = HashSet::new();
     for message in &full_lines {
@@ -165,8 +174,7 @@ async fn process_clients_response(messages: Vec<String>) -> Result<()> {
 
         let names: HashSet<String> = right.split(", ").map(|a| a.to_string()).collect();
 
-        let app_name_without_last_number = APP_NAME.rsplitn(2, '.').nth(1).unwrap();
-        if left.contains(app_name_without_last_number) {
+        if left.contains(&app_name_without_last_number) {
             for name in names {
                 names_with_cef.insert(name);
             }

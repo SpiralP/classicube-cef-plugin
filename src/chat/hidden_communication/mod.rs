@@ -7,7 +7,7 @@ pub use self::{encoding::LightEntity, global_control::CURRENT_MAP_THEME};
 use super::SIMULATING;
 use crate::async_manager;
 use classicube_helpers::CellGetSet;
-use classicube_sys::{Chat_AddOf, MsgType_MSG_TYPE_NORMAL, Server};
+use classicube_sys::{MsgType_MSG_TYPE_NORMAL, Server};
 #[cfg(feature = "detour")]
 use detour::static_detour;
 use futures::channel::oneshot;
@@ -50,8 +50,38 @@ pub fn initialize() {
 
     #[cfg(feature = "detour")]
     unsafe {
+        use classicube_sys::Chat_AddOf;
+
         DETOUR.initialize(Chat_AddOf, chat_add_hook).unwrap();
         DETOUR.enable().unwrap();
+    }
+
+    #[cfg(not(feature = "detour"))]
+    {
+        use classicube_helpers::events::chat::{ChatReceivedEvent, ChatReceivedEventHandler};
+
+        thread_local!(
+            static CHAT_RECEIVED: ChatReceivedEventHandler = {
+                let mut h = ChatReceivedEventHandler::new();
+
+                h.on(
+                    |ChatReceivedEvent {
+                         message,
+                         message_type,
+                     }| {
+                        if *message_type == MsgType_MSG_TYPE_NORMAL as c_int
+                            && handle_chat_message(message.to_string())
+                        {
+                            return;
+                        }
+                    },
+                );
+
+                h
+            };
+        );
+
+        CHAT_RECEIVED.with(|_| {});
     }
 
     whispers::start_listening();

@@ -34,8 +34,8 @@ jobs:
       - name: Install nightly
         uses: actions-rs/toolchain@v1
         with:
+          toolchain: nightly
           target: ${{ matrix.config.arch }}-pc-windows-msvc
-          toolchain: nightly-${{ matrix.config.arch }}-pc-windows-msvc
           override: true
 
       - name: Build
@@ -78,46 +78,49 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  linux:
+  linux_x86:
     name: Build Linux ${{ matrix.config.arch }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         config:
-          - { arch: x86_64, bits: 64 }
-          - { arch: i686, bits: 32 }
+          - { arch: x86_64 }
+          - { arch: i686 }
+          # - { arch: armhf, target: armv7-unknown-linux-gnueabihf }
+          # - { arch: aarch64, target: aarch64-unknown-linux-gnu }
 
     steps:
       - uses: actions/checkout@v2
 
-      - name: Install 64 bit deps
-        if: matrix.config.bits == 64
+      - name: Install x86_64 deps
+        if: ${{ matrix.config.arch == 'x86_64' }}
         run: |
           sudo apt-get -y update \
-          && sudo apt-get -y install git curl gcc g++ build-essential pkg-config cmake clang \
+          && sudo apt-get -y install git curl gcc g++ build-essential cmake clang-10 pkg-config \
             libssl-dev libglib2.0-dev libpango1.0-dev libatk1.0-dev libgtk-3-dev libgdk-pixbuf2.0-dev \
             libnss3 libasound2 libxss1 libnspr4 \
-          && curl 'http://opensource.spotify.com/cefbuilds/cef_binary_84.3.3%2Bgffc2f0e%2Bchromium-84.0.4147.89_linux${{ matrix.config.bits }}.tar.bz2' | tar -xjf - \
+          && curl 'http://opensource.spotify.com/cefbuilds/cef_binary_84.3.3%2Bgffc2f0e%2Bchromium-84.0.4147.89_linux64.tar.bz2' | tar -xjf - \
           && mv cef_binary_* cef_interface/cef_binary
 
-      - name: Install 32 bit deps
-        if: matrix.config.bits == 32
+      - name: Install i686 deps
+        if: ${{ matrix.config.arch == 'i686' }}
         run: |
           sudo dpkg --add-architecture i386 \
           && sudo apt-get -y update \
-          && sudo apt-get -y install git curl gcc g++ build-essential pkg-config:i386 cmake \
+          && sudo apt-get -y install git curl gcc g++ build-essential cmake clang-10 pkg-config:i386 \
+            gcc-multilib g++-multilib \
             libssl-dev:i386 libglib2.0-dev:i386 libpango1.0-dev:i386 libatk1.0-dev:i386 libgtk-3-dev:i386 libgdk-pixbuf2.0-dev:i386 \
-            gcc-multilib g++-multilib libclang1-10:i386 libclang-common-10-dev \
             libnss3:i386 libasound2:i386 libxss1:i386 libnspr4:i386 \
-          && curl 'http://opensource.spotify.com/cefbuilds/cef_binary_84.3.3%2Bgffc2f0e%2Bchromium-84.0.4147.89_linux${{ matrix.config.bits }}.tar.bz2' | tar -xjf - \
-          && mv cef_binary_* cef_interface/cef_binary
+          && curl 'http://opensource.spotify.com/cefbuilds/cef_binary_84.3.3%2Bgffc2f0e%2Bchromium-84.0.4147.89_linux32.tar.bz2' | tar -xjf - \
+          && mv cef_binary_* cef_interface/cef_binary \
+          && echo "::set-env name=PKG_CONFIG_ALLOW_CROSS::1"
 
       - name: Install nightly
         uses: actions-rs/toolchain@v1
         with:
+          toolchain: nightly
           target: ${{ matrix.config.arch }}-unknown-linux-gnu
-          toolchain: nightly-${{ matrix.config.arch }}-unknown-linux-gnu
           override: true
 
       - name: Build

@@ -8,6 +8,7 @@ use super::SIMULATING;
 use crate::async_manager;
 use classicube_helpers::CellGetSet;
 use classicube_sys::{Chat_AddOf, MsgType_MSG_TYPE_NORMAL, Server};
+#[cfg(feature = "detour")]
 use detour::static_detour;
 use futures::channel::oneshot;
 use log::debug;
@@ -16,6 +17,7 @@ use std::{
     os::raw::c_int,
 };
 
+#[cfg(feature = "detour")]
 static_detour! {
     static DETOUR: unsafe extern "C" fn(*const classicube_sys:: String, c_int);
 }
@@ -28,6 +30,7 @@ thread_local!(
     static WAITING_FOR_MESSAGE: RefCell<Vec<oneshot::Sender<String>>> = Default::default();
 );
 
+#[cfg(feature = "detour")]
 fn chat_add_hook(text: *const classicube_sys::String, message_type: c_int) {
     if message_type == MsgType_MSG_TYPE_NORMAL as c_int
         && handle_chat_message(unsafe { (*text).to_string() })
@@ -45,6 +48,7 @@ pub fn initialize() {
         return;
     }
 
+    #[cfg(feature = "detour")]
     unsafe {
         DETOUR.initialize(Chat_AddOf, chat_add_hook).unwrap();
         DETOUR.enable().unwrap();
@@ -74,6 +78,7 @@ pub fn shutdown() {
     global_control::stop_listening();
     whispers::stop_listening();
 
+    #[cfg(feature = "detour")]
     unsafe {
         let _ignore_error = DETOUR.disable();
     }

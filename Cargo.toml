@@ -13,12 +13,11 @@ async-dispatcher = { git = "https://github.com/SpiralP/rust-async-dispatcher.git
 async-recursion = "0.3.1"
 base64 = "0.12.3"
 bincode = "1.3.1"
-# chrono = { version = "0.4.11", features = ["serde"] }
 clap = { git = "https://github.com/SpiralP/clap-cc.git" }
 classicube-helpers = { git = "https://github.com/SpiralP/rust-classicube-helpers.git", features = ["futures"] }
 classicube-sys = { git = "https://github.com/SpiralP/rust-classicube-sys.git" }
 color-backtrace = { git = "https://github.com/SpiralP/color-backtrace-msgbox.git" }
-detour = { git = "https://github.com/SpiralP/detour-rs.git" }
+detour = { git = "https://github.com/SpiralP/detour-rs.git", optional = true }
 deunicode = "1.1.1"
 error-chain = "0.12.2"
 futures = "0.3.5"
@@ -32,16 +31,15 @@ rand = "0.7.3"
 regex = "1.3.9"
 serde = { version = "1.0.114", features = ["derive"] }
 simplelog = "0.8.0"
-# sntpc = "0.2.0"
 tokio = { version = "0.2.21", features = ["full"] }
 url = "2.1.1"
-# widestring = "0.4.2"
 
 [build-dependencies]
 bindgen = "0.54.1"
 cmake = "0.1.44"
 
 [features]
+default = ["detour"]
 ci = []
 
 

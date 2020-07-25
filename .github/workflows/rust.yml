@@ -93,8 +93,6 @@ jobs:
         config:
           - { arch: x86_64, target: x86_64-unknown-linux-gnu }
           - { arch: i686, target: i686-unknown-linux-gnu }
-          # - { arch: armhf, target: armv7-unknown-linux-gnueabihf }
-          # - { arch: aarch64, target: aarch64-unknown-linux-gnu }
 
     steps:
       - uses: actions/checkout@v2
@@ -182,7 +180,7 @@ jobs:
       matrix:
         config:
           - { arch: armhf, target: armv7-unknown-linux-gnueabihf }
-          # - { arch: aarch64, target: aarch64-unknown-linux-gnu }
+          - { arch: aarch64, target: aarch64-unknown-linux-gnu }
 
     steps:
       - uses: actions/checkout@v2
@@ -199,9 +197,7 @@ jobs:
       - name: Install aarch64 deps
         if: matrix.config.arch == 'aarch64'
         run: |
-          # TODO
-          false \
-          && docker build -t cross-aarch64 -f cross-aarch64.Dockerfile . \
+          docker build -t cross-aarch64 -f cross-aarch64.Dockerfile . \
           && aria2c 'http://opensource.spotify.com/cefbuilds/cef_binary_84.3.3%2Bgffc2f0e%2Bchromium-84.0.4147.89_linuxarm64.tar.bz2' -o cef_binary.tar.bz2 --max-connection-per-server=4 \
           && tar -xjf cef_binary.tar.bz2 \
           && rm cef_binary.tar.bz2 \
@@ -220,7 +216,7 @@ jobs:
         with:
           use-cross: true
           command: build
-          args: --target ${{ matrix.config.target }}
+          args: --target ${{ matrix.config.target }} --no-default-features
 
       - name: Build Release
         uses: actions-rs/cargo@v1
@@ -228,7 +224,7 @@ jobs:
         with:
           use-cross: true
           command: build
-          args: --target ${{ matrix.config.target }} --release
+          args: --target ${{ matrix.config.target }} --release --no-default-features
 
       - name: Rename files
         if: startsWith(github.ref, 'refs/tags/')

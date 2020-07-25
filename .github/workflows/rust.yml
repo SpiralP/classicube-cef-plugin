@@ -23,7 +23,7 @@ jobs:
           scoop install aria2
           scoop install --arch ${{ matrix.config.bits }}bit llvm
           echo "::set-env name=LIBCLANG_PATH::$HOME\scoop\apps\llvm\current\bin"
-          aria2c 'http://opensource.spotify.com/cefbuilds/cef_binary_84.3.3%2Bgffc2f0e%2Bchromium-84.0.4147.89_windows${{ matrix.config.bits }}.tar.bz2' -o cef_binary.tar.bz2
+          aria2c 'http://opensource.spotify.com/cefbuilds/cef_binary_84.3.3%2Bgffc2f0e%2Bchromium-84.0.4147.89_windows${{ matrix.config.bits }}.tar.bz2' -o cef_binary.tar.bz2 --max-connection-per-server=4
           7z x -y 'cef_binary.tar.bz2'
           Remove-Item 'cef_binary.tar.bz2'
           7z x -y 'cef_binary.tar'
@@ -103,10 +103,12 @@ jobs:
         if: matrix.config.arch == 'x86_64'
         run: |
           sudo apt-get -y update \
-          && sudo apt-get -y install git curl gcc g++ build-essential cmake clang-10 pkg-config \
+          && sudo apt-get -y install aria2 git curl gcc g++ build-essential cmake clang-10 pkg-config \
             libssl-dev libglib2.0-dev libpango1.0-dev libatk1.0-dev libgtk-3-dev libgdk-pixbuf2.0-dev \
             libnss3 libasound2 libxss1 libnspr4 \
-          && curl 'http://opensource.spotify.com/cefbuilds/cef_binary_84.3.3%2Bgffc2f0e%2Bchromium-84.0.4147.89_linux64.tar.bz2' | tar -xjf - \
+          && aria2c 'http://opensource.spotify.com/cefbuilds/cef_binary_84.3.3%2Bgffc2f0e%2Bchromium-84.0.4147.89_linux64.tar.bz2' -o cef_binary.tar.bz2 --max-connection-per-server=4 \
+          && tar -xjf cef_binary.tar.bz2 \
+          && rm cef_binary.tar.bz2 \
           && mv cef_binary_* cef_interface/cef_binary
 
       - name: Install i686 deps
@@ -114,11 +116,13 @@ jobs:
         run: |
           sudo dpkg --add-architecture i386 \
           && sudo apt-get -y update \
-          && sudo apt-get -y install git curl gcc g++ build-essential cmake clang-10 pkg-config:i386 \
+          && sudo apt-get -y install aria2 git curl gcc g++ build-essential cmake clang-10 pkg-config:i386 \
             gcc-multilib g++-multilib \
             libssl-dev:i386 libglib2.0-dev:i386 libpango1.0-dev:i386 libatk1.0-dev:i386 libgtk-3-dev:i386 libgdk-pixbuf2.0-dev:i386 \
             libnss3:i386 libasound2:i386 libxss1:i386 libnspr4:i386 \
-          && curl 'http://opensource.spotify.com/cefbuilds/cef_binary_84.3.3%2Bgffc2f0e%2Bchromium-84.0.4147.89_linux32.tar.bz2' | tar -xjf - \
+          && aria2c 'http://opensource.spotify.com/cefbuilds/cef_binary_84.3.3%2Bgffc2f0e%2Bchromium-84.0.4147.89_linux32.tar.bz2' -o cef_binary.tar.bz2 --max-connection-per-server=4 \
+          && tar -xjf cef_binary.tar.bz2 \
+          && rm cef_binary.tar.bz2 \
           && mv cef_binary_* cef_interface/cef_binary \
           && echo "::set-env name=PKG_CONFIG_ALLOW_CROSS::1"
 
@@ -186,8 +190,10 @@ jobs:
 
       - name: Install deps
         run: |
-          brew install cmake \
-          && curl 'http://opensource.spotify.com/cefbuilds/cef_binary_84.3.3%2Bgffc2f0e%2Bchromium-84.0.4147.89_macosx${{ matrix.config.bits }}.tar.bz2' | tar -xjf - \
+          brew install aria2 cmake \
+          && aria2c 'http://opensource.spotify.com/cefbuilds/cef_binary_84.3.3%2Bgffc2f0e%2Bchromium-84.0.4147.89_macosx${{ matrix.config.bits }}.tar.bz2' -o cef_binary.tar.bz2 --max-connection-per-server=4 \
+          && tar -xjf cef_binary.tar.bz2 \
+          && rm cef_binary.tar.bz2 \
           && mv cef_binary_* cef_interface/cef_binary
 
       - name: Install nightly

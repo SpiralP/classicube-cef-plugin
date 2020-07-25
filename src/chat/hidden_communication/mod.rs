@@ -12,10 +12,9 @@ use classicube_sys::{MsgType_MSG_TYPE_NORMAL, Server};
 use detour::static_detour;
 use futures::channel::oneshot;
 use log::debug;
-use std::{
-    cell::{Cell, RefCell},
-    os::raw::c_int,
-};
+use std::cell::{Cell, RefCell};
+#[cfg(feature = "detour")]
+use std::os::raw::c_int;
 
 #[cfg(feature = "detour")]
 static_detour! {
@@ -32,7 +31,9 @@ thread_local!(
 
 #[cfg(feature = "detour")]
 fn chat_add_hook(text: *const classicube_sys::String, message_type: c_int) {
-    if message_type == MsgType_MSG_TYPE_NORMAL as c_int
+    use classicube_sys::MsgType;
+
+    if message_type as MsgType == MsgType_MSG_TYPE_NORMAL
         && handle_chat_message(unsafe { (*text).to_string() })
     {
         return;
@@ -69,7 +70,7 @@ pub fn initialize() {
                          message,
                          message_type,
                      }| {
-                        if *message_type == MsgType_MSG_TYPE_NORMAL as c_int
+                        if *message_type == MsgType_MSG_TYPE_NORMAL
                             && handle_chat_message(message.to_string())
                         {
                             return;

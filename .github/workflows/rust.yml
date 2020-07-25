@@ -28,7 +28,7 @@ jobs:
           Remove-Item 'cef_binary.tar.bz2'
           7z x -y 'cef_binary.tar'
           Remove-Item 'cef_binary.tar'
-          Get-ChildItem 'cef_binary_*' | Rename-Item -NewName 'cef_binary'
+          Get-ChildItem cef_binary_* | Rename-Item -NewName 'cef_binary'
           Move-Item -Path 'cef_binary' -Destination 'cef_interface'
 
       - name: Install nightly
@@ -43,38 +43,43 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/') != true
         with:
           command: build
+          args: --target ${{ matrix.config.arch }}-pc-windows-msvc
 
       - name: Test
         uses: actions-rs/cargo@v1
         if: startsWith(github.ref, 'refs/tags/') != true
         with:
           command: test
-          args: --features ci -- --nocapture
+          args: --target ${{ matrix.config.arch }}-pc-windows-msvc --features ci -- --nocapture
 
       - name: Build Release
         uses: actions-rs/cargo@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
           command: build
-          args: --release
+          args: --target ${{ matrix.config.arch }}-pc-windows-msvc --release
 
-      - run: Rename-Item -Path "target\release\classicube_cef_plugin.dll" -NewName "classicube_cef_windows_${{ matrix.config.arch }}.dll"
+      - name: Rename files
         if: startsWith(github.ref, 'refs/tags/')
-
-      - run: Rename-Item -Path "target\release\classicube_cef_plugin.pdb" -NewName "classicube_cef_windows_${{ matrix.config.arch }}.pdb"
-        if: startsWith(github.ref, 'refs/tags/')
-
-      - run: Get-ChildItem "target\release\build\classicube-cef-plugin-*\out\cef.exe" | Rename-Item -NewName "cef-windows-${{ matrix.config.arch }}.exe"
-        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          Move-Item `
+            -Path 'target\${{ matrix.config.arch }}-pc-windows-msvc\release\classicube_cef_plugin.dll' `
+            -Destination '.\classicube_cef_windows_${{ matrix.config.arch }}.dll'
+          Move-Item `
+            -Path 'target\${{ matrix.config.arch }}-pc-windows-msvc\release\classicube_cef_plugin.pdb' `
+            -Destination 'classicube_cef_windows_${{ matrix.config.arch }}.pdb'
+          Get-ChildItem `
+            target\${{ matrix.config.arch }}-pc-windows-msvc\release\build\classicube-cef-plugin-*\out\cef.exe `
+            | Move-Item -Destination '.\cef-windows-${{ matrix.config.arch }}.exe'
 
       - name: Upload Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            target/release/classicube_cef_windows_${{ matrix.config.arch }}.dll
-            target/release/classicube_cef_windows_${{ matrix.config.arch }}.pdb
-            target/release/build/classicube-cef-plugin-*/out/cef-windows-${{ matrix.config.arch }}.exe
+            classicube_cef_windows_${{ matrix.config.arch }}.dll
+            classicube_cef_windows_${{ matrix.config.arch }}.pdb
+            cef-windows-${{ matrix.config.arch }}.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -94,7 +99,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Install x86_64 deps
-        if: ${{ matrix.config.arch == 'x86_64' }}
+        if: matrix.config.arch == 'x86_64'
         run: |
           sudo apt-get -y update \
           && sudo apt-get -y install git curl gcc g++ build-essential cmake clang-10 pkg-config \
@@ -104,7 +109,7 @@ jobs:
           && mv cef_binary_* cef_interface/cef_binary
 
       - name: Install i686 deps
-        if: ${{ matrix.config.arch == 'i686' }}
+        if: matrix.config.arch == 'i686'
         run: |
           sudo dpkg --add-architecture i386 \
           && sudo apt-get -y update \
@@ -128,26 +133,29 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/') != true
         with:
           command: build
+          args: --target ${{ matrix.config.arch }}-unknown-linux-gnu
 
       - name: Test
         uses: actions-rs/cargo@v1
         if: startsWith(github.ref, 'refs/tags/') != true
         with:
           command: test
-          args: --features ci -- --nocapture
+          args: --target ${{ matrix.config.arch }}-unknown-linux-gnu --features ci -- --nocapture
 
       - name: Build Release
         uses: actions-rs/cargo@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
           command: build
-          args: --release
+          args: --target ${{ matrix.config.arch }}-unknown-linux-gnu --release
 
-      - run: mv target/release/libclassicube_cef_plugin.so "classicube_cef_linux_${{ matrix.config.arch }}.so"
+      - name: Rename files
         if: startsWith(github.ref, 'refs/tags/')
-
-      - run: mv target/release/build/classicube-cef-plugin-*/out/cef "cef-linux-${{ matrix.config.arch }}"
-        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          mv 'target/${{ matrix.config.arch }}-unknown-linux-gnu/release/libclassicube_cef_plugin.so' \
+            './classicube_cef_linux_${{ matrix.config.arch }}.so' \
+          && mv target/${{ matrix.config.arch }}-unknown-linux-gnu/release/build/classicube-cef-plugin-*/out/cef \
+            './cef-linux-${{ matrix.config.arch }}'
 
       - name: Upload Release
         uses: softprops/action-gh-release@v1
@@ -182,8 +190,8 @@ jobs:
       - name: Install nightly
         uses: actions-rs/toolchain@v1
         with:
+          toolchain: nightly
           target: ${{ matrix.config.arch }}-apple-darwin
-          toolchain: nightly-${{ matrix.config.arch }}-apple-darwin
           override: true
 
       - name: Build
@@ -191,26 +199,27 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/') != true
         with:
           command: build
+          args: --target ${{ matrix.config.arch }}-apple-darwin
 
       - name: Test
         uses: actions-rs/cargo@v1
         if: startsWith(github.ref, 'refs/tags/') != true
         with:
           command: test
-          args: --features ci -- --nocapture
+          args: --target ${{ matrix.config.arch }}-apple-darwin --features ci -- --nocapture
 
       - name: Build Release
         uses: actions-rs/cargo@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
           command: build
-          args: --release
+          args: --target ${{ matrix.config.arch }}-apple-darwin --release
 
-      - run: mv target/release/libclassicube_cef_plugin.dylib "classicube_cef_macos_${{ matrix.config.arch }}.dylib"
+      - name: Rename files
         if: startsWith(github.ref, 'refs/tags/')
-
-      - run: mv target/release/build/classicube-cef-plugin-*/out/cef "cef-macos-${{ matrix.config.arch }}"
-        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          mv 'target/${{ matrix.config.arch }}-apple-darwin/release/libclassicube_cef_plugin.dylib' './classicube_cef_macos_${{ matrix.config.arch }}.dylib' \
+          && mv target/${{ matrix.config.arch }}-apple-darwin/release/build/classicube-cef-plugin-*/out/cef './cef-macos-${{ matrix.config.arch }}'
 
       - name: Upload Release
         uses: softprops/action-gh-release@v1

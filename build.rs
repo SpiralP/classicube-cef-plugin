@@ -47,6 +47,7 @@ fn main() {
         .build_target("cef_interface")
         .profile(profile)
         .define("USE_SANDBOX", "OFF")
+        .define("TARGET_ARCH", env::var("CARGO_CFG_TARGET_ARCH").unwrap())
         .build();
 
     // link to libcef_dll_wrapper
@@ -130,6 +131,7 @@ fn main() {
         .build_target("cef_exe")
         .profile(profile)
         .define("USE_SANDBOX", "OFF")
+        .define("TARGET_ARCH", env::var("CARGO_CFG_TARGET_ARCH").unwrap())
         .build();
 
     #[cfg(target_os = "windows")]

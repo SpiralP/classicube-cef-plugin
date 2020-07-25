@@ -34,7 +34,8 @@ jobs:
       - name: Install nightly
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly
+          # we have to use this toolchain because "libclang.dll: invalid DLL (32-bit)"
+          toolchain: nightly-${{ matrix.config.target }}
           target: ${{ matrix.config.target }}
           override: true
 
@@ -154,8 +155,10 @@ jobs:
         run: |
           mv 'target/${{ matrix.config.target }}/release/libclassicube_cef_plugin.so' \
             './classicube_cef_linux_${{ matrix.config.arch }}.so' \
+          && file './classicube_cef_linux_${{ matrix.config.arch }}.so' \
           && mv target/${{ matrix.config.target }}/release/build/classicube-cef-plugin-*/out/cef \
-            './cef-linux-${{ matrix.config.arch }}'
+            './cef-linux-${{ matrix.config.arch }}' \
+          && file './cef-linux-${{ matrix.config.arch }}'
 
       - name: Upload Release
         uses: softprops/action-gh-release@v1
@@ -219,7 +222,9 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         run: |
           mv 'target/${{ matrix.config.target }}/release/libclassicube_cef_plugin.dylib' './classicube_cef_macos_${{ matrix.config.arch }}.dylib' \
-          && mv target/${{ matrix.config.target }}/release/build/classicube-cef-plugin-*/out/cef './cef-macos-${{ matrix.config.arch }}'
+          && file './classicube_cef_macos_${{ matrix.config.arch }}.dylib' \
+          && mv target/${{ matrix.config.target }}/release/build/classicube-cef-plugin-*/out/cef './cef-macos-${{ matrix.config.arch }}' \
+          && file './cef-macos-${{ matrix.config.arch }}'
 
       - name: Upload Release
         uses: softprops/action-gh-release@v1

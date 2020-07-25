@@ -103,7 +103,7 @@ jobs:
         if: matrix.config.arch == 'x86_64'
         run: |
           sudo apt-get -y update \
-          && sudo apt-get -y install aria2 git curl gcc g++ build-essential cmake clang-10 pkg-config \
+          && sudo apt-get -y install aria2 git gcc g++ build-essential cmake clang-10 pkg-config \
             libssl-dev libglib2.0-dev libpango1.0-dev libatk1.0-dev libgtk-3-dev libgdk-pixbuf2.0-dev \
             libnss3 libasound2 libxss1 libnspr4 \
           && aria2c 'http://opensource.spotify.com/cefbuilds/cef_binary_84.3.3%2Bgffc2f0e%2Bchromium-84.0.4147.89_linux64.tar.bz2' -o cef_binary.tar.bz2 --max-connection-per-server=4 \
@@ -116,7 +116,7 @@ jobs:
         run: |
           sudo dpkg --add-architecture i386 \
           && sudo apt-get -y update \
-          && sudo apt-get -y install aria2 git curl gcc g++ build-essential cmake clang-10 pkg-config:i386 \
+          && sudo apt-get -y install aria2 git gcc g++ build-essential cmake clang-10 pkg-config:i386 \
             gcc-multilib g++-multilib \
             libssl-dev:i386 libglib2.0-dev:i386 libpango1.0-dev:i386 libatk1.0-dev:i386 libgtk-3-dev:i386 libgdk-pixbuf2.0-dev:i386 \
             libnss3:i386 libasound2:i386 libxss1:i386 libnspr4:i386 \
@@ -151,6 +151,94 @@ jobs:
         uses: actions-rs/cargo@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
+          command: build
+          args: --target ${{ matrix.config.target }} --release
+
+      - name: Rename files
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          mv 'target/${{ matrix.config.target }}/release/libclassicube_cef_plugin.so' \
+            './classicube_cef_linux_${{ matrix.config.arch }}.so' \
+          && file './classicube_cef_linux_${{ matrix.config.arch }}.so' \
+          && mv target/${{ matrix.config.target }}/release/build/classicube-cef-plugin-*/out/cef \
+            './cef-linux-${{ matrix.config.arch }}' \
+          && file './cef-linux-${{ matrix.config.arch }}'
+
+      - name: Upload Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            classicube_cef_linux_${{ matrix.config.arch }}.so
+            cef-linux-${{ matrix.config.arch }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  linux_arm:
+    name: Build Linux ${{ matrix.config.arch }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - { arch: armhf, target: armv7-unknown-linux-gnueabihf }
+          # - { arch: aarch64, target: aarch64-unknown-linux-gnu }
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install armhf deps
+        if: matrix.config.arch == 'armhf'
+        run: |
+          docker build -t cross-armhf -f cross-armhf.Dockerfile . \
+          && sudo apt-get -y update \
+          && sudo apt-get -y install aria2 \
+          && aria2c 'http://opensource.spotify.com/cefbuilds/cef_binary_84.3.3%2Bgffc2f0e%2Bchromium-84.0.4147.89_linuxarm.tar.bz2' -o cef_binary.tar.bz2 --max-connection-per-server=4 \
+          && tar -xjf cef_binary.tar.bz2 \
+          && rm cef_binary.tar.bz2 \
+          && mv cef_binary_* cef_interface/cef_binary
+
+      - name: Install aarch64 deps
+        if: matrix.config.arch == 'aarch64'
+        run: |
+          # TODO
+          false \
+          && docker build -t cross-aarch64 -f cross-aarch64.Dockerfile . \
+          && sudo apt-get -y update \
+          && sudo apt-get -y install aria2 \
+          && aria2c 'http://opensource.spotify.com/cefbuilds/cef_binary_84.3.3%2Bgffc2f0e%2Bchromium-84.0.4147.89_linuxarm64.tar.bz2' -o cef_binary.tar.bz2 --max-connection-per-server=4 \
+          && tar -xjf cef_binary.tar.bz2 \
+          && rm cef_binary.tar.bz2 \
+          && mv cef_binary_* cef_interface/cef_binary
+
+      - name: Install nightly
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          target: ${{ matrix.config.target }}
+          override: true
+
+      - name: Build
+        uses: actions-rs/cargo@v1
+        if: startsWith(github.ref, 'refs/tags/') != true
+        with:
+          use-cross: true
+          command: build
+          args: --target ${{ matrix.config.target }}
+
+      - name: Test
+        uses: actions-rs/cargo@v1
+        if: startsWith(github.ref, 'refs/tags/') != true
+        with:
+          use-cross: true
+          command: test
+          args: --target ${{ matrix.config.target }} --features ci -- --nocapture
+
+      - name: Build Release
+        uses: actions-rs/cargo@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          use-cross: true
           command: build
           args: --target ${{ matrix.config.target }} --release
 

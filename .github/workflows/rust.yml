@@ -31,7 +31,7 @@ jobs:
           Get-ChildItem cef_binary_* | Rename-Item -NewName 'cef_binary'
           Move-Item -Path 'cef_binary' -Destination 'cef_interface'
 
-      - name: Install nightly
+      - name: Install nightly ${{ matrix.config.target }}
         uses: actions-rs/toolchain@v1
         with:
           # we have to use this toolchain because "libclang.dll: invalid DLL (32-bit)"
@@ -126,7 +126,7 @@ jobs:
           && mv cef_binary_* cef_interface/cef_binary \
           && echo "::set-env name=PKG_CONFIG_ALLOW_CROSS::1"
 
-      - name: Install nightly
+      - name: Install nightly ${{ matrix.config.target }}
         uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly
@@ -191,8 +191,6 @@ jobs:
         if: matrix.config.arch == 'armhf'
         run: |
           docker build -t cross-armhf -f cross-armhf.Dockerfile . \
-          && sudo apt-get -y update \
-          && sudo apt-get -y install aria2 \
           && aria2c 'http://opensource.spotify.com/cefbuilds/cef_binary_84.3.3%2Bgffc2f0e%2Bchromium-84.0.4147.89_linuxarm.tar.bz2' -o cef_binary.tar.bz2 --max-connection-per-server=4 \
           && tar -xjf cef_binary.tar.bz2 \
           && rm cef_binary.tar.bz2 \
@@ -204,14 +202,12 @@ jobs:
           # TODO
           false \
           && docker build -t cross-aarch64 -f cross-aarch64.Dockerfile . \
-          && sudo apt-get -y update \
-          && sudo apt-get -y install aria2 \
           && aria2c 'http://opensource.spotify.com/cefbuilds/cef_binary_84.3.3%2Bgffc2f0e%2Bchromium-84.0.4147.89_linuxarm64.tar.bz2' -o cef_binary.tar.bz2 --max-connection-per-server=4 \
           && tar -xjf cef_binary.tar.bz2 \
           && rm cef_binary.tar.bz2 \
           && mv cef_binary_* cef_interface/cef_binary
 
-      - name: Install nightly
+      - name: Install nightly ${{ matrix.config.target }}
         uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly
@@ -225,14 +221,6 @@ jobs:
           use-cross: true
           command: build
           args: --target ${{ matrix.config.target }}
-
-      - name: Test
-        uses: actions-rs/cargo@v1
-        if: startsWith(github.ref, 'refs/tags/') != true
-        with:
-          use-cross: true
-          command: test
-          args: --target ${{ matrix.config.target }} --features ci -- --nocapture
 
       - name: Build Release
         uses: actions-rs/cargo@v1
@@ -284,7 +272,7 @@ jobs:
           && rm cef_binary.tar.bz2 \
           && mv cef_binary_* cef_interface/cef_binary
 
-      - name: Install nightly
+      - name: Install nightly ${{ matrix.config.target }}
         uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly

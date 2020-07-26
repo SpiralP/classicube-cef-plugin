@@ -103,7 +103,7 @@ jobs:
           sudo apt-get -y update \
           && sudo apt-get -y install aria2 git gcc g++ build-essential cmake clang-10 pkg-config \
             libssl-dev libglib2.0-dev libpango1.0-dev libatk1.0-dev libgtk-3-dev libgdk-pixbuf2.0-dev \
-            libnss3 libasound2 libxss1 libnspr4 \
+            libssl1.1 libnss3 libasound2 libxss1 libnspr4 \
           && aria2c 'http://opensource.spotify.com/cefbuilds/cef_binary_84.3.3%2Bgffc2f0e%2Bchromium-84.0.4147.89_linux64.tar.bz2' -o cef_binary.tar.bz2 --max-connection-per-server=4 \
           && tar -xjf cef_binary.tar.bz2 \
           && rm cef_binary.tar.bz2 \
@@ -117,7 +117,7 @@ jobs:
           && sudo apt-get -y install aria2 git gcc g++ build-essential cmake clang-10 pkg-config:i386 \
             gcc-multilib g++-multilib \
             libssl-dev:i386 libglib2.0-dev:i386 libpango1.0-dev:i386 libatk1.0-dev:i386 libgtk-3-dev:i386 libgdk-pixbuf2.0-dev:i386 \
-            libnss3:i386 libasound2:i386 libxss1:i386 libnspr4:i386 \
+            libssl1.1:i386 libnss3:i386 libasound2:i386 libxss1:i386 libnspr4:i386 \
           && aria2c 'http://opensource.spotify.com/cefbuilds/cef_binary_84.3.3%2Bgffc2f0e%2Bchromium-84.0.4147.89_linux32.tar.bz2' -o cef_binary.tar.bz2 --max-connection-per-server=4 \
           && tar -xjf cef_binary.tar.bz2 \
           && rm cef_binary.tar.bz2 \

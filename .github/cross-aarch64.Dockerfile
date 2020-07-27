@@ -18,6 +18,7 @@ RUN dpkg --add-architecture arm64 \
     && make -j4 \
     && make install_sw \
     # cleanup
+    && cd .. && rm -rf openssl-1.1.1g \
     && apt-get -y autoremove && apt-get -y clean && rm -rf /var/lib/apt \
     && rm -rf /tmp && mkdir /tmp && chmod 777 /tmp \
     && rm -rf /usr/share/doc /usr/share/man /usr/share/locale

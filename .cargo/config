@@ -20,7 +20,7 @@ rustflags = [
 ]
 
 
-[target.armv7-unknown-linux-gnueabihf]
+[target.arm-unknown-linux-gnueabihf]
 rustflags = [
   "-C", "link-args=-Wl,-rpath,./cef/cef_binary,-rpath,./",
 ]

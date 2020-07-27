@@ -314,15 +314,6 @@ if(OS_LINUX)
   set_target_properties(cef_exe PROPERTIES INSTALL_RPATH "$ORIGIN")
   set_target_properties(cef_exe PROPERTIES BUILD_WITH_INSTALL_RPATH TRUE)
   set_target_properties(cef_exe PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CEF_TARGET_OUT_DIR})
-
-  # # /etc/ld.so.conf.d/arm-linux-gnueabihf.conf
-  # # Multiarch support
-  # /usr/local/lib/arm-linux-gnueabihf
-  # /lib/arm-linux-gnueabihf
-  # /usr/lib/arm-linux-gnueabihf
-  SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -L /usr/local/lib/arm-linux-gnueabihf -Wl,-rpath-link,/usr/local/lib/arm-linux-gnueabihf")
-  SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -L /lib/arm-linux-gnueabihf -Wl,-rpath-link,/lib/arm-linux-gnueabihf")
-  SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -L /usr/lib/arm-linux-gnueabihf -Wl,-rpath-link,/usr/lib/arm-linux-gnueabihf")
 endif()
 
 

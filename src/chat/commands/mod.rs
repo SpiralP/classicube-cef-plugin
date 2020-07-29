@@ -18,7 +18,6 @@ thread_local!(
 pub fn initialize() {
     let app = App::new("cef")
         .setting(AppSettings::SubcommandRequiredElseHelp)
-        .global_setting(AppSettings::DisableVersion)
         .global_setting(AppSettings::ColoredHelp)
         .arg(
             Arg::with_name("background")

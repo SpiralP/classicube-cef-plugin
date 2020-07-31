@@ -1,6 +1,8 @@
 use crate::error::*;
 use std::{fmt::Display, marker::PhantomData, str::FromStr};
 
+// TODO cache get, update on set
+
 pub struct RustOption<T>
 where
     T: FromStr + Display,

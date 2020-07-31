@@ -41,6 +41,6 @@ pub fn set<S: Into<Vec<u8>>>(key: S, value: String) {
 pub const MUTE_LOSE_FOCUS: RustOption<bool> = RustOption::new("cef-mute-lose-focus", "true");
 pub const AUTOPLAY_MAP_THEMES: RustOption<bool> =
     RustOption::new("cef-autoplay-map-themes", "true");
-pub const MAP_THEME_VOLUME: RustOption<f32> = RustOption::new("cef-map-theme-volume", "0.5");
+pub const VOLUME: RustOption<f32> = RustOption::new("cef-volume", "1.0");
 pub const FRAME_RATE: RustOption<u16> = RustOption::new("cef-frame-rate", "30");
 pub const SUBTITLES: RustOption<bool> = RustOption::new("cef-subtitles", "true");

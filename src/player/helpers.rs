@@ -5,6 +5,7 @@ use crate::{
     entity_manager::{CefEntity, EntityManager},
     error::*,
     helpers::vec3_to_vector3,
+    options::VOLUME,
 };
 use classicube_helpers::OptionWithInner;
 use classicube_sys::{Vec3, ENTITIES_SELF_ID};
@@ -20,7 +21,7 @@ pub async fn start_update_loop(entity_id: usize) {
     }
 }
 
-pub fn compute_real_volume(entity: &CefEntity) -> Option<(f32, VolumeMode)> {
+fn compute_real_volume(entity: &CefEntity) -> Option<(f32, VolumeMode)> {
     let volume_mode = entity.player.get_volume_mode();
 
     if volume_mode == VolumeMode::Global {
@@ -92,7 +93,10 @@ async fn start_loop(entity_id: usize) -> Result<()> {
         // update volume
         EntityManager::with_entity(entity_id, |entity| {
             if let Some((volume, volume_mode)) = compute_real_volume(entity) {
-                let _ignore = entity.player.set_volume(entity.browser.as_ref(), volume);
+                let volume_modifier = VOLUME.get()?;
+                let _ignore = entity
+                    .player
+                    .set_volume(entity.browser.as_ref(), volume * volume_modifier);
 
                 let _ignore = entity
                     .player

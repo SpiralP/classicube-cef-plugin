@@ -4,7 +4,7 @@ use crate::{
     chat::{hidden_communication::SHOULD_BLOCK, Chat, PlayerSnapshot},
     entity_manager::{EntityBuilder, EntityManager},
     error::*,
-    options::{AUTOPLAY_MAP_THEMES, MAP_THEME_VOLUME},
+    options::{AUTOPLAY_MAP_THEMES, VOLUME},
     player::{MediaPlayer, Player, PlayerTrait, VolumeMode, YoutubePlayer},
 };
 use classicube_helpers::{tab_list::remove_color, CellGetSet};
@@ -217,7 +217,6 @@ async fn handle_map_theme_url(message: String) -> Result<()> {
 
     debug!("map_theme got {:?}", url);
 
-    let volume = MAP_THEME_VOLUME.get()?;
     let mut player = match YoutubePlayer::from_url(&url) {
         Ok(player) => Player::Youtube(player),
         Err(youtube_error) => match MediaPlayer::from_url(&url) {
@@ -232,6 +231,7 @@ async fn handle_map_theme_url(message: String) -> Result<()> {
             }
         },
     };
+    let volume = VOLUME.get()?;
     player.set_silent(true)?;
     player.set_volume(None, volume)?;
     player.set_volume_mode(None, VolumeMode::Global)?;

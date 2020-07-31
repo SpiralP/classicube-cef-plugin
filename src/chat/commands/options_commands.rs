@@ -35,9 +35,9 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
                     .arg(Arg::with_name("bool").default_value(options::SUBTITLES.default())),
             )
             .subcommand(
-                App::new("map-theme-volume").about("Map theme volume").arg(
-                    Arg::with_name("percent").default_value(options::MAP_THEME_VOLUME.default()),
-                ),
+                App::new("volume")
+                    .about("Global volume modifier")
+                    .arg(Arg::with_name("percent").default_value(options::VOLUME.default())),
             )
             .subcommand(
                 App::new("frame-rate")
@@ -115,18 +115,14 @@ pub async fn handle_command(
                 Ok(true)
             }
 
-            ("map-theme-volume", Some(matches)) => {
-                let value = options::MAP_THEME_VOLUME.get()?;
+            ("volume", Some(matches)) => {
+                let value = options::VOLUME.get()?;
                 if matches.occurrences_of("percent") > 0 {
                     let volume = matches.value_of("percent").unwrap();
                     let volume = volume.parse()?;
 
-                    options::MAP_THEME_VOLUME.set(volume);
-                    Chat::print(format!(
-                        "map-theme-volume: {} -> {}",
-                        value,
-                        options::MAP_THEME_VOLUME.get()?
-                    ));
+                    options::VOLUME.set(volume);
+                    Chat::print(format!("volume: {} -> {}", value, options::VOLUME.get()?));
 
                     if let Some(entity_id) = CURRENT_MAP_THEME.get() {
                         EntityManager::with_entity(entity_id, |entity| {
@@ -136,7 +132,7 @@ pub async fn handle_command(
                         })?;
                     }
                 } else {
-                    Chat::print(format!("map-theme-volume: {}", value));
+                    Chat::print(format!("volume: {}", value));
                 }
 
                 Ok(true)

@@ -131,6 +131,19 @@ pub async fn handle_command(
                             Ok(())
                         })?;
                     }
+
+                    EntityManager::with_all_entities(|entities| {
+                        for entity in entities.values_mut() {
+                            let volume = entity.player.get_volume();
+
+                            // bad hacks because we only run javascript setVolume
+                            // when screen volume has changed
+                            let _ignore = entity.player.set_volume(entity.browser.as_ref(), 0.0);
+                            let _ignore = entity.player.set_volume(entity.browser.as_ref(), volume);
+                        }
+
+                        Ok::<_, Error>(())
+                    })?;
                 } else {
                     Chat::print(format!("volume: {}", value));
                 }

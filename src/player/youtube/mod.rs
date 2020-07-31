@@ -4,6 +4,7 @@ use crate::{
     cef::{RustRefBrowser, RustV8Value},
     chat::Chat,
     error::*,
+    options,
     options::SUBTITLES,
 };
 use classicube_helpers::color;
@@ -187,7 +188,11 @@ impl PlayerTrait for YoutubePlayer {
     fn set_volume(&mut self, browser: Option<&RustRefBrowser>, volume: f32) -> Result<()> {
         if let Some(browser) = browser {
             if (volume - self.volume).abs() > 0.0001 {
-                Self::execute_function(browser, &format!("setVolume({})", volume))?;
+                let volume_modifier = options::VOLUME.get()?;
+                Self::execute_function(
+                    browser,
+                    &format!("setVolume({})", volume * volume_modifier),
+                )?;
             }
         }
 

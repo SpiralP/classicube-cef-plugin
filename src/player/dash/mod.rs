@@ -4,6 +4,7 @@ use crate::{
     cef::{RustRefBrowser, RustV8Value},
     chat::Chat,
     error::*,
+    options,
 };
 use classicube_helpers::color;
 use futures::{future::RemoteHandle, prelude::*};
@@ -110,7 +111,8 @@ impl PlayerTrait for DashPlayer {
     fn set_volume(&mut self, browser: Option<&RustRefBrowser>, volume: f32) -> Result<()> {
         if let Some(browser) = browser {
             if (volume - self.volume).abs() > 0.0001 {
-                Self::get_player_field(browser, &format!("volume = {}", volume));
+                let volume_modifier = options::VOLUME.get()?;
+                Self::get_player_field(browser, &format!("volume = {}", volume * volume_modifier));
             }
         }
 

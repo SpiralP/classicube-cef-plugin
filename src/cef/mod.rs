@@ -18,7 +18,7 @@ use crate::{
 };
 use classicube_helpers::{shared::FutureShared, CellGetSet, OptionWithInner};
 use futures::stream::{FuturesUnordered, StreamExt};
-use log::debug;
+use log::*;
 use std::{
     cell::{Cell, RefCell},
     collections::HashMap,
@@ -133,17 +133,19 @@ impl Cef {
     pub async fn shutdown() {
         mute_lose_focus::shutdown();
 
-        let app = {
+        let mut app = {
             let mut mutex = CEF.with(|mutex| mutex.clone());
             let mut global_cef = mutex.lock().await;
-            let cef = global_cef.take().unwrap();
+            if let Some(cef) = global_cef.take() {
+                debug!("shutting down all browsers");
+                crate::time!("Cef::close_all_browsers()", 1000, {
+                    Self::close_all_browsers().await;
+                });
 
-            debug!("shutting down all browsers");
-            crate::time!("Cef::close_all_browsers()", 1000, {
-                Self::close_all_browsers().await;
-            });
-
-            cef.app
+                Some(cef.app)
+            } else {
+                None
+            }
         };
 
         // must clear this before .shutdown() because it holds refs
@@ -153,9 +155,14 @@ impl Cef {
             event_queue.take().unwrap();
         });
 
-        crate::time!("cef app.shutdown()", 1000, {
-            app.shutdown().unwrap();
-        });
+        if let Some(app) = app.take() {
+            crate::time!("cef app.shutdown()", 1000, {
+                if let Err(e) = app.shutdown() {
+                    error!("app.shutdown(): {}", e);
+                }
+            });
+        }
+
         IS_INITIALIZED.set(false);
     }
 

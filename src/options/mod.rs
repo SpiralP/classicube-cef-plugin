@@ -51,5 +51,6 @@ macro_rules! option {
 pub const MUTE_LOSE_FOCUS: RustOption<bool> = option!("cef-mute-lose-focus", "true", bool);
 pub const AUTOPLAY_MAP_THEMES: RustOption<bool> = option!("cef-autoplay-map-themes", "true", bool);
 pub const VOLUME: RustOption<f32> = option!("cef-volume", "1.0", f32);
+pub const MAP_THEME_VOLUME: RustOption<f32> = option!("cef-map-theme-volume", "0.3", f32);
 pub const FRAME_RATE: RustOption<u16> = option!("cef-frame-rate", "30", u16);
 pub const SUBTITLES: RustOption<bool> = option!("cef-subtitles", "true", bool);

@@ -40,6 +40,11 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
                     .arg(Arg::with_name("percent").default_value(options::VOLUME.default())),
             )
             .subcommand(
+                App::new("map-theme-volume").about("Map theme volume").arg(
+                    Arg::with_name("percent").default_value(options::MAP_THEME_VOLUME.default()),
+                ),
+            )
+            .subcommand(
                 App::new("frame-rate")
                     .about("Changes default frame rate of newly created browsers")
                     .arg(Arg::with_name("fps").default_value(options::FRAME_RATE.default())),
@@ -146,6 +151,46 @@ pub async fn handle_command(
                     })?;
                 } else {
                     Chat::print(format!("volume: {}", value));
+                }
+
+                Ok(true)
+            }
+
+            ("map-theme-volume", Some(matches)) => {
+                let value = options::MAP_THEME_VOLUME.get()?;
+                if matches.occurrences_of("percent") > 0 {
+                    let volume = matches.value_of("percent").unwrap();
+                    let volume = volume.parse()?;
+
+                    options::MAP_THEME_VOLUME.set(volume);
+                    Chat::print(format!(
+                        "map-theme-volume: {} -> {}",
+                        value,
+                        options::MAP_THEME_VOLUME.get()?
+                    ));
+
+                    if let Some(entity_id) = CURRENT_MAP_THEME.get() {
+                        EntityManager::with_entity(entity_id, |entity| {
+                            entity.player.set_volume(entity.browser.as_ref(), volume)?;
+
+                            Ok(())
+                        })?;
+                    }
+
+                    EntityManager::with_all_entities(|entities| {
+                        for entity in entities.values_mut() {
+                            let volume = entity.player.get_volume();
+
+                            // bad hacks because we only run javascript setVolume
+                            // when screen volume has changed
+                            let _ignore = entity.player.set_volume(entity.browser.as_ref(), 0.0);
+                            let _ignore = entity.player.set_volume(entity.browser.as_ref(), volume);
+                        }
+
+                        Ok::<_, Error>(())
+                    })?;
+                } else {
+                    Chat::print(format!("map-theme-volume: {}", value));
                 }
 
                 Ok(true)

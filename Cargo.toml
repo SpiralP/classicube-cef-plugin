@@ -19,7 +19,7 @@ classicube-sys = { git = "https://github.com/SpiralP/rust-classicube-sys.git" }
 color-backtrace = { git = "https://github.com/SpiralP/color-backtrace-msgbox.git" }
 detour = { git = "https://github.com/SpiralP/detour-rs.git", optional = true }
 deunicode = "1.1.1"
-error-chain = "0.12.2"
+error-chain = "0.12.3"
 futures = "0.3.5"
 futures-timer = "3.0.2"
 invidious = { git = "https://github.com/SpiralP/rust-invidious.git" }
@@ -31,7 +31,7 @@ rand = "0.7.3"
 regex = "1.3.9"
 serde = { version = "1.0.114", features = ["derive"] }
 simplelog = "0.8.0"
-tokio = { version = "0.2.21", features = ["full"] }
+tokio = { version = "0.2.22", features = ["full"] }
 url = "2.1.1"
 
 [build-dependencies]
@@ -41,12 +41,6 @@ cmake = "0.1.44"
 [features]
 default = ["detour"]
 ci = []
-
-
-
-# remove when 1.1.8 releases
-[patch."https://github.com/SpiralP/rust-classicube-sys.git"]
-classicube-sys = { git = "https://github.com/SpiralP//rust-classicube-sys", branch = "next" }
 
 
 [package.metadata.release]

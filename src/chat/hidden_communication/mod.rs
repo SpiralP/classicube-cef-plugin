@@ -7,19 +7,16 @@ pub use self::{encoding::LightEntity, global_control::CURRENT_MAP_THEME};
 use super::SIMULATING;
 use crate::async_manager;
 use classicube_helpers::CellGetSet;
-use classicube_sys::{MsgType_MSG_TYPE_NORMAL, Server};
-#[cfg(feature = "detour")]
-use detour::static_detour;
+use classicube_sys::{
+    MsgType_MSG_TYPE_NORMAL, Net_Handler, Protocol, Server, UNSAFE_GetString,
+    OPCODE__OPCODE_MESSAGE,
+};
 use futures::channel::oneshot;
 use log::debug;
-use std::cell::{Cell, RefCell};
-#[cfg(feature = "detour")]
-use std::os::raw::c_int;
-
-#[cfg(feature = "detour")]
-static_detour! {
-    static DETOUR: unsafe extern "C" fn(*const classicube_sys:: String, c_int);
-}
+use std::{
+    cell::{Cell, RefCell},
+    slice,
+};
 
 thread_local!(
     static SHOULD_BLOCK: Cell<bool> = Cell::new(false);
@@ -29,17 +26,42 @@ thread_local!(
     static WAITING_FOR_MESSAGE: RefCell<Vec<oneshot::Sender<String>>> = Default::default();
 );
 
-#[cfg(feature = "detour")]
-fn chat_add_hook(text: *const classicube_sys::String, message_type: c_int) {
-    use classicube_sys::MsgType;
+thread_local!(
+    static OLD_MESSAGE_HANDLER: RefCell<Net_Handler> = Default::default();
+);
 
-    if message_type as MsgType == MsgType_MSG_TYPE_NORMAL
-        && handle_chat_message(unsafe { (*text).to_string() })
+extern "C" fn message_handler(data: *mut u8) {
     {
-        return;
+        use classicube_sys::MsgType;
+
+        let data = unsafe { slice::from_raw_parts(data, 65) };
+        let message_type = data[0] as MsgType;
+        let text = unsafe { UNSAFE_GetString(&data[1..]) }.to_string();
+
+        if message_type == MsgType_MSG_TYPE_NORMAL && handle_chat_message(text) {
+            return;
+        }
     }
 
-    unsafe { DETOUR.call(text, message_type) }
+    OLD_MESSAGE_HANDLER.with(|cell| {
+        let option = &*cell.borrow();
+        let f = option.unwrap();
+        unsafe {
+            f(data);
+        }
+    });
+}
+
+fn install_message_handler() {
+    let old_handler = unsafe { Protocol.Handlers[OPCODE__OPCODE_MESSAGE as usize] };
+    unsafe {
+        Protocol.Handlers[OPCODE__OPCODE_MESSAGE as usize] = Some(message_handler);
+    }
+
+    OLD_MESSAGE_HANDLER.with(|cell| {
+        let option = &mut *cell.borrow_mut();
+        *option = old_handler;
+    });
 }
 
 pub fn initialize() {
@@ -49,44 +71,20 @@ pub fn initialize() {
         return;
     }
 
-    #[cfg(feature = "detour")]
-    unsafe {
-        use classicube_sys::Chat_AddOf;
-
-        DETOUR.initialize(Chat_AddOf, chat_add_hook).unwrap();
-        DETOUR.enable().unwrap();
-    }
-
-    #[cfg(not(feature = "detour"))]
-    {
-        use classicube_helpers::events::chat::{ChatReceivedEvent, ChatReceivedEventHandler};
-
-        thread_local!(
-            static CHAT_RECEIVED: ChatReceivedEventHandler = {
-                let mut h = ChatReceivedEventHandler::new();
-
-                h.on(
-                    |ChatReceivedEvent {
-                         message,
-                         message_type,
-                     }| {
-                        if *message_type == MsgType_MSG_TYPE_NORMAL
-                            && handle_chat_message(message.to_string())
-                        {
-                            return;
-                        }
-                    },
-                );
-
-                h
-            };
-        );
-
-        CHAT_RECEIVED.with(|_| {});
-    }
-
     whispers::start_listening();
     global_control::start_listening();
+
+    install_message_handler();
+}
+
+pub fn reset() {
+    debug!("reset hidden_communication");
+
+    if unsafe { Server.IsSinglePlayer } != 0 {
+        return;
+    }
+
+    install_message_handler();
 }
 
 pub fn on_new_map() {
@@ -108,11 +106,6 @@ pub fn shutdown() {
 
     global_control::stop_listening();
     whispers::stop_listening();
-
-    #[cfg(feature = "detour")]
-    unsafe {
-        let _ignore_error = DETOUR.disable();
-    }
 }
 
 pub async fn wait_for_message() -> String {

@@ -104,4 +104,16 @@ impl Plugin {
             async_manager::shutdown();
         });
     }
+
+    /// Called to reset the component's state. (e.g. reconnecting to server)
+    pub fn reset() {
+        debug!("plugin shutdown");
+
+        PLUGIN
+            .with_inner_mut(|plugin| {
+                plugin.entity_manager.reset();
+                plugin.chat.reset();
+            })
+            .unwrap();
+    }
 }

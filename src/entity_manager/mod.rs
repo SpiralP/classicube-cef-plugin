@@ -143,6 +143,14 @@ impl EntityManager {
         });
     }
 
+    pub fn reset(&mut self) {
+        debug!("reset entity_manager");
+
+        async_manager::block_on_local(async {
+            let _ignore_error = Self::remove_all_entities().await;
+        });
+    }
+
     fn get_new_id() -> usize {
         ENTITY_ID.with(|cell| {
             let mut entity_id = cell.get();

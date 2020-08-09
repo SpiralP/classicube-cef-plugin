@@ -156,6 +156,10 @@ impl Chat {
         self.chat_command.shutdown();
     }
 
+    pub fn reset(&mut self) {
+        hidden_communication::reset();
+    }
+
     pub fn print<S: Into<String>>(s: S) {
         let s = s.into();
         info!("{}", s);

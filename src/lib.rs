@@ -38,6 +38,12 @@ extern "C" fn free() {
     });
 }
 
+extern "C" fn reset() {
+    time!("Plugin::reset()", 1000, {
+        Plugin::reset();
+    });
+}
+
 extern "C" fn on_new_map() {
     time!("Plugin::on_new_map()", 1000, {
         Plugin::on_new_map();
@@ -60,7 +66,7 @@ pub static mut Plugin_Component: IGameComponent = IGameComponent {
     // Called when the component is being freed. (e.g. due to game being closed)
     Free: Some(free),
     // Called to reset the component's state. (e.g. reconnecting to server)
-    Reset: None,
+    Reset: Some(reset),
     // Called to update the component's state when the user begins loading a new map.
     OnNewMap: Some(on_new_map),
     // Called to update the component's state when the user has finished loading a new map.

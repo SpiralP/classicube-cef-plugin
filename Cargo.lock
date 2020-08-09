@@ -129,30 +129,6 @@ dependencies = [
 
 [[package]]
 name = "bindgen"
-version = "0.53.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c72a978d268b1d70b0e963217e60fdabd9523a941457a6c42a7315d15c7e89e5"
-dependencies = [
- "bitflags",
- "cexpr",
- "cfg-if",
- "clang-sys",
- "clap 2.33.2",
- "env_logger",
- "lazy_static",
- "lazycell",
- "log",
- "peeking_take_while",
- "proc-macro2",
- "quote",
- "regex",
- "rustc-hash",
- "shlex",
- "which",
-]
-
-[[package]]
-name = "bindgen"
 version = "0.54.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f4d49b80beb70d76cdac92f5681e666f9a697c737c4f4117a67229a0386dc736"
@@ -237,11 +213,6 @@ dependencies = [
 
 [[package]]
 name = "cc"
-version = "1.0.50"
-source = "git+https://github.com/SpiralP/cc-rs.git#e72e9af70fbc5697a184fe45733a739086e24df4"
-
-[[package]]
-name = "cc"
 version = "1.0.58"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f9a06fb2e53271d7c279ec1efea6ab691c35a2ae67ec0d91d7acec0caf13b518"
@@ -319,13 +290,12 @@ dependencies = [
  "async-recursion",
  "base64",
  "bincode",
- "bindgen 0.54.1",
+ "bindgen",
  "clap 2.33.0",
  "classicube-helpers",
  "classicube-sys",
  "cmake",
  "color-backtrace",
- "detour",
  "deunicode",
  "error-chain",
  "futures",
@@ -357,10 +327,10 @@ dependencies = [
 [[package]]
 name = "classicube-sys"
 version = "0.1.0"
-source = "git+https://github.com/SpiralP/rust-classicube-sys.git#2ae1099c4af845876d1dbb6f2a210d5b05cbe6ae"
+source = "git+https://github.com/SpiralP//rust-classicube-sys?branch=next#1b136a3bebf77e1c38934e7075d74ade3686619c"
 dependencies = [
- "bindgen 0.54.1",
- "cc 1.0.58",
+ "bindgen",
+ "cc",
  "fs_extra",
  "paste 1.0.0",
  "regex",
@@ -372,7 +342,7 @@ version = "0.1.44"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0e56268c17a6248366d66d4a47a3381369d068cce8409bb1716ed77ea32163bb"
 dependencies = [
- "cc 1.0.58",
+ "cc",
 ]
 
 [[package]]
@@ -441,32 +411,6 @@ dependencies = [
  "core-foundation 0.6.4",
  "foreign-types",
  "libc",
-]
-
-[[package]]
-name = "detour"
-version = "0.7.1"
-source = "git+https://github.com/SpiralP/detour-rs.git#a7ba1a97f0d0fe289c3bc6386d9f8251db681153"
-dependencies = [
- "cfg-if",
- "detours-sys",
- "generic-array",
- "lazy_static",
- "libc",
- "libudis86-sys",
- "mmap-fixed",
- "region",
- "slice-pool",
- "winapi 0.3.9",
-]
-
-[[package]]
-name = "detours-sys"
-version = "0.1.0"
-source = "git+https://github.com/SpiralP/rust-detours-sys.git#16f6d085378683df22be5dd3de904996e92c9344"
-dependencies = [
- "bindgen 0.53.3",
- "cc 1.0.50",
 ]
 
 [[package]]
@@ -845,7 +789,7 @@ dependencies = [
  "bitflags",
  "cairo-rs",
  "cairo-sys-rs",
- "cc 1.0.58",
+ "cc",
  "gdk",
  "gdk-pixbuf",
  "gdk-pixbuf-sys",
@@ -901,9 +845,9 @@ dependencies = [
 
 [[package]]
 name = "hashbrown"
-version = "0.8.1"
+version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "34f595585f103464d8d2f6e9864682d74c1601fed5e07d62b1c9058dba8246fb"
+checksum = "e91b62f79061a0bc2e046024cb7ba44b08419ed238ecbd9adbd787434b9e8c25"
 dependencies = [
  "autocfg",
 ]
@@ -1003,9 +947,9 @@ dependencies = [
 
 [[package]]
 name = "indexmap"
-version = "1.5.0"
+version = "1.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5b88cd59ee5f71fea89a62248fc8f387d44400cefe05ef548466d61ced9029a7"
+checksum = "86b45e59b16c76b11bf9738fd5d38879d3bd28ad292d7b313608becb17ae2df9"
 dependencies = [
  "autocfg",
  "hashbrown",
@@ -1086,7 +1030,7 @@ version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f2b111a074963af1d37a139918ac6d49ad1d0d5e47f72fd55388619691a7d753"
 dependencies = [
- "cc 1.0.58",
+ "cc",
  "winapi 0.3.9",
 ]
 
@@ -1097,31 +1041,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c7d73b3f436185384286bd8098d17ec07c9a7d2388a6599f824d8502b529702a"
 
 [[package]]
-name = "libudis86-sys"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "139bbf9ddb1bfc90c1ac64dd2923d9c957cd433cee7315c018125d72ab08a6b0"
-dependencies = [
- "cc 1.0.58",
- "libc",
-]
-
-[[package]]
 name = "log"
 version = "0.4.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4fabed175da42fed1fa0746b0ea71f412aa9d35e76e95e59b192c64b9dc2bf8b"
 dependencies = [
  "cfg-if",
-]
-
-[[package]]
-name = "mach"
-version = "0.3.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b823e83b2affd8f40a9ee8c29dbc56404c1e34cd2710921f2801e2cf29527afa"
-dependencies = [
- "libc",
 ]
 
 [[package]]
@@ -1241,17 +1166,6 @@ checksum = "07b88fb9795d4d36d62a012dfbf49a8f5cf12751f36d31a9dbe66d528e58979e"
 dependencies = [
  "socket2",
  "winapi 0.3.9",
-]
-
-[[package]]
-name = "mmap-fixed"
-version = "0.1.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "27c1ae264d6343d3b4079549f6bc9e6d074dc4106cb1324c7753c6ce11d07b21"
-dependencies = [
- "kernel32-sys",
- "libc",
- "winapi 0.2.8",
 ]
 
 [[package]]
@@ -1441,7 +1355,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a842db4709b604f0fe5d1170ae3565899be2ad3d9cbc72dedc789ac0511f78de"
 dependencies = [
  "autocfg",
- "cc 1.0.58",
+ "cc",
  "libc",
  "pkg-config",
  "vcpkg",
@@ -1682,18 +1596,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "26412eb97c6b088a6997e05f69403a802a92d520de2f8e63c2b65f9e0f47c4e8"
 
 [[package]]
-name = "region"
-version = "2.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "877e54ea2adcd70d80e9179344c97f93ef0dffd6b03e1f4529e6e83ab2fa9ae0"
-dependencies = [
- "bitflags",
- "libc",
- "mach",
- "winapi 0.3.9",
-]
-
-[[package]]
 name = "remove_dir_all"
 version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1875,12 +1777,6 @@ name = "slab"
 version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c111b5bd5695e56cffe5129854aa230b39c93a305372fdbb2668ca2394eea9f8"
-
-[[package]]
-name = "slice-pool"
-version = "0.4.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "733fc6e5f1bd3a8136f842c9bdea4e5f17c910c2fcc98c90c3aa7604ef5e2e7a"
 
 [[package]]
 name = "slotmap"

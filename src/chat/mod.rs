@@ -108,7 +108,7 @@ impl Chat {
                         true,
                     )
                     .await
-                    .unwrap();
+                    .expect("don't worry about this error");
                 }
 
                 run(&["create", "-n", "ag", "-sq", "youtu.be/keF7n1eVKzE?t=273"]).await;

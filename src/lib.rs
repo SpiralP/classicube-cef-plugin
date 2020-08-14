@@ -20,7 +20,9 @@ use std::{os::raw::c_int, ptr};
 
 extern "C" fn init() {
     color_backtrace::install_with_settings(
-        color_backtrace::Settings::new().verbosity(color_backtrace::Verbosity::Full),
+        color_backtrace::Settings::new()
+            .verbosity(color_backtrace::Verbosity::Full)
+            .message("CEF crashed!!"),
     );
 
     logger::initialize(true, false);

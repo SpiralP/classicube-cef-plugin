@@ -1,6 +1,6 @@
 [package]
 name = "classicube-cef-plugin"
-version = "0.13.11"
+version = "0.13.12-alpha.0"
 authors = ["SpiralP <spiral.palmer@gmail.com>"]
 edition = "2018"
 publish = false

@@ -345,6 +345,14 @@ impl PlayerTrait for Player {
     }
 }
 
+pub fn on_new_map() {
+    volume_fade::on_new_map();
+}
+
+pub fn on_new_map_loaded() {
+    volume_fade::on_new_map_loaded();
+}
+
 #[test]
 fn test_create_player() {
     let good_web = [
@@ -373,12 +381,4 @@ fn test_create_player() {
             panic!("not Youtube");
         }
     }
-}
-
-pub fn on_new_map() {
-    volume_fade::on_new_map();
-}
-
-pub fn on_new_map_loaded() {
-    volume_fade::on_new_map_loaded();
 }

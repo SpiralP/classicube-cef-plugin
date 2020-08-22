@@ -23,3 +23,48 @@ pub async fn search(input: &str) -> Result<String> {
     })
     .await?
 }
+
+#[cfg(test)]
+#[no_mangle]
+extern "C" fn Gfx_DeleteTexture() {}
+
+#[cfg(test)]
+#[no_mangle]
+extern "C" fn Gfx_CreateTexture() {}
+
+#[cfg(test)]
+#[no_mangle]
+extern "C" fn Entity_SetModel() {}
+
+#[cfg(test)]
+#[no_mangle]
+extern "C" fn Options_Get() {}
+
+#[cfg(test)]
+#[no_mangle]
+extern "C" fn Options_Set() {}
+
+#[cfg(test)]
+#[no_mangle]
+extern "C" fn Chat_Send() {}
+
+#[cfg(test)]
+#[no_mangle]
+extern "C" fn ScheduledTask_Add() {}
+
+#[cfg(test)]
+#[no_mangle]
+static mut Entities: () = ();
+
+#[cfg(test)]
+#[no_mangle]
+static mut Camera: () = ();
+
+#[test]
+fn test_search_youtube() {
+    async_manager::initialize();
+
+    async_manager::block_on_local(async {
+        println!("{:#?}", search("nyan").await);
+    });
+}

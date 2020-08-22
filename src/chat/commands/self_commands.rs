@@ -5,7 +5,7 @@ use crate::{
     error::*,
     search,
 };
-use clap::{App, Arg, ArgMatches};
+use clap::{App, AppSettings, Arg, ArgMatches};
 use classicube_sys::{
     Entities, Vec3, ENTITIES_SELF_ID, FACE_CONSTS, FACE_CONSTS_FACE_XMAX, FACE_CONSTS_FACE_XMIN,
     FACE_CONSTS_FACE_YMAX, FACE_CONSTS_FACE_YMIN, FACE_CONSTS_FACE_ZMAX, FACE_CONSTS_FACE_ZMIN,
@@ -34,6 +34,11 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
         App::new("sync")
             .about("Re-sync all screens from someone else")
             .arg(Arg::with_name("player-name")),
+    )
+    .subcommand(
+        App::new("crash")
+            .setting(AppSettings::Hidden)
+            .alias("panic"),
     )
 }
 
@@ -128,6 +133,10 @@ pub async fn handle_command(
             }
 
             Ok(true)
+        }
+
+        ("crash", Some(_matches)) => {
+            panic!("here's your crash!");
         }
 
         _ => Ok(false),

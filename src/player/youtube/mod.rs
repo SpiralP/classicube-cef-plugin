@@ -89,7 +89,6 @@ impl PlayerTrait for YoutubePlayer {
     }
 
     fn from_input(url_or_id: &str) -> Result<Self> {
-        let url_or_id = url_or_id.replace("%feature=", "&feature=");
         if let Ok(url) = Url::parse(&url_or_id) {
             Self::from_url(&url)
         } else if let Some(this) = Self::from_id(url_or_id.to_string()) {
@@ -363,16 +362,18 @@ impl YoutubePlayer {
 
 impl YoutubePlayer {
     pub fn from_id(id: String) -> Option<Self> {
+        if id.len() < 11 {
+            return None;
+        }
+
+        let id = &id[..11];
         let regex = Regex::new(r"^[A-Za-z0-9_\-]{11}$").unwrap();
         if regex.is_match(&id) {
             Some(Self {
-                id,
+                id: id.to_string(),
                 time: Duration::from_secs(0),
                 ..Default::default()
             })
-        } else if id.contains('%') {
-            let id = id.split('%').next()?;
-            Self::from_id(id.to_string())
         } else {
             None
         }
@@ -470,18 +471,20 @@ impl YoutubePlayer {
 fn test_youtube() {
     {
         let without_time = [
-            "https://www.youtube.com/watch?v=gQngg8iQipk",
-            "https://youtu.be/gQngg8iQipk",
-            "https://www.youtube.com/embed/gQngg8iQipk",
+            "https://www.youtube.com/watch?v=pNMRBTN1SGU",
+            "https://youtu.be/pNMRBTN1SGU",
+            "https://www.youtube.com/embed/pNMRBTN1SGU",
             // test for cc replacing & with %
-            "https://www.youtube.com/watch?v=gQngg8iQipk&list=ELG1JYZnaQbZc",
-            "https://www.youtube.com/watch?v=gQngg8iQipk%list=ELG1JYZnaQbZc",
-            "https://www.youtube.com/watch?v=gQngg8iQipk&feature=youtu.be",
-            "https://www.youtube.com/watch?v=gQngg8iQipk%feature=youtu.be",
+            "https://www.youtube.com/watch?v=pNMRBTN1SGU&list=ELG1JYZnaQbZc",
+            "https://www.youtube.com/watch?v=pNMRBTN1SGU%list=ELG1JYZnaQbZc",
+            "https://www.youtube.com/watch?v=pNMRBTN1SGU&feature=youtu.be",
+            "https://www.youtube.com/watch?v=pNMRBTN1SGU%feature=youtu.be",
+            "https://www.youtube.com/watch?v=pNMRBTN1SGU&ab_channel=VvporTV",
+            "https://www.youtube.com/watch?v=pNMRBTN1SGU%ab_channel=VvporTV",
         ];
 
         let should = YoutubePlayer {
-            id: "gQngg8iQipk".into(),
+            id: "pNMRBTN1SGU".into(),
             time: Duration::from_secs(0),
             ..Default::default()
         };
@@ -494,19 +497,19 @@ fn test_youtube() {
 
     {
         let with_time = [
-            "https://www.youtube.com/watch?v=gQngg8iQipk&feature=youtu.be&t=36",
-            "https://www.youtube.com/watch?v=gQngg8iQipk&t=36",
-            "https://www.youtube.com/watch?time_continue=36&v=gQngg8iQipk&feature=emb_logo",
-            "https://www.youtube.com/watch?t=36&time_continue=11&v=gQngg8iQipk&feature=emb_logo",
-            "https://youtu.be/gQngg8iQipk?t=36",
-            "https://www.youtube.com/embed/gQngg8iQipk?autoplay=1&start=36",
-            "https://www.youtube.com/embed/gQngg8iQipk?start=36",
+            "https://www.youtube.com/watch?v=pNMRBTN1SGU&feature=youtu.be&t=36",
+            "https://www.youtube.com/watch?v=pNMRBTN1SGU&t=36",
+            "https://www.youtube.com/watch?time_continue=36&v=pNMRBTN1SGU&feature=emb_logo",
+            "https://www.youtube.com/watch?t=36&time_continue=11&v=pNMRBTN1SGU&feature=emb_logo",
+            "https://youtu.be/pNMRBTN1SGU?t=36",
+            "https://www.youtube.com/embed/pNMRBTN1SGU?autoplay=1&start=36",
+            "https://www.youtube.com/embed/pNMRBTN1SGU?start=36",
             /* TODO
-             * "https://www.youtube.com/watch?v=gQngg8iQipk%t=827s", */
+             * "https://www.youtube.com/watch?v=pNMRBTN1SGU%t=827s", */
         ];
 
         let should = YoutubePlayer {
-            id: "gQngg8iQipk".into(),
+            id: "pNMRBTN1SGU".into(),
             time: Duration::from_secs(36),
             ..Default::default()
         };
@@ -517,9 +520,9 @@ fn test_youtube() {
         }
     }
 
-    let left = YoutubePlayer::from_input("gQngg8iQipk").unwrap();
+    let left = YoutubePlayer::from_input("pNMRBTN1SGU").unwrap();
     let right = YoutubePlayer {
-        id: "gQngg8iQipk".into(),
+        id: "pNMRBTN1SGU".into(),
         time: Duration::from_secs(0),
         ..Default::default()
     };

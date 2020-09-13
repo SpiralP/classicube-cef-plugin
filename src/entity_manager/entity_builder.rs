@@ -46,53 +46,56 @@ impl EntityBuilder {
         let url = self.player.on_create();
 
         let entity_id = EntityManager::get_new_id();
-        ENTITIES.with(move |cell| {
-            let entities = &mut *cell.borrow_mut();
+        {
+            let name = name.clone();
+            ENTITIES.with(move |cell| {
+                let entities = &mut *cell.borrow_mut();
 
-            let mut entity =
-                CefEntity::register(entity_id, self.player, self.queue, self.should_send);
+                let mut entity =
+                    CefEntity::register(entity_id, name, self.player, self.queue, self.should_send);
 
-            if let Some(pos) = self.position {
-                entity.entity.Position.set(pos.0, pos.1, pos.2);
-            }
-
-            if let Some(rot) = self.rotation {
-                entity.entity.RotX = rot.0;
-                entity.entity.RotY = rot.1;
-            }
-
-            if let Some(size) = self.size {
-                entity.set_size(size.0, size.1);
-            }
-            entity.set_scale(self.scale);
-
-            debug!("entity {} registered", entity_id);
-            entities.insert(entity_id, entity);
-
-            let frame_rate = self.frame_rate;
-            let insecure = self.insecure;
-            let resolution = self.resolution;
-            async_manager::spawn_local_on_main_thread(async move {
-                let result = async move {
-                    let browser = Cef::create_browser(url, frame_rate, insecure).await?;
-
-                    if let Some((width, height)) = resolution {
-                        Cef::resize_browser(&browser, width, height)?;
-                    }
-
-                    EntityManager::with_entity(entity_id, |entity| {
-                        entity.attach_browser(browser);
-                        Ok(())
-                    })?;
-
-                    Ok::<_, Error>(())
-                };
-
-                if let Err(e) = result.await {
-                    warn!("create_attach_browser: {}", e);
+                if let Some(pos) = self.position {
+                    entity.entity.Position.set(pos.0, pos.1, pos.2);
                 }
+
+                if let Some(rot) = self.rotation {
+                    entity.entity.RotX = rot.0;
+                    entity.entity.RotY = rot.1;
+                }
+
+                if let Some(size) = self.size {
+                    entity.set_size(size.0, size.1);
+                }
+                entity.set_scale(self.scale);
+
+                debug!("entity {} registered", entity_id);
+                entities.insert(entity_id, entity);
+
+                let frame_rate = self.frame_rate;
+                let insecure = self.insecure;
+                let resolution = self.resolution;
+                async_manager::spawn_local_on_main_thread(async move {
+                    let result = async move {
+                        let browser = Cef::create_browser(url, frame_rate, insecure).await?;
+
+                        if let Some((width, height)) = resolution {
+                            Cef::resize_browser(&browser, width, height)?;
+                        }
+
+                        EntityManager::with_entity(entity_id, |entity| {
+                            entity.attach_browser(browser);
+                            Ok(())
+                        })?;
+
+                        Ok::<_, Error>(())
+                    };
+
+                    if let Err(e) = result.await {
+                        warn!("create_attach_browser: {}", e);
+                    }
+                });
             });
-        });
+        }
 
         if let Some(name) = name {
             debug!("created named entity {:?} with id {}", name, entity_id);

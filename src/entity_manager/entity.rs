@@ -15,6 +15,7 @@ use std::{collections::VecDeque, mem, pin::Pin};
 
 pub struct CefEntity {
     pub id: usize,
+    pub name: Option<String>,
 
     pub entity: Pin<Box<Entity>>,
     pub browser: Option<RustRefBrowser>,
@@ -29,7 +30,13 @@ pub struct CefEntity {
 }
 
 impl CefEntity {
-    pub fn register(id: usize, player: Player, queue: VecDeque<Player>, should_send: bool) -> Self {
+    pub fn register(
+        id: usize,
+        name: Option<String>,
+        player: Player,
+        queue: VecDeque<Player>,
+        should_send: bool,
+    ) -> Self {
         let entity = Box::pin(unsafe { mem::zeroed() });
 
         let v_table = Box::pin(EntityVTABLE {
@@ -53,6 +60,7 @@ impl CefEntity {
 
         let mut this = Self {
             id,
+            name,
             entity,
             v_table,
             texture,

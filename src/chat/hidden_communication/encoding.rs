@@ -10,6 +10,7 @@ use std::collections::VecDeque;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct LightEntity {
+    pub name: Option<String>,
     pub player: Player,
     pub queue: VecDeque<Player>,
     pub pos: (f32, f32, f32),
@@ -49,6 +50,7 @@ pub async fn create_message() -> Message {
 
                 let e = &entity.entity;
 
+                let name = entity.name.clone();
                 let pos = (e.Position.X, e.Position.Y, e.Position.Z);
                 let ang = (e.RotX, e.RotY);
                 let scale = entity.get_scale();
@@ -59,6 +61,7 @@ pub async fn create_message() -> Message {
                 let queue = entity.queue.clone();
 
                 Some(LightEntity {
+                    name,
                     pos,
                     ang,
                     player,
@@ -111,6 +114,10 @@ pub async fn received_message(mut message: Message) -> Result<bool> {
             .rotation(info.ang.0, info.ang.1)
             .scale(info.scale)
             .size(info.size.0, info.size.1);
+
+        if let Some(name) = info.name {
+            builder = builder.name(name);
+        }
 
         if let Some(res) = info.resolution {
             builder = builder.resolution(res.0, res.1);

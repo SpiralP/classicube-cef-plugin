@@ -2,11 +2,11 @@ use crate::{
     cef::Cef,
     entity_manager::{EntityBuilder, EntityManager},
     error::*,
-    player::Player,
+    player::{Player, PlayerTrait},
 };
 use log::debug;
 use serde::{Deserialize, Serialize};
-use std::collections::VecDeque;
+use std::{collections::VecDeque, time::Duration};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct LightEntity {
@@ -74,16 +74,6 @@ pub async fn create_message() -> Message {
             .collect()
     });
 
-    // if let Ok(time) = entity.player.get_current_time().await {
-    //     // this is a couple seconds behind because of the load time
-    //     // of the browser page
-    //     if let Player::Youtube(ref mut yt) = &mut player {
-    //         yt.time = time + Duration::from_secs(4);
-    //     } else if let Player::Media(ref mut media) = &mut player {
-    //         media.time = time + Duration::from_secs(4);
-    //     }
-    // }
-
     Message {
         entities: light_entities,
     }
@@ -105,8 +95,20 @@ pub async fn received_message(mut message: Message) -> Result<bool> {
         EntityManager::remove_entity(id).await?;
     }
 
-    for info in message.entities.drain(..) {
+    for mut info in message.entities.drain(..) {
         debug!("creating {:#?}", info);
+
+        if let Ok(time) = info.player.get_current_time() {
+            if time > Duration::from_secs(1) {
+                // this is a couple seconds behind because of the load time
+                // of the browser page and whisper delay, so add a couple seconds
+                if let Player::Youtube(ref mut yt) = &mut info.player {
+                    yt.time = time + Duration::from_secs(4);
+                } else if let Player::Media(ref mut media) = &mut info.player {
+                    media.time = time + Duration::from_secs(4);
+                }
+            }
+        }
 
         let mut builder = EntityBuilder::new(info.player)
             .queue(info.queue)

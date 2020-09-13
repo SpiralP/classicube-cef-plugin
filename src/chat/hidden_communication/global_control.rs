@@ -5,7 +5,7 @@ use crate::{
     entity_manager::{EntityBuilder, EntityManager},
     error::*,
     options,
-    player::{MediaPlayer, Player, PlayerTrait, VolumeMode, YoutubePlayer},
+    player::{MediaPlayer, Player, PlayerTrait, VolumeMode, YouTubePlayer},
 };
 use classicube_helpers::{tab_list::remove_color, CellGetSet};
 use classicube_sys::ENTITIES_SELF_ID;
@@ -217,8 +217,8 @@ async fn handle_map_theme_url(message: String) -> Result<()> {
 
     debug!("map_theme got {:?}", url);
 
-    let mut player = match YoutubePlayer::from_url(&url) {
-        Ok(player) => Player::Youtube(player),
+    let mut player = match YouTubePlayer::from_url(&url) {
+        Ok(player) => Player::YouTube(player),
         Err(youtube_error) => match MediaPlayer::from_url(&url) {
             Ok(player) => Player::Media(player),
             Err(media_error) => {

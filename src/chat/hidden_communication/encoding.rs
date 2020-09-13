@@ -102,7 +102,7 @@ pub async fn received_message(mut message: Message) -> Result<bool> {
             if time > Duration::from_secs(1) {
                 // this is a couple seconds behind because of the load time
                 // of the browser page and whisper delay, so add a couple seconds
-                if let Player::Youtube(ref mut yt) = &mut info.player {
+                if let Player::YouTube(ref mut yt) = &mut info.player {
                     yt.time = time + Duration::from_secs(4);
                 } else if let Player::Media(ref mut media) = &mut info.player {
                     media.time = time + Duration::from_secs(4);

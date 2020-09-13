@@ -226,7 +226,7 @@ impl CefEntity {
             // try to persist volume options
             //
             // only persist for same-type because if we went from a
-            // Web player which has global volume to a Youtube, it would
+            // Web player which has global volume to a YouTube, it would
             // make the youtube player global volume too
             let volume = self.player.get_volume();
             let volume_mode = self.player.get_volume_mode();

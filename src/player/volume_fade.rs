@@ -44,7 +44,7 @@ async fn fade_all() -> Result<()> {
     EntityManager::with_all_entities(|entities| {
         for entity in entities.values_mut() {
             match &mut entity.player {
-                Player::Youtube(player) => drop(player.update_loop_handle.take()),
+                Player::YouTube(player) => drop(player.update_loop_handle.take()),
                 Player::Dash(player) => drop(player.update_loop_handle.take()),
                 Player::Media(player) => drop(player.update_loop_handle.take()),
                 Player::Web(_player) => {}

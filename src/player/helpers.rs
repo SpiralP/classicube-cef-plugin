@@ -1,4 +1,4 @@
-use super::{MediaPlayer, Player, PlayerTrait, VolumeMode, YoutubePlayer};
+use super::{MediaPlayer, Player, PlayerTrait, VolumeMode, YouTubePlayer};
 use crate::{
     async_manager,
     chat::ENTITIES,
@@ -105,7 +105,7 @@ async fn start_loop(entity_id: usize) -> Result<()> {
         // TODO add a has_timed
 
         enum Kind {
-            Youtube,
+            YouTube,
             Media,
         }
         let opt = EntityManager::with_entity(entity_id, |entity| {
@@ -113,7 +113,7 @@ async fn start_loop(entity_id: usize) -> Result<()> {
             // while with_entity is not
             Ok(match &entity.player {
                 Player::Media(_) => Some((entity.browser.as_ref().cloned(), Kind::Media)),
-                Player::Youtube(_) => Some((entity.browser.as_ref().cloned(), Kind::Youtube)),
+                Player::YouTube(_) => Some((entity.browser.as_ref().cloned(), Kind::YouTube)),
 
                 _ => None,
             })
@@ -123,7 +123,7 @@ async fn start_loop(entity_id: usize) -> Result<()> {
             if let Some(browser) = maybe_browser {
                 let time = match kind {
                     Kind::Media => MediaPlayer::get_real_time(&browser).await,
-                    Kind::Youtube => YoutubePlayer::get_real_time(&browser).await,
+                    Kind::YouTube => YouTubePlayer::get_real_time(&browser).await,
                 };
 
                 // update time field for when we sync to someone else
@@ -133,7 +133,7 @@ async fn start_loop(entity_id: usize) -> Result<()> {
                             Player::Media(player) => {
                                 player.time = time;
                             }
-                            Player::Youtube(player) => {
+                            Player::YouTube(player) => {
                                 player.time = time;
                             }
 
@@ -152,7 +152,7 @@ async fn start_loop(entity_id: usize) -> Result<()> {
                         false
                     }
 
-                    Kind::Youtube => YoutubePlayer::real_is_finished_playing(&browser).await?,
+                    Kind::YouTube => YouTubePlayer::real_is_finished_playing(&browser).await?,
                 };
 
                 if is_finished_playing {
@@ -164,7 +164,7 @@ async fn start_loop(entity_id: usize) -> Result<()> {
                                 //
                             }
 
-                            Player::Youtube(player) => {
+                            Player::YouTube(player) => {
                                 player.finished = is_finished_playing;
                                 entity.skip()?;
                             }

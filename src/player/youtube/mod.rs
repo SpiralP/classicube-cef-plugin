@@ -19,7 +19,7 @@ use std::{
 use url::Url;
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct YoutubePlayer {
+pub struct YouTubePlayer {
     pub id: String,
     pub time: Duration,
 
@@ -45,7 +45,7 @@ pub struct YoutubePlayer {
     pub create_time: Option<Instant>,
 }
 
-impl Default for YoutubePlayer {
+impl Default for YouTubePlayer {
     fn default() -> Self {
         Self {
             id: String::new(),
@@ -67,7 +67,7 @@ impl Default for YoutubePlayer {
     }
 }
 
-impl Clone for YoutubePlayer {
+impl Clone for YouTubePlayer {
     fn clone(&self) -> Self {
         Self {
             id: self.id.clone(),
@@ -83,9 +83,9 @@ impl Clone for YoutubePlayer {
     }
 }
 
-impl PlayerTrait for YoutubePlayer {
+impl PlayerTrait for YouTubePlayer {
     fn type_name(&self) -> &'static str {
-        "Youtube"
+        "YouTube"
     }
 
     fn from_input(url_or_id: &str) -> Result<Self> {
@@ -99,7 +99,7 @@ impl PlayerTrait for YoutubePlayer {
     }
 
     fn on_create(&mut self) -> String {
-        debug!("YoutubePlayer on_create {}", self.id);
+        debug!("YouTubePlayer on_create {}", self.id);
         self.create_time = Some(Instant::now());
 
         let mut params = vec![
@@ -305,7 +305,7 @@ impl PlayerTrait for YoutubePlayer {
     }
 }
 
-impl YoutubePlayer {
+impl YouTubePlayer {
     pub async fn real_is_finished_playing(browser: &RustRefBrowser) -> Result<bool> {
         let ended = match Self::eval_method(browser, "playerEnded").await? {
             RustV8Value::Bool(ended) => ended,
@@ -360,7 +360,7 @@ impl YoutubePlayer {
     }
 }
 
-impl YoutubePlayer {
+impl YouTubePlayer {
     pub fn from_id(id: String) -> Option<Self> {
         if id.len() < 11 {
             return None;
@@ -483,13 +483,13 @@ fn test_youtube() {
             "https://www.youtube.com/watch?v=pNMRBTN1SGU%ab_channel=VvporTV",
         ];
 
-        let should = YoutubePlayer {
+        let should = YouTubePlayer {
             id: "pNMRBTN1SGU".into(),
             time: Duration::from_secs(0),
             ..Default::default()
         };
         for &url in &without_time {
-            let yt = YoutubePlayer::from_input(url).unwrap();
+            let yt = YouTubePlayer::from_input(url).unwrap();
             assert_eq!(yt.id, should.id);
             assert_eq!(yt.time, should.time);
         }
@@ -508,20 +508,20 @@ fn test_youtube() {
              * "https://www.youtube.com/watch?v=pNMRBTN1SGU%t=827s", */
         ];
 
-        let should = YoutubePlayer {
+        let should = YouTubePlayer {
             id: "pNMRBTN1SGU".into(),
             time: Duration::from_secs(36),
             ..Default::default()
         };
         for &url in &with_time {
-            let yt = YoutubePlayer::from_input(url).unwrap();
+            let yt = YouTubePlayer::from_input(url).unwrap();
             assert_eq!(yt.id, should.id);
             assert_eq!(yt.time, should.time);
         }
     }
 
-    let left = YoutubePlayer::from_input("pNMRBTN1SGU").unwrap();
-    let right = YoutubePlayer {
+    let left = YouTubePlayer::from_input("pNMRBTN1SGU").unwrap();
+    let right = YouTubePlayer {
         id: "pNMRBTN1SGU".into(),
         time: Duration::from_secs(0),
         ..Default::default()
@@ -530,8 +530,8 @@ fn test_youtube() {
     assert_eq!(left.time, right.time);
 
     // not 11 chars
-    assert!(YoutubePlayer::from_input("gQngg8iQip").is_err());
+    assert!(YouTubePlayer::from_input("gQngg8iQip").is_err());
 
     // blank input
-    assert!(YoutubePlayer::from_input("").is_err());
+    assert!(YouTubePlayer::from_input("").is_err());
 }

@@ -2,7 +2,7 @@ use super::helpers::*;
 use crate::{
     async_manager,
     chat::PlayerSnapshot,
-    entity_manager::{EntityBuilder, EntityManager},
+    entity_manager::{EntityBuilder, EntityManager, TargetEntity},
     error::*,
     player::{PlayerBuilder, VolumeMode},
 };
@@ -97,6 +97,12 @@ pub async fn handle_command(
 
             let should_send = !matches.is_present("no-send");
             let silent = matches.is_present("silent");
+
+            if let Some(name) = matches.value_of("name") {
+                if let Ok(id) = name.get_entity_id() {
+                    let _ = EntityManager::remove_entity(id).await;
+                }
+            }
 
             let mut player_builder = PlayerBuilder::new()
                 .autoplay(autoplay)

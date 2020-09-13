@@ -216,7 +216,7 @@ jobs:
         with:
           use-cross: true
           command: build
-          args: --target ${{ matrix.config.target }} --no-default-features
+          args: --target ${{ matrix.config.target }}
 
       - name: Build Release
         uses: actions-rs/cargo@v1
@@ -224,7 +224,7 @@ jobs:
         with:
           use-cross: true
           command: build
-          args: --target ${{ matrix.config.target }} --release --no-default-features
+          args: --target ${{ matrix.config.target }} --release
 
       - name: Rename files
         if: startsWith(github.ref, 'refs/tags/')

@@ -1,5 +1,5 @@
 # docker build -t cross-armhf -f .github/cross-armhf.Dockerfile .
-# cross build --target armv7-unknown-linux-gnueabihf --no-default-features
+# cross build --target armv7-unknown-linux-gnueabihf
 
 # ubuntu-like
 FROM rustembedded/cross:armv7-unknown-linux-gnueabihf-0.2.1
@@ -24,3 +24,4 @@ RUN dpkg --add-architecture armhf \
     && rm -rf /usr/share/doc /usr/share/man /usr/share/locale
 
 ENV PKG_CONFIG_PATH=/usr/lib/arm-linux-gnueabihf/pkgconfig
+ENV CPLUS_INCLUDE_PATH=/usr/arm-linux-gnueabihf/include/c++/5/arm-linux-gnueabihf

@@ -1,5 +1,5 @@
 # docker build -t cross-aarch64 -f .github/cross-aarch64.Dockerfile .
-# cross build --target aarch64-unknown-linux-gnu --no-default-features
+# cross build --target aarch64-unknown-linux-gnu
 
 # ubuntu-like
 FROM rustembedded/cross:aarch64-unknown-linux-gnu-0.2.1
@@ -24,3 +24,4 @@ RUN dpkg --add-architecture arm64 \
     && rm -rf /usr/share/doc /usr/share/man /usr/share/locale
 
 ENV PKG_CONFIG_PATH=/usr/lib/aarch64-linux-gnu/pkgconfig
+ENV CPLUS_INCLUDE_PATH=/usr/aarch64-linux-gnu/include/c++/5/aarch64-linux-gnu

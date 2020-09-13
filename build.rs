@@ -104,9 +104,7 @@ fn main() {
         // bindings for.
         .header_contents(
             "bindgen.hpp",
-            r#"
-            #include "interface.hh"
-        "#,
+            "#include \"interface.hh\"",
         )
         // Tell cargo to invalidate the built crate whenever any of the
         // included header files changed.

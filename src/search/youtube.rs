@@ -60,6 +60,7 @@ static mut Entities: () = ();
 #[no_mangle]
 static mut Camera: () = ();
 
+#[ignore]
 #[test]
 fn test_search_youtube() {
     async_manager::initialize();

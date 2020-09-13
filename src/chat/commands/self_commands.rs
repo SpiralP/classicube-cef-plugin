@@ -106,19 +106,6 @@ pub async fn handle_command(
         }
 
         ("sync", Some(matches)) => {
-            // only remove synced browsers
-            let mut entity_ids: Vec<usize> = EntityManager::with_all_entities(|entities| {
-                entities
-                    .iter()
-                    .filter(|(_, entity)| entity.should_send())
-                    .map(|(&id, _)| id)
-                    .collect()
-            });
-
-            for id in entity_ids.drain(..) {
-                EntityManager::remove_entity(id).await?;
-            }
-
             // TODO realname search
             if let Some(name) = matches.value_of("player-name") {
                 let had_data = whispers::outgoing::query_whisper(name).await?;

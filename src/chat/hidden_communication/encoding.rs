@@ -89,6 +89,19 @@ pub async fn create_message() -> Message {
 pub async fn received_message(mut message: Message) -> Result<bool> {
     let mut had_data = false;
 
+    // only remove synced browsers
+    let mut entity_ids: Vec<usize> = EntityManager::with_all_entities(|entities| {
+        entities
+            .iter()
+            .filter(|(_, entity)| entity.should_send())
+            .map(|(&id, _)| id)
+            .collect()
+    });
+
+    for id in entity_ids.drain(..) {
+        EntityManager::remove_entity(id).await?;
+    }
+
     for info in message.entities.drain(..) {
         debug!("creating {:#?}", info);
 

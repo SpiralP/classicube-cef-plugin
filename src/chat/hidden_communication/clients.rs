@@ -24,7 +24,7 @@ pub fn query() {
 
         // whole query shouldn't take more than 30 seconds
         // includes whispering and browser creation
-        match async_manager::timeout(Duration::from_secs(30), do_query()).await {
+        match async_manager::timeout_local(Duration::from_secs(30), do_query()).await {
             Some(result) => {
                 if let Err(e) = result {
                     warn!("clients query failed: {}", e);

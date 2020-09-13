@@ -616,15 +616,22 @@ pub async fn handle_command(
         }
 
         ("at", Some(matches)) => {
+            let x = matches.value_of("x").unwrap().parse()?;
+            let y = matches.value_of("y").unwrap().parse()?;
+            let z = matches.value_of("z").unwrap().parse()?;
+
             if EntityManager::with_entity((matches, player), |_| Ok(())).is_err() {
-                super::run(player.clone(), vec!["create".to_string()], true, true).await?;
+                let mut args = vec!["create".to_string(), "--no-wait".to_string()];
+
+                if let Some(name) = matches.value_of("name") {
+                    args.push("--name".to_string());
+                    args.push(name.to_string());
+                }
+
+                super::run(player.clone(), args, true, true).await?;
             }
 
             EntityManager::with_entity((matches, player), |entity| {
-                let x = matches.value_of("x").unwrap().parse()?;
-                let y = matches.value_of("y").unwrap().parse()?;
-                let z = matches.value_of("z").unwrap().parse()?;
-
                 entity.entity.Position.set(x, y, z);
 
                 if let Some(yaw) = matches.value_of("yaw") {

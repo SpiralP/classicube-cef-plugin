@@ -686,7 +686,7 @@ pub async fn handle_command(
                             color::TEAL,
                         ));
 
-                        for (i, player) in entity.queue.iter().enumerate() {
+                        for (i, (player, title)) in entity.queue.iter().enumerate() {
                             let url = player.get_url();
 
                             Chat::print(format!(
@@ -698,6 +698,11 @@ pub async fn handle_command(
                                 color::SILVER,
                                 url
                             ));
+
+                            let title = title.lock().unwrap();
+                            if let Some(title) = &*title {
+                                Chat::print(format!("{}{}", color::SILVER, title));
+                            }
                         }
                     }
                 }

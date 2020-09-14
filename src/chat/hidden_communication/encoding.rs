@@ -58,7 +58,12 @@ pub async fn create_message() -> Message {
                 let resolution = entity.browser.as_ref().map(Cef::get_browser_size);
 
                 let player = entity.player.clone();
-                let queue = entity.queue.clone();
+                let queue = entity
+                    .queue
+                    .iter()
+                    .map(|(player, _)| player)
+                    .cloned()
+                    .collect();
 
                 Some(LightEntity {
                     name,

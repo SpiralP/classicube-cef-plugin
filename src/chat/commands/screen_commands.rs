@@ -226,15 +226,12 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
             .arg(Arg::with_name("scale").requires("pitch")),
     )
     .subcommand(
-        App::new("info")
-            .alias("link")
-            .about("Get what's playing on the current screen")
-            .arg(
-                Arg::with_name("name")
-                    .long("name")
-                    .short("n")
-                    .takes_value(true),
-            ),
+        App::new("info").about("Get what's playing").arg(
+            Arg::with_name("name")
+                .long("name")
+                .short("n")
+                .takes_value(true),
+        ),
     )
     .subcommand(
         App::new("resume").about("Resume paused video").arg(
@@ -315,10 +312,14 @@ pub async fn handle_command(
                 .should_loop(should_loop)
                 .build(&url)?;
 
+            let kind = p.type_name();
             EntityManager::with_entity((matches, player), move |entity| {
-                if let Some(kind) = entity.queue(p)? {
+                if let Some(queue_size) = entity.queue(p)? {
                     Chat::print(format!(
-                        "{}Queued {}{} {}",
+                        "{}Queued {}{} {}{} {}{}",
+                        color::TEAL,
+                        color::GOLD,
+                        queue_size,
                         color::TEAL,
                         kind,
                         color::SILVER,

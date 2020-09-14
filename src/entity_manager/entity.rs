@@ -192,9 +192,9 @@ impl CefEntity {
 impl CefEntity {
     /// add item to queue
     ///
-    /// if item was queued, returns the type-name of player,
+    /// if item was queued, returns the size of queue,
     /// else returns None meaning we're about to play the item
-    pub fn queue(&mut self, player: Player) -> Result<Option<&'static str>> {
+    pub fn queue(&mut self, player: Player) -> Result<Option<usize>> {
         // this needs to determine if the current player was finished,
         // if it was then we play right away,
         // else we queue it for next
@@ -204,10 +204,9 @@ impl CefEntity {
 
             Ok(None)
         } else {
-            let type_name = player.type_name();
             self.queue.push_back(player);
 
-            Ok(Some(type_name))
+            Ok(Some(self.queue.len()))
         }
     }
 

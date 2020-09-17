@@ -45,7 +45,7 @@ impl PlayerTrait for WebPlayer {
     }
 
     fn on_title_change(&mut self, _entity_id: usize, _browser: &RustRefBrowser, title: String) {
-        if self.last_title == title || title == "data:text/html," {
+        if self.last_title == title || title == Self::blank_page().url {
             return;
         }
 

@@ -15,6 +15,7 @@ use classicube_sys::{
     Texture, TextureRec, PACKEDCOL_WHITE,
 };
 use futures::channel::oneshot;
+use log::*;
 use std::{
     collections::VecDeque,
     mem,
@@ -226,12 +227,16 @@ impl CefEntity {
                 let youtube_id = yt.id.clone();
 
                 async_manager::spawn(async move {
-                    if let Ok(response) = invidious::api::videos::request(
-                        &youtube_id,
-                        invidious::api::videos::Parameters::default(),
-                    )
-                    .await
-                    {
+                    debug!("lookup {}", youtube_id);
+
+                    let f = async move {
+                        let response = async_manager::timeout(
+                            Duration::from_secs(5),
+                            invidious::api::videos::request(&youtube_id, Default::default()),
+                        )
+                        .await
+                        .chain_err(|| "timed out")??;
+
                         // Justice - Cross (Full Album) (49:21)
                         let title = format!(
                             "{} ({})",
@@ -245,6 +250,12 @@ impl CefEntity {
                         async_manager::spawn_on_main_thread(async move {
                             Chat::print(format!("{}{}", color::SILVER, title));
                         });
+
+                        Ok::<_, Error>(())
+                    };
+
+                    if let Err(e) = f.await {
+                        warn!("youtube lookup error: {}", e);
                     }
                 });
             }

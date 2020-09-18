@@ -1,15 +1,19 @@
 use super::{helpers::*, Chat};
 use crate::{
+    async_manager,
     chat::{hidden_communication::whispers, PlayerSnapshot},
     entity_manager::EntityManager,
     error::*,
+    helpers::format_duration,
     search,
 };
 use clap::{App, AppSettings, Arg, ArgMatches};
+use classicube_helpers::color;
 use classicube_sys::{
     Entities, Vec3, ENTITIES_SELF_ID, FACE_CONSTS, FACE_CONSTS_FACE_XMAX, FACE_CONSTS_FACE_XMIN,
     FACE_CONSTS_FACE_YMAX, FACE_CONSTS_FACE_YMIN, FACE_CONSTS_FACE_ZMAX, FACE_CONSTS_FACE_ZMIN,
 };
+use std::time::Duration;
 
 // commands that should only run on the person who said them
 pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
@@ -51,9 +55,20 @@ pub async fn handle_command(
             let args = matches.values_of_lossy("search").unwrap();
             let input = args.join(" ");
             let input = (*input).to_string();
-            let id = search::youtube::search(&input).await?;
+            let video =
+                async_manager::timeout(Duration::from_secs(5), search::youtube::search(&input))
+                    .await
+                    .chain_err(|| "timed out")??;
 
-            Chat::send(format!("cef play {}", id));
+            // Justice - Cross (Full Album) (49:21)
+            let title = format!(
+                "{} ({})",
+                video.title,
+                format_duration(Duration::from_secs(video.length_seconds as _))
+            );
+            Chat::print(format!("{}{}", color::SILVER, title));
+
+            Chat::send(format!("cef play {}", video.video_id));
 
             Ok(true)
         }

@@ -1,27 +1,32 @@
 use crate::{async_manager, error::*};
-use invidious::api::search;
+use invidious::api::{search, search::Video};
 use log::debug;
 
-pub async fn search(input: &str) -> Result<String> {
+pub async fn search(input: &str) -> Result<Video> {
     let input = input.to_string();
 
-    async_manager::spawn(async move {
+    let video = async_manager::spawn(async move {
         debug!("searching {:?}", input);
-        let schema = search::request(search::Parameters {
+        let mut videos = search::request(search::Parameters {
             q: Some(input),
             ..Default::default()
         })
         .await?;
 
-        let first = schema.get(0).chain_err(|| "no results")?;
-        if let search::SchemaType::Video(video) = &first {
-            let id = video.video_id.to_string();
-            Ok(id)
+        if videos.is_empty() {
+            bail!("no results");
         } else {
-            Err("other schema type found, not video".into())
+            let first = videos.remove(0);
+            if let search::SchemaType::Video(video) = first {
+                Ok::<_, Error>(video)
+            } else {
+                Err("other schema type found, not video".into())
+            }
         }
     })
-    .await?
+    .await??;
+
+    Ok(video)
 }
 
 #[cfg(test)]

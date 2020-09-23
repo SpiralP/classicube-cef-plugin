@@ -307,7 +307,7 @@ impl PlayerTrait for YouTubePlayer {
 
 impl YouTubePlayer {
     pub async fn real_is_finished_playing(browser: &RustRefBrowser) -> Result<bool> {
-        let ended = match Self::eval_method(browser, "playerEnded").await? {
+        let ended = match Self::eval_method(browser, "playerFinished").await? {
             RustV8Value::Bool(ended) => ended,
 
             other => {

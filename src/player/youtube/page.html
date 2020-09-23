@@ -39,9 +39,11 @@
       var subtitles = parseInt(getQueryVariable("subtitles")) === 1;
       var autoplay = parseInt(getQueryVariable("autoplay")) === 1;
       var should_loop = parseInt(getQueryVariable("loop")) === 1;
+
       var speed = 1.0;
 
-      window.playerEnded = false;
+      window.playerFinishedTime = 0;
+      window.playerFinished = false;
 
       function setVolume(volume) {
         if (
@@ -72,13 +74,14 @@
           // mouse along a video progress bar and then set it to true when the user releases
           // the mouse.
           window.player.seekTo(time, true);
-          window.playerEnded = false;
+          window.playerFinished = false;
         }
         startTime = time;
       }
       function getCurrentTime() {
-        if (window.playerEnded) {
-          return window.playerEndedTime;
+        if (window.playerFinished) {
+          // when stopped, getCurrentTime and getDuration will give 0
+          return window.playerFinishedTime;
         }
 
         if (
@@ -159,10 +162,8 @@
       function onPlayerReady(event) {
         var player = event.target;
         player.setVolume(startVolume * 100.0);
-        if (speed !== 1.0) {
-          console.log("speeeed");
-          player.setPlaybackRate(speed);
-        }
+        player.setPlaybackRate(speed);
+        // TODO maybe if time >= duration, stopVideo ?
         if (autoplay) {
           player.playVideo();
         } else {
@@ -199,10 +200,10 @@
       // var done = false;
 
       function onPlayerStateChange(event) {
-        if (event.data === YT.PlayerState.PLAYING) {
-          var player = event.target;
-          var videoData = player.getVideoData();
+        var player = event.target;
 
+        if (event.data === YT.PlayerState.PLAYING) {
+          var videoData = player.getVideoData();
           var totalSeconds = player.getDuration();
           if (isFinite(totalSeconds)) {
             document.title =
@@ -212,9 +213,9 @@
           }
         } else if (event.data === YT.PlayerState.ENDED) {
           if (!should_loop) {
-            window.playerEnded = true;
-            window.playerEndedTime = window.player.getCurrentTime();
-            window.player.stopVideo();
+            window.playerFinishedTime = player.getDuration();
+            window.playerFinished = true;
+            player.stopVideo();
           }
         }
       }

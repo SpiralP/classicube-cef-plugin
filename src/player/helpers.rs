@@ -121,6 +121,18 @@ async fn start_loop(entity_id: usize) -> Result<()> {
 
         if let Some((maybe_browser, kind)) = opt {
             if let Some(browser) = maybe_browser {
+                // check if finished playing
+                // Do this before setting time because get_real_time will return duration
+                // instead of a current time after finishing video
+                let is_finished_playing = match kind {
+                    Kind::Media => {
+                        // TODO
+                        false
+                    }
+
+                    Kind::YouTube => YouTubePlayer::real_is_finished_playing(&browser).await?,
+                };
+
                 let time = match kind {
                     Kind::Media => MediaPlayer::get_real_time(&browser).await,
                     Kind::YouTube => YouTubePlayer::get_real_time(&browser).await,
@@ -144,16 +156,6 @@ async fn start_loop(entity_id: usize) -> Result<()> {
                         Ok(())
                     })?;
                 }
-
-                // check if finished playing
-                let is_finished_playing = match kind {
-                    Kind::Media => {
-                        // TODO
-                        false
-                    }
-
-                    Kind::YouTube => YouTubePlayer::real_is_finished_playing(&browser).await?,
-                };
 
                 if is_finished_playing {
                     debug!("finished playing!");

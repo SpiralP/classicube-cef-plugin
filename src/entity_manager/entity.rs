@@ -301,7 +301,7 @@ impl CefEntity {
     pub fn skip(&mut self) -> Result<()> {
         if let Some((new_player, _)) = self.queue.pop_front().take() {
             self.play(new_player)?;
-        } else {
+        } else if !self.player.is_finished_playing() {
             // show blank page
             self.stop()?;
         }

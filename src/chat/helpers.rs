@@ -32,15 +32,9 @@ pub fn is_global_cef_message(mut message: &str) -> Option<&str> {
 
 #[test]
 fn test_is_global_cef_message() {
-    assert_eq!(
-        is_global_cef_message("&fcef is good"),
-        Some("is good".to_string())
-    );
-    assert_eq!(
-        is_global_cef_message("cef is good"),
-        Some("is good".to_string())
-    );
-    assert_eq!(is_global_cef_message("cef "), Some("".to_string()));
+    assert_eq!(is_global_cef_message("&fcef is good"), Some("is good"));
+    assert_eq!(is_global_cef_message("cef is good"), Some("is good"));
+    assert_eq!(is_global_cef_message("cef "), Some(""));
     assert_eq!(is_global_cef_message(""), None);
     assert_eq!(is_global_cef_message("&f"), None);
     assert_eq!(is_global_cef_message("&fcef"), None);

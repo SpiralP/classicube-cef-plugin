@@ -1,7 +1,11 @@
 use super::{wait_for_message, SHOULD_BLOCK};
 use crate::{
     async_manager,
-    chat::{hidden_communication::whispers::start_whispering, Chat, TAB_LIST},
+    chat::{
+        helpers::{is_clients_message, is_clients_start_message},
+        hidden_communication::whispers::start_whispering,
+        is_continuation_message, Chat, TAB_LIST,
+    },
     error::*,
     plugin::APP_NAME,
 };
@@ -70,14 +74,10 @@ async fn do_query() -> Result<()> {
     debug!("querying /clients");
     Chat::send("/clients");
 
-    fn is_clients_start_message(bytes: &[u8]) -> bool {
-        bytes.len() >= 14 && (&bytes[0..1] == b"&" && &bytes[2..] == b"Players using:")
-    }
-
     async_manager::timeout(Duration::from_secs(3), async {
         loop {
             let message = wait_for_message().await;
-            if is_clients_start_message(message.as_bytes()) {
+            if is_clients_start_message(&message) {
                 SHOULD_BLOCK.set(true);
                 break;
             }
@@ -87,33 +87,31 @@ async fn do_query() -> Result<()> {
     .await
     .chain_err(|| "never found start of clients response")?;
 
-    let mut was_clients_message = false;
-    let mut is_clients_message = move |bytes: &[u8]| -> bool {
-        // &7  ClassiCube 1.1.6 + cef0.9.4 + Ponies v2.1: &f¿ Mew, ┌ Glim
-        // &7  ClassiCube 1.1.6 + cef0.9.4 +cs3.4.5 + More Models v1.2.4 +
-        // > &7Poni: &fSpiralP
-        // &7  ClassiCraft 1.1.3: &fFaeEmpress
-        let is = if bytes.len() >= 5 && (&bytes[0..1] == b"&" && &bytes[2..4] == b"  ") {
-            true
-        } else {
-            was_clients_message && bytes.len() >= 3 && &bytes[0..3] == b"> &"
-        };
-
-        was_clients_message = is;
-
-        is
-    };
-
     let mut messages = Vec::new();
     let timeout_result = async_manager::timeout(Duration::from_secs(3), async {
+        let mut was_clients_message = false;
+
         loop {
             let message = wait_for_message().await;
-            if is_clients_message(message.as_bytes()) {
-                // probably a /clients response
+
+            if was_clients_message {
+                if let Some(message) = is_continuation_message(&message) {
+                    SHOULD_BLOCK.set(true);
+
+                    let last_message = messages.last_mut().unwrap();
+                    *last_message = format!("{} {}", last_message, message);
+                    continue;
+                }
+            }
+            if let Some(message) = is_clients_message(&message) {
+                SHOULD_BLOCK.set(true);
+
+                // a /clients response
                 messages.push(message.to_string());
 
-                // don't show this message!
-                SHOULD_BLOCK.set(true);
+                was_clients_message = true;
+            } else {
+                was_clients_message = false;
             }
             // keep checking because other messages can be shown in the middle of
             // the /clients response
@@ -131,25 +129,6 @@ async fn do_query() -> Result<()> {
 }
 
 async fn process_clients_response(messages: Vec<String>) -> Result<()> {
-    let mut full_lines = Vec::new();
-
-    for message in &messages {
-        // if we start with "&f  "
-        if &message.as_bytes()[0..1] == b"&" && &message.as_bytes()[2..4] == b"  " {
-            // start of line
-
-            // "&7  "
-            full_lines.push(message[4..].to_string());
-        } else {
-            // a continuation message
-
-            let last = full_lines.last_mut().chain_err(|| "no last?")?;
-
-            // "> &f" or "> &7"
-            *last = format!("{} {}", last, message[2..].to_string());
-        }
-    }
-
     // cef0.13.2-alpha.0
     let app_name_without_last_number = format!(
         "{}.",
@@ -159,10 +138,10 @@ async fn process_clients_response(messages: Vec<String>) -> Result<()> {
             .collect::<Vec<_>>()
             .join(".")
     );
-    debug!("{:#?} {:?}", full_lines, app_name_without_last_number);
+    debug!("{:#?} {:?}", messages, app_name_without_last_number);
 
     let mut names_with_cef: HashSet<String> = HashSet::new();
-    for message in &full_lines {
+    for message in &messages {
         let pos = message.find(": &f").chain_err(|| "couldn't find colon")?;
 
         let (left, right) = message.split_at(pos);

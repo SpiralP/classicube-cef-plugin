@@ -4,7 +4,7 @@ pub mod helpers;
 pub mod hidden_communication;
 
 pub use self::chat_command::CefChatCommand;
-use crate::{async_manager, error::*};
+use crate::{async_manager, chat::helpers::is_continuation_message, error::*};
 use classicube_helpers::{
     entities::{Entities, ENTITY_SELF_ID},
     events::chat::{ChatReceivedEvent, ChatReceivedEventHandler},
@@ -357,22 +357,24 @@ fn find_player_from_message(mut full_msg: String) -> Option<(u8, String, String)
     LAST_CHAT.with(|cell| {
         let mut last_chat = cell.borrow_mut();
 
-        if !full_msg.starts_with("> &f") {
+        if let Some(continuation) = is_continuation_message(&full_msg) {
+            if let Some(chat_last) = &*last_chat {
+                // we're a continue message
+
+                // kill old thread
+                FUTURE_HANDLE.with(|cell| {
+                    cell.set(None);
+                });
+
+                full_msg = continuation.to_string();
+
+                // most likely there's a space
+                // the server trims the first line :(
+                full_msg = format!("{} {}", chat_last, full_msg);
+                *last_chat = Some(full_msg.clone());
+            }
+        } else {
             // normal message start
-            *last_chat = Some(full_msg.clone());
-        } else if let Some(chat_last) = &*last_chat {
-            // we're a continue message
-
-            FUTURE_HANDLE.with(|cell| {
-                cell.set(None);
-            });
-
-            // TODO split_off bad mut :(
-            full_msg = full_msg.split_off(4); // skip "> &f"
-
-            // most likely there's a space
-            // the server trims the first line :(
-            full_msg = format!("{} {}", chat_last, full_msg);
             *last_chat = Some(full_msg.clone());
         }
 

@@ -3,7 +3,7 @@ use crate::{
     async_manager,
     chat::{
         helpers::{is_incoming_whisper, is_outgoing_whisper},
-        Chat,
+        is_continuation_message, Chat,
     },
     error::*,
 };
@@ -50,11 +50,10 @@ pub async fn query_whisper(real_name: &str) -> Result<bool> {
                 let timeout_result = async_manager::timeout(Duration::from_secs(1), async {
                     loop {
                         let message = wait_for_message().await;
-                        if message.starts_with("> &f") {
-                            // a continuation "> &f"
+                        if let Some(continuation) = is_continuation_message(&message) {
                             SHOULD_BLOCK.set(true);
 
-                            parts.push(message[4..].to_string());
+                            parts.push(continuation.to_string());
                         } else {
                             debug!("stopping because of other message {:?}", message);
                             break;

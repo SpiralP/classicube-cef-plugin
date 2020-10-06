@@ -3,7 +3,7 @@ use crate::{
     async_manager,
     chat::{
         helpers::{is_incoming_whisper, is_outgoing_whisper},
-        Chat, ENTITIES, TAB_LIST,
+        is_continuation_message, Chat, ENTITIES, TAB_LIST,
     },
     error::*,
 };
@@ -111,8 +111,7 @@ async fn send_reply(real_name: String) -> Result<()> {
                 let timeout_result = async_manager::timeout(Duration::from_secs(1), async {
                     loop {
                         let message = wait_for_message().await;
-                        if message.starts_with("> &f") {
-                            // a continuation "> &f"
+                        if let Some(_continuation) = is_continuation_message(&message) {
                             SHOULD_BLOCK.set(true);
                         } else {
                             debug!("stopping because of other message {:?}", message);

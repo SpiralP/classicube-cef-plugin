@@ -4,7 +4,7 @@ use crate::{
     chat::{
         helpers::{is_global_cef_message, is_map_theme_message},
         hidden_communication::SHOULD_BLOCK,
-        Chat, PlayerSnapshot,
+        is_continuation_message, Chat, PlayerSnapshot,
     },
     entity_manager::{EntityBuilder, EntityManager},
     error::*,
@@ -154,8 +154,8 @@ pub async fn listen_loop() {
             let timeout_result = async_manager::timeout(Duration::from_secs(1), async {
                 loop {
                     let message = wait_for_message().await;
-                    if message.starts_with("> &f") {
-                        parts.push(message[4..].to_string());
+                    if let Some(continuation) = is_continuation_message(&message) {
+                        parts.push(continuation.to_string());
                     } else {
                         debug!("stopping because of other message {:?}", message);
                         break;

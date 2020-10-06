@@ -1,7 +1,11 @@
 use super::wait_for_message;
 use crate::{
     async_manager,
-    chat::{hidden_communication::SHOULD_BLOCK, Chat, PlayerSnapshot},
+    chat::{
+        helpers::{is_global_cef_message, is_map_theme_message},
+        hidden_communication::SHOULD_BLOCK,
+        Chat, PlayerSnapshot,
+    },
     entity_manager::{EntityBuilder, EntityManager},
     error::*,
     options,
@@ -102,28 +106,6 @@ async fn worker_loop(mut receiver: mpsc::UnboundedReceiver<impl Future<Output = 
         f.await;
     }
     warn!("global message worker stopped?");
-}
-
-fn is_map_theme_message(message: &str) -> bool {
-    let m = remove_color(message).to_lowercase();
-
-    m.starts_with("map theme: ") || m.starts_with("map theme song: ")
-}
-
-fn is_global_cef_message(mut m: &str) -> Option<String> {
-    if m.len() < 4 {
-        return None;
-    }
-
-    if &m[0..1] == "&" {
-        m = &m[2..];
-    }
-
-    if m.starts_with("cef ") {
-        Some(m[4..].to_string())
-    } else {
-        None
-    }
 }
 
 pub async fn listen_loop() {

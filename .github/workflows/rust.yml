@@ -18,11 +18,11 @@ jobs:
       - name: Install deps
         run: |
           iwr -useb get.scoop.sh | iex
-          echo "##[add-path]$HOME\scoop\shims"
-          echo "##[add-path]C:\ProgramData\scoop\shims"
+          echo "$HOME\scoop\shims" >> $env:GITHUB_PATH
+          echo "C:\ProgramData\scoop\shims" >> $env:GITHUB_PATH
           scoop install aria2
           scoop install --arch ${{ matrix.config.bits }}bit llvm
-          echo "::set-env name=LIBCLANG_PATH::$HOME\scoop\apps\llvm\current\bin"
+          echo "LIBCLANG_PATH=$HOME\scoop\apps\llvm\current\bin" >> $env:GITHUB_ENV
           aria2c 'http://opensource.spotify.com/cefbuilds/cef_binary_84.3.3%2Bgffc2f0e%2Bchromium-84.0.4147.89_windows${{ matrix.config.bits }}.tar.bz2' -o cef_binary.tar.bz2 --max-connection-per-server=4
           7z x -y 'cef_binary.tar.bz2'
           Remove-Item 'cef_binary.tar.bz2'
@@ -122,7 +122,7 @@ jobs:
           && tar -xjf cef_binary.tar.bz2 \
           && rm cef_binary.tar.bz2 \
           && mv cef_binary_* cef_interface/cef_binary \
-          && echo "::set-env name=PKG_CONFIG_ALLOW_CROSS::1"
+          && echo "PKG_CONFIG_ALLOW_CROSS=1" >> $GITHUB_ENV
 
       - name: Install nightly ${{ matrix.config.target }}
         uses: actions-rs/toolchain@v1

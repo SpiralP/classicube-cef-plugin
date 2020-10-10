@@ -10,32 +10,32 @@ crate-type = ["cdylib"]
 
 [dependencies]
 async-dispatcher = { git = "https://github.com/SpiralP/rust-async-dispatcher.git" }
-async-recursion = "0.3.1"
-backtrace = "0.3.51"
-base64 = "0.13.0"
-bincode = "1.3.1"
+async-recursion = "0.3"
+backtrace = "0.3"
+base64 = "0.13"
+bincode = "1.3"
 clap = { git = "https://github.com/SpiralP/clap-cc.git" }
 classicube-helpers = { git = "https://github.com/SpiralP/rust-classicube-helpers.git", features = ["futures"] }
 classicube-sys = { git = "https://github.com/SpiralP/rust-classicube-sys.git" }
-deunicode = "1.1.1"
-error-chain = "0.12.4"
-futures = "0.3.6"
-futures-timer = "3.0.2"
+deunicode = "1.1"
+error-chain = "0.12"
+futures = "0.3"
+futures-timer = "3.0"
 invidious = { git = "https://github.com/SpiralP/rust-invidious.git" }
-lazy_static = "1.4.0"
-log = "0.4.11"
-nalgebra = "0.22.0"
-ncollide3d = "0.25.0"
-rand = "0.7.3"
-regex = "1.3.9"
-serde = { version = "1.0.116", features = ["derive"] }
-simplelog = "0.8.0"
-tokio = { version = "0.2.22", features = ["full"] }
-url = "2.1.1"
+lazy_static = "1.4"
+log = "0.4"
+nalgebra = "0.22"
+ncollide3d = "0.25"
+rand = "0.7"
+regex = "1.3"
+serde = { version = "1.0", features = ["derive"] }
+simplelog = "0.8"
+tokio = { version = "0.2", features = ["full"] }
+url = "2.1"
 
 [build-dependencies]
-bindgen = "0.55.1"
-cmake = "0.1.44"
+bindgen = "0.55"
+cmake = "0.1"
 
 [features]
 ci = []

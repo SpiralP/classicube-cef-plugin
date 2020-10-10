@@ -695,7 +695,7 @@ dependencies = [
 [[package]]
 name = "invidious"
 version = "0.1.0"
-source = "git+https://github.com/SpiralP/rust-invidious.git#7363b6e6a28fcec6971c0919c99c78d91de14cbb"
+source = "git+https://github.com/SpiralP/rust-invidious.git#2a1eeb70afecf03aef8b50d0f642cc50d4fd0bd4"
 dependencies = [
  "error-chain",
  "reqwest",

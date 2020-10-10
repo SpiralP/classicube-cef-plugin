@@ -73,16 +73,32 @@ jobs:
             target\${{ matrix.config.target }}\release\build\classicube-cef-plugin-*\out\cef.exe `
             | Move-Item -Destination '.\cef-windows-${{ matrix.config.arch }}.exe'
 
+      - name: VirusTotal Scan
+        uses: crazy-max/ghaction-virustotal@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        id: virustotal
+        with:
+          vt_api_key: ${{ secrets.VT_API_KEY }}
+          files: |
+            classicube_cef_windows_${{ matrix.config.arch }}.dll
+            cef-windows-${{ matrix.config.arch }}.exe
+
+      - name: Generate Release Body Text
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          node .github\format-release.js '${{ steps.virustotal.outputs.analysis }}' > release_body_text.txt
+
       - name: Upload Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
+          body_path: release_body_text.txt
           files: |
             classicube_cef_windows_${{ matrix.config.arch }}.dll
             classicube_cef_windows_${{ matrix.config.arch }}.pdb
             cef-windows-${{ matrix.config.arch }}.exe
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   linux_x86:
     name: Build Linux ${{ matrix.config.arch }}

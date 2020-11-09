@@ -1,5 +1,6 @@
 #![feature(const_fn)]
 
+mod api;
 mod async_manager;
 mod cef;
 mod chat;
@@ -11,7 +12,6 @@ mod options;
 mod panic;
 mod player;
 mod plugin;
-mod search;
 
 use self::plugin::Plugin;
 use classicube_helpers::{time, time_silent};

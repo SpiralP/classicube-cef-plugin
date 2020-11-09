@@ -14,10 +14,8 @@ error_chain! {
         Bincode(bincode::Error);
         Base64(base64::DecodeError);
         Clap(clap::Error);
-    }
-
-    links {
-        Invidious(invidious::Error, invidious::ErrorKind);
+        SerdeJson(serde_json::Error);
+        Reqwest(reqwest::Error);
     }
 
     errors {

@@ -1,11 +1,10 @@
 use super::{helpers::*, Chat};
 use crate::{
-    async_manager,
+    api, async_manager,
     chat::{hidden_communication::whispers, PlayerSnapshot},
     entity_manager::EntityManager,
     error::*,
     helpers::format_duration,
-    search,
 };
 use clap::{App, AppSettings, Arg, ArgMatches};
 use classicube_helpers::color;
@@ -56,7 +55,7 @@ pub async fn handle_command(
             let input = args.join(" ");
             let input = (*input).to_string();
             let video =
-                async_manager::timeout(Duration::from_secs(5), search::youtube::search(&input))
+                async_manager::timeout(Duration::from_secs(5), api::youtube::search(&input))
                     .await
                     .chain_err(|| "timed out")??;
 
@@ -64,11 +63,11 @@ pub async fn handle_command(
             let title = format!(
                 "{} ({})",
                 video.title,
-                format_duration(Duration::from_secs(video.length_seconds as _))
+                format_duration(Duration::from_secs(video.duration_seconds as _))
             );
             Chat::print(format!("{}{}", color::SILVER, title));
 
-            Chat::send(format!("cef play {}", video.video_id));
+            Chat::send(format!("cef play {}", video.id));
 
             Ok(true)
         }

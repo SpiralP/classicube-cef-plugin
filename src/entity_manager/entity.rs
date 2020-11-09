@@ -1,6 +1,6 @@
 use super::{BROWSER_ID_TO_ENTITY_ID, TEXTURE_HEIGHT, TEXTURE_WIDTH};
 use crate::{
-    async_manager,
+    api, async_manager,
     cef::RustRefBrowser,
     chat::Chat,
     entity_manager::{DEFAULT_MODEL_HEIGHT, DEFAULT_MODEL_WIDTH},
@@ -232,7 +232,7 @@ impl CefEntity {
                     let f = async move {
                         let response = async_manager::timeout(
                             Duration::from_secs(5),
-                            invidious::api::videos::request(&youtube_id, Default::default()),
+                            api::youtube::video(&youtube_id),
                         )
                         .await
                         .chain_err(|| "timed out")??;
@@ -241,7 +241,7 @@ impl CefEntity {
                         let title = format!(
                             "{} ({})",
                             response.title,
-                            format_duration(Duration::from_secs(response.length_seconds as _))
+                            format_duration(Duration::from_secs(response.duration_seconds as _))
                         );
 
                         let mut shared = shared.lock().unwrap();

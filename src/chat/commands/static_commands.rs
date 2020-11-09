@@ -113,9 +113,11 @@ pub async fn handle_command(
                 player_builder = player_builder.volume_mode(VolumeMode::Global);
             }
 
-            let player = player_builder.build(&url)?;
+            let mut players = player_builder.build(&url).await?;
+            let player = players.remove(0);
 
             let mut entity_builder = EntityBuilder::new(player)
+                .queue(players.into())
                 .insecure(insecure)
                 .should_send(should_send);
 

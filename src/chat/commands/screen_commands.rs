@@ -307,32 +307,35 @@ pub async fn handle_command(
             let autoplay = !matches.is_present("no-autoplay");
             let should_loop = matches.is_present("loop");
 
-            let p = PlayerBuilder::new()
+            let mut players = PlayerBuilder::new()
                 .autoplay(autoplay)
                 .should_loop(should_loop)
-                .build(&url)?;
+                .build(&url)
+                .await?;
 
-            let kind = p.type_name();
-            EntityManager::with_entity((matches, player), move |entity| {
-                if let Some(queue_size) = entity.queue(p)? {
-                    Chat::print(format!(
-                        "{}Queued {}{} {}{} {}{}",
-                        color::TEAL,
-                        color::GOLD,
-                        queue_size,
-                        color::TEAL,
-                        kind,
-                        color::SILVER,
-                        url
-                    ));
+            for p in players.drain(..) {
+                let kind = p.type_name();
+                EntityManager::with_entity((matches, player), |entity| {
+                    if let Some(queue_size) = entity.queue(p)? {
+                        Chat::print(format!(
+                            "{}Queued {}{} {}{} {}{}",
+                            color::TEAL,
+                            color::GOLD,
+                            queue_size,
+                            color::TEAL,
+                            kind,
+                            color::SILVER,
+                            url
+                        ));
 
-                    if skip {
-                        entity.skip()?;
+                        if skip {
+                            entity.skip()?;
+                        }
                     }
-                }
 
-                Ok(())
-            })?;
+                    Ok(())
+                })?;
+            }
 
             Ok(true)
         }

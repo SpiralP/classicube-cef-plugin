@@ -10,13 +10,6 @@ struct ApiError {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct SearchResponse {
-    pub id: String,
-    pub title: String,
-    pub duration_seconds: u64,
-}
-
-#[derive(Debug, Deserialize)]
 pub struct VideoResponse {
     pub title: String,
     pub duration_seconds: u64,
@@ -43,6 +36,36 @@ pub async fn video(id: &str) -> Result<VideoResponse> {
     .await??;
 
     Ok(result)
+}
+
+pub async fn playlist(id: &str) -> Result<Vec<String>> {
+    let id = id.to_string();
+
+    let result = async_manager::spawn(async move {
+        let client = reqwest::Client::new();
+        let bytes = client
+            .get(&format!("{}/playlist/{}", API_URL, id))
+            .send()
+            .await?
+            .bytes()
+            .await?;
+
+        if let Ok(error) = serde_json::from_slice::<ApiError>(&bytes) {
+            bail!("{}", error.message);
+        } else {
+            Ok::<_, Error>(serde_json::from_slice::<Vec<String>>(&bytes)?)
+        }
+    })
+    .await??;
+
+    Ok(result)
+}
+
+#[derive(Debug, Deserialize)]
+pub struct SearchResponse {
+    pub id: String,
+    pub title: String,
+    pub duration_seconds: u64,
 }
 
 pub async fn search(query: &str) -> Result<SearchResponse> {

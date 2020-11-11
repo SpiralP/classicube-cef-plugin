@@ -315,6 +315,7 @@ pub async fn handle_command(
 
             for p in players.drain(..) {
                 let kind = p.type_name();
+                let url = p.get_url();
                 EntityManager::with_entity((matches, player), |entity| {
                     if let Some(queue_size) = entity.queue(p)? {
                         Chat::print(format!(

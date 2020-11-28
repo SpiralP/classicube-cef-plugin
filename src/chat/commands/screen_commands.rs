@@ -765,12 +765,39 @@ pub async fn handle_command(
             let entity_id =
                 EntityManager::with_entity((matches, player), move |entity| Ok(entity.id))?;
 
-            EntityManager::with_entity(entity_id, move |entity| {
-                entity.player.set_volume(entity.browser.as_ref(), from)?;
-                entity
-                    .player
-                    .set_volume_mode(entity.browser.as_ref(), VolumeMode::Global)
-            })?;
+            let set_volume = move |volume: f32| {
+                EntityManager::with_entity(entity_id, move |entity| {
+                    match entity.player.get_volume_mode() {
+                        VolumeMode::Global => {
+                            entity.player.set_volume(entity.browser.as_ref(), volume)
+                        }
+                        VolumeMode::Distance {
+                            multiplier: _,
+                            distance,
+                        } => entity.player.set_volume_mode(
+                            entity.browser.as_ref(),
+                            VolumeMode::Distance {
+                                multiplier: volume,
+                                distance,
+                            },
+                        ),
+                        VolumeMode::Panning {
+                            multiplier: _,
+                            distance,
+                            pan,
+                        } => entity.player.set_volume_mode(
+                            entity.browser.as_ref(),
+                            VolumeMode::Panning {
+                                multiplier: volume,
+                                distance,
+                                pan,
+                            },
+                        ),
+                    }
+                })
+            };
+
+            set_volume(from)?;
 
             let start_time = Instant::now();
             loop {
@@ -783,16 +810,12 @@ pub async fn handle_command(
                 }
 
                 let volume = from + (to - from) * percent;
-                EntityManager::with_entity(entity_id, move |entity| {
-                    entity.player.set_volume(entity.browser.as_ref(), volume)
-                })?;
+                set_volume(volume)?;
 
                 async_manager::sleep(Duration::from_millis(32)).await;
             }
 
-            EntityManager::with_entity(entity_id, move |entity| {
-                entity.player.set_volume(entity.browser.as_ref(), to)
-            })?;
+            set_volume(to)?;
 
             Ok(true)
         }

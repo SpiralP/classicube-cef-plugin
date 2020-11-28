@@ -225,8 +225,8 @@ impl PlayerTrait for YouTubePlayer {
                                 window.panner = panner;
                                 window.context = context;
                             }}
-                            window.panner.pan.setValueCurveAtTime(
-                                [window.panner.pan.value, {}],
+                            window.panner.pan.setTargetAtTime(
+                                {},
                                 window.context.currentTime,
                                 0.02
                             );

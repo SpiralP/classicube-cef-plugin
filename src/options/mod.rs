@@ -21,7 +21,7 @@ pub fn get<S: Into<Vec<u8>>>(key: S) -> Option<String> {
 
     let string_value = cc_string_value.to_string();
 
-    if string_value == "" {
+    if string_value.is_empty() {
         None
     } else {
         Some(string_value)

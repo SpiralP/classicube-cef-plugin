@@ -121,6 +121,7 @@ pub fn get_click_coords(
         let x = diff.dot(&right) / width;
         let y = -(diff.dot(&up) / height);
 
+        #[allow(clippy::manual_range_contains)]
         if x < 0.0 || x > 1.0 || y < 0.0 || y > 1.0 {
             return Err("not looking at a screen".into());
         }

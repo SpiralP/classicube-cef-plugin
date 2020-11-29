@@ -93,50 +93,72 @@ impl Chat {
         hidden_communication::on_new_map_loaded();
 
         #[cfg(debug_assertions)]
-        if unsafe { Server.IsSinglePlayer } != 0 {
-            async_manager::spawn_local_on_main_thread(async {
-                async_manager::sleep(Duration::from_millis(2000)).await;
+        unsafe {
+            use classicube_helpers::OptionWithInner;
+            use classicube_sys::ENTITIES_SELF_ID;
 
-                async fn run(args: &[&str]) {
-                    let player_snapshot =
-                        PlayerSnapshot::from_entity_id(classicube_sys::ENTITIES_SELF_ID as _)
-                            .unwrap();
-                    crate::chat::commands::run(
-                        player_snapshot,
-                        args.iter().map(ToString::to_string).collect(),
-                        true,
-                        true,
-                    )
-                    .await
-                    .expect("don't worry about this error");
+            if Server.IsSinglePlayer == 0 {
+                let me = ENTITIES
+                    .with_inner(|entities| {
+                        entities
+                            .get(ENTITIES_SELF_ID as _)
+                            .map(|me| me.get_display_name() == "SpiralP2")
+                    })
+                    .flatten()
+                    .unwrap_or(false);
+
+                if me {
+                    async_manager::spawn_local_on_main_thread(async {
+                        async_manager::sleep(Duration::from_millis(200)).await;
+                        let s = classicube_sys::OwnedString::new("/tp SpiralP+");
+                        classicube_sys::Chat_Send(s.as_cc_string(), 0);
+                    });
                 }
+            } else {
+                async_manager::spawn_local_on_main_thread(async {
+                    async_manager::sleep(Duration::from_millis(2000)).await;
 
-                run(&["create", "-n", "ag", "-sq", "youtu.be/keF7n1eVKzE?t=273"]).await;
-                run(&["here", "-n", "ag"]).await;
-                run(&["volume", "-n", "ag", "-p", "10.0"]).await;
-                // run(&["speed", "-n", "ag", "1.1"]).await;
+                    async fn run(args: &[&str]) {
+                        let player_snapshot =
+                            PlayerSnapshot::from_entity_id(classicube_sys::ENTITIES_SELF_ID as _)
+                                .unwrap();
+                        crate::chat::commands::run(
+                            player_snapshot,
+                            args.iter().map(ToString::to_string).collect(),
+                            true,
+                            true,
+                        )
+                        .await
+                        .expect("don't worry about this error");
+                    }
 
-                // async_manager::sleep(Duration::from_millis(1000)).await;
+                    run(&["create", "-n", "ag", "-sq", "youtu.be/keF7n1eVKzE?t=273"]).await;
+                    run(&["here", "-n", "ag"]).await;
+                    run(&["volume", "-n", "ag", "-p", "10.0"]).await;
+                    // run(&["speed", "-n", "ag", "1.1"]).await;
 
-                // let browser = crate::entity_manager::EntityManager::with_all_entities(|entities| {
-                //     entities
-                //         .values()
-                //         .next()
-                //         .and_then(|e| e.browser.as_ref().cloned())
-                // });
+                    // async_manager::sleep(Duration::from_millis(1000)).await;
 
-                // if let Some(browser) = browser {
-                //     async_manager::spawn_local_on_main_thread(async move {
-                //         debug!("eval");
-                //         debug!(
-                //             "{:#?}",
-                //             browser
-                //                 .eval_javascript("'the world is not anymore the way it used to be'")
-                //                 .await
-                //         );
-                //     });
-                // }
-            });
+                    // let browser = crate::entity_manager::EntityManager::with_all_entities(|entities| {
+                    //     entities
+                    //         .values()
+                    //         .next()
+                    //         .and_then(|e| e.browser.as_ref().cloned())
+                    // });
+
+                    // if let Some(browser) = browser {
+                    //     async_manager::spawn_local_on_main_thread(async move {
+                    //         debug!("eval");
+                    //         debug!(
+                    //             "{:#?}",
+                    //             browser
+                    //                 .eval_javascript("'the world is not anymore the way it used to be'")
+                    //                 .await
+                    //         );
+                    //     });
+                    // }
+                });
+            }
         }
     }
 

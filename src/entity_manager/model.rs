@@ -51,7 +51,8 @@ impl CefModel {
 impl CefModel {
     unsafe fn register_gfx_texture(&mut self) {
         // must be a vec or else we try to fit huge array onto stack and crash!
-        let mut pixels: Vec<u32> = vec![u32::MAX; TEXTURE_WIDTH as usize * TEXTURE_HEIGHT as usize];
+        let mut pixels: Vec<u32> =
+            vec![0xFFFFFFFF; TEXTURE_WIDTH as usize * TEXTURE_HEIGHT as usize];
 
         let mut bmp = Bitmap {
             scan0: pixels.as_mut_ptr(),
@@ -83,7 +84,7 @@ impl CefModel {
         let entity = unsafe { &mut *entity };
 
         unsafe {
-            Gfx_SetAlphaTest(0);
+            Gfx_SetAlphaTest(1);
             Gfx_SetTexturing(1);
 
             Texture_RenderShaded(&mut entity.NameTex, WHITE_TRANSPARENT);

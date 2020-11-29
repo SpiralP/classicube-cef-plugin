@@ -58,6 +58,7 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
             .arg(
                 Arg::with_name("silent")
                     .long("silent")
+                    .alias("quiet")
                     .short("q")
                     .help("Don't show Now Playing messages"),
             )

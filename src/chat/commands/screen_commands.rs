@@ -58,6 +58,13 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
                     .short("l")
                     .help("Loop after track finishes playing"),
             )
+            .arg(
+                Arg::with_name("silent")
+                    .long("silent")
+                    .alias("quiet")
+                    .short("q")
+                    .help("Don't show Now Playing messages"),
+            )
             .arg(Arg::with_name("url").required(true).multiple(true)),
     )
     .subcommand(
@@ -306,10 +313,12 @@ pub async fn handle_command(
             let skip = matches.is_present("skip");
             let autoplay = !matches.is_present("no-autoplay");
             let should_loop = matches.is_present("loop");
+            let silent = matches.is_present("silent");
 
             let mut players = PlayerBuilder::new()
                 .autoplay(autoplay)
                 .should_loop(should_loop)
+                .silent(silent)
                 .build(&url)
                 .await?;
 

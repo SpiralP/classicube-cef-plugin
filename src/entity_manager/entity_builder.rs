@@ -51,8 +51,21 @@ impl EntityBuilder {
             ENTITIES.with(move |cell| {
                 let entities = &mut *cell.borrow_mut();
 
-                let mut entity =
-                    CefEntity::register(entity_id, name, self.player, self.queue, self.should_send);
+                // hack for our transparent ImagePlayer
+                let background_color = if let Player::Image(_) = &self.player {
+                    0x00FFFFFF
+                } else {
+                    0xFFFFFFFF
+                };
+
+                let mut entity = CefEntity::register(
+                    entity_id,
+                    name,
+                    self.player,
+                    self.queue,
+                    self.should_send,
+                    background_color,
+                );
 
                 if let Some(pos) = self.position {
                     entity.entity.Position.set(pos.0, pos.1, pos.2);
@@ -76,7 +89,9 @@ impl EntityBuilder {
                 let resolution = self.resolution;
                 async_manager::spawn_local_on_main_thread(async move {
                     let result = async move {
-                        let browser = Cef::create_browser(url, frame_rate, insecure).await?;
+                        let browser =
+                            Cef::create_browser(url, frame_rate, insecure, background_color)
+                                .await?;
 
                         if let Some((width, height)) = resolution {
                             Cef::resize_browser(&browser, width, height)?;

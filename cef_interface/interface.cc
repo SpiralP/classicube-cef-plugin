@@ -138,7 +138,7 @@ extern "C" int cef_interface_initialize(MyApp* app) {
   // so that it can paint
   settings.multi_threaded_message_loop = false;
 
-  settings.background_color = 0x00FFFFFF;
+  settings.background_color = 0xFFFFFFFF;
 
   CefString(&settings.log_file).FromASCII("cef-binary.log");
 
@@ -216,14 +216,15 @@ extern "C" int cef_interface_initialize(MyApp* app) {
 extern "C" int cef_interface_create_browser(MyClient* client,
                                             const char* startup_url,
                                             int frame_rate,
-                                            bool insecure) {
+                                            bool insecure,
+                                            uint32_t background_color) {
   // Create the browser window.
   CefWindowInfo window_info;
   window_info.SetAsWindowless(0);
 
   const CefString& url = startup_url;
   CefBrowserSettings settings;
-  settings.background_color = 0x00FFFFFF;
+  settings.background_color = background_color;
   settings.windowless_frame_rate = frame_rate;
 
   settings.tab_to_links = STATE_DISABLED;

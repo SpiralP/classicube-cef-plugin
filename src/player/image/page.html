@@ -1,0 +1,32 @@
+<html>
+  <head>
+    <title>Image Loading</title>
+    <style>
+      body {
+        padding: 0;
+        margin: 0;
+        overflow: hidden;
+      }
+      img {
+        height: 100%;
+        width: 100%;
+        object-fit: contain;
+      }
+    </style>
+  </head>
+
+  <body>
+    <script>
+      const url = "IMAGE_URL";
+      const img = document.createElement("img");
+
+      img.onload = () => {
+        const filename = url.substring(url.lastIndexOf("/") + 1);
+        document.title = `${filename} (${img.width}x${img.height})`;
+        document.body.appendChild(img);
+      };
+
+      img.src = url;
+    </script>
+  </body>
+</html>

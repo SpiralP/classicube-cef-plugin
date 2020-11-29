@@ -123,7 +123,7 @@ impl Cef {
     fn warm_up() {
         // load a blank browser so that the next load is quicker
         async_manager::spawn_local_on_main_thread(async {
-            let browser = Self::create_browser("data:text/html,", 30, false)
+            let browser = Self::create_browser("data:text/html,", 30, false, 0x00FFFFFF)
                 .await
                 .unwrap();
             Self::close_browser(&browser).await.unwrap();
@@ -185,6 +185,7 @@ impl Cef {
         url: T,
         fps: u16,
         insecure: bool,
+        background_color: u32,
     ) -> Result<RustRefBrowser> {
         let mut create_browser_mutex = {
             let mut mutex = CEF.with(|mutex| mutex.clone());
@@ -210,7 +211,7 @@ impl Cef {
             (client, event_receiver)
         };
 
-        client.create_browser(url, fps as _, insecure)?;
+        client.create_browser(url, fps as _, insecure, background_color)?;
 
         let browser = loop {
             if let CefEvent::BrowserCreated(browser) = event_receiver.recv().await.unwrap() {

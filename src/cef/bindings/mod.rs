@@ -126,11 +126,18 @@ impl RustRefClient {
         startup_url: T,
         fps: c_int,
         insecure: bool,
+        background_color: u32,
     ) -> Result<()> {
         let startup_url = CString::new(startup_url).unwrap();
 
         to_result(unsafe {
-            cef_interface_create_browser(self.ptr, startup_url.as_ptr(), fps, insecure)
+            cef_interface_create_browser(
+                self.ptr,
+                startup_url.as_ptr(),
+                fps,
+                insecure,
+                background_color,
+            )
         })
     }
 }

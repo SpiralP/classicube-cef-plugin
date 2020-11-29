@@ -47,6 +47,7 @@ impl CefEntity {
         player: Player,
         mut queue: VecDeque<Player>,
         should_send: bool,
+        background_color: u32,
     ) -> Self {
         let entity = Box::pin(unsafe { mem::zeroed() });
 
@@ -60,7 +61,7 @@ impl CefEntity {
         });
 
         let mut pixels: Vec<u32> =
-            vec![0xFFFFFFFF; TEXTURE_WIDTH as usize * TEXTURE_HEIGHT as usize];
+            vec![background_color; TEXTURE_WIDTH as usize * TEXTURE_HEIGHT as usize];
 
         let mut bmp = Bitmap {
             scan0: pixels.as_mut_ptr(),

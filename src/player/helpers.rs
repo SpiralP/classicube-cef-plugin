@@ -1,13 +1,11 @@
 use super::{MediaPlayer, Player, PlayerTrait, VolumeMode, YouTubePlayer};
 use crate::{
     async_manager,
-    chat::ENTITIES,
     entity_manager::{CefEntity, EntityManager},
     error::*,
     helpers::vec3_to_vector3,
 };
-use classicube_helpers::OptionWithInner;
-use classicube_sys::{Vec3, ENTITIES_SELF_ID};
+use classicube_sys::{Camera, Vec3};
 use log::*;
 use nalgebra::Vector3;
 use std::time::Duration;
@@ -30,20 +28,19 @@ fn compute_real_volume(entity: &CefEntity) -> Option<(f32, VolumeMode)> {
 
     // use distance or panning volume
 
-    let (my_pos, my_forward) = ENTITIES
-        .with_inner(|entities| {
-            let me = entities.get(ENTITIES_SELF_ID as _)?;
+    let (position, orientation) = unsafe {
+        if Camera.Active.is_null() {
+            warn!("Camera.Active is null!");
+            return None;
+        }
+        let camera = &*Camera.Active;
+        let position = camera.GetPosition.map(|f| f(0.0))?;
+        let orientation = camera.GetOrientation.map(|f| f())?;
+        (position, orientation)
+    };
 
-            // ignore pitch, not really needed
-            // also when looking straight down, it swaps ears?
-            let [_pitch, yaw] = me.get_head();
-
-            Some((
-                vec3_to_vector3(&me.get_eye_position()),
-                vec3_to_vector3(&Vec3::get_dir_vector(yaw.to_radians(), 0.0)),
-            ))
-        })
-        .flatten()?;
+    let my_pos = vec3_to_vector3(&position);
+    let my_forward = vec3_to_vector3(&Vec3::get_dir_vector(orientation.X, 0.0));
 
     let ent_pos = vec3_to_vector3(&entity.entity.Position);
 

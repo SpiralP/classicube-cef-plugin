@@ -45,7 +45,7 @@ thread_local!(
 thread_local!(
     static EVENT_QUEUE: RefCell<
         Option<(broadcast::Sender<CefEvent>, broadcast::Receiver<CefEvent>)>,
-    > = RefCell::new(Some(broadcast::channel(32)));
+    > = RefCell::new(Some(broadcast::channel(256)));
 );
 
 thread_local!(

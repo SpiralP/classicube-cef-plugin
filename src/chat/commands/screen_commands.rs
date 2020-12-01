@@ -215,8 +215,8 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
     )
     .subcommand(
         App::new("at")
-            .usage("cef at <x> <y> <z> [yaw] [pitch] [scale]")
             .alias("tp")
+            .usage("cef at <x> <y> <z> [yaw] [pitch] [scale]")
             .about("Move to coords x,y,z and optional yaw,pitch")
             .setting(AppSettings::AllowLeadingHyphen)
             .arg(
@@ -270,6 +270,7 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
     )
     .subcommand(
         App::new("fade")
+            .usage("cef fade [from] <to> <seconds>")
             .about("Fade volume")
             .arg(
                 Arg::with_name("name")
@@ -277,16 +278,10 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
                     .short("n")
                     .takes_value(true),
             )
-            .arg(Arg::with_name("from").required(true))
-            .arg(Arg::with_name("to").required(true))
-            .arg(Arg::with_name("seconds").required(true)),
+            .arg(Arg::with_name("from_or_to").required(true))
+            .arg(Arg::with_name("to_or_seconds").required(true))
+            .arg(Arg::with_name("maybe_seconds").required(false)),
     )
-    // .subcommand(
-    //     App::new("test_time")
-    //         .about("the hacks")
-    //         .setting(AppSettings::AllowLeadingHyphen)
-    //         .arg(Arg::with_name("hack").required(true)),
-    // )
 }
 
 #[async_recursion(?Send)]
@@ -759,20 +754,46 @@ pub async fn handle_command(
         }
 
         ("fade", Some(matches)) => {
-            let from: f32 = matches.value_of("from").unwrap().parse()?;
-            ensure!(from.is_finite(), "from not finite");
-            ensure!(from.is_sign_positive(), "from not positive");
+            fn check_f32(name: &str, n: f32) -> Result<f32> {
+                ensure!(n.is_finite(), "{} not finite", name);
+                ensure!(n.is_sign_positive(), "{} not positive", name);
+                Ok(n)
+            }
 
-            let to: f32 = matches.value_of("to").unwrap().parse()?;
-            ensure!(to.is_finite(), "to not finite");
-            ensure!(to.is_sign_positive(), "to not positive");
+            let (maybe_from, to, seconds) = if let Some(maybe_seconds) =
+                matches.value_of("maybe_seconds")
+            {
+                // fade from to seconds
+                let seconds: f32 = check_f32("seconds", maybe_seconds.parse()?)?;
 
-            let seconds: f32 = matches.value_of("seconds").unwrap().parse()?;
-            ensure!(seconds.is_finite(), "seconds not finite");
-            ensure!(seconds.is_sign_positive(), "seconds not positive");
+                let from: f32 =
+                    check_f32("from", matches.value_of("from_or_to").unwrap().parse()?)?;
+                let to: f32 = check_f32("to", matches.value_of("to_or_seconds").unwrap().parse()?)?;
+                (Some(from), to, seconds)
+            } else {
+                // fade to seconds
+                let to: f32 = check_f32("to", matches.value_of("from_or_to").unwrap().parse()?)?;
+                let seconds: f32 = check_f32(
+                    "seconds",
+                    matches.value_of("to_or_seconds").unwrap().parse()?,
+                )?;
+                (None, to, seconds)
+            };
 
             let entity_id =
                 EntityManager::with_entity((matches, player), move |entity| Ok(entity.id))?;
+
+            let from = if let Some(from) = maybe_from {
+                from
+            } else {
+                EntityManager::with_entity(entity_id, move |entity| {
+                    Ok(match entity.player.get_volume_mode() {
+                        VolumeMode::Global => entity.player.get_volume(),
+                        VolumeMode::Distance { multiplier, .. } => multiplier,
+                        VolumeMode::Panning { multiplier, .. } => multiplier,
+                    })
+                })?
+            };
 
             let set_volume = move |volume: f32| {
                 EntityManager::with_entity(entity_id, move |entity| {

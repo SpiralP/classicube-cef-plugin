@@ -16,6 +16,9 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
     app.subcommand(
         App::new("create")
             .about("Creates a new screen")
+            .long_about(
+                "Creates a new screen\nThis will wait for page load unless --no-wait is specified",
+            )
             .arg(
                 Arg::with_name("name")
                     .long("name")
@@ -53,14 +56,21 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
                 Arg::with_name("global")
                     .long("global")
                     .short("g")
-                    .help("Hidden screen with unchanging volume"),
+                    .help("Hidden screen with global/unchanging volume")
+                    .long_help(
+                        "Hidden screen with global/unchanging volume.\nAlso sets resolution to \
+                         1x1 and fps to 1 for performance",
+                    ),
             )
             .arg(
                 Arg::with_name("silent")
                     .long("silent")
                     .alias("quiet")
                     .short("q")
-                    .help("Don't show Now Playing messages"),
+                    .help("Don't show Now Playing messages")
+                    .long_help(
+                        "Don't show Now Playing messages\n(may not be allowed on some urls)",
+                    ),
             )
             .arg(
                 Arg::with_name("loop")
@@ -72,7 +82,11 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
                 Arg::with_name("transparent")
                     .long("transparent")
                     .short("t")
-                    .help("Use transparent background"),
+                    .help("Use transparent background")
+                    .long_help(
+                        "Use transparent background\nNote that text can appear strange (pixels \
+                         missing)",
+                    ),
             )
             .arg(Arg::with_name("url").multiple(true)),
     )

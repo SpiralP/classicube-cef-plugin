@@ -237,10 +237,6 @@ extern "C" int cef_interface_create_browser(MyClient* client,
   CefRefPtr<CefDictionaryValue> extra_info = nullptr;
   CefRefPtr<CefRequestContext> request_context = nullptr;
 
-  // settings.web_security = STATE_DISABLED;
-  // settings.file_access_from_file_urls = STATE_ENABLED;
-  // settings.universal_access_from_file_urls = STATE_ENABLED;
-
   if (insecure) {
     settings.web_security = STATE_DISABLED;
 
@@ -413,7 +409,6 @@ extern "C" int cef_interface_browser_was_resized(CefBrowser* browser) {
 
 extern "C" int cef_interface_browser_open_dev_tools(CefBrowser* browser) {
   auto browser_host = browser->GetHost();
-  auto client = browser_host->GetClient();
 
   CefWindowInfo window_info;
 #if defined(_WIN64) || defined(_WIN32)
@@ -421,9 +416,8 @@ extern "C" int cef_interface_browser_open_dev_tools(CefBrowser* browser) {
 #endif
 
   CefBrowserSettings settings;
-
   CefPoint inspect_element_at;
-  browser_host->ShowDevTools(window_info, client, settings, inspect_element_at);
+  browser_host->ShowDevTools(window_info, NULL, settings, inspect_element_at);
 
   return 0;
 }

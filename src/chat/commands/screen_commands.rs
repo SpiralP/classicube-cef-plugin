@@ -78,7 +78,14 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
                     .takes_value(true),
             ),
     )
-    .subcommand(App::new("stop").about("Stop playing"))
+    .subcommand(
+        App::new("stop").about("Stop playing").arg(
+            Arg::with_name("name")
+                .long("name")
+                .short("n")
+                .takes_value(true),
+        ),
+    )
     .subcommand(
         App::new("close")
             .aliases(&["remove", "clear"])
@@ -115,7 +122,14 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
             .arg(Arg::with_name("width").required(true))
             .arg(Arg::with_name("height").required(true)),
     )
-    .subcommand(App::new("reload").alias("refresh").about("Reload"))
+    .subcommand(
+        App::new("reload").alias("refresh").about("Reload").arg(
+            Arg::with_name("name")
+                .long("name")
+                .short("n")
+                .takes_value(true),
+        ),
+    )
     .subcommand(
         App::new("angles")
             .alias("angle")

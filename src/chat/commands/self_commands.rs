@@ -21,7 +21,16 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
             .about("Search youtube and play the first result")
             .arg(Arg::with_name("search").required(true).multiple(true)),
     )
-    .subcommand(App::new("there").about("Move the closest screen to the block you are aiming at"))
+    .subcommand(
+        App::new("there")
+            .about("Move screen to the block you are aiming at")
+            .arg(
+                Arg::with_name("name")
+                    .long("name")
+                    .short("n")
+                    .takes_value(true),
+            ),
+    )
     .subcommand(
         App::new("devtools")
             .alias("devtool")
@@ -72,7 +81,7 @@ pub async fn handle_command(
             Ok(true)
         }
 
-        ("there", Some(_matches)) => {
+        ("there", Some(matches)) => {
             let trace = get_camera_trace().chain_err(|| "no picked block")?;
 
             // the block's hit face
@@ -100,8 +109,16 @@ pub async fn handle_command(
             // let position = position - Vec3::new(0.5, 0.0, 0.5);
 
             Chat::send(format!(
-                "cef at {} {} {} {} {}",
-                position.X, position.Y, position.Z, yaw, 0.0
+                "cef at{} {} {} {} {} {}",
+                matches
+                    .value_of("name")
+                    .map(|name| format!(" -n {}", name))
+                    .unwrap_or_default(),
+                position.X,
+                position.Y,
+                position.Z,
+                yaw,
+                0.0
             ));
 
             Ok(true)

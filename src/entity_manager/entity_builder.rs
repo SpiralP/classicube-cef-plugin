@@ -22,6 +22,7 @@ pub struct EntityBuilder {
     scale: f32,
     rotation: Option<(f32, f32)>,
     position: Option<(f32, f32, f32)>,
+    background_color: Option<u32>,
 }
 
 impl EntityBuilder {
@@ -38,6 +39,7 @@ impl EntityBuilder {
             scale: 0.25,
             rotation: None,
             position: None,
+            background_color: None,
         }
     }
 
@@ -50,13 +52,7 @@ impl EntityBuilder {
             let name = name.clone();
             ENTITIES.with(move |cell| {
                 let entities = &mut *cell.borrow_mut();
-
-                // hack for our transparent ImagePlayer
-                let background_color = if let Player::Image(_) = &self.player {
-                    0x00FFFFFF
-                } else {
-                    0xFFFFFFFF
-                };
+                let background_color = self.background_color.unwrap_or(0xFFFFFFFF);
 
                 let mut entity = CefEntity::register(
                     entity_id,
@@ -173,6 +169,11 @@ impl EntityBuilder {
 
     pub fn queue(mut self, queue: VecDeque<Player>) -> Self {
         self.queue = queue;
+        self
+    }
+
+    pub fn background_color(mut self, background_color: u32) -> Self {
+        self.background_color = Some(background_color);
         self
     }
 }

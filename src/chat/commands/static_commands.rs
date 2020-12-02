@@ -4,7 +4,7 @@ use crate::{
     chat::PlayerSnapshot,
     entity_manager::{EntityBuilder, EntityManager, TargetEntity},
     error::*,
-    player::{PlayerBuilder, VolumeMode},
+    player::{Player, PlayerBuilder, VolumeMode},
 };
 use clap::{App, Arg, ArgMatches};
 
@@ -68,6 +68,12 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
                     .short("l")
                     .help("Loop after track finishes playing"),
             )
+            .arg(
+                Arg::with_name("transparent")
+                    .long("transparent")
+                    .short("t")
+                    .help("Use transparent background"),
+            )
             .arg(Arg::with_name("url").multiple(true)),
     )
     .subcommand(
@@ -93,10 +99,9 @@ pub async fn handle_command(
             let insecure = matches.is_present("insecure");
             let autoplay = !matches.is_present("no-autoplay");
             let wait_for_page_load = !matches.is_present("no-wait");
+            let should_send = !matches.is_present("no-send");
             let global = matches.is_present("global");
             let should_loop = matches.is_present("loop");
-
-            let should_send = !matches.is_present("no-send");
             let silent = matches.is_present("silent");
 
             if let Some(name) = matches.value_of("name") {
@@ -117,6 +122,12 @@ pub async fn handle_command(
             let mut players = player_builder.build(&url).await?;
             let player = players.remove(0);
 
+            let transparent = if let Player::Image(_) = &player {
+                true
+            } else {
+                matches.is_present("transparent")
+            };
+
             let mut entity_builder = EntityBuilder::new(player)
                 .queue(players.into())
                 .insecure(insecure)
@@ -125,6 +136,10 @@ pub async fn handle_command(
             if global {
                 // 1 fps, 1x1 resolution
                 entity_builder = entity_builder.resolution(1, 1).frame_rate(1).scale(0.0);
+            }
+
+            if transparent {
+                entity_builder = entity_builder.background_color(0x00FFFFFF);
             }
 
             if let Some(name) = matches.value_of("name") {

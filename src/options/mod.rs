@@ -1,7 +1,7 @@
 mod rust_option;
 
 use self::rust_option::RustOption;
-use classicube_sys::{Options_Get, Options_Set, OwnedString, STRING_SIZE};
+use classicube_sys::{cc_string, Options_Get, Options_Set, OwnedString, STRING_SIZE};
 use std::{cell::Cell, ffi::CString, os::raw::c_char};
 
 pub fn get<S: Into<Vec<u8>>>(key: S) -> Option<String> {
@@ -9,7 +9,7 @@ pub fn get<S: Into<Vec<u8>>>(key: S) -> Option<String> {
     let c_default = CString::new("").unwrap();
 
     let mut buffer: [c_char; (STRING_SIZE as usize) + 1] = [0; (STRING_SIZE as usize) + 1];
-    let mut cc_string_value = classicube_sys::String {
+    let mut cc_string_value = cc_string {
         buffer: buffer.as_mut_ptr(),
         capacity: STRING_SIZE as u16,
         length: 0,

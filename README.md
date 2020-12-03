@@ -16,7 +16,7 @@ You probably want [the loader plugin](https://github.com/SpiralP/classicube-cef-
 - Clone this repo
 
 * Download CEF "Standard Distribution"
-  - http://opensource.spotify.com/cefbuilds/index.html
+  - https://cef-builds.spotifycdn.com/index.html
   - Extract and rename the `cef_binary_...` folder to `cef_interface/cef_binary`
 
 - Run `cargo build --release`

@@ -4,7 +4,10 @@ console.log(
   analysis
     .split(",")
     .map((line) => {
-      const [file, url] = line.split("=", 2);
+      const i = line.indexOf("=");
+      const file = line.slice(0, i);
+      const url = line.slice(i + 1);
+
       return `\`${file}\`: [VirusTotal analysis](${url})`;
     })
     .join("\n")

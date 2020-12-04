@@ -84,7 +84,7 @@ impl CefModel {
         let entity = unsafe { &mut *entity };
 
         unsafe {
-            Gfx_SetAlphaTest(0);
+            Gfx_SetAlphaTest(1);
             // Gfx_SetAlphaBlending(1);
             // Gfx_SetAlphaArgBlend(1);
             Gfx_SetTexturing(1);

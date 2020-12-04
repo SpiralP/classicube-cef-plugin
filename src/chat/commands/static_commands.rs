@@ -153,7 +153,7 @@ pub async fn handle_command(
             }
 
             if transparent {
-                entity_builder = entity_builder.background_color(0x00000000);
+                entity_builder = entity_builder.background_color(0x00FFFFFF);
             }
 
             if let Some(name) = matches.value_of("name") {

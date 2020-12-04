@@ -1,8 +1,8 @@
 use super::{helpers::*, TEXTURE_HEIGHT, TEXTURE_WIDTH};
 use classicube_sys::{
-    Bitmap, Entity, Gfx_SetAlphaArgBlend, Gfx_SetAlphaBlending, Gfx_SetAlphaTest, Gfx_SetTexturing,
-    Model, ModelTex, ModelVertex, Model_Init, Model_Register, OwnedGfxTexture, PackedCol,
-    PackedCol_Make, SKIN_TYPE_SKIN_64x64, MODEL_BOX_VERTICES,
+    Bitmap, Entity, Gfx_SetAlphaTest, Gfx_SetTexturing, Model, ModelTex, ModelVertex, Model_Init,
+    Model_Register, OwnedGfxTexture, PackedCol, PackedCol_Make, SKIN_TYPE_SKIN_64x64,
+    MODEL_BOX_VERTICES,
 };
 use std::{ffi::CString, mem, pin::Pin};
 
@@ -85,8 +85,8 @@ impl CefModel {
 
         unsafe {
             Gfx_SetAlphaTest(0);
-            Gfx_SetAlphaBlending(1);
-            Gfx_SetAlphaArgBlend(1);
+            // Gfx_SetAlphaBlending(1);
+            // Gfx_SetAlphaArgBlend(1);
             Gfx_SetTexturing(1);
 
             Texture_RenderShaded(&mut entity.NameTex, WHITE);

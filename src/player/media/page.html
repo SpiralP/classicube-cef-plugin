@@ -18,17 +18,24 @@
   </head>
 
   <body>
-    <video id="player" src="MEDIA_URL"></video>
+    <video id="player" controls crossorigin></video>
     <script>
-      var player = document.getElementById("player");
-      window.player = player;
-
-      // window["START" + "_" + "TIME"] = 0;
-      // window["START" + "_" + "VOLUME"] = 0.25;
-
-      player.currentTime = START_TIME;
-      player.volume = START_VOLUME;
-
+      // https://stackoverflow.com/a/2091331
+      function getQueryVariable(variable) {
+        var query = window.location.search.substring(1);
+        var vars = query.split("&");
+        for (var i = 0; i < vars.length; i++) {
+          var pair = vars[i].split("=");
+          if (decodeURIComponent(pair[0]) == variable) {
+            if (pair[1] != null) {
+              return decodeURIComponent(pair[1]);
+            } else {
+              return true;
+            }
+          }
+        }
+        return undefined;
+      }
       // https://stackoverflow.com/a/6313008
       function formatSeconds(totalSeconds) {
         var sec_num = parseInt(totalSeconds, 10); // don't forget the second param
@@ -52,6 +59,19 @@
         }
       }
 
+      var url = getQueryVariable("url");
+      var startTime = parseFloat(getQueryVariable("time") || 0.0);
+      var startVolume = parseFloat(getQueryVariable("volume") || 1.0);
+      var autoplay = parseInt(getQueryVariable("autoplay")) === 1;
+      var shouldLoop = parseInt(getQueryVariable("loop")) === 1;
+      var speed = parseFloat(getQueryVariable("speed") || 1.0);
+
+      window.playerFinishedTime = 0;
+      window.playerFinished = false;
+
+      var player = document.getElementById("player");
+      window.player = player;
+
       player.addEventListener("loadedmetadata", function () {
         var totalSeconds = player.duration;
         var url = new URL(player.src);
@@ -73,8 +93,65 @@
       });
       updateSize();
 
-      if (AUTOPLAY) {
+      player.autoplay = autoplay;
+      player.src = url;
+      player.volume = startVolume;
+      player.loop = shouldLoop;
+      player.currentTime = startTime;
+      player.playbackRate = speed;
+
+      if (autoplay) {
         player.play();
+      }
+
+      function setVolume(volume) {
+        player.volume = volume;
+      }
+      function getVolume() {
+        return player.volume;
+      }
+
+      function setCurrentTime(time) {
+        player.currentTime = time;
+        playerFinished = false;
+      }
+      function getCurrentTime() {
+        if (playerFinished) {
+          // when stopped, getCurrentTime and getDuration will give 0
+          return playerFinishedTime;
+        }
+
+        return player.currentTime;
+      }
+
+      function setPlaying(playing) {
+        if (playing) {
+          player.play();
+        } else {
+          player.pause();
+        }
+      }
+
+      function setPlaybackRate(rate) {
+        console.warn("setPlaybackRate", rate);
+        player.playbackRate = rate;
+      }
+
+      function handlePanning(pan) {
+        if (typeof window.panner === "undefined") {
+          var context = new AudioContext();
+          var source = context.createMediaElementSource(player);
+          var panner = context.createStereoPanner();
+          source.connect(panner);
+          panner.connect(context.destination);
+          window.panner = panner;
+          window.context = context;
+        }
+        window.panner.pan.setTargetAtTime(
+          pan,
+          window.context.currentTime,
+          0.02
+        );
       }
     </script>
   </body>

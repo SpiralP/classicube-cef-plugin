@@ -27,6 +27,7 @@ pub unsafe extern "C" fn rust_warn(c_str: *const ::std::os::raw::c_char) {
 }
 
 const YOUTUBE_HTML: &[u8] = include_bytes!("../../player/youtube/page.html");
+const MEDIA_HTML: &[u8] = include_bytes!("../../player/media/page.html");
 
 fn handle_scheme_create(
     _browser: RustRefBrowser,
@@ -42,6 +43,7 @@ fn handle_scheme_create(
 
     match host {
         "youtube" => Ok(YOUTUBE_HTML),
+        "media" => Ok(MEDIA_HTML),
 
         _ => {
             bail!("no such local scheme for {:?}", host);

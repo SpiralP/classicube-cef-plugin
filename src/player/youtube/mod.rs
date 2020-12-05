@@ -103,8 +103,10 @@ impl PlayerTrait for YouTubePlayer {
         self.create_time = Some(Instant::now());
 
         let mut params = vec![
+            ("id", self.id.to_string()),
             ("time", format!("{}", self.time.as_secs())),
             ("volume", format!("{}", self.volume)),
+            ("speed", format!("{}", self.speed)),
         ];
 
         if SUBTITLES.get().unwrap() {
@@ -119,19 +121,15 @@ impl PlayerTrait for YouTubePlayer {
             params.push(("loop", "1".to_string()));
         }
 
-        Url::parse_with_params(&format!("local://youtube/{}", self.id), &params)
+        Url::parse_with_params("local://youtube/", &params)
             .unwrap()
             .into_string()
     }
 
-    fn on_page_loaded(&mut self, entity_id: usize, browser: &RustRefBrowser) {
+    fn on_page_loaded(&mut self, entity_id: usize, _browser: &RustRefBrowser) {
         let (f, remote_handle) = start_update_loop(entity_id).remote_handle();
         self.update_loop_handle = Some(remote_handle);
         async_manager::spawn_local_on_main_thread(f);
-
-        if (self.speed - 1.0).abs() > 0.01 {
-            let _ignore = self.set_speed(Some(browser), self.speed);
-        }
     }
 
     fn on_title_change(&mut self, _entity_id: usize, browser: &RustRefBrowser, title: String) {
@@ -173,7 +171,7 @@ impl PlayerTrait for YouTubePlayer {
     }
 
     fn set_current_time(&mut self, browser: &RustRefBrowser, time: Duration) -> Result<()> {
-        Self::execute_function(browser, &format!("setCurrentTime({})", time.as_secs_f32()))?;
+        Self::execute(browser, &format!("setCurrentTime({})", time.as_secs_f32()))?;
         self.time = time;
 
         Ok(())
@@ -188,10 +186,7 @@ impl PlayerTrait for YouTubePlayer {
         if let Some(browser) = browser {
             if (volume - self.volume).abs() > 0.0001 {
                 let volume_modifier = options::VOLUME.get()?;
-                Self::execute_function(
-                    browser,
-                    &format!("setVolume({})", volume * volume_modifier),
-                )?;
+                Self::execute(browser, &format!("setVolume({})", volume * volume_modifier))?;
             }
         }
 
@@ -211,6 +206,7 @@ impl PlayerTrait for YouTubePlayer {
     ) -> Result<()> {
         if let Some(browser) = browser {
             if let VolumeMode::Panning { pan, .. } = mode {
+                // TODO less big string!
                 let _ignore = browser.execute_javascript_on_frame(
                     "https://www.youtube.com",
                     format!(
@@ -286,7 +282,7 @@ impl PlayerTrait for YouTubePlayer {
     }
 
     fn set_playing(&mut self, browser: &RustRefBrowser, playing: bool) -> Result<()> {
-        Self::execute_function(browser, &format!("setPlaying({})", playing))?;
+        Self::execute(browser, &format!("setPlaying({})", playing))?;
         Ok(())
     }
 
@@ -297,7 +293,7 @@ impl PlayerTrait for YouTubePlayer {
 
     fn set_speed(&mut self, browser: Option<&RustRefBrowser>, speed: f32) -> Result<()> {
         if let Some(browser) = browser {
-            Self::execute_function(browser, &format!("setPlaybackRate({})", speed))?;
+            Self::execute(browser, &format!("setPlaybackRate({})", speed))?;
         }
 
         self.speed = speed;
@@ -307,7 +303,7 @@ impl PlayerTrait for YouTubePlayer {
 
 impl YouTubePlayer {
     pub async fn real_is_finished_playing(browser: &RustRefBrowser) -> Result<bool> {
-        let ended = match Self::eval_method(browser, "playerFinished").await? {
+        let ended = match Self::eval(browser, "playerFinished").await? {
             RustV8Value::Bool(ended) => ended,
 
             other => {
@@ -319,7 +315,7 @@ impl YouTubePlayer {
     }
 
     pub async fn get_real_time(browser: &RustRefBrowser) -> Result<Duration> {
-        let seconds = match Self::eval_method(browser, "getCurrentTime()").await? {
+        let seconds = match Self::eval(browser, "getCurrentTime()").await? {
             RustV8Value::Double(seconds) => seconds as f32,
             RustV8Value::Int(seconds) => seconds as f32,
             RustV8Value::UInt(seconds) => seconds as f32,
@@ -332,29 +328,13 @@ impl YouTubePlayer {
         Ok(Duration::from_secs_f32(seconds))
     }
 
-    #[allow(dead_code)]
-    pub async fn get_real_volume(browser: &RustRefBrowser) -> Result<f32> {
-        let volume = match Self::eval_method(browser, "getVolume()").await? {
-            RustV8Value::Double(volume) => volume as f32,
-            RustV8Value::Int(volume) => volume as f32,
-            RustV8Value::UInt(volume) => volume as f32,
-
-            _ => {
-                bail!("non-number js value");
-            }
-        };
-
-        let percent = volume as f32;
-        Ok(percent)
-    }
-
-    fn execute_function(browser: &RustRefBrowser, method: &str) -> Result<()> {
+    fn execute(browser: &RustRefBrowser, method: &str) -> Result<()> {
         let code = format!("window.{};", method);
         browser.execute_javascript(code)?;
         Ok(())
     }
 
-    async fn eval_method(browser: &RustRefBrowser, method: &str) -> Result<RustV8Value> {
+    async fn eval(browser: &RustRefBrowser, method: &str) -> Result<RustV8Value> {
         let code = format!("window.{};", method);
         Ok(browser.eval_javascript(code).await?)
     }

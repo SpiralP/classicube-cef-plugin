@@ -122,11 +122,7 @@ async fn start_loop(entity_id: usize) -> Result<()> {
                 // Do this before setting time because get_real_time will return duration
                 // instead of a current time after finishing video
                 let is_finished_playing = match kind {
-                    Kind::Media => {
-                        // TODO
-                        false
-                    }
-
+                    Kind::Media => MediaPlayer::real_is_finished_playing(&browser).await?,
                     Kind::YouTube => YouTubePlayer::real_is_finished_playing(&browser).await?,
                 };
 

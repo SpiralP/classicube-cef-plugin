@@ -1,5 +1,4 @@
 #include "app.hh"
-
 #include "serialize.hh"
 
 // Minimal implementation of CefApp for the browser process.
@@ -25,8 +24,9 @@ void MyApp::OnBeforeCommandLineProcessing(
   command_line->AppendSwitch("disable-extensions");
   // command_line->AppendSwitch("disable-web-security");
   // command_line->AppendSwitch("ignore-certificate-errors");
-  command_line->AppendSwitch("disable-site-isolation-trials");
+  // command_line->AppendSwitch("disable-site-isolation-trials");
 
+  // don't show up in media info on windows volume change popup
   std::string new_value("HardwareMediaKeyHandling");
   if (command_line->HasSwitch("disable-features")) {
     CefString old_value = command_line->GetSwitchValue("disable-features");

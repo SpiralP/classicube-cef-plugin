@@ -32,15 +32,36 @@
         }
         return undefined;
       }
+      // https://stackoverflow.com/a/6313008
+      function formatSeconds(totalSeconds) {
+        var sec_num = parseInt(totalSeconds, 10); // don't forget the second param
+        var hours = Math.floor(sec_num / 3600);
+        var minutes = Math.floor((sec_num - hours * 3600) / 60);
+        var seconds = sec_num - hours * 3600 - minutes * 60;
 
-      var videoId = window.location.pathname.substring(1);
+        if (hours < 10) {
+          hours = "0" + hours;
+        }
+        if (minutes < 10) {
+          minutes = "0" + minutes;
+        }
+        if (seconds < 10) {
+          seconds = "0" + seconds;
+        }
+        if (hours !== "00") {
+          return hours + ":" + minutes + ":" + seconds;
+        } else {
+          return minutes + ":" + seconds;
+        }
+      }
+
+      var videoId = getQueryVariable("id");
       var startTime = parseFloat(getQueryVariable("time") || 0.0);
       var startVolume = parseFloat(getQueryVariable("volume") || 1.0);
+      var speed = parseFloat(getQueryVariable("speed") || 1.0);
       var subtitles = parseInt(getQueryVariable("subtitles")) === 1;
       var autoplay = parseInt(getQueryVariable("autoplay")) === 1;
-      var should_loop = parseInt(getQueryVariable("loop")) === 1;
-
-      var speed = 1.0;
+      var shouldLoop = parseInt(getQueryVariable("loop")) === 1;
 
       window.playerFinishedTime = 0;
       window.playerFinished = false;
@@ -138,7 +159,7 @@
             start: startTime,
             cc_load_policy: subtitles ? 1 : 0,
             cc_lang_pref: "en",
-            loop: should_loop ? 1 : 0,
+            loop: shouldLoop ? 1 : 0,
           },
           events: {
             onReady: onPlayerReady,
@@ -171,29 +192,6 @@
         }
       }
 
-      // https://stackoverflow.com/a/6313008
-      function formatSeconds(totalSeconds) {
-        var sec_num = parseInt(totalSeconds, 10); // don't forget the second param
-        var hours = Math.floor(sec_num / 3600);
-        var minutes = Math.floor((sec_num - hours * 3600) / 60);
-        var seconds = sec_num - hours * 3600 - minutes * 60;
-
-        if (hours < 10) {
-          hours = "0" + hours;
-        }
-        if (minutes < 10) {
-          minutes = "0" + minutes;
-        }
-        if (seconds < 10) {
-          seconds = "0" + seconds;
-        }
-        if (hours !== "00") {
-          return hours + ":" + minutes + ":" + seconds;
-        } else {
-          return minutes + ":" + seconds;
-        }
-      }
-
       // 5. The API calls this function when the player's state changes.
       //    The function indicates that when playing a video (state=1),
       //    the player should play for six seconds and then stop.
@@ -212,7 +210,7 @@
             document.title = videoData.title;
           }
         } else if (event.data === YT.PlayerState.ENDED) {
-          if (!should_loop) {
+          if (!shouldLoop) {
             window.playerFinishedTime = player.getDuration();
             window.playerFinished = true;
             player.stopVideo();

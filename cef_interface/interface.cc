@@ -196,14 +196,7 @@ extern "C" int cef_interface_initialize(MyApp* app) {
     return -1;
   }
 
-  // if (!CefAddCrossOriginWhitelistEntry("local://youtube", "https", "", true))
-  // {
-  //   rust_warn("CefAddCrossOriginWhitelistEntry failed!");
-  //   return -1;
-  // }
-
-  // if (!CefAddCrossOriginWhitelistEntry("local://youtube", "http", "", true))
-  // {
+  // if (!CefAddCrossOriginWhitelistEntry("local://media", "http", "", true)) {
   //   rust_warn("CefAddCrossOriginWhitelistEntry failed!");
   //   return -1;
   // }
@@ -227,9 +220,10 @@ extern "C" int cef_interface_create_browser(MyClient* client,
   settings.background_color = background_color;
   settings.windowless_frame_rate = frame_rate;
 
-  settings.tab_to_links = STATE_DISABLED;
-  settings.file_access_from_file_urls = STATE_DISABLED;
   settings.universal_access_from_file_urls = STATE_DISABLED;
+  settings.file_access_from_file_urls = STATE_DISABLED;
+
+  settings.tab_to_links = STATE_DISABLED;
   settings.plugins = STATE_DISABLED;
   settings.javascript_dom_paste = STATE_DISABLED;
   settings.javascript_access_clipboard = STATE_DISABLED;
@@ -238,6 +232,8 @@ extern "C" int cef_interface_create_browser(MyClient* client,
   CefRefPtr<CefRequestContext> request_context = nullptr;
 
   if (insecure) {
+    // this is pretty useless because it needs to be on the subprocess's
+    // OnBeforeCommandLineProcessing
     settings.web_security = STATE_DISABLED;
 
     // CefRequestContextSettings request_context_settings;

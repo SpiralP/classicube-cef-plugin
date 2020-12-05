@@ -132,7 +132,14 @@ impl Chat {
                         .expect("don't worry about this error");
                     }
 
-                    run(&["create", "-n", "ag", "-sq", "youtu.be/keF7n1eVKzE?t=273"]).await;
+                    run(&[
+                        "create",
+                        "-n",
+                        "ag",
+                        "-sq",
+                        "http://put.nu/files/Mv7R7ye.mp3",
+                    ])
+                    .await;
                     run(&["here", "-n", "ag"]).await;
                     run(&["volume", "-n", "ag", "-p", "10.0"]).await;
                     // run(&["speed", "-n", "ag", "1.1"]).await;

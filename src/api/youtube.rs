@@ -1,7 +1,8 @@
 use crate::{async_manager, error::*};
 use serde::Deserialize;
 
-pub const API_URL: &str = "http://youtube.spiralp.uk.to:43210";
+const API_URL: &str = "http://youtube.spiralp.uk.to:43210";
+const APP_USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"));
 
 #[derive(Debug, Deserialize)]
 struct ApiError {
@@ -15,11 +16,18 @@ pub struct VideoResponse {
     pub duration_seconds: u64,
 }
 
+fn make_client() -> reqwest::Client {
+    reqwest::Client::builder()
+        .user_agent(APP_USER_AGENT)
+        .build()
+        .unwrap()
+}
+
 pub async fn video(id: &str) -> Result<VideoResponse> {
     let id = id.to_string();
 
     let result = async_manager::spawn(async move {
-        let client = reqwest::Client::new();
+        let client = make_client();
         let bytes = client
             .get(&format!("{}/video/{}", API_URL, id))
             .send()
@@ -42,7 +50,7 @@ pub async fn playlist(id: &str) -> Result<Vec<String>> {
     let id = id.to_string();
 
     let result = async_manager::spawn(async move {
-        let client = reqwest::Client::new();
+        let client = make_client();
         let bytes = client
             .get(&format!("{}/playlist/{}", API_URL, id))
             .send()
@@ -72,7 +80,7 @@ pub async fn search(query: &str) -> Result<SearchResponse> {
     let query = query.to_string();
 
     let result = async_manager::spawn(async move {
-        let client = reqwest::Client::new();
+        let client = make_client();
         let bytes = client
             .get(&format!("{}/search", API_URL))
             .query(&[("q", &query)])

@@ -24,6 +24,11 @@ extern "C" fn init() {
 
     logger::initialize(true, false);
 
+    debug!(
+        "Init {}",
+        concat!(env!("CARGO_PKG_NAME"), " v", env!("CARGO_PKG_VERSION"))
+    );
+
     time!("Plugin::initialize()", 5000, {
         Plugin::initialize();
     });

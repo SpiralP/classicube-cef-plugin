@@ -24,7 +24,9 @@ void MyApp::OnBeforeCommandLineProcessing(
   command_line->AppendSwitch("disable-extensions");
   // command_line->AppendSwitch("disable-web-security");
   // command_line->AppendSwitch("ignore-certificate-errors");
-  // command_line->AppendSwitch("disable-site-isolation-trials");
+
+  // to make execute_javascript_on_frame work
+  command_line->AppendSwitch("disable-site-isolation-trials");
 
   // don't show up in media info on windows volume change popup
   std::string new_value("HardwareMediaKeyHandling");

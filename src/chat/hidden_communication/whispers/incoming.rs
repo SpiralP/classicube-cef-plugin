@@ -2,7 +2,9 @@ use super::{encoding, wait_for_message, SHOULD_BLOCK};
 use crate::{
     async_manager,
     chat::{
-        helpers::{is_incoming_whisper, is_outgoing_whisper},
+        helpers::{
+            is_cef_reply_whisper, is_cef_request_whisper, is_incoming_whisper, is_outgoing_whisper,
+        },
         is_continuation_message, Chat, ENTITIES, TAB_LIST,
     },
     error::*,
@@ -15,8 +17,8 @@ pub async fn listen_loop() {
     loop {
         let message = wait_for_message().await;
 
-        // incoming whisper
-        if is_incoming_whisper(&message) && message.ends_with(": &f?CEF?") {
+        // incoming info request whisper
+        if is_incoming_whisper(&message) && is_cef_request_whisper(&message) {
             SHOULD_BLOCK.set(true);
 
             info!("incoming_whisper {:?}", message);
@@ -97,14 +99,15 @@ async fn send_reply(real_name: String) -> Result<()> {
 
     let encoded = encoding::encode(&message)?;
     debug!("sending encoded message length {}", encoded.len());
-    Chat::send(format!("@{}+ !CEF!{}", real_name, encoded));
 
-    // my outgoing whisper
+    // my outgoing info reply whisper
     async_manager::timeout(Duration::from_secs(5), async {
+        Chat::send(format!("@{}+ !CEF!{}", real_name, encoded));
+
         loop {
             let message = wait_for_message().await;
 
-            if is_outgoing_whisper(&message) && message.contains(": &f!CEF!") {
+            if is_outgoing_whisper(&message) && is_cef_reply_whisper(&message) {
                 SHOULD_BLOCK.set(true);
 
                 // also block > continuation messages

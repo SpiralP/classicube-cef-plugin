@@ -72,9 +72,10 @@ async fn do_query() -> Result<()> {
     // &e  ClassiCube 1.1.4 + Ponies v2.1:&1 *&bgemsgem&1*
 
     debug!("querying /clients");
-    Chat::send("/clients");
 
     async_manager::timeout(Duration::from_secs(3), async {
+        Chat::send("/clients");
+
         loop {
             let message = wait_for_message().await;
             if is_clients_start_message(&message) {

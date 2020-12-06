@@ -12,6 +12,14 @@ pub fn is_incoming_whisper(message: &str) -> bool {
             && message.get(2..6).map(|a| a == "[>] ").unwrap_or(false))
 }
 
+pub fn is_cef_request_whisper(message: &str) -> bool {
+    (is_outgoing_whisper(message) || is_incoming_whisper(message)) && message.contains("?CEF?")
+}
+
+pub fn is_cef_reply_whisper(message: &str) -> bool {
+    (is_outgoing_whisper(message) || is_incoming_whisper(message)) && message.contains("!CEF!")
+}
+
 pub fn is_map_theme_message(message: &str) -> bool {
     let message = remove_color(message).to_lowercase();
 

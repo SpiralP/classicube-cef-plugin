@@ -2,7 +2,9 @@ use super::{encoding, wait_for_message, SHOULD_BLOCK};
 use crate::{
     async_manager,
     chat::{
-        helpers::{is_incoming_whisper, is_outgoing_whisper},
+        helpers::{
+            is_cef_reply_whisper, is_cef_request_whisper, is_incoming_whisper, is_outgoing_whisper,
+        },
         is_continuation_message, Chat,
     },
     error::*,
@@ -14,17 +16,17 @@ use std::time::Duration;
 pub async fn query_whisper(real_name: &str) -> Result<bool> {
     debug!("query_whisper asking {}", real_name);
 
-    Chat::send(format!("@{}+ ?CEF?", real_name));
-    // SpiralP2 -> SpiralP
-    // &7[<] &uSpiralP2: &f?CEF?
-    // &9[>] &uSpiralP: &f?CEF?
-
-    // my outgoing whisper
+    // my outgoing info request whisper
     async_manager::timeout(Duration::from_secs(3), async {
+        Chat::send(format!("@{}+ ?CEF?", real_name));
+        // SpiralP2 -> SpiralP
+        // &7[<] &uSpiralP2: &f?CEF?
+        // &9[>] &uSpiralP: &f?CEF?
+
         loop {
             let message = wait_for_message().await;
 
-            if is_outgoing_whisper(&message) && message.ends_with(": &f?CEF?") {
+            if is_outgoing_whisper(&message) && is_cef_request_whisper(&message) {
                 SHOULD_BLOCK.set(true);
                 break;
             }
@@ -33,17 +35,17 @@ pub async fn query_whisper(real_name: &str) -> Result<bool> {
     .await
     .chain_err(|| "never found my outgoing whisper")?;
 
-    // incoming whisper from them
+    // incoming info reply whisper
     let full_message_encoded = async_manager::timeout(Duration::from_secs(5), async {
         loop {
             let message = wait_for_message().await;
-            if is_incoming_whisper(&message) && message.contains(": &f!CEF!") {
+            if is_incoming_whisper(&message) && is_cef_reply_whisper(&message) {
                 SHOULD_BLOCK.set(true);
                 debug!("got whisper response {:?}", message);
 
                 let mut parts: Vec<String> = Vec::new();
 
-                let first_parts = message.splitn(2, ": &f!CEF!").collect::<Vec<_>>();
+                let first_parts = message.splitn(2, "!CEF!").collect::<Vec<_>>();
                 let first_encoded = first_parts[1].to_string();
                 parts.push(first_encoded);
 

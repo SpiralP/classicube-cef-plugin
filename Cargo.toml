@@ -23,8 +23,8 @@ futures = "0.3"
 futures-timer = "3"
 lazy_static = "1"
 log = "0.4"
-nalgebra = "0.22"
-ncollide3d = "0.25"
+nalgebra = "0.23"
+ncollide3d = "0.26"
 rand = "0.7"
 regex = "1"
 reqwest = "0.10"
@@ -35,7 +35,7 @@ tokio = { version = "0.2", features = ["full"] }
 url = "2"
 
 [build-dependencies]
-bindgen = "0.55"
+bindgen = "0.56"
 cmake = "0.1"
 
 [features]

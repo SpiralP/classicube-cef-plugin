@@ -116,63 +116,61 @@ async fn start_loop(entity_id: usize) -> Result<()> {
             })
         })?;
 
-        if let Some((maybe_browser, kind)) = opt {
-            if let Some(browser) = maybe_browser {
-                // check if finished playing
-                // Do this before setting time because get_real_time will return duration
-                // instead of a current time after finishing video
-                let is_finished_playing = match kind {
-                    Kind::Media => MediaPlayer::real_is_finished_playing(&browser).await?,
-                    Kind::YouTube => YouTubePlayer::real_is_finished_playing(&browser).await?,
-                };
+        if let Some((Some(browser), kind)) = opt {
+            // check if finished playing
+            // Do this before setting time because get_real_time will return duration
+            // instead of a current time after finishing video
+            let is_finished_playing = match kind {
+                Kind::Media => MediaPlayer::real_is_finished_playing(&browser).await?,
+                Kind::YouTube => YouTubePlayer::real_is_finished_playing(&browser).await?,
+            };
 
-                let time = match kind {
-                    Kind::Media => MediaPlayer::get_real_time(&browser).await,
-                    Kind::YouTube => YouTubePlayer::get_real_time(&browser).await,
-                };
+            let time = match kind {
+                Kind::Media => MediaPlayer::get_real_time(&browser).await,
+                Kind::YouTube => YouTubePlayer::get_real_time(&browser).await,
+            };
 
-                // update time field for when we sync to someone else
-                if let Ok(time) = time {
-                    EntityManager::with_entity(entity_id, move |entity| {
-                        match &mut entity.player {
-                            Player::Media(player) => {
-                                player.time = time;
-                            }
-                            Player::YouTube(player) => {
-                                player.time = time;
-                            }
-
-                            _ => {
-                                bail!("not supported time");
-                            }
+            // update time field for when we sync to someone else
+            if let Ok(time) = time {
+                EntityManager::with_entity(entity_id, move |entity| {
+                    match &mut entity.player {
+                        Player::Media(player) => {
+                            player.time = time;
                         }
-                        Ok(())
-                    })?;
-                }
-
-                if is_finished_playing {
-                    debug!("finished playing!");
-
-                    EntityManager::with_entity(entity_id, move |entity| {
-                        match &mut entity.player {
-                            Player::Media(_player) => {
-                                //
-                            }
-
-                            Player::YouTube(player) => {
-                                player.finished = is_finished_playing;
-                                entity.skip()?;
-                            }
-
-                            _ => {
-                                bail!("is_finished_playing not supported");
-                            }
+                        Player::YouTube(player) => {
+                            player.time = time;
                         }
-                        Ok(())
-                    })?;
 
-                    break;
-                }
+                        _ => {
+                            bail!("not supported time");
+                        }
+                    }
+                    Ok(())
+                })?;
+            }
+
+            if is_finished_playing {
+                debug!("finished playing!");
+
+                EntityManager::with_entity(entity_id, move |entity| {
+                    match &mut entity.player {
+                        Player::Media(_player) => {
+                            //
+                        }
+
+                        Player::YouTube(player) => {
+                            player.finished = is_finished_playing;
+                            entity.skip()?;
+                        }
+
+                        _ => {
+                            bail!("is_finished_playing not supported");
+                        }
+                    }
+                    Ok(())
+                })?;
+
+                break;
             }
         }
 

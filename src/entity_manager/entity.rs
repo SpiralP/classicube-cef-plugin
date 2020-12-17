@@ -15,7 +15,7 @@ use classicube_sys::{
     Texture, TextureRec, PACKEDCOL_WHITE,
 };
 use futures::channel::oneshot;
-use log::*;
+use tracing::*;
 use std::{
     collections::VecDeque,
     mem,

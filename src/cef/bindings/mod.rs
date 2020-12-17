@@ -3,13 +3,13 @@ mod generated;
 pub use self::generated::*;
 use super::{javascript, javascript::RustV8Value};
 use crate::error::*;
-use log::*;
 use std::{
     ffi::{CStr, CString},
     mem,
     os::raw::c_int,
     ptr, slice,
 };
+use tracing::*;
 use url::Url;
 
 #[no_mangle]

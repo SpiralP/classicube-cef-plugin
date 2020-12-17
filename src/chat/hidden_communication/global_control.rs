@@ -14,12 +14,12 @@ use crate::{
 use classicube_helpers::{tab_list::remove_color, CellGetSet};
 use classicube_sys::ENTITIES_SELF_ID;
 use futures::{channel::mpsc, future::RemoteHandle, prelude::*};
-use log::{debug, info, warn};
 use std::{
     cell::{Cell, RefCell},
     pin::Pin,
     time::Duration,
 };
+use tracing::{debug, info, warn};
 use url::Url;
 
 thread_local!(

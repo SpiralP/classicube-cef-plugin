@@ -11,7 +11,7 @@ use crate::{
 use async_recursion::async_recursion;
 use clap::{App, AppSettings, Arg, ArgMatches};
 use classicube_helpers::color;
-use log::*;
+use tracing::*;
 use std::time::{Duration, Instant};
 
 // static commands not targetted at a specific entity

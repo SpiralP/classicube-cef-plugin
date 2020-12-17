@@ -6,9 +6,9 @@ use crate::{
     helpers::vec3_to_vector3,
 };
 use classicube_sys::{Camera, Vec3};
-use log::*;
 use nalgebra::Vector3;
 use std::time::Duration;
+use tracing::*;
 
 pub async fn start_update_loop(entity_id: usize) {
     let result = start_loop(entity_id).await;

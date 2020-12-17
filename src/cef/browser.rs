@@ -1,13 +1,13 @@
 use super::{bindings::RustRect, CefEvent, CEF_DEFAULT_HEIGHT, CEF_DEFAULT_WIDTH, EVENT_QUEUE};
 use crate::cef::RustRefBrowser;
 use classicube_helpers::OptionWithInner;
-use log::*;
 use std::{
     cell::RefCell,
     collections::HashMap,
     ffi::CStr,
     os::raw::{c_char, c_int},
 };
+use tracing::*;
 
 // identifier, browser
 thread_local!(

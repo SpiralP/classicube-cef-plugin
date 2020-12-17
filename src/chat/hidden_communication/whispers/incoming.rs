@@ -10,7 +10,7 @@ use crate::{
     error::*,
 };
 use classicube_helpers::{shared::FutureShared, CellGetSet, OptionWithInner};
-use log::{debug, info, warn};
+use tracing::{debug, info, warn};
 use std::time::Duration;
 
 pub async fn listen_loop() {

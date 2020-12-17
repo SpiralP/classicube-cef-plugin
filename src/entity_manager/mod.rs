@@ -21,12 +21,12 @@ use futures::{
     prelude::*,
     stream::{FuturesUnordered, StreamExt},
 };
-use log::*;
 use std::{
     cell::{Cell, RefCell},
     collections::HashMap,
     os::raw::*,
 };
+use tracing::*;
 
 pub const TEXTURE_WIDTH: u16 = 2048;
 pub const TEXTURE_HEIGHT: u16 = 2048;

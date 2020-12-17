@@ -7,6 +7,10 @@ pub fn install_hook() {
 }
 
 fn panic_hook(info: &PanicInfo<'_>) {
+    unsafe {
+        drop(crate::logger::GUARD.take());
+    }
+
     let (popup_message, stderr_message, verbose_message) = {
         // The current implementation always returns `Some`.
         let panic_location = info.location().unwrap();

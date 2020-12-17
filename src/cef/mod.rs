@@ -18,7 +18,7 @@ use crate::{
 };
 use classicube_helpers::{shared::FutureShared, CellGetSet, OptionWithInner};
 use futures::stream::{FuturesUnordered, StreamExt};
-use log::*;
+use tracing::*;
 use std::{
     cell::{Cell, RefCell},
     collections::HashMap,

@@ -5,7 +5,7 @@ use crate::{
     player::{Player, PlayerTrait},
 };
 use futures::{future::RemoteHandle, prelude::*};
-use log::{debug, warn};
+use tracing::{debug, warn};
 use std::{cell::Cell, time::Duration};
 
 thread_local!(

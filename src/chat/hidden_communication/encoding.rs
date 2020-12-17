@@ -4,7 +4,7 @@ use crate::{
     error::*,
     player::{Player, PlayerTrait},
 };
-use log::debug;
+use tracing::debug;
 use serde::{Deserialize, Serialize};
 use std::{collections::VecDeque, time::Duration};
 

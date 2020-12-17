@@ -1,8 +1,8 @@
 use super::EntityManager;
 use crate::cef::RustRefBrowser;
 use classicube_sys::*;
-use log::warn;
 use std::os::raw::{c_int, c_void};
+use tracing::warn;
 
 /// This gets called from cef browser's OnPaint
 pub extern "C" fn cef_paint_callback(

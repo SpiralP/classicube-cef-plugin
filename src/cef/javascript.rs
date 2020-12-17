@@ -6,6 +6,7 @@ use std::{
     collections::HashMap,
     os::raw::c_double,
 };
+use tracing::warn;
 
 thread_local!(
     static TASK_ID: Cell<u64> = Cell::new(0);
@@ -47,10 +48,10 @@ pub extern "C" fn on_javascript_callback(
 
     if let Some(task) = maybe_task {
         if task.send(response).is_err() {
-            log::warn!("error sending to waiting task {}", task_id);
+            warn!("error sending to waiting task {}", task_id);
         }
     } else {
-        log::warn!("no waiting task for id {}", task_id);
+        warn!("no waiting task for id {}", task_id);
     }
 }
 

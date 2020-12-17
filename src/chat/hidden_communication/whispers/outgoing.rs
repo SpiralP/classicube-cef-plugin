@@ -10,8 +10,8 @@ use crate::{
     error::*,
 };
 use classicube_helpers::CellGetSet;
-use log::debug;
 use std::time::Duration;
+use tracing::debug;
 
 pub async fn query_whisper(real_name: &str) -> Result<bool> {
     debug!("query_whisper asking {}", real_name);

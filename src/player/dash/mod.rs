@@ -8,9 +8,9 @@ use crate::{
 };
 use classicube_helpers::color;
 use futures::{future::RemoteHandle, prelude::*};
-use log::debug;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
+use tracing::debug;
 use url::Url;
 
 const PAGE_HTML: &str = include_str!("page.html");

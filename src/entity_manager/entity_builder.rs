@@ -6,8 +6,8 @@ use crate::{
     options::FRAME_RATE,
     player::{Player, PlayerTrait},
 };
-use log::*;
 use std::collections::VecDeque;
+use tracing::*;
 
 pub struct EntityBuilder {
     player: Player,

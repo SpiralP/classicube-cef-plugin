@@ -8,7 +8,7 @@ use crate::{
 };
 use classicube_helpers::color;
 use futures::{future::RemoteHandle, prelude::*};
-use log::*;
+use tracing::*;
 use serde::{Deserialize, Serialize};
 use std::{
     path::Path,

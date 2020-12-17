@@ -16,8 +16,8 @@ mod plugin;
 use self::plugin::Plugin;
 use classicube_helpers::{time, time_silent};
 use classicube_sys::*;
-use log::debug;
 use std::{os::raw::c_int, ptr};
+use tracing::debug;
 
 extern "C" fn init() {
     panic::install_hook();
@@ -40,6 +40,10 @@ extern "C" fn free() {
     time!("Plugin::shutdown()", 1000, {
         Plugin::shutdown();
     });
+
+    unsafe {
+        drop(crate::logger::GUARD.take());
+    }
 }
 
 extern "C" fn reset() {

@@ -12,7 +12,7 @@ use crate::{
 use classicube_helpers::{tab_list::remove_color, CellGetSet, OptionWithInner};
 use classicube_sys::ENTITIES_SELF_ID;
 use futures::{future::RemoteHandle, prelude::*};
-use log::{debug, warn};
+use tracing::{debug, warn};
 use std::{cell::RefCell, collections::HashSet, sync::Once, time::Duration};
 
 thread_local!(

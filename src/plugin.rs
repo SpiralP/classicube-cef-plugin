@@ -1,8 +1,8 @@
 use crate::{async_manager, cef::Cef, chat::Chat, entity_manager::EntityManager, player};
 use classicube_helpers::{color, OptionWithInner};
 use classicube_sys::{Server, String_AppendConst};
-use log::*;
 use std::{cell::RefCell, ffi::CString};
+use tracing::*;
 
 thread_local!(
     static PLUGIN: RefCell<Option<Plugin>> = RefCell::new(None);

@@ -1,42 +1,57 @@
-use simplelog::*;
-use std::{fs::File, sync::Once};
+use std::fs::File;
+use tracing_appender::non_blocking::WorkerGuard;
+use tracing_subscriber::{
+    filter::EnvFilter,
+    fmt::{time::SystemTime, Layer},
+    prelude::*,
+};
+
+pub static mut GUARD: Option<WorkerGuard> = None;
 
 pub fn initialize(debug: bool, other_crates: bool) {
-    static START: Once = Once::new();
+    {
+        // erase files so they're only of this session
+        let f = File::create("cef-binary.log").unwrap();
+        f.set_len(0).unwrap();
 
-    START.call_once(move || {
-        let level = if debug {
-            LevelFilter::Debug
-        } else {
-            LevelFilter::Info
-        };
+        let f = File::create("cef.log").unwrap();
+        f.set_len(0).unwrap();
+    }
 
-        let my_crate_name = env!("CARGO_PKG_NAME").replace("-", "_");
+    let level = if debug { "debug" } else { "info" };
+    let my_crate_name = env!("CARGO_PKG_NAME").replace("-", "_");
 
-        let mut loggers: Vec<Box<dyn SharedLogger>> = Vec::with_capacity(2);
-        loggers.push(WriteLogger::new(
-            level,
-            ConfigBuilder::new()
-                .add_filter_allow(my_crate_name.clone())
-                .build(),
-            File::create("cef.log").unwrap(),
-        ));
+    let mut filter = EnvFilter::from_default_env();
 
-        let mut config = ConfigBuilder::new();
+    if other_crates {
+        filter = filter.add_directive(level.parse().unwrap());
+    } else {
+        filter = filter.add_directive(format!("{}={}", my_crate_name, level).parse().unwrap());
+    }
 
-        config.set_target_level(LevelFilter::Trace);
-        config.set_thread_level(LevelFilter::Trace);
+    let (file_writer, guard) =
+        tracing_appender::non_blocking(tracing_appender::rolling::never(".", "cef.log"));
 
-        if !other_crates {
-            config.add_filter_allow(my_crate_name);
-        }
+    tracing_subscriber::fmt()
+        .with_env_filter(filter)
+        .with_target(false)
+        .with_thread_ids(false)
+        .with_thread_names(false)
+        .with_ansi(true)
+        .without_time()
+        .finish()
+        .with(
+            Layer::default()
+                .with_writer(file_writer)
+                .with_target(false)
+                .with_thread_ids(false)
+                .with_thread_names(false)
+                .with_ansi(false)
+                .with_timer(SystemTime),
+        )
+        .init();
 
-        loggers.push(TermLogger::new(level, config.build(), TerminalMode::Mixed));
-
-        CombinedLogger::init(loggers).unwrap();
-    });
-
-    // erase file so it's only this session
-    let f = File::create("cef-binary.log").unwrap();
-    f.set_len(0).unwrap();
+    unsafe {
+        GUARD.replace(guard);
+    }
 }

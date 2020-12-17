@@ -8,8 +8,8 @@ use super::{Chat, PlayerSnapshot};
 use crate::{async_manager, error::*};
 use clap::{App, AppSettings, Arg, ArgMatches};
 use classicube_helpers::OptionWithInner;
-use log::{debug, warn};
 use std::cell::RefCell;
+use tracing::{debug, warn};
 
 thread_local!(
     static COMMAND_APP: RefCell<Option<App<'static, 'static>>> = Default::default();

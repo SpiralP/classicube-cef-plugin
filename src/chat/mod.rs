@@ -14,7 +14,7 @@ use classicube_helpers::{
 use classicube_sys::{Chat_Send, MsgType, MsgType_MSG_TYPE_NORMAL, OwnedString, Server, Vec3};
 use deunicode::deunicode;
 use futures::{future::RemoteHandle, prelude::*};
-use log::*;
+use tracing::*;
 use std::{
     cell::{Cell, RefCell},
     time::Duration,

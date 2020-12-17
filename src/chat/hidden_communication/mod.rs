@@ -12,11 +12,11 @@ use classicube_sys::{
     OPCODE__OPCODE_MESSAGE,
 };
 use futures::channel::oneshot;
-use log::debug;
 use std::{
     cell::{Cell, RefCell},
     slice,
 };
+use tracing::debug;
 
 thread_local!(
     static SHOULD_BLOCK: Cell<bool> = Cell::new(false);

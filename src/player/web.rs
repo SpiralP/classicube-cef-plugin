@@ -1,8 +1,8 @@
 use super::PlayerTrait;
 use crate::{cef::RustRefBrowser, chat::Chat, error::*};
 use classicube_helpers::color;
-use log::debug;
 use serde::{Deserialize, Serialize};
+use tracing::debug;
 use url::Url;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

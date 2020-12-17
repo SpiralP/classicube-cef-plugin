@@ -34,6 +34,7 @@ pub enum RustV8Value {
     Undefined,
 }
 
+#[tracing::instrument(fields(_browser, response))]
 pub extern "C" fn on_javascript_callback(
     _browser: RustRefBrowser,
     task_id: u64,

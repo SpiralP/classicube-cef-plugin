@@ -23,6 +23,7 @@ thread_local!(
 );
 
 // OnAfterCreated
+#[tracing::instrument(fields(browser = browser.get_identifier()))]
 pub extern "C" fn on_after_created(browser: RustRefBrowser) {
     let id = browser.get_identifier();
     debug!("on_after_created {}", id);
@@ -43,6 +44,7 @@ pub extern "C" fn on_after_created(browser: RustRefBrowser) {
 }
 
 // OnBeforeClose
+#[tracing::instrument(fields(browser = browser.get_identifier()))]
 pub extern "C" fn on_before_close(browser: RustRefBrowser) {
     let id = browser.get_identifier();
     debug!("on_before_close {}", id);
@@ -60,6 +62,7 @@ pub extern "C" fn on_before_close(browser: RustRefBrowser) {
 }
 
 // OnPageLoaded
+#[tracing::instrument(fields(browser = browser.get_identifier()))]
 pub extern "C" fn on_page_loaded(browser: RustRefBrowser) {
     let id = browser.get_identifier();
     debug!("on_page_loaded {}", id);
@@ -72,6 +75,7 @@ pub extern "C" fn on_page_loaded(browser: RustRefBrowser) {
 }
 
 // OnTitleChange
+#[tracing::instrument(fields(browser = browser.get_identifier(), title_c_str))]
 pub extern "C" fn on_title_change(browser: RustRefBrowser, title_c_str: *const c_char) {
     let id = browser.get_identifier();
     let title = unsafe { CStr::from_ptr(title_c_str) }
@@ -86,6 +90,7 @@ pub extern "C" fn on_title_change(browser: RustRefBrowser, title_c_str: *const c
         .unwrap();
 }
 
+#[tracing::instrument(fields(browser = browser.get_identifier()))]
 pub extern "C" fn get_view_rect(browser: RustRefBrowser) -> RustRect {
     let browser_id = browser.get_identifier();
 
@@ -105,6 +110,7 @@ pub extern "C" fn get_view_rect(browser: RustRefBrowser) -> RustRect {
     })
 }
 
+#[tracing::instrument(fields(browser = browser.get_identifier()))]
 pub extern "C" fn on_certificate_error_callback(browser: RustRefBrowser) -> bool {
     let browser_id = browser.get_identifier();
 

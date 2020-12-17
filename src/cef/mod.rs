@@ -18,13 +18,13 @@ use crate::{
 };
 use classicube_helpers::{shared::FutureShared, CellGetSet, OptionWithInner};
 use futures::stream::{FuturesUnordered, StreamExt};
-use tracing::*;
 use std::{
     cell::{Cell, RefCell},
     collections::HashMap,
     os::raw::c_int,
 };
 use tokio::sync::broadcast;
+use tracing::*;
 
 pub const CEF_DEFAULT_WIDTH: u16 = 1920;
 pub const CEF_DEFAULT_HEIGHT: u16 = 1080;
@@ -52,6 +52,7 @@ thread_local!(
     static IS_INITIALIZED: Cell<bool> = Cell::new(false);
 );
 
+#[tracing::instrument]
 extern "C" fn on_context_initialized_callback(client: RustRefClient) {
     debug!("on_context_initialized_callback {:?}", client);
 
@@ -98,7 +99,7 @@ impl Cef {
         IS_INITIALIZED.set(true);
 
         async_manager::spawn_local_on_main_thread(async move {
-            while crate::time_silent!("Cef::try_step()", 100, { Cef::try_step() }) {
+            while crate::time_silent!("Cef::step()", 100, { Cef::step() }) {
                 async_manager::yield_now().await;
             }
         });
@@ -122,14 +123,18 @@ impl Cef {
 
     fn warm_up() {
         // load a blank browser so that the next load is quicker
-        async_manager::spawn_local_on_main_thread(async {
-            let browser = Self::create_browser("data:text/html,", 30, false, 0x00FFFFFF)
-                .await
-                .unwrap();
-            Self::close_browser(&browser).await.unwrap();
-        });
+        async_manager::spawn_local_on_main_thread(
+            async {
+                let browser = Self::create_browser("data:text/html,", 30, false, 0x00FFFFFF)
+                    .await
+                    .unwrap();
+                Self::close_browser(&browser).await.unwrap();
+            }
+            .instrument(debug_span!("warm_up")),
+        );
     }
 
+    #[tracing::instrument]
     pub async fn shutdown() {
         mute_lose_focus::shutdown();
 
@@ -166,9 +171,11 @@ impl Cef {
         IS_INITIALIZED.set(false);
     }
 
-    fn try_step() -> bool {
+    #[tracing::instrument]
+    fn step() -> bool {
         if IS_INITIALIZED.get() {
             RustRefApp::step().unwrap();
+
             true
         } else {
             false

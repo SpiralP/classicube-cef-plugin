@@ -1,14 +1,18 @@
-use std::{fs::File, sync::Once};
-use tracing_appender::non_blocking::WorkerGuard;
+use std::{fs::File, io::BufWriter, sync::Once};
+use tracing_flame::FlameLayer;
 use tracing_subscriber::{
     filter::EnvFilter,
     fmt::{time::SystemTime, Layer},
     prelude::*,
 };
 
-pub static mut GUARD: Option<WorkerGuard> = None;
+pub enum Guard {
+    Appender(tracing_appender::non_blocking::WorkerGuard),
+    Flame(tracing_flame::FlushGuard<BufWriter<File>>),
+}
+pub static mut GUARDS: Option<Vec<Guard>> = None;
 
-pub fn initialize(debug: bool, other_crates: bool) {
+pub fn initialize(debug: bool, other_crates: bool, flame: bool) {
     static ONCE: Once = Once::new();
 
     ONCE.call_once(move || {
@@ -32,10 +36,13 @@ pub fn initialize(debug: bool, other_crates: bool) {
             filter = filter.add_directive(format!("{}={}", my_crate_name, level).parse().unwrap());
         }
 
+        let mut guards = Vec::with_capacity(2);
+
         let (file_writer, guard) =
             tracing_appender::non_blocking(tracing_appender::rolling::never(".", "cef.log"));
+        guards.push(Guard::Appender(guard));
 
-        tracing_subscriber::fmt()
+        let subscriber = tracing_subscriber::fmt()
             .with_env_filter(filter)
             .with_target(false)
             .with_thread_ids(false)
@@ -51,11 +58,19 @@ pub fn initialize(debug: bool, other_crates: bool) {
                     .with_thread_names(false)
                     .with_ansi(false)
                     .with_timer(SystemTime),
-            )
-            .init();
+            );
+
+        if flame {
+            let (flame_layer, guard) = FlameLayer::with_file("./flame.log").unwrap();
+            guards.push(Guard::Flame(guard));
+
+            subscriber.with(flame_layer).init();
+        } else {
+            subscriber.init();
+        }
 
         unsafe {
-            GUARD.replace(guard);
+            GUARDS.replace(guards);
         }
     });
 }

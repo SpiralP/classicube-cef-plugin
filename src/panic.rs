@@ -8,7 +8,7 @@ pub fn install_hook() {
 
 fn panic_hook(info: &PanicInfo<'_>) {
     unsafe {
-        drop(crate::logger::GUARD.take());
+        drop(crate::logger::GUARDS.take());
     }
 
     let (popup_message, stderr_message, verbose_message) = {

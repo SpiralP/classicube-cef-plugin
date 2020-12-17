@@ -22,42 +22,49 @@ use tracing::debug;
 extern "C" fn init() {
     panic::install_hook();
 
-    logger::initialize(true, false);
+    logger::initialize(true, false, false);
 
-    debug!(
-        "Init {}",
-        concat!(env!("CARGO_PKG_NAME"), " v", env!("CARGO_PKG_VERSION"))
-    );
+    tracing::debug_span!("init").in_scope(|| {
+        debug!(
+            "Init {}",
+            concat!(env!("CARGO_PKG_NAME"), " v", env!("CARGO_PKG_VERSION"))
+        );
 
-    time!("Plugin::initialize()", 5000, {
-        Plugin::initialize();
-    });
+        time!("Plugin::initialize()", 5000, {
+            Plugin::initialize();
+        });
+    })
 }
 
 extern "C" fn free() {
-    debug!("Free");
+    tracing::debug_span!("free").in_scope(|| {
+        debug!("Free");
 
-    time!("Plugin::shutdown()", 1000, {
-        Plugin::shutdown();
+        time!("Plugin::shutdown()", 1000, {
+            Plugin::shutdown();
+        });
     });
 
     unsafe {
-        drop(crate::logger::GUARD.take());
+        drop(crate::logger::GUARDS.take());
     }
 }
 
+#[tracing::instrument]
 extern "C" fn reset() {
     time!("Plugin::reset()", 1000, {
         Plugin::reset();
     });
 }
 
+#[tracing::instrument]
 extern "C" fn on_new_map() {
     time!("Plugin::on_new_map()", 1000, {
         Plugin::on_new_map();
     });
 }
 
+#[tracing::instrument]
 extern "C" fn on_new_map_loaded() {
     time!("Plugin::on_new_map_loaded()", 1000, {
         Plugin::on_new_map_loaded();

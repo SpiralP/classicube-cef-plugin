@@ -5,6 +5,7 @@ use std::os::raw::{c_int, c_void};
 use tracing::warn;
 
 /// This gets called from cef browser's OnPaint
+#[tracing::instrument(fields(browser = browser.get_identifier(), new_pixels))]
 pub extern "C" fn cef_paint_callback(
     browser: RustRefBrowser,
     new_pixels: *const c_void,

@@ -56,6 +56,7 @@ pub fn get_matches(args: &[String]) -> Result<ArgMatches<'static>> {
         .unwrap()?)
 }
 
+#[tracing::instrument(name = "commands::run", fields(player, is_self, show_errors, args = args.join(" ").as_str()))]
 pub async fn run(
     player: PlayerSnapshot,
     mut args: Vec<String>,
@@ -147,7 +148,7 @@ fn get_last_color(text: &str) -> Option<char> {
 #[cfg(not(feature = "ci"))]
 #[tokio::test]
 async fn test_commands() {
-    crate::logger::initialize(true, true);
+    crate::logger::initialize(true, true, false);
     initialize();
 
     run(

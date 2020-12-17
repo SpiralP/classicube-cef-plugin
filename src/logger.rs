@@ -1,4 +1,4 @@
-use std::fs::File;
+use std::{fs::File, sync::Once};
 use tracing_appender::non_blocking::WorkerGuard;
 use tracing_subscriber::{
     filter::EnvFilter,
@@ -9,49 +9,53 @@ use tracing_subscriber::{
 pub static mut GUARD: Option<WorkerGuard> = None;
 
 pub fn initialize(debug: bool, other_crates: bool) {
-    {
-        // erase files so they're only of this session
-        let f = File::create("cef-binary.log").unwrap();
-        f.set_len(0).unwrap();
+    static ONCE: Once = Once::new();
 
-        let f = File::create("cef.log").unwrap();
-        f.set_len(0).unwrap();
-    }
+    ONCE.call_once(move || {
+        {
+            // erase files so they're only of this session
+            let f = File::create("cef-binary.log").unwrap();
+            f.set_len(0).unwrap();
 
-    let level = if debug { "debug" } else { "info" };
-    let my_crate_name = env!("CARGO_PKG_NAME").replace("-", "_");
+            let f = File::create("cef.log").unwrap();
+            f.set_len(0).unwrap();
+        }
 
-    let mut filter = EnvFilter::from_default_env();
+        let level = if debug { "debug" } else { "info" };
+        let my_crate_name = env!("CARGO_PKG_NAME").replace("-", "_");
 
-    if other_crates {
-        filter = filter.add_directive(level.parse().unwrap());
-    } else {
-        filter = filter.add_directive(format!("{}={}", my_crate_name, level).parse().unwrap());
-    }
+        let mut filter = EnvFilter::from_default_env();
 
-    let (file_writer, guard) =
-        tracing_appender::non_blocking(tracing_appender::rolling::never(".", "cef.log"));
+        if other_crates {
+            filter = filter.add_directive(level.parse().unwrap());
+        } else {
+            filter = filter.add_directive(format!("{}={}", my_crate_name, level).parse().unwrap());
+        }
 
-    tracing_subscriber::fmt()
-        .with_env_filter(filter)
-        .with_target(false)
-        .with_thread_ids(false)
-        .with_thread_names(false)
-        .with_ansi(true)
-        .without_time()
-        .finish()
-        .with(
-            Layer::default()
-                .with_writer(file_writer)
-                .with_target(false)
-                .with_thread_ids(false)
-                .with_thread_names(false)
-                .with_ansi(false)
-                .with_timer(SystemTime),
-        )
-        .init();
+        let (file_writer, guard) =
+            tracing_appender::non_blocking(tracing_appender::rolling::never(".", "cef.log"));
 
-    unsafe {
-        GUARD.replace(guard);
-    }
+        tracing_subscriber::fmt()
+            .with_env_filter(filter)
+            .with_target(false)
+            .with_thread_ids(false)
+            .with_thread_names(false)
+            .with_ansi(true)
+            .without_time()
+            .finish()
+            .with(
+                Layer::default()
+                    .with_writer(file_writer)
+                    .with_target(false)
+                    .with_thread_ids(false)
+                    .with_thread_names(false)
+                    .with_ansi(false)
+                    .with_timer(SystemTime),
+            )
+            .init();
+
+        unsafe {
+            GUARD.replace(guard);
+        }
+    });
 }

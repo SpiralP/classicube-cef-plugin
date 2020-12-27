@@ -10,14 +10,16 @@ use tracing::debug;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct LightEntity {
-    pub name: Option<String>,
-    pub player: Player,
-    pub queue: VecDeque<Player>,
-    pub pos: (f32, f32, f32),
-    pub ang: (f32, f32),
-    pub scale: f32,
-    pub size: (u16, u16),
-    pub resolution: Option<(u16, u16)>,
+    player: Player,
+    queue: VecDeque<Player>,
+
+    name: Option<String>,
+    resolution: Option<(u16, u16)>,
+    size: (u16, u16),
+    scale: f32,
+    rotation: (f32, f32),
+    position: (f32, f32, f32),
+    background_color: u32,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -43,19 +45,9 @@ pub async fn create_message() -> Message {
     let light_entities: Vec<_> = EntityManager::with_all_entities(|entities| {
         entities
             .iter()
-            .filter_map(|(&_id, entity)| {
-                if !entity.should_send() {
-                    return None;
-                }
-
+            .filter(|(_id, entity)| entity.should_send)
+            .map(|(&_id, entity)| {
                 let e = &entity.entity;
-
-                let name = entity.name.clone();
-                let pos = (e.Position.X, e.Position.Y, e.Position.Z);
-                let ang = (e.RotX, e.RotY);
-                let scale = entity.get_scale();
-                let size = entity.get_size();
-                let resolution = entity.browser.as_ref().map(Cef::get_browser_size);
 
                 let player = entity.player.clone();
                 let queue = entity
@@ -65,16 +57,25 @@ pub async fn create_message() -> Message {
                     .cloned()
                     .collect();
 
-                Some(LightEntity {
-                    name,
-                    pos,
-                    ang,
+                let name = entity.name.clone();
+                let resolution = entity.browser.as_ref().map(Cef::get_browser_size);
+                let size = entity.get_size();
+                let scale = entity.get_scale();
+                let rotation = (e.RotX, e.RotY);
+                let position = (e.Position.X, e.Position.Y, e.Position.Z);
+                let background_color = entity.background_color;
+
+                LightEntity {
                     player,
                     queue,
-                    scale,
-                    size,
+                    name,
                     resolution,
-                })
+                    size,
+                    scale,
+                    rotation,
+                    position,
+                    background_color,
+                }
             })
             .collect()
     });
@@ -91,7 +92,7 @@ pub async fn received_message(mut message: Message) -> Result<bool> {
     let mut entity_ids: Vec<usize> = EntityManager::with_all_entities(|entities| {
         entities
             .iter()
-            .filter(|(_, entity)| entity.should_send())
+            .filter(|(_, entity)| entity.should_send)
             .map(|(&id, _)| id)
             .collect()
     });
@@ -117,10 +118,11 @@ pub async fn received_message(mut message: Message) -> Result<bool> {
 
         let mut builder = EntityBuilder::new(info.player)
             .queue(info.queue)
-            .position(info.pos.0, info.pos.1, info.pos.2)
-            .rotation(info.ang.0, info.ang.1)
+            .size(info.size.0, info.size.1)
             .scale(info.scale)
-            .size(info.size.0, info.size.1);
+            .rotation(info.rotation.0, info.rotation.1)
+            .position(info.position.0, info.position.1, info.position.2)
+            .background_color(info.background_color);
 
         if let Some(name) = info.name {
             builder = builder.name(name);

@@ -3,7 +3,7 @@ pub mod encoding;
 pub mod global_control;
 pub mod whispers;
 
-pub use self::{encoding::LightEntity, global_control::CURRENT_MAP_THEME};
+pub use self::global_control::CURRENT_MAP_THEME;
 use super::SIMULATING;
 use crate::async_manager;
 use classicube_helpers::CellGetSet;

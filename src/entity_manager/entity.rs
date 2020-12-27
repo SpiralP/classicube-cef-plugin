@@ -30,9 +30,11 @@ pub struct CefEntity {
 
     pub entity: Pin<Box<Entity>>,
     pub browser: Option<RustRefBrowser>,
+
     pub player: Player,
     pub queue: VecDeque<(Player, Arc<Mutex<Option<String>>>)>,
-    should_send: bool,
+    pub should_send: bool,
+    pub background_color: u32,
 
     v_table: Pin<Box<EntityVTABLE>>,
     texture: OwnedGfxTexture,
@@ -85,6 +87,7 @@ impl CefEntity {
                 .map(|player| (player, Arc::new(Mutex::new(None))))
                 .collect(),
             should_send,
+            background_color,
             page_loaded_senders: Vec::new(),
         };
 
@@ -199,10 +202,6 @@ impl CefEntity {
     pub fn get_size(&self) -> (u16, u16) {
         let CefEntity { entity, .. } = self;
         (entity.NameTex.Width, entity.NameTex.Height)
-    }
-
-    pub fn should_send(&self) -> bool {
-        self.should_send
     }
 }
 

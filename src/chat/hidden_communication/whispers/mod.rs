@@ -5,9 +5,9 @@ use super::{encoding, wait_for_message, SHOULD_BLOCK};
 use crate::{async_manager, chat::ENTITIES, error::*};
 use classicube_helpers::OptionWithInner;
 use futures::{future::RemoteHandle, prelude::*};
-use tracing::{debug, warn};
 use rand::seq::SliceRandom;
 use std::cell::Cell;
+use tracing::{debug, warn};
 
 thread_local!(
     static LISTENER: Cell<Option<RemoteHandle<()>>> = Default::default();

@@ -4,9 +4,9 @@ use crate::{
     error::*,
     player::{Player, PlayerTrait},
 };
-use tracing::debug;
 use serde::{Deserialize, Serialize};
 use std::{collections::VecDeque, time::Duration};
+use tracing::debug;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct LightEntity {

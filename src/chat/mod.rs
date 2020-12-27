@@ -14,11 +14,11 @@ use classicube_helpers::{
 use classicube_sys::{Chat_Send, MsgType, MsgType_MSG_TYPE_NORMAL, OwnedString, Server, Vec3};
 use deunicode::deunicode;
 use futures::{future::RemoteHandle, prelude::*};
-use tracing::*;
 use std::{
     cell::{Cell, RefCell},
     time::Duration,
 };
+use tracing::*;
 
 thread_local!(
     static LAST_CHAT: RefCell<Option<String>> = RefCell::new(None);

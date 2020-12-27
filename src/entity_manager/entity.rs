@@ -15,7 +15,6 @@ use classicube_sys::{
     Texture, TextureRec, PACKEDCOL_WHITE,
 };
 use futures::channel::oneshot;
-use tracing::*;
 use std::{
     collections::VecDeque,
     mem,
@@ -23,6 +22,7 @@ use std::{
     sync::{Arc, Mutex},
     time::Duration,
 };
+use tracing::*;
 
 pub struct CefEntity {
     pub id: usize,

@@ -12,8 +12,8 @@ use crate::{
 use classicube_helpers::{tab_list::remove_color, CellGetSet, OptionWithInner};
 use classicube_sys::ENTITIES_SELF_ID;
 use futures::{future::RemoteHandle, prelude::*};
-use tracing::{debug, warn};
 use std::{cell::RefCell, collections::HashSet, sync::Once, time::Duration};
+use tracing::{debug, warn};
 
 thread_local!(
     static CURRENT_RUNNING: RefCell<Option<RemoteHandle<()>>> = Default::default();

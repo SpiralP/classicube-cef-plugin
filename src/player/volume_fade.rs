@@ -5,8 +5,8 @@ use crate::{
     player::{Player, PlayerTrait},
 };
 use futures::{future::RemoteHandle, prelude::*};
-use tracing::{debug, warn};
 use std::{cell::Cell, time::Duration};
+use tracing::{debug, warn};
 
 thread_local!(
     static FADING_HANDLE: Cell<Option<RemoteHandle<()>>> = Default::default();

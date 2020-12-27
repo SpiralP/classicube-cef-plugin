@@ -8,12 +8,12 @@ use crate::{
 };
 use classicube_helpers::color;
 use futures::{future::RemoteHandle, prelude::*};
-use tracing::*;
 use serde::{Deserialize, Serialize};
 use std::{
     path::Path,
     time::{Duration, Instant},
 };
+use tracing::*;
 use url::Url;
 
 #[derive(Debug, Serialize, Deserialize)]

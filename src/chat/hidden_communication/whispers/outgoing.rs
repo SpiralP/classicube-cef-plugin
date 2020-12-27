@@ -18,7 +18,7 @@ pub async fn query_whisper(real_name: &str) -> Result<bool> {
 
     // my outgoing info request whisper
     async_manager::timeout(Duration::from_secs(3), async {
-        Chat::send(format!("@{}+ ?CEF?", real_name));
+        Chat::send(format!("@{} ?CEF?", real_name));
         // SpiralP2 -> SpiralP
         // &7[<] &uSpiralP2: &f?CEF?
         // &9[>] &uSpiralP: &f?CEF?

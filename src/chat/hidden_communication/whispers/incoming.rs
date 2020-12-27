@@ -10,8 +10,8 @@ use crate::{
     error::*,
 };
 use classicube_helpers::{shared::FutureShared, CellGetSet, OptionWithInner};
-use tracing::{debug, info, warn};
 use std::time::Duration;
+use tracing::{debug, info, warn};
 
 pub async fn listen_loop() {
     loop {
@@ -102,7 +102,7 @@ async fn send_reply(real_name: String) -> Result<()> {
 
     // my outgoing info reply whisper
     async_manager::timeout(Duration::from_secs(5), async {
-        Chat::send(format!("@{}+ !CEF!{}", real_name, encoded));
+        Chat::send(format!("@{} !CEF!{}", real_name, encoded));
 
         loop {
             let message = wait_for_message().await;

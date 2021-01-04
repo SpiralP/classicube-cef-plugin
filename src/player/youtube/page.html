@@ -164,6 +164,19 @@
           events: {
             onReady: onPlayerReady,
             onStateChange: onPlayerStateChange,
+            onError: (event) => {
+              console.warn(event);
+              const n = event.data;
+              if (n === 5 || n === 101 || n === 150) {
+                // 5
+                // "Your browser does not currently recognize any of the video formats available."
+                // 101, 150
+                // "Playback on other websites has been disabled by the video owner."
+                console.warn("redirecting to reencode");
+                document.write("<h1>redirecting to reencode</h1>");
+                window.location = `http://youtube.spiralp.uk.to:43210/reencode/${videoId}`;
+              }
+            },
           },
         });
 

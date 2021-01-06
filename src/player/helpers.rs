@@ -14,7 +14,7 @@ pub async fn start_update_loop(entity_id: usize) {
     let result = start_loop(entity_id).await;
 
     if let Err(e) = result {
-        log::warn!("start_update_loop {} {}", entity_id, e);
+        warn!("start_update_loop {} {}", entity_id, e);
     }
 }
 

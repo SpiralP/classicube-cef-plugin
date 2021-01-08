@@ -106,20 +106,6 @@ pub async fn search(query: &str) -> Result<SearchResponse> {
 
 #[cfg(test)]
 #[no_mangle]
-extern "C" fn Gfx_DeleteTexture(_: *mut classicube_sys::GfxResourceID) {}
-
-#[cfg(test)]
-#[no_mangle]
-extern "C" fn Gfx_CreateTexture(
-    _: *mut classicube_sys::Bitmap,
-    _: classicube_sys::cc_bool,
-    _: classicube_sys::cc_bool,
-) -> classicube_sys::GfxResourceID {
-    std::ptr::null_mut()
-}
-
-#[cfg(test)]
-#[no_mangle]
 static mut Entities: () = ();
 
 #[cfg(test)]
@@ -141,6 +127,8 @@ test_noop!(Chat_Send);
 test_noop!(ScheduledTask_Add);
 test_noop!(Chat_AddOf);
 test_noop!(Chat_Add);
+test_noop!(Gfx_CreateTexture);
+test_noop!(Gfx_DeleteTexture);
 
 #[ignore]
 #[test]

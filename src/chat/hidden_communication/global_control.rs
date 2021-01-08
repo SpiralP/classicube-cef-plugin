@@ -9,9 +9,9 @@ use crate::{
     entity_manager::{EntityBuilder, EntityManager},
     error::*,
     options,
-    player::{MediaPlayer, Player, PlayerTrait, VolumeMode, YouTubePlayer},
+    player::{PlayerBuilder, PlayerTrait, VolumeMode},
 };
-use classicube_helpers::{tab_list::remove_color, CellGetSet};
+use classicube_helpers::CellGetSet;
 use classicube_sys::ENTITIES_SELF_ID;
 use futures::{channel::mpsc, future::RemoteHandle, prelude::*};
 use std::{
@@ -20,7 +20,6 @@ use std::{
     time::Duration,
 };
 use tracing::{debug, info, warn};
-use url::Url;
 
 thread_local!(
     pub static CURRENT_MAP_THEME: Cell<Option<usize>> = Default::default();
@@ -145,17 +144,17 @@ pub async fn listen_loop() {
                     }
                 });
             }
-        } else if is_map_theme_message(&message) {
+        } else if let Some(first_part_input) = is_map_theme_message(&message) {
             debug!("got map_theme url first part {:?}", message);
 
-            let mut parts: Vec<String> = Vec::new();
-            parts.push(message);
+            let mut input_parts: Vec<String> = Vec::new();
+            input_parts.push(first_part_input.to_string());
 
             let timeout_result = async_manager::timeout(Duration::from_secs(1), async {
                 loop {
                     let message = wait_for_message().await;
                     if let Some(continuation) = is_continuation_message(&message) {
-                        parts.push(continuation.to_string());
+                        input_parts.push(continuation.to_string());
                     } else {
                         debug!("stopping because of other message {:?}", message);
                         break;
@@ -168,13 +167,11 @@ pub async fn listen_loop() {
                 debug!("stopping because of timeout");
             }
 
-            let full_message: String = parts.join("");
-            let full_message = remove_color(full_message);
-
-            info!("map_theme {:?}", full_message);
+            let full_input: String = input_parts.join("");
+            info!("map_theme {:?}", full_input);
 
             async_manager::spawn_local_on_main_thread(async move {
-                match handle_map_theme_url(full_message).await {
+                match handle_map_theme_url(full_input).await {
                     Ok(_) => {}
 
                     Err(e) => {
@@ -186,53 +183,70 @@ pub async fn listen_loop() {
     }
 }
 
-async fn handle_map_theme_url(message: String) -> Result<()> {
+async fn handle_map_theme_url(input: String) -> Result<()> {
+    debug!("map_theme got {:?}", input);
+
     if !options::AUTOPLAY_MAP_THEMES.get()? {
         return Ok(());
     }
 
-    let regex = regex::Regex::new(r"https?://(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)").unwrap();
+    // let regex = regex::Regex::new(r"https?://(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)").unwrap();
 
-    let match_ = regex.find(&message).chain_err(|| "regex find url")?;
-    let url = match_.as_str();
-    let url = Url::parse(url)?;
+    // let match_ = regex.find(&message).chain_err(|| "regex find url")?;
+    // let url = match_.as_str();
+    // let url = Url::parse(url)?;
 
-    debug!("map_theme got {:?}", url);
+    // let mut player = match YouTubePlayer::from_input(&url) {
+    //     Ok(player) => Player::YouTube(player),
+    //     Err(youtube_error) => match MediaPlayer::from_input(&url) {
+    //         Ok(player) => Player::Media(player),
+    //         Err(media_error) => {
+    //             bail!(
+    //                 "couldn't create any player for url {:?}: {}, {}",
+    //                 url,
+    //                 youtube_error,
+    //                 media_error
+    //             );
+    //         }
+    //     },
+    // };
 
-    let mut player = match YouTubePlayer::from_url(&url) {
-        Ok(player) => Player::YouTube(player),
-        Err(youtube_error) => match MediaPlayer::from_url(&url) {
-            Ok(player) => Player::Media(player),
-            Err(media_error) => {
-                bail!(
-                    "couldn't create any player for url {:?}: {}, {}",
-                    url,
-                    youtube_error,
-                    media_error
-                );
-            }
-        },
-    };
     let volume = options::MAP_THEME_VOLUME.get()?;
-    player.set_silent(true)?;
-    player.set_volume(None, volume)?;
-    player.set_volume_mode(None, VolumeMode::Global)?;
-    player.set_loop(None, true)?;
 
-    if let Some(entity_id) = CURRENT_MAP_THEME.get() {
-        EntityManager::with_entity(entity_id, |entity| entity.play(player))?;
-    } else {
-        // 1 fps, 1x1 resolution, don't send to other players, don't print "Now Playing"
-        let entity_id = EntityBuilder::new(player)
-            .frame_rate(1)
-            .resolution(1, 1)
-            .should_send(false)
-            .scale(0.0)
-            .position(0.0, 0.0, 0.0)
-            .create()?;
+    let mut players = PlayerBuilder::new()
+        .silent(true)
+        .volume(volume)
+        .volume_mode(VolumeMode::Global)
+        .should_loop(true)
+        // use youtube's so it can loop after playlist end
+        .use_youtube_playlist(true)
+        .build(&input)
+        .await?;
 
-        CURRENT_MAP_THEME.set(Some(entity_id));
+    for player in &players {
+        if player.type_name() != "YouTube" && player.type_name() != "Media" {
+            bail!("map theme not of type YoutubePlayer or MediaPlayer");
+        }
     }
+
+    let player = players.remove(0);
+
+    if let Some(entity_id) = CURRENT_MAP_THEME.with(|cell| cell.take()) {
+        EntityManager::remove_entity(entity_id).await?;
+    }
+
+    // 1 fps, 1x1 resolution, don't send to other players, don't print "Now Playing"
+    let entity_id = EntityBuilder::new(player)
+        .queue(players.into())
+        .frame_rate(1)
+        .resolution(1, 1)
+        .should_send(false)
+        .scale(0.0)
+        .position(0.0, 0.0, 0.0)
+        .create()
+        .await?;
+
+    CURRENT_MAP_THEME.set(Some(entity_id));
 
     Ok(())
 }

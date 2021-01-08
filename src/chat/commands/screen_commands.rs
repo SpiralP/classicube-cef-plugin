@@ -12,7 +12,6 @@ use async_recursion::async_recursion;
 use clap::{App, AppSettings, Arg, ArgMatches};
 use classicube_helpers::color;
 use std::time::{Duration, Instant};
-use tracing::*;
 
 // static commands not targetted at a specific entity
 pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
@@ -408,11 +407,7 @@ pub async fn handle_command(
         ("close", Some(matches)) => {
             let entity_id = EntityManager::with_entity((matches, player), |entity| Ok(entity.id))?;
 
-            async_manager::spawn_local_on_main_thread(async move {
-                if let Err(e) = EntityManager::remove_entity(entity_id).await {
-                    warn!("{}", e);
-                }
-            });
+            EntityManager::remove_entity(entity_id).await?;
 
             Ok(true)
         }

@@ -8,7 +8,7 @@ use std::{
     future::Future,
     pin::Pin,
     rc::Rc,
-    sync::Mutex,
+    sync::{Mutex, Once},
     task::{Context, Poll},
     time::Duration,
 };
@@ -36,11 +36,12 @@ thread_local!(
     static TICK_HANDLER: RefCell<Option<TickEventHandler>> = Default::default();
 );
 
+#[tracing::instrument]
 pub fn initialize() {
-    debug!("initialize async_manager");
+    debug!("async_manager");
 
     let async_dispatcher = Dispatcher::new();
-    *ASYNC_DISPATCHER_HANDLE.lock().unwrap() = Some(async_dispatcher.get_handle());
+    let async_dispatcher_handle = async_dispatcher.get_handle();
     ASYNC_DISPATCHER_LOCAL_HANDLE.with(|cell| {
         *cell.borrow_mut() = Some(async_dispatcher.get_handle_local());
     });
@@ -48,12 +49,17 @@ pub fn initialize() {
         *cell.borrow_mut() = Some(async_dispatcher);
     });
 
-    let rt = tokio::runtime::Builder::new_multi_thread()
-        .enable_all()
-        .build()
-        .unwrap();
+    static ONCE: Once = Once::new();
+    ONCE.call_once(move || {
+        *ASYNC_DISPATCHER_HANDLE.lock().unwrap() = Some(async_dispatcher_handle);
 
-    *TOKIO_RUNTIME.lock().unwrap() = Some(rt);
+        let rt = tokio::runtime::Builder::new_multi_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+
+        *TOKIO_RUNTIME.lock().unwrap() = Some(rt);
+    });
 
     TICK_HANDLER.with(|cell| {
         let mut tick_handler = TickEventHandler::new();

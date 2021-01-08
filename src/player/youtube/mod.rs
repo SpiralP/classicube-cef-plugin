@@ -23,6 +23,9 @@ pub struct YouTubePlayer {
     pub id: String,
     pub time: Duration,
 
+    // TODO syncing playlists based on video index and time?
+    pub is_playlist: bool,
+
     // 0-1
     volume: f32,
     volume_mode: VolumeMode,
@@ -49,6 +52,7 @@ impl Default for YouTubePlayer {
     fn default() -> Self {
         Self {
             id: String::new(),
+            is_playlist: false,
             time: Duration::from_millis(0),
             volume: 1.0,
             volume_mode: VolumeMode::Distance {
@@ -71,6 +75,7 @@ impl Clone for YouTubePlayer {
     fn clone(&self) -> Self {
         Self {
             id: self.id.clone(),
+            is_playlist: self.is_playlist,
             time: self.time,
             volume: self.volume,
             volume_mode: self.volume_mode,
@@ -90,8 +95,16 @@ impl PlayerTrait for YouTubePlayer {
 
     fn from_input(url_or_id: &str) -> Result<Self> {
         if let Ok(url) = Url::parse(&url_or_id) {
-            Self::from_url(&url)
-        } else if let Some(this) = Self::from_id(url_or_id.to_string()) {
+            Self::from_url(&url).or_else(|e| {
+                // try with % replaced with &
+                // because & is sent as % from cc client
+                if let Ok(url) = Url::parse(&url_or_id.replace("%", "&")) {
+                    Self::from_url(&url).or(Err(e))
+                } else {
+                    Err(e)
+                }
+            })
+        } else if let Some(this) = Self::from_id(url_or_id) {
             Ok(this)
         } else {
             Err("couldn't match id or url from input".into())
@@ -121,6 +134,10 @@ impl PlayerTrait for YouTubePlayer {
             params.push(("loop", "1".to_string()));
         }
 
+        if self.is_playlist {
+            params.push(("playlist", "1".to_string()));
+        }
+
         Url::parse_with_params("local://youtube/", &params)
             .unwrap()
             .into_string()
@@ -148,7 +165,8 @@ impl PlayerTrait for YouTubePlayer {
 
         self.last_title = title;
 
-        if self.autoplay {
+        // playlists will show multiple titles
+        if self.autoplay && !self.is_playlist {
             let now = Instant::now();
             if let Some(create_time) = self.create_time {
                 // if it took a long time to load
@@ -341,17 +359,10 @@ impl YouTubePlayer {
 }
 
 impl YouTubePlayer {
-    pub fn from_id(id: String) -> Option<Self> {
-        if id.len() < 11 {
-            return None;
-        }
-
-        let id = &id[..11];
-        let regex = Regex::new(r"^[A-Za-z0-9_\-]{11}$").unwrap();
-        if regex.is_match(&id) {
+    pub fn from_video_id(id: &str) -> Option<Self> {
+        if id.len() == 11 && Regex::new(r"^[A-Za-z0-9_\-]+$").unwrap().is_match(&id) {
             Some(Self {
                 id: id.to_string(),
-                time: Duration::from_secs(0),
                 ..Default::default()
             })
         } else {
@@ -359,8 +370,29 @@ impl YouTubePlayer {
         }
     }
 
-    pub fn from_id_and_time(id: String, time: Duration) -> Option<Self> {
-        let mut this = Self::from_id(id)?;
+    pub fn from_playlist_id(id: &str) -> Option<Self> {
+        if id.len() > 11 && Regex::new(r"^[A-Za-z0-9_\-]+$").unwrap().is_match(&id) {
+            Some(Self {
+                id: id.to_string(),
+                is_playlist: true,
+                ..Default::default()
+            })
+        } else {
+            None
+        }
+    }
+
+    /// from either a video id or playlist id
+    pub fn from_id(id: &str) -> Option<Self> {
+        if id.len() >= 11 {
+            Self::from_video_id(&id).or_else(|| Self::from_playlist_id(&id))
+        } else {
+            None
+        }
+    }
+
+    pub fn from_id_and_time(id: &str, time: Duration) -> Option<Self> {
+        let mut this = Self::from_id(&id)?;
         this.time = time;
 
         Some(this)
@@ -369,11 +401,11 @@ impl YouTubePlayer {
     pub fn from_url(url: &Url) -> Result<Self> {
         if url.scheme() != "http" && url.scheme() != "https" {
             Err("not http/https".into())
-        } else if let Some(this) = Self::from_normal(&url) {
+        } else if let Some(this) = Self::from_embed(&url) {
             Ok(this)
         } else if let Some(this) = Self::from_short(&url) {
             Ok(this)
-        } else if let Some(this) = Self::from_embed(&url) {
+        } else if let Some(this) = Self::from_normal(&url) {
             Ok(this)
         } else {
             Err("couldn't match url from input".into())
@@ -387,7 +419,7 @@ impl YouTubePlayer {
         }
 
         let query: HashMap<_, _> = url.query_pairs().collect();
-        let id = query.get("v")?.to_string();
+        let id = query.get("v").or_else(|| query.get("list"))?;
 
         // checks "t" first then for "time_continue"
         let time = query
@@ -402,7 +434,7 @@ impl YouTubePlayer {
             })
             .unwrap_or_default();
 
-        Some(Self::from_id_and_time(id, time)?)
+        Some(Self::from_id_and_time(&id, time)?)
     }
 
     fn from_short(url: &Url) -> Option<Self> {
@@ -411,7 +443,7 @@ impl YouTubePlayer {
             return None;
         }
 
-        let id = url.path_segments()?.next()?.to_string();
+        let id = url.path_segments()?.next()?;
 
         let query: HashMap<_, _> = url.query_pairs().collect();
         let time = query
@@ -420,7 +452,7 @@ impl YouTubePlayer {
             .map(Duration::from_secs)
             .unwrap_or_default();
 
-        Some(Self::from_id_and_time(id, time)?)
+        Some(Self::from_id_and_time(&id, time)?)
     }
 
     fn from_embed(url: &Url) -> Option<Self> {
@@ -434,7 +466,7 @@ impl YouTubePlayer {
             return None;
         }
 
-        let id = path_segments.next()?.to_string();
+        let id = path_segments.next()?;
 
         let query: HashMap<_, _> = url.query_pairs().collect();
         let time = query
@@ -443,14 +475,15 @@ impl YouTubePlayer {
             .map(Duration::from_secs)
             .unwrap_or_default();
 
-        Some(Self::from_id_and_time(id, time)?)
+        Some(Self::from_id_and_time(&id, time)?)
     }
 }
 
 #[test]
 fn test_youtube() {
     {
-        let without_time = [
+        let inputs = [
+            "pNMRBTN1SGU",
             "https://www.youtube.com/watch?v=pNMRBTN1SGU",
             "https://youtu.be/pNMRBTN1SGU",
             "https://www.youtube.com/embed/pNMRBTN1SGU",
@@ -465,18 +498,16 @@ fn test_youtube() {
 
         let should = YouTubePlayer {
             id: "pNMRBTN1SGU".into(),
-            time: Duration::from_secs(0),
             ..Default::default()
         };
-        for &url in &without_time {
-            let yt = YouTubePlayer::from_input(url).unwrap();
+        for input in &inputs {
+            let yt = YouTubePlayer::from_input(&input).expect(input);
             assert_eq!(yt.id, should.id);
-            assert_eq!(yt.time, should.time);
         }
     }
 
     {
-        let with_time = [
+        let inputs = [
             "https://www.youtube.com/watch?v=pNMRBTN1SGU&feature=youtu.be&t=36",
             "https://www.youtube.com/watch?v=pNMRBTN1SGU&t=36",
             "https://www.youtube.com/watch?time_continue=36&v=pNMRBTN1SGU&feature=emb_logo",
@@ -484,8 +515,10 @@ fn test_youtube() {
             "https://youtu.be/pNMRBTN1SGU?t=36",
             "https://www.youtube.com/embed/pNMRBTN1SGU?autoplay=1&start=36",
             "https://www.youtube.com/embed/pNMRBTN1SGU?start=36",
-            /* TODO
-             * "https://www.youtube.com/watch?v=pNMRBTN1SGU%t=827s", */
+            "https://www.youtube.com/watch?v=pNMRBTN1SGU%t=36",
+            "https://www.youtube.com/watch?time_continue=36%v=pNMRBTN1SGU%feature=emb_logo",
+            "https://www.youtube.com/watch?v=pNMRBTN1SGU%feature=youtu.be%t=36",
+            // test for cc replacing & with %
         ];
 
         let should = YouTubePlayer {
@@ -493,25 +526,89 @@ fn test_youtube() {
             time: Duration::from_secs(36),
             ..Default::default()
         };
-        for &url in &with_time {
-            let yt = YouTubePlayer::from_input(url).unwrap();
+        for input in &inputs {
+            let yt = YouTubePlayer::from_input(&input).expect(input);
             assert_eq!(yt.id, should.id);
             assert_eq!(yt.time, should.time);
         }
     }
 
-    let left = YouTubePlayer::from_input("pNMRBTN1SGU").unwrap();
-    let right = YouTubePlayer {
-        id: "pNMRBTN1SGU".into(),
-        time: Duration::from_secs(0),
-        ..Default::default()
-    };
-    assert_eq!(left.id, right.id);
-    assert_eq!(left.time, right.time);
+    {
+        // not 11 chars
+        assert!(YouTubePlayer::from_input("gQngg8iQip").is_err());
 
-    // not 11 chars
-    assert!(YouTubePlayer::from_input("gQngg8iQip").is_err());
+        // blank input
+        assert!(YouTubePlayer::from_input("").is_err());
+    }
 
-    // blank input
-    assert!(YouTubePlayer::from_input("").is_err());
+    // playlists
+    {
+        // id parsing
+        {
+            let ids = [
+                "PLspeOI0YmcdPQJWbvMhOCg5RhGkNUoVJR",
+                "PLDfU1tT3TQ16cW3WdAKf2WicS6wrdgZxB",
+                "PLbzoR-pLrL6qucl8-lOnzvhFc2UM1tcZA",
+                "PLWwAypAcFRgKAIIFqBr9oy-ZYZnixa_Fj",
+                "OLAK5uy_kNWirTkTpIwjLNlYorGFj8-GIa5yPHw1c",
+                "PLpnh5xqG8PuONcW35KipnicwP4W3oyFMS",
+                "PLF37D334894B07EEA",
+            ];
+            for id in &ids {
+                let should = YouTubePlayer {
+                    id: id.to_string(),
+                    is_playlist: true,
+                    ..Default::default()
+                };
+                {
+                    let yt = YouTubePlayer::from_input(&id).expect(id);
+                    assert_eq!(yt.id, should.id);
+                }
+                {
+                    // also try link to playlist
+                    let id = format!("https://www.youtube.com/playlist?list={}", id);
+                    let yt = YouTubePlayer::from_input(&id).expect(&id);
+                    assert_eq!(yt.id, should.id);
+                }
+            }
+        }
+
+        // link to video with playlist param
+        // -> don't treat as playlist at all, just the video
+        // if we ever want to handle both make sure to check "index" param
+        {
+            let ids = [
+                "https://youtu.be/mZpa3nOLOa8?list=PLDfU1tT3TQ16cW3WdAKf2WicS6wrdgZxB",
+                "https://www.youtube.com/watch?v=mZpa3nOLOa8&list=PLDfU1tT3TQ16cW3WdAKf2WicS6wrdgZxB&index=1",
+            ];
+            let should = YouTubePlayer {
+                id: "mZpa3nOLOa8".to_string(),
+                is_playlist: false,
+                ..Default::default()
+            };
+            for id in &ids {
+                let yt = YouTubePlayer::from_input(&id).expect(id);
+                assert_eq!(yt.id, should.id);
+            }
+        }
+
+        // with time
+        {
+            let ids = [
+                "https://youtu.be/mZpa3nOLOa8?list=PLDfU1tT3TQ16cW3WdAKf2WicS6wrdgZxB&t=69",
+                "https://www.youtube.com/watch?v=mZpa3nOLOa8&list=PLDfU1tT3TQ16cW3WdAKf2WicS6wrdgZxB&index=1&t=69",
+            ];
+            let should = YouTubePlayer {
+                id: "mZpa3nOLOa8".to_string(),
+                is_playlist: false,
+                time: Duration::from_secs(69),
+                ..Default::default()
+            };
+            for id in &ids {
+                let yt = YouTubePlayer::from_input(&id).expect(id);
+                assert_eq!(yt.id, should.id);
+                assert_eq!(yt.time, should.time);
+            }
+        }
+    }
 }

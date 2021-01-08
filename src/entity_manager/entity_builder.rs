@@ -1,6 +1,5 @@
 use super::{CefEntity, EntityManager, ENTITIES, NAME_TO_ID};
 use crate::{
-    async_manager,
     cef::Cef,
     error::*,
     options::FRAME_RATE,
@@ -43,14 +42,14 @@ impl EntityBuilder {
         }
     }
 
-    pub fn create(mut self) -> Result<usize> {
+    pub async fn create(mut self) -> Result<usize> {
         let name = self.name.take();
         let url = self.player.on_create();
 
         let entity_id = EntityManager::get_new_id();
         {
             let name = name.clone();
-            ENTITIES.with(move |cell| {
+            let future = ENTITIES.with(move |cell| {
                 let entities = &mut *cell.borrow_mut();
                 let background_color = self.background_color.unwrap_or(0xFFFFFFFF);
 
@@ -83,29 +82,25 @@ impl EntityBuilder {
                 let frame_rate = self.frame_rate;
                 let insecure = self.insecure;
                 let resolution = self.resolution;
-                async_manager::spawn_local_on_main_thread(async move {
-                    let result = async move {
-                        let browser =
-                            Cef::create_browser(url, frame_rate, insecure, background_color)
-                                .await?;
 
-                        if let Some((width, height)) = resolution {
-                            Cef::resize_browser(&browser, width, height)?;
-                        }
+                async move {
+                    let browser =
+                        Cef::create_browser(url, frame_rate, insecure, background_color).await?;
 
-                        EntityManager::with_entity(entity_id, |entity| {
-                            entity.attach_browser(browser);
-                            Ok(())
-                        })?;
-
-                        Ok::<_, Error>(())
-                    };
-
-                    if let Err(e) = result.await {
-                        warn!("create_attach_browser: {}", e);
+                    if let Some((width, height)) = resolution {
+                        Cef::resize_browser(&browser, width, height)?;
                     }
-                });
+
+                    EntityManager::with_entity(entity_id, |entity| {
+                        entity.attach_browser(browser);
+                        Ok(())
+                    })?;
+
+                    Ok::<_, Error>(())
+                }
             });
+
+            future.await?;
         }
 
         if let Some(name) = name {

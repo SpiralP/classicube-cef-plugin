@@ -132,7 +132,7 @@ pub async fn received_message(mut message: Message) -> Result<bool> {
             builder = builder.resolution(res.0, res.1);
         }
 
-        builder.create()?;
+        builder.create().await?;
 
         had_data = true;
     }

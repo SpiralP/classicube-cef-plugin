@@ -132,7 +132,9 @@ impl Chat {
                         .expect("don't worry about this error");
                     }
 
-                    run(&["create", "-n", "ag", "-s", "zGM8PT1eAvY"]).await;
+                    run(&["create", "-n", "ag", "-s", "4sk0uDbM5lc"]).await;
+                    run(&["volume", "-n", "ag", "-p", "10"]).await;
+
                     // run(&["here", "-n", "ag"]).await;
                     // run(&["volume", "-n", "ag", "-p", "10.0"]).await;
                     // run(&["speed", "-n", "ag", "1.1"]).await;

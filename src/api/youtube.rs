@@ -1,5 +1,6 @@
 use crate::{async_manager, error::*};
 use serde::Deserialize;
+use tracing::*;
 
 const API_URL: &str = "http://youtube.spiralp.uk.to:43210";
 const APP_USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"));
@@ -46,6 +47,7 @@ pub async fn video(id: &str) -> Result<VideoResponse> {
     Ok(result)
 }
 
+#[tracing::instrument]
 pub async fn playlist(id: &str) -> Result<Vec<String>> {
     let id = id.to_string();
 
@@ -59,12 +61,14 @@ pub async fn playlist(id: &str) -> Result<Vec<String>> {
             .await?;
 
         if let Ok(error) = serde_json::from_slice::<ApiError>(&bytes) {
-            bail!("{}", error.message);
+            bail!("ApiError: {}", error.message);
         } else {
             Ok::<_, Error>(serde_json::from_slice::<Vec<String>>(&bytes)?)
         }
     })
     .await??;
+
+    debug!("{:?}", result);
 
     Ok(result)
 }
@@ -102,31 +106,17 @@ pub async fn search(query: &str) -> Result<SearchResponse> {
 
 #[cfg(test)]
 #[no_mangle]
-extern "C" fn Gfx_DeleteTexture() {}
+extern "C" fn Gfx_DeleteTexture(_: *mut classicube_sys::GfxResourceID) {}
 
 #[cfg(test)]
 #[no_mangle]
-extern "C" fn Gfx_CreateTexture() {}
-
-#[cfg(test)]
-#[no_mangle]
-extern "C" fn Entity_SetModel() {}
-
-#[cfg(test)]
-#[no_mangle]
-extern "C" fn Options_Get() {}
-
-#[cfg(test)]
-#[no_mangle]
-extern "C" fn Options_Set() {}
-
-#[cfg(test)]
-#[no_mangle]
-extern "C" fn Chat_Send() {}
-
-#[cfg(test)]
-#[no_mangle]
-extern "C" fn ScheduledTask_Add() {}
+extern "C" fn Gfx_CreateTexture(
+    _: *mut classicube_sys::Bitmap,
+    _: classicube_sys::cc_bool,
+    _: classicube_sys::cc_bool,
+) -> classicube_sys::GfxResourceID {
+    std::ptr::null_mut()
+}
 
 #[cfg(test)]
 #[no_mangle]
@@ -136,22 +126,40 @@ static mut Entities: () = ();
 #[no_mangle]
 static mut Camera: () = ();
 
+macro_rules! test_noop {
+    ($name:tt) => {
+        #[cfg(test)]
+        #[no_mangle]
+        pub extern "C" fn $name() {}
+    };
+}
+
+test_noop!(Entity_SetModel);
+test_noop!(Options_Get);
+test_noop!(Options_Set);
+test_noop!(Chat_Send);
+test_noop!(ScheduledTask_Add);
+test_noop!(Chat_AddOf);
+test_noop!(Chat_Add);
+
 #[ignore]
 #[test]
 fn test_youtube_search() {
-    async_manager::initialize();
+    crate::logger::initialize(true, false, false);
+    crate::async_manager::initialize();
 
     async_manager::block_on_local(async {
-        println!("{:#?}", search("nyan").await);
+        println!("{:#?}", search("nyan").await.unwrap());
     });
 }
 
 #[ignore]
 #[test]
 fn test_youtube_video() {
-    async_manager::initialize();
+    crate::logger::initialize(true, false, false);
+    crate::async_manager::initialize();
 
     async_manager::block_on_local(async {
-        println!("{:#?}", video("QH2-TGUlwu4").await);
+        println!("{:#?}", video("QH2-TGUlwu4").await.unwrap());
     });
 }

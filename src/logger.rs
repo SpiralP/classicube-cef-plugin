@@ -14,7 +14,6 @@ pub static mut GUARDS: Option<Vec<Guard>> = None;
 
 pub fn initialize(debug: bool, other_crates: bool, flame: bool) {
     static ONCE: Once = Once::new();
-
     ONCE.call_once(move || {
         {
             // erase files so they're only of this session

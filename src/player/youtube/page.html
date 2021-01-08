@@ -55,13 +55,14 @@
         }
       }
 
-      var videoId = getQueryVariable("id");
+      var id = getQueryVariable("id");
       var startTime = parseFloat(getQueryVariable("time") || 0.0);
       var startVolume = parseFloat(getQueryVariable("volume") || 1.0);
       var speed = parseFloat(getQueryVariable("speed") || 1.0);
       var subtitles = parseInt(getQueryVariable("subtitles")) === 1;
       var autoplay = parseInt(getQueryVariable("autoplay")) === 1;
       var shouldLoop = parseInt(getQueryVariable("loop")) === 1;
+      var isPlaylist = parseInt(getQueryVariable("playlist")) === 1;
 
       window.playerFinishedTime = 0;
       window.playerFinished = false;
@@ -146,9 +147,15 @@
         var player = new YT.Player("player", {
           width: window.innerWidth,
           height: window.innerHeight,
-          videoId: videoId,
+          videoId: id,
           playerVars: {
-            playlist: videoId,
+            listType: isPlaylist ? "playlist" : undefined,
+            list: isPlaylist ? id : undefined,
+
+            // this is a local playlist, not a youtube one!
+            // adding this makes looping a single video work
+            playlist: isPlaylist ? undefined : id,
+
             // setting to 0 will cause ads to play
             autoplay: 1,
             controls: 0,
@@ -167,14 +174,14 @@
             onError: (event) => {
               console.warn(event);
               const n = event.data;
-              if (n === 5 || n === 101 || n === 150) {
+              if (!isPlaylist && (n === 5 || n === 101 || n === 150)) {
                 // 5
                 // "Your browser does not currently recognize any of the video formats available."
                 // 101, 150
                 // "Playback on other websites has been disabled by the video owner."
                 console.warn("redirecting to reencode");
                 document.write("<h1>redirecting to reencode</h1>");
-                window.location = `http://youtube.spiralp.uk.to:43210/reencode/${videoId}`;
+                window.location = `http://youtube.spiralp.uk.to:43210/reencode/${id}`;
               }
             },
           },
@@ -216,14 +223,22 @@
         if (event.data === YT.PlayerState.PLAYING) {
           var videoData = player.getVideoData();
           var totalSeconds = player.getDuration();
+
+          let title = "";
+          if (isPlaylist) {
+            const array = player.getPlaylist();
+            const index = player.getPlaylistIndex();
+            title = `[playlist ${index + 1}/${array.length}] `;
+          }
           if (isFinite(totalSeconds)) {
-            document.title =
-              videoData.title + " (" + formatSeconds(totalSeconds) + ")";
+            document.title = `${title}${videoData.title} (${formatSeconds(
+              totalSeconds
+            )})`;
           } else {
-            document.title = videoData.title;
+            document.title = `${title}${videoData.title}`;
           }
         } else if (event.data === YT.PlayerState.ENDED) {
-          if (!shouldLoop) {
+          if (!isPlaylist && !shouldLoop) {
             window.playerFinishedTime = player.getDuration();
             window.playerFinished = true;
             player.stopVideo();

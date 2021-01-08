@@ -171,7 +171,7 @@ pub async fn handle_command(
                 entity_builder = entity_builder.name(name);
             }
 
-            let entity_id = entity_builder.create()?;
+            let entity_id = entity_builder.create().await?;
 
             if !global {
                 EntityManager::with_entity(entity_id, |entity| {

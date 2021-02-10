@@ -222,7 +222,7 @@ fn test_get_clients() {
     crate::logger::initialize(true, false, false);
     crate::async_manager::initialize();
 
-    async_manager::spawn_on_main_thread(async {
+    async_manager::spawn_local_on_main_thread(async {
         let r = get_clients().await.unwrap();
 
         let mut iter = r.iter();
@@ -263,4 +263,5 @@ fn test_get_clients() {
     }
 
     async_manager::run();
+    crate::async_manager::shutdown();
 }

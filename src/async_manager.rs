@@ -8,7 +8,7 @@ use std::{
     future::Future,
     pin::Pin,
     rc::Rc,
-    sync::{Mutex, Once},
+    sync::Mutex,
     task::{Context, Poll},
     time::Duration,
 };
@@ -49,26 +49,26 @@ pub fn initialize() {
         *cell.borrow_mut() = Some(async_dispatcher);
     });
 
-    static ONCE: Once = Once::new();
-    ONCE.call_once(move || {
-        *ASYNC_DISPATCHER_HANDLE.lock().unwrap() = Some(async_dispatcher_handle);
+    *ASYNC_DISPATCHER_HANDLE.lock().unwrap() = Some(async_dispatcher_handle);
 
-        let rt = tokio::runtime::Builder::new_multi_thread()
-            .enable_all()
-            .build()
-            .unwrap();
+    let rt = tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()
+        .unwrap();
 
-        *TOKIO_RUNTIME.lock().unwrap() = Some(rt);
-    });
+    *TOKIO_RUNTIME.lock().unwrap() = Some(rt);
 
-    TICK_HANDLER.with(|cell| {
-        let mut tick_handler = TickEventHandler::new();
-        tick_handler.on(|_task| {
-            step();
+    #[cfg(not(test))]
+    {
+        TICK_HANDLER.with(|cell| {
+            let mut tick_handler = TickEventHandler::new();
+            tick_handler.on(|_task| {
+                step();
+            });
+
+            *cell.borrow_mut() = Some(tick_handler);
         });
-
-        *cell.borrow_mut() = Some(tick_handler);
-    });
+    }
 }
 
 pub fn shutdown() {
@@ -96,6 +96,7 @@ pub fn shutdown() {
         }
     }
 
+    #[cfg(not(test))]
     {
         if TICK_HANDLER.with_inner(|_| ()).is_some() {
             debug!("shutdown tick_handler");

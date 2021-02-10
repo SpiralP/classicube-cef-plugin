@@ -51,7 +51,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/') != true
         with:
           command: test
-          args: --target ${{ matrix.config.target }} --features ci -- --nocapture
+          args: --target ${{ matrix.config.target }} -- --nocapture --test-threads 1
 
       - name: Build Release
         uses: actions-rs/cargo@v1
@@ -159,7 +159,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/') != true
         with:
           command: test
-          args: --target ${{ matrix.config.target }} --features ci -- --nocapture
+          args: --target ${{ matrix.config.target }} -- --nocapture --test-threads 1
 
       - name: Build Release
         uses: actions-rs/cargo@v1
@@ -303,7 +303,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/') != true
         with:
           command: test
-          args: --target ${{ matrix.config.target }} --features ci -- --nocapture
+          args: --target ${{ matrix.config.target }} -- --nocapture --test-threads 1
 
       - name: Build Release
         uses: actions-rs/cargo@v1

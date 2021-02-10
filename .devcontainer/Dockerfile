@@ -8,7 +8,7 @@ RUN export DEBIAN_FRONTEND=noninteractive \
   # openssl-sys <- reqwest
   libssl-dev \
   # bindgen <- classicube-sys
-  clang-10 \
+  clang-11 \
   # classicube-cef-plugin
   cmake \
   # cef ld linking

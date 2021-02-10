@@ -145,27 +145,32 @@ fn get_last_color(text: &str) -> Option<char> {
     last_color
 }
 
-#[cfg(not(feature = "ci"))]
-#[tokio::test]
-async fn test_commands() {
+#[test]
+fn test_commands() {
     crate::logger::initialize(true, true, false);
-    initialize();
+    crate::async_manager::initialize();
+    self::initialize();
 
-    run(
-        unsafe { std::mem::zeroed() },
-        vec!["--".into(), "help".into()],
-        true,
-        true,
-    )
-    .await
-    .unwrap();
+    async_manager::spawn_local_on_main_thread(async {
+        run(
+            unsafe { std::mem::zeroed() },
+            vec!["--".into(), "help".into()],
+            true,
+            true,
+        )
+        .await
+        .unwrap();
 
-    run(
-        unsafe { std::mem::zeroed() },
-        vec!["help".into()],
-        true,
-        true,
-    )
-    .await
-    .unwrap();
+        run(
+            unsafe { std::mem::zeroed() },
+            vec!["help".into()],
+            true,
+            true,
+        )
+        .await
+        .unwrap();
+    });
+
+    crate::async_manager::run();
+    crate::async_manager::shutdown();
 }

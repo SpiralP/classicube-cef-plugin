@@ -18,8 +18,6 @@ pub async fn start_whispering(players: Vec<(u8, String)>) -> Result<()> {
         return Ok(());
     }
 
-    debug!("start_whispering");
-
     let mut real_players: Vec<_> = players
         .iter()
         .filter(|(id, _real_name)| {
@@ -29,6 +27,8 @@ pub async fn start_whispering(players: Vec<(u8, String)>) -> Result<()> {
                 .unwrap()
         })
         .collect();
+
+    debug!("start_whispering {:#?}", real_players);
 
     real_players.shuffle(&mut rand::thread_rng());
 

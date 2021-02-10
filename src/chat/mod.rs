@@ -11,7 +11,7 @@ use classicube_helpers::{
     tab_list::{remove_color, TabList},
     CellGetSet,
 };
-use classicube_sys::{Chat_Send, MsgType, MsgType_MSG_TYPE_NORMAL, OwnedString, Server, Vec3};
+use classicube_sys::{MsgType, MsgType_MSG_TYPE_NORMAL, Server, Vec3};
 use deunicode::deunicode;
 use futures::{future::RemoteHandle, prelude::*};
 use std::{
@@ -190,7 +190,7 @@ impl Chat {
 
         #[cfg(not(test))]
         {
-            use classicube_sys::Chat_Add;
+            use classicube_sys::{Chat_Add, OwnedString};
 
             let mut s = deunicode(&s);
 
@@ -213,12 +213,17 @@ impl Chat {
     pub fn send<S: Into<String>>(s: S) {
         let s = s.into();
         info!("{}", s);
-        let s = deunicode(&s);
 
-        let owned_string = OwnedString::new(s);
+        #[cfg(not(test))]
+        {
+            use classicube_sys::{Chat_Send, OwnedString};
 
-        unsafe {
-            Chat_Send(owned_string.as_cc_string(), 0);
+            let s = deunicode(&s);
+            let owned_string = OwnedString::new(s);
+
+            unsafe {
+                Chat_Send(owned_string.as_cc_string(), 0);
+            }
         }
     }
 }
@@ -326,8 +331,9 @@ fn handle_chat_received(message: String, message_type: MsgType) {
                 warn!("player_snapshot all lookups failed for id {:?}", id);
             }
         }
-    } else if (message.contains(": ") || message.contains("> "))
+    } else if message.contains(": ")
         && !message.starts_with("&5Discord: &f[")
+        && !message.starts_with("&5(Discord) ")
     {
         warn!("couldn't match player for {:?}", message);
     }
@@ -410,8 +416,6 @@ fn find_player_from_message(mut full_msg: String) -> Option<(u8, String, String)
         // find colon from the left
         let opt = full_msg
             .find(": ")
-            .and_then(|pos| if pos > 4 { Some(pos) } else { None })
-            .or_else(|| full_msg.find("> "))
             .and_then(|pos| if pos > 4 { Some(pos) } else { None });
 
         if let Some(pos) = opt {

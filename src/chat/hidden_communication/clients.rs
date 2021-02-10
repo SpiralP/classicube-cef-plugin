@@ -28,7 +28,12 @@ pub fn query() {
 
         // whole query shouldn't take more than 30 seconds
         // includes whispering and browser creation
-        match async_manager::timeout_local(Duration::from_secs(30), do_query()).await {
+        match async_manager::timeout_local(Duration::from_secs(30), async {
+            let messages = get_clients().await?;
+            process_clients_response(messages).await
+        })
+        .await
+        {
             Some(result) => {
                 if let Err(e) = result {
                     warn!("clients query failed: {}", e);
@@ -62,7 +67,7 @@ pub fn stop_query() {
     // });
 }
 
-async fn do_query() -> Result<()> {
+async fn get_clients() -> Result<Vec<String>> {
     // TODO check for "Server software: MCGalaxy 1.9.2.0"
 
     // Server software: ProCraft
@@ -97,6 +102,7 @@ async fn do_query() -> Result<()> {
 
             if was_clients_message {
                 if let Some(message) = is_continuation_message(&message) {
+                    let message = remove_color(message);
                     SHOULD_BLOCK.set(true);
 
                     let last_message = messages.last_mut().unwrap();
@@ -105,10 +111,11 @@ async fn do_query() -> Result<()> {
                 }
             }
             if let Some(message) = is_clients_message(&message) {
+                let message = remove_color(message);
                 SHOULD_BLOCK.set(true);
 
                 // a /clients response
-                messages.push(message.to_string());
+                messages.push(message);
 
                 was_clients_message = true;
             } else {
@@ -124,12 +131,10 @@ async fn do_query() -> Result<()> {
         debug!("stopping because of timeout");
     }
 
-    process_clients_response(messages).await?;
-
-    Ok(())
+    Ok(messages)
 }
 
-async fn process_clients_response(messages: Vec<String>) -> Result<()> {
+fn get_names_with_cef(messages: &[String]) -> Result<HashSet<String>> {
     // cef0.13.2-alpha.0
     let app_name_without_last_number = format!(
         "{}.",
@@ -142,15 +147,12 @@ async fn process_clients_response(messages: Vec<String>) -> Result<()> {
     debug!("{:#?} {:?}", messages, app_name_without_last_number);
 
     let mut names_with_cef: HashSet<String> = HashSet::new();
-    for message in &messages {
-        let pos = message.find(": &f").chain_err(|| "couldn't find colon")?;
+    for message in messages {
+        let pos = message.find(": ").chain_err(|| "couldn't find colon")?;
 
         let (left, right) = message.split_at(pos);
-        // skip ": &f"
-        let right = &right[4..];
-
-        let left = remove_color(left);
-        let right = remove_color(right);
+        // skip ": "
+        let right = &right[2..];
 
         let names: HashSet<String> = right.split(", ").map(|a| a.to_string()).collect();
 
@@ -160,6 +162,12 @@ async fn process_clients_response(messages: Vec<String>) -> Result<()> {
             }
         }
     }
+
+    Ok(names_with_cef)
+}
+
+async fn process_clients_response(messages: Vec<String>) -> Result<()> {
+    let mut names_with_cef = get_names_with_cef(&messages)?;
 
     debug!("{:#?}", names_with_cef);
 
@@ -196,4 +204,63 @@ async fn process_clients_response(messages: Vec<String>) -> Result<()> {
     }
 
     Ok(())
+}
+
+#[test]
+fn test_get_names_with_cef() {
+    let lines = vec![format!(
+        "ClassiCube 1.2.4 + {} +cs3.5.15 + Ponies v2.1: name",
+        APP_NAME
+    )];
+
+    let r = get_names_with_cef(&lines).unwrap();
+    assert!(r.contains("name"));
+}
+
+#[test]
+fn test_get_clients() {
+    crate::logger::initialize(true, false, false);
+    crate::async_manager::initialize();
+
+    async_manager::spawn_on_main_thread(async {
+        let r = get_clients().await.unwrap();
+
+        let mut iter = r.iter();
+        assert_eq!(
+            iter.next().unwrap(),
+            "ClassiCube 1.2.4 + cef1.3.0 +cs3.5.15 + Ponies v2.1: name"
+        );
+        assert_eq!(
+            iter.next().unwrap(),
+            "ClassiCube 1.2.4 + cef1.3.0 +cs3.6.0 + MM 1.2.5 + Ponies v2.1: SpiralP"
+        );
+    });
+
+    let messages = vec![
+        ("hi", false),
+        ("&7Players using:", true),
+        (
+            "&7  ClassiCube 1.2.4 + cef1.3.0 +cs3.5.15 + Ponies v2.1:",
+            true,
+        ),
+        ("> &7&fname", true),
+        ("asdf", false),
+        (
+            "&7  ClassiCube 1.2.4 + cef1.3.0 +cs3.6.0 + MM 1.2.5 + Ponies",
+            true,
+        ),
+        ("> &7v2.1: &fSpiralP", true),
+        ("okay", false),
+    ];
+
+    for (message, should_block) in messages {
+        assert_eq!(
+            super::handle_chat_message(message.to_string()),
+            should_block,
+            "{:?}",
+            message
+        );
+    }
+
+    async_manager::run();
 }

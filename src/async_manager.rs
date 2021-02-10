@@ -127,6 +127,15 @@ pub fn step() {
         .unwrap();
 }
 
+#[cfg(test)]
+pub fn run() {
+    ASYNC_DISPATCHER
+        .with_inner_mut(|async_dispatcher| {
+            async_dispatcher.run();
+        })
+        .unwrap();
+}
+
 pub async fn sleep(duration: Duration) {
     let _ = Delay::new(duration).await;
 }

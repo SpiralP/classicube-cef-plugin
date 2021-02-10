@@ -121,7 +121,7 @@ pub async fn wait_for_message() -> String {
 }
 
 #[must_use]
-fn handle_chat_message(message: String) -> bool {
+pub fn handle_chat_message(message: String) -> bool {
     // don't recurse from Chat::send()
     if SIMULATING.get() {
         return false;

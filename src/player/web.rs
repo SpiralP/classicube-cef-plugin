@@ -137,7 +137,7 @@ fn test_web() {
         ];
 
         for &url in &bad_urls {
-            assert!(WebPlayer::from_input(url).is_err(), url);
+            assert!(WebPlayer::from_input(url).is_err(), "{}", url);
         }
     }
 }

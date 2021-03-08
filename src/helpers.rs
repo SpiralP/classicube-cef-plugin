@@ -1,5 +1,5 @@
 use classicube_sys::Vec3;
-use nalgebra::*;
+use nalgebra::Vector3;
 use std::time::Duration;
 
 pub fn vec3_to_vector3(v: &Vec3) -> Vector3<f32> {
@@ -16,10 +16,10 @@ pub fn format_duration(duration: Duration) -> String {
     let minutes = (seconds - hours * 3600) / 60;
     let seconds = seconds - hours * 3600 - minutes * 60;
 
-    if hours != 0 {
-        format!("{:02}:{:02}:{:02}", hours, minutes, seconds)
-    } else {
+    if hours == 0 {
         format!("{:02}:{:02}", minutes, seconds)
+    } else {
+        format!("{:02}:{:02}:{:02}", hours, minutes, seconds)
     }
 }
 

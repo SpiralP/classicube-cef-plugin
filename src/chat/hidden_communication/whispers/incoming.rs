@@ -72,7 +72,7 @@ async fn handle_request(message: String) -> Result<()> {
         .chain_err(|| "TAB_LIST")?;
 
     if let Some(real_name) = maybe_real_name {
-        let mut mutex = SENDING.with(|m| m.clone());
+        let mut mutex = SENDING.with(Clone::clone);
         let mutex = mutex.lock().await;
 
         send_reply(real_name).await?;

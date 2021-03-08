@@ -66,8 +66,8 @@ fn panic_hook(info: &PanicInfo<'_>) {
         .append(true)
         .open("cef-crashes.log")
     {
-        let _ = writeln!(file, "{}", verbose_message);
-        let _ = file.flush();
+        drop(writeln!(file, "{}", verbose_message));
+        drop(file.flush());
         drop(file);
     }
 

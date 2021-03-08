@@ -116,7 +116,7 @@ pub async fn listen_loop() {
 
             let args = global_cef_message
                 .split(' ')
-                .map(|a| a.to_string())
+                .map(ToString::to_string)
                 .collect::<Vec<String>>();
 
             if let Some(player_snapshot) = PlayerSnapshot::from_entity_id(ENTITIES_SELF_ID as _) {
@@ -147,8 +147,7 @@ pub async fn listen_loop() {
         } else if let Some(first_part_input) = is_map_theme_message(&message) {
             debug!("got map_theme url first part {:?}", message);
 
-            let mut input_parts: Vec<String> = Vec::new();
-            input_parts.push(first_part_input.to_string());
+            let mut input_parts: Vec<String> = vec![first_part_input.to_string()];
 
             let timeout_result = async_manager::timeout(Duration::from_secs(1), async {
                 loop {
@@ -231,7 +230,7 @@ async fn handle_map_theme_url(input: String) -> Result<()> {
 
     let player = players.remove(0);
 
-    if let Some(entity_id) = CURRENT_MAP_THEME.with(|cell| cell.take()) {
+    if let Some(entity_id) = CURRENT_MAP_THEME.with(Cell::take) {
         EntityManager::remove_entity(entity_id).await?;
     }
 

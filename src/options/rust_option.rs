@@ -21,9 +21,7 @@ impl<T> RustOption<T>
 where
     T: FromStr + Display + Copy + 'static,
     Self: 'static,
-    <T as FromStr>::Err: std::error::Error,
-    <T as FromStr>::Err: Send,
-    <T as FromStr>::Err: 'static,
+    <T as FromStr>::Err: std::error::Error + Send + 'static,
 {
     pub const fn new(
         key: &'static str,

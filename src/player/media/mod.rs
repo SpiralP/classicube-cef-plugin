@@ -91,7 +91,7 @@ impl PlayerTrait for MediaPlayer {
         WebPlayer::from_input(url)?;
 
         let url = Url::parse(url)?;
-        Ok(Self::from_url(&url)?)
+        Self::from_url(&url)
     }
 
     fn on_create(&mut self) -> String {

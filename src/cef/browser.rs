@@ -119,10 +119,8 @@ pub extern "C" fn on_certificate_error_callback(browser: RustRefBrowser) -> bool
     ALLOW_INSECURE.with(move |cell| {
         let allow_insecure = &mut *cell.borrow_mut();
 
-        if let Some(allow) = allow_insecure.get(&browser_id) {
-            *allow
-        } else {
-            false
-        }
+        allow_insecure
+            .get(&browser_id)
+            .map_or(false, |allow| *allow)
     })
 }

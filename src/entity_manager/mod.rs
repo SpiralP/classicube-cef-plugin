@@ -24,7 +24,7 @@ use futures::{
 use std::{
     cell::{Cell, RefCell},
     collections::HashMap,
-    os::raw::*,
+    os::raw::c_int,
 };
 use tracing::*;
 
@@ -202,11 +202,7 @@ impl EntityManager {
             let entities = &mut *cell.borrow_mut();
 
             if let Some(mut entity) = entities.remove(&entity_id) {
-                if let Some(browser) = entity.browser.take() {
-                    Ok(Some(browser))
-                } else {
-                    Ok::<_, Error>(None)
-                }
+                Ok::<_, Error>(entity.browser.take())
             } else {
                 bail!(
                     "remove_entity: couldn't find entity for entity id {}",
@@ -292,11 +288,7 @@ impl EntityManager {
             ids.get(&browser_id).copied()
         });
 
-        if let Some(entity_id) = maybe_entity_id {
-            entities.get_mut(&entity_id)
-        } else {
-            None
-        }
+        maybe_entity_id.and_then(move |entity_id| entities.get_mut(&entity_id))
     }
 
     pub fn with_entity<N, F, T>(target: N, f: F) -> Result<T>
@@ -420,10 +412,9 @@ impl TargetEntity for Box<dyn TargetEntity> {
 impl<'a> TargetEntity for (&'a clap::ArgMatches<'_>, &'a PlayerSnapshot) {
     fn get_entity_id(&self) -> Result<usize> {
         let &(matches, player) = self;
-        if let Some(name) = matches.value_of("name") {
-            name.get_entity_id()
-        } else {
-            player.eye_position.get_entity_id()
-        }
+        matches.value_of("name").map_or_else(
+            || player.eye_position.get_entity_id(),
+            |name| name.get_entity_id(),
+        )
     }
 }

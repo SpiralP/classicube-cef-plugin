@@ -138,7 +138,7 @@ pub fn run() {
 }
 
 pub async fn sleep(duration: Duration) {
-    let _ = Delay::new(duration).await;
+    Delay::new(duration).await;
 }
 
 pub async fn yield_now() {
@@ -197,7 +197,7 @@ where
 
 /// Block thread until future is resolved.
 ///
-/// This will continue to call the same executor so cef_step() will still be called!
+/// This will continue to call the same executor so `cef_step()` will still be called!
 pub fn block_on_local<F>(f: F)
 where
     F: Future<Output = ()> + 'static,
@@ -278,7 +278,7 @@ where
     F: Future<Output = ()> + 'static,
 {
     let mut handle = ASYNC_DISPATCHER_LOCAL_HANDLE
-        .with_inner(|handle| handle.clone())
+        .with_inner(Clone::clone)
         .expect("ASYNC_DISPATCHER_LOCAL_HANDLE is None");
 
     handle.spawn(f);

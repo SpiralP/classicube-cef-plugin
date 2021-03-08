@@ -283,7 +283,7 @@ impl Clone for RustRefBrowser {
 
 impl ToString for RustRefString {
     fn to_string(&self) -> String {
-        let s = unsafe { slice::from_raw_parts(self.ptr as *const u8, self.len as usize) };
+        let s = unsafe { slice::from_raw_parts(self.ptr.cast::<u8>(), self.len as usize) };
         String::from_utf8_lossy(s).into_owned()
     }
 }
@@ -331,19 +331,19 @@ impl Drop for FFIRustV8Value {
 
             // hack to make sure the union fields call our drop
             match self.tag {
-                FFIRustV8Value_Tag::Unknown => {}
-                FFIRustV8Value_Tag::Array => {}
-                FFIRustV8Value_Tag::ArrayBuffer => {}
                 FFIRustV8Value_Tag::Bool => mem::swap(inner.bool_.as_mut(), &mut mem::zeroed()),
-                FFIRustV8Value_Tag::Date => {}
                 FFIRustV8Value_Tag::Double => mem::swap(inner.double_.as_mut(), &mut mem::zeroed()),
-                FFIRustV8Value_Tag::Function => {}
                 FFIRustV8Value_Tag::Int => mem::swap(inner.int_.as_mut(), &mut mem::zeroed()),
-                FFIRustV8Value_Tag::Null => {}
-                FFIRustV8Value_Tag::Object => {}
                 FFIRustV8Value_Tag::String => mem::swap(inner.string.as_mut(), &mut mem::zeroed()),
                 FFIRustV8Value_Tag::UInt => mem::swap(inner.uint.as_mut(), &mut mem::zeroed()),
-                FFIRustV8Value_Tag::Undefined => {}
+                FFIRustV8Value_Tag::Unknown
+                | FFIRustV8Value_Tag::Array
+                | FFIRustV8Value_Tag::ArrayBuffer
+                | FFIRustV8Value_Tag::Date
+                | FFIRustV8Value_Tag::Function
+                | FFIRustV8Value_Tag::Null
+                | FFIRustV8Value_Tag::Object
+                | FFIRustV8Value_Tag::Undefined => {}
             }
         }
     }

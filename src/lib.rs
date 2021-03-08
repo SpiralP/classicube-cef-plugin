@@ -15,7 +15,7 @@ mod plugin;
 
 use self::plugin::Plugin;
 use classicube_helpers::{time, time_silent};
-use classicube_sys::*;
+use classicube_sys::IGameComponent;
 use std::{os::raw::c_int, ptr};
 use tracing::debug;
 

@@ -76,17 +76,14 @@ impl PlayerTrait for WebPlayer {
 
 impl WebPlayer {
     pub fn from_url(url: Url) -> Option<Self> {
-        let has_tld = url
-            .host()
-            .map(|host| {
-                if let url::Host::Domain(s) = host {
-                    s.contains('.')
-                } else {
-                    // allow direct ips
-                    true
-                }
-            })
-            .unwrap_or(false);
+        let has_tld = url.host().map_or(false, |host| {
+            if let url::Host::Domain(s) = host {
+                s.contains('.')
+            } else {
+                // allow direct ips
+                true
+            }
+        });
 
         if has_tld {
             Some(Self {

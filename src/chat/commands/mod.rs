@@ -98,7 +98,7 @@ pub async fn run(
             warn!("{:#?}", e);
 
             if show_errors || is_self {
-                chat_print_lines(format!("{}", e));
+                chat_print_lines(&format!("{}", e));
             }
 
             // TODO
@@ -110,7 +110,7 @@ pub async fn run(
 }
 
 /// needs to keep same color code from last line
-fn chat_print_lines(s: String) {
+fn chat_print_lines(s: &str) {
     let s = s.trim();
 
     let lines: Vec<String> = s.split('\n').map(String::from).collect();

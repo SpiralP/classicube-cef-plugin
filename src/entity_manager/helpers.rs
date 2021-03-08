@@ -1,6 +1,9 @@
 #![allow(non_snake_case)]
 
-use classicube_sys::*;
+use classicube_sys::{
+    Gfx_BindTexture, Gfx_Make2DQuad, Gfx_SetVertexFormat, Gfx_UpdateDynamicVb_IndexedTris,
+    OwnedGfxVertexBuffer, PackedCol, Texture, VertexFormat__VERTEX_FORMAT_TEXTURED,
+};
 use std::cell::RefCell;
 
 thread_local!(

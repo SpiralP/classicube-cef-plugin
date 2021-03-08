@@ -1,5 +1,5 @@
 use super::ENTITIES;
-use classicube_sys::*;
+use classicube_sys::{Entities, Entity, EntityVTABLE, ENTITIES_SELF_ID};
 use std::{
     cell::Cell,
     os::raw::{c_double, c_float},
@@ -15,7 +15,7 @@ thread_local!(
     static VTABLE: Cell<Option<Pin<Box<EntityVTABLE>>>> = Cell::new(None);
 );
 
-/// This is called when LocalPlayer_RenderModel is called.
+/// This is called when `LocalPlayer_RenderModel` is called.
 extern "C" fn hook(local_player_entity: *mut Entity, delta: c_double, t: c_float) {
     ORIGINAL_FN.with(|cell| {
         if let Some(f) = cell.get() {

@@ -434,7 +434,7 @@ impl YouTubePlayer {
             })
             .unwrap_or_default();
 
-        Some(Self::from_id_and_time(&id, time)?)
+        Self::from_id_and_time(&id, time)
     }
 
     fn from_short(url: &Url) -> Option<Self> {
@@ -452,7 +452,7 @@ impl YouTubePlayer {
             .map(Duration::from_secs)
             .unwrap_or_default();
 
-        Some(Self::from_id_and_time(&id, time)?)
+        Self::from_id_and_time(&id, time)
     }
 
     fn from_embed(url: &Url) -> Option<Self> {
@@ -475,7 +475,7 @@ impl YouTubePlayer {
             .map(Duration::from_secs)
             .unwrap_or_default();
 
-        Some(Self::from_id_and_time(&id, time)?)
+        Self::from_id_and_time(&id, time)
     }
 }
 

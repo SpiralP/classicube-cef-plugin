@@ -51,7 +51,7 @@ impl EntityBuilder {
             let name = name.clone();
             let future = ENTITIES.with(move |cell| {
                 let entities = &mut *cell.borrow_mut();
-                let background_color = self.background_color.unwrap_or(0xFFFFFFFF);
+                let background_color = self.background_color.unwrap_or(0xFFFF_FFFF);
 
                 let mut entity = CefEntity::register(
                     entity_id,

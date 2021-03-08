@@ -38,7 +38,7 @@ extern "C" fn message_handler(data: *mut u8) {
         let message_type = data[0] as MsgType;
         let text = unsafe { UNSAFE_GetString(&data[1..]) }.to_string();
 
-        if message_type == MsgType_MSG_TYPE_NORMAL && handle_chat_message(text) {
+        if message_type == MsgType_MSG_TYPE_NORMAL && handle_chat_message(&text) {
             return;
         }
     }
@@ -121,7 +121,7 @@ pub async fn wait_for_message() -> String {
 }
 
 #[must_use]
-pub fn handle_chat_message(message: String) -> bool {
+pub fn handle_chat_message(message: &str) -> bool {
     // don't recurse from Chat::send()
     if SIMULATING.get() {
         return false;

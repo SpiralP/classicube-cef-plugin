@@ -1,7 +1,10 @@
 use crate::{chat::PlayerSnapshot, entity_manager::CefEntity, error::*, helpers::vec3_to_vector3};
-use classicube_sys::{Camera, Entities, LocalPlayer, RayTracer, Vec3, ENTITIES_SELF_ID};
-use nalgebra::*;
-use ncollide3d::{query::*, shape::*};
+use classicube_sys::{Camera, Entities, RayTracer, Vec3, ENTITIES_SELF_ID};
+use nalgebra::{Isometry3, Point3, Rotation3, UnitQuaternion, Vector3};
+use ncollide3d::{
+    query::{Ray, RayCast, RayIntersection},
+    shape::Plane,
+};
 
 pub fn move_entity(entity: &mut CefEntity, player: &PlayerSnapshot) {
     let dir = Vec3::get_dir_vector(player.Yaw.to_radians(), player.Pitch.to_radians());
@@ -13,8 +16,8 @@ pub fn move_entity(entity: &mut CefEntity, player: &PlayerSnapshot) {
     );
 
     // turn it to face the player
-    entity.entity.RotY = player.Yaw + 180f32;
-    entity.entity.RotX = 360f32 - player.Pitch;
+    entity.entity.RotY = player.Yaw + 180_f32;
+    entity.entity.RotX = 360_f32 - player.Pitch;
 }
 
 pub fn get_camera_trace() -> Option<RayTracer> {
@@ -23,7 +26,7 @@ pub fn get_camera_trace() -> Option<RayTracer> {
     let mut ray_tracer = unsafe { std::mem::zeroed() };
 
     let entity_ptr = unsafe { Entities.List[ENTITIES_SELF_ID as usize] };
-    let local_player = entity_ptr as *mut LocalPlayer;
+    let local_player = entity_ptr.cast::<classicube_sys::LocalPlayer>();
     let local_player = unsafe { &mut *local_player };
 
     let old_reach_distance = local_player.ReachDistance;
@@ -36,10 +39,10 @@ pub fn get_camera_trace() -> Option<RayTracer> {
     local_player.ReachDistance = old_reach_distance;
 
     // debug!("{:#?}", ray_tracer);
-    if ray_tracer.Valid != 0 {
-        Some(ray_tracer)
-    } else {
+    if ray_tracer.Valid == 0 {
         None
+    } else {
+        Some(ray_tracer)
     }
 }
 
@@ -80,16 +83,16 @@ pub fn get_click_coords(
 
         let ray = Ray::new(eye_pos, aim_dir);
         let plane = Plane::new(normal);
-        if let Some(intersection) = plane.toi_and_normal_with_ray(&iso, &ray, 32.0, true) {
-            if intersection.toi == 0.0 {
-                // 0 if aiming from wrong side
-                None
-            } else {
-                Some((ray, plane, intersection))
-            }
-        } else {
-            None
-        }
+        plane
+            .toi_and_normal_with_ray(&iso, &ray, 32.0, true)
+            .and_then(|intersection| {
+                if intersection.toi == 0.0 {
+                    // 0 if aiming from wrong side
+                    None
+                } else {
+                    Some((ray, plane, intersection))
+                }
+            })
     }
 
     let eye_pos = vec3_to_vector3(&eye_position);
@@ -112,8 +115,8 @@ pub fn get_click_coords(
         let up = up.normalize();
         let right = -left;
 
-        let width = entity_scale.X * entity_size.0 as f32;
-        let height = entity_scale.Y * entity_size.1 as f32;
+        let width = entity_scale.X * f32::from(entity_size.0);
+        let height = entity_scale.Y * f32::from(entity_size.1);
 
         let top_left = screen_pos - 0.5 * right * width + up * height;
 

@@ -1,4 +1,4 @@
-use super::{helpers::*, TEXTURE_HEIGHT, TEXTURE_WIDTH};
+use super::{helpers::Texture_RenderShaded, TEXTURE_HEIGHT, TEXTURE_WIDTH};
 use classicube_sys::{
     Bitmap, Entity, Gfx_SetAlphaTest, Gfx_SetTexturing, Model, ModelTex, ModelVertex, Model_Init,
     Model_Register, OwnedGfxTexture, PackedCol, PackedCol_Make, SKIN_TYPE_SKIN_64x64,
@@ -52,12 +52,12 @@ impl CefModel {
     unsafe fn register_gfx_texture(&mut self) {
         // must be a vec or else we try to fit huge array onto stack and crash!
         let mut pixels: Vec<u32> =
-            vec![0xFFFFFFFF; TEXTURE_WIDTH as usize * TEXTURE_HEIGHT as usize];
+            vec![0xFFFF_FFFF; TEXTURE_WIDTH as usize * TEXTURE_HEIGHT as usize];
 
         let mut bmp = Bitmap {
             scan0: pixels.as_mut_ptr(),
-            width: TEXTURE_WIDTH as i32,
-            height: TEXTURE_HEIGHT as i32,
+            width: i32::from(TEXTURE_WIDTH),
+            height: i32::from(TEXTURE_HEIGHT),
         };
 
         let default_texture = OwnedGfxTexture::create(&mut bmp, true, false);

@@ -154,7 +154,7 @@ fn get_names_with_cef(messages: &[String]) -> Result<HashSet<String>> {
         // skip ": "
         let right = &right[2..];
 
-        let names: HashSet<String> = right.split(", ").map(|a| a.to_string()).collect();
+        let names: HashSet<String> = right.split(", ").map(ToString::to_string).collect();
 
         if left.contains(&app_name_without_last_number) {
             for name in names {
@@ -255,7 +255,7 @@ fn test_get_clients() {
 
     for (message, should_block) in messages {
         assert_eq!(
-            super::handle_chat_message(message.to_string()),
+            super::handle_chat_message(message),
             should_block,
             "{:?}",
             message

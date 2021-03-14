@@ -154,7 +154,9 @@
 
             // this is a local playlist, not a youtube one!
             // adding this makes looping a single video work
-            playlist: isPlaylist ? undefined : id,
+            //
+            // for some reason setting this breaks `start`
+            playlist: !isPlaylist && shouldLoop ? id : undefined,
 
             // setting to 0 will cause ads to play
             autoplay: 1,
@@ -204,6 +206,7 @@
         var player = event.target;
         player.setVolume(startVolume * 100.0);
         player.setPlaybackRate(speed);
+
         // TODO maybe if time >= duration, stopVideo ?
         if (autoplay) {
           player.playVideo();

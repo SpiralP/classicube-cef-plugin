@@ -135,7 +135,7 @@ fn test_youtube_search() {
     crate::logger::initialize(true, false, false);
     crate::async_manager::initialize();
 
-    async_manager::spawn_local_on_main_thread(async {
+    crate::async_manager::spawn_local_on_main_thread(async {
         println!("{:#?}", search("nyan").await.unwrap());
     });
 
@@ -148,7 +148,7 @@ fn test_youtube_video() {
     crate::logger::initialize(true, false, false);
     crate::async_manager::initialize();
 
-    async_manager::spawn_local_on_main_thread(async {
+    crate::async_manager::spawn_local_on_main_thread(async {
         println!("{:#?}", video("QH2-TGUlwu4").await.unwrap());
     });
 

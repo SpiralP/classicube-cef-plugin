@@ -91,7 +91,11 @@ pub fn is_clients_message(message: &str) -> Option<&str> {
 
 pub fn remove_color_left(mut text: &str) -> &str {
     while text.len() >= 2 && text.get(0..1).map(|c| c == "&").unwrap_or(false) {
-        text = &text[2..];
+        if let Some(trimmed) = text.get(2..) {
+            text = trimmed;
+        } else {
+            break;
+        }
     }
 
     text

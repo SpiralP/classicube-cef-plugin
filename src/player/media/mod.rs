@@ -115,7 +115,7 @@ impl PlayerTrait for MediaPlayer {
 
         Url::parse_with_params("local://media/", &params)
             .unwrap()
-            .into_string()
+            .into()
     }
 
     fn on_page_loaded(&mut self, entity_id: usize, _browser: &RustRefBrowser) {

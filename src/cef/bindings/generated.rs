@@ -1,7 +1,10 @@
-#![allow(non_upper_case_globals)]
-#![allow(non_camel_case_types)]
-#![allow(non_snake_case)]
-#![allow(clippy::transmute_ptr_to_ptr)]
-#![allow(dead_code)]
+#![allow(
+    non_upper_case_globals,
+    non_camel_case_types,
+    non_snake_case,
+    deref_nullptr,
+    dead_code,
+    clippy::transmute_ptr_to_ptr
+)]
 
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));

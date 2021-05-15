@@ -140,7 +140,7 @@ impl PlayerTrait for YouTubePlayer {
 
         Url::parse_with_params("local://youtube/", &params)
             .unwrap()
-            .into_string()
+            .into()
     }
 
     fn on_page_loaded(&mut self, entity_id: usize, _browser: &RustRefBrowser) {

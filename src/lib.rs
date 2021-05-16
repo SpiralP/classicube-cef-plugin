@@ -45,9 +45,7 @@ extern "C" fn free() {
         });
     });
 
-    unsafe {
-        drop(crate::logger::GUARDS.take());
-    }
+    logger::free();
 }
 
 #[tracing::instrument]

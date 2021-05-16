@@ -6,11 +6,11 @@ use tracing_subscriber::{
     prelude::*,
 };
 
-pub enum Guard {
+enum Guard {
     Appender(tracing_appender::non_blocking::WorkerGuard),
     Flame(tracing_flame::FlushGuard<BufWriter<File>>),
 }
-pub static mut GUARDS: Option<Vec<Guard>> = None;
+static mut GUARDS: Option<Vec<Guard>> = None;
 
 pub fn initialize(debug: bool, other_crates: bool, flame: bool) {
     static ONCE: Once = Once::new();
@@ -72,4 +72,10 @@ pub fn initialize(debug: bool, other_crates: bool, flame: bool) {
             GUARDS.replace(guards);
         }
     });
+}
+
+pub fn free() {
+    unsafe {
+        drop(GUARDS.take());
+    }
 }

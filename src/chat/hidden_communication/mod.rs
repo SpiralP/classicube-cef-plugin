@@ -122,7 +122,7 @@ pub async fn wait_for_message() -> String {
 
 #[must_use]
 pub fn handle_chat_message(message: &str) -> bool {
-    // don't recurse from Chat::send()
+    // don't recurse from Chat::print()
     if SIMULATING.get() {
         return false;
     }

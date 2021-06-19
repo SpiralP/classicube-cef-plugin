@@ -22,8 +22,8 @@ error-chain = "0.12"
 futures = "0.3"
 futures-timer = "3"
 lazy_static = "1"
-nalgebra = "0.26"
-ncollide3d = "0.29"
+nalgebra = "0.27"
+ncollide3d = "0.30"
 rand = "0.8"
 regex = "1"
 reqwest = "0.11"
@@ -51,3 +51,9 @@ tag-message = "Release version {{version}}"
 pre-release-commit-message = "Release {{version}}"
 post-release-commit-message = "Begin {{next_version}}"
 dev-version-ext = "alpha"
+
+
+
+# remove when ClassiCube 1.2.6
+[patch.'https://github.com/SpiralP/rust-classicube-sys.git']
+classicube-sys = { git = "https://github.com/SpiralP//rust-classicube-sys.git", branch = "next" }

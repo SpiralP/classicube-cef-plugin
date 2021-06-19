@@ -100,7 +100,7 @@ jobs:
             classicube_cef_windows_${{ matrix.config.arch }}.pdb
             cef-windows-${{ matrix.config.arch }}.exe
 
-  linux_x86:
+  linux:
     name: Build Linux ${{ matrix.config.arch }}
     runs-on: ubuntu-latest
     strategy:

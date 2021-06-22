@@ -154,12 +154,13 @@ async fn start_loop(entity_id: usize) -> Result<()> {
 
                 EntityManager::with_entity(entity_id, move |entity| {
                     match &mut entity.player {
-                        Player::Media(_player) => {
-                            //
+                        Player::Media(player) => {
+                            player.finished = true;
+                            entity.skip()?;
                         }
 
                         Player::YouTube(player) => {
-                            player.finished = is_finished_playing;
+                            player.finished = true;
                             entity.skip()?;
                         }
 

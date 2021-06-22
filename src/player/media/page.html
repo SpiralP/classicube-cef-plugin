@@ -72,7 +72,7 @@
       var player = document.getElementById("player");
       window.player = player;
 
-      player.addEventListener("loadedmetadata", function () {
+      player.addEventListener("loadedmetadata", () => {
         var totalSeconds = player.duration;
         var url = new URL(player.src);
         var host = url.host;
@@ -81,6 +81,11 @@
         } else {
           document.title = host;
         }
+      });
+
+      player.addEventListener("ended", () => {
+        window.playerFinishedTime = player.currentTime;
+        window.playerFinished = true;
       });
 
       function updateSize() {
@@ -121,12 +126,12 @@
 
       function setCurrentTime(time) {
         player.currentTime = time;
-        playerFinished = false;
+        window.playerFinished = false;
       }
       function getCurrentTime() {
-        if (playerFinished) {
+        if (window.playerFinished) {
           // when stopped, getCurrentTime and getDuration will give 0
-          return playerFinishedTime;
+          return window.playerFinishedTime;
         }
 
         return player.currentTime;

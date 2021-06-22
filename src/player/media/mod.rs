@@ -318,7 +318,7 @@ impl MediaPlayer {
                 .chain_err(|| "to_str")?;
 
             match ext {
-                "mp3" | "wav" | "ogg" | "aac" | "mp4" | "webm" | "avi" | "3gp" | "mov" => {
+                "mp3" | "wav" | "ogg" | "aac" | "mp4" | "webm" | "avi" | "3gp" | "mov" | "mkv" => {
                     Ok(Self {
                         url: url.to_string(),
                         ..Default::default()

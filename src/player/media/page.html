@@ -18,7 +18,7 @@
   </head>
 
   <body>
-    <video id="player" controls crossorigin></video>
+    <video id="player" controls crossorigin="anonymous"></video>
     <script>
       // https://stackoverflow.com/a/2091331
       function getQueryVariable(variable) {
@@ -92,6 +92,14 @@
         updateSize();
       });
       updateSize();
+
+      player.onerror = () => {
+        if (player.crossOrigin) {
+          console.warn("now trying without crossOrigin...");
+          player.crossOrigin = undefined;
+          player.src = url;
+        }
+      };
 
       player.autoplay = autoplay;
       player.src = url;

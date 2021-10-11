@@ -98,9 +98,19 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
     )
     .subcommand(
         App::new("reply")
-            .about("Run a \"/reply\" command on the server")
+            .about("Run a \"/Reply\" command on the server")
             .long_about(
-                "Run a \"/reply\" command on the server\nThis is useful to use in scripts to know \
+                "Run a \"/Reply\" command on the server\nThis is useful to use in scripts to know \
+                 when cef commands have finished executing.  For example when screens are \
+                 finished loading via \"cef create\".",
+            )
+            .arg(Arg::with_name("num").required(true)),
+    )
+    .subcommand(
+        App::new("replytwo")
+            .about("Run a \"/ReplyTwo\" command on the server")
+            .long_about(
+                "Run a \"/ReplyTwo\" command on the server\nThis is useful to use in scripts to know \
                  when cef commands have finished executing.  For example when screens are \
                  finished loading via \"cef create\".",
             )
@@ -206,7 +216,17 @@ pub async fn handle_command(
 
         ("reply", Some(matches)) => {
             let num = matches.value_of_lossy("num").unwrap();
-            let owned_string = OwnedString::new(format!("/reply {}", num));
+            let owned_string = OwnedString::new(format!("/Reply {}", num));
+            unsafe {
+                Chat_Send(owned_string.as_cc_string(), 0);
+            }
+
+            Ok(true)
+        }
+
+        ("replytwo", Some(matches)) => {
+            let num = matches.value_of_lossy("num").unwrap();
+            let owned_string = OwnedString::new(format!("/ReplyTwo {}", num));
             unsafe {
                 Chat_Send(owned_string.as_cc_string(), 0);
             }

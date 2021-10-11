@@ -22,8 +22,8 @@ error-chain = "0.12"
 futures = "0.3"
 futures-timer = "3"
 lazy_static = "1"
-nalgebra = "0.27"
-ncollide3d = "0.30"
+nalgebra = "0.29"
+ncollide3d = "0.32"
 rand = "0.8"
 regex = "1"
 reqwest = "0.11"
@@ -38,7 +38,7 @@ tracing-subscriber = "0.2"
 url = "2"
 
 [build-dependencies]
-bindgen = "0.58"
+bindgen = "0.59"
 cmake = "0.1"
 
 [features]

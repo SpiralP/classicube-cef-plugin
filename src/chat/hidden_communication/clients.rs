@@ -151,14 +151,15 @@ fn get_names_with_cef(messages: &[String]) -> Result<HashSet<String>> {
         let pos = message.find(": ").chain_err(|| "couldn't find colon")?;
 
         let (left, right) = message.split_at(pos);
+
         // skip ": "
-        let right = &right[2..];
+        if let Some(right) = right.get(2..) {
+            let names: HashSet<String> = right.split(", ").map(ToString::to_string).collect();
 
-        let names: HashSet<String> = right.split(", ").map(ToString::to_string).collect();
-
-        if left.contains(&app_name_without_last_number) {
-            for name in names {
-                names_with_cef.insert(name);
+            if left.contains(&app_name_without_last_number) {
+                for name in names {
+                    names_with_cef.insert(name);
+                }
             }
         }
     }

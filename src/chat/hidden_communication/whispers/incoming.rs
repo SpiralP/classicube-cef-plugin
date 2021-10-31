@@ -44,7 +44,7 @@ thread_local!(
 
 async fn handle_request(message: String) -> Result<()> {
     // "&9[>] "
-    let colon_pos = message.find(": &f").chain_err(|| "couldn't find colon")?;
+    let colon_pos = message.find(": ").chain_err(|| "couldn't find colon")?;
     let nick_name = message.get(6..colon_pos).chain_err(|| "char boundary")?;
     info!("from {:?}", nick_name);
 

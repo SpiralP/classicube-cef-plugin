@@ -7,7 +7,7 @@ use url::Url;
 
 const PAGE_HTML: &str = include_str!("page.html");
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 pub struct ImagePlayer {
     url: String,
 
@@ -15,16 +15,6 @@ pub struct ImagePlayer {
 
     #[serde(skip)]
     last_title: String,
-}
-
-impl Default for ImagePlayer {
-    fn default() -> Self {
-        Self {
-            url: String::new(),
-            silent: false,
-            last_title: String::new(),
-        }
-    }
 }
 
 impl Clone for ImagePlayer {

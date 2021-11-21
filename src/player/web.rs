@@ -5,21 +5,12 @@ use serde::{Deserialize, Serialize};
 use tracing::debug;
 use url::Url;
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize)]
 pub struct WebPlayer {
     url: String,
 
     #[serde(skip)]
     last_title: String,
-}
-
-impl Default for WebPlayer {
-    fn default() -> Self {
-        Self {
-            url: String::new(),
-            last_title: String::new(),
-        }
-    }
 }
 
 impl PlayerTrait for WebPlayer {

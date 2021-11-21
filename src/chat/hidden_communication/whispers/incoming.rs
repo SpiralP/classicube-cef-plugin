@@ -52,7 +52,7 @@ async fn handle_request(message: String) -> Result<()> {
     let maybe_real_name = TAB_LIST
         .with_inner(|tab_list| {
             tab_list
-                .find_entry_by_nick_name(&nick_name)
+                .find_entry_by_nick_name(nick_name)
                 .and_then(|entry| {
                     let id = entry.get_id();
 

@@ -94,7 +94,7 @@ impl PlayerTrait for YouTubePlayer {
     }
 
     fn from_input(url_or_id: &str) -> Result<Self> {
-        if let Ok(url) = Url::parse(&url_or_id) {
+        if let Ok(url) = Url::parse(url_or_id) {
             Self::from_url(&url).or_else(|e| {
                 // try with % replaced with &
                 // because & is sent as % from cc client
@@ -360,7 +360,7 @@ impl YouTubePlayer {
 
 impl YouTubePlayer {
     pub fn from_video_id(id: &str) -> Option<Self> {
-        if id.len() == 11 && Regex::new(r"^[A-Za-z0-9_\-]+$").unwrap().is_match(&id) {
+        if id.len() == 11 && Regex::new(r"^[A-Za-z0-9_\-]+$").unwrap().is_match(id) {
             Some(Self {
                 id: id.to_string(),
                 ..Default::default()
@@ -371,7 +371,7 @@ impl YouTubePlayer {
     }
 
     pub fn from_playlist_id(id: &str) -> Option<Self> {
-        if id.len() > 11 && Regex::new(r"^[A-Za-z0-9_\-]+$").unwrap().is_match(&id) {
+        if id.len() > 11 && Regex::new(r"^[A-Za-z0-9_\-]+$").unwrap().is_match(id) {
             Some(Self {
                 id: id.to_string(),
                 is_playlist: true,
@@ -385,14 +385,14 @@ impl YouTubePlayer {
     /// from either a video id or playlist id
     pub fn from_id(id: &str) -> Option<Self> {
         if id.len() >= 11 {
-            Self::from_video_id(&id).or_else(|| Self::from_playlist_id(&id))
+            Self::from_video_id(id).or_else(|| Self::from_playlist_id(id))
         } else {
             None
         }
     }
 
     pub fn from_id_and_time(id: &str, time: Duration) -> Option<Self> {
-        let mut this = Self::from_id(&id)?;
+        let mut this = Self::from_id(id)?;
         this.time = time;
 
         Some(this)
@@ -401,11 +401,11 @@ impl YouTubePlayer {
     pub fn from_url(url: &Url) -> Result<Self> {
         if url.scheme() != "http" && url.scheme() != "https" {
             Err("not http/https".into())
-        } else if let Some(this) = Self::from_embed(&url) {
+        } else if let Some(this) = Self::from_embed(url) {
             Ok(this)
-        } else if let Some(this) = Self::from_short(&url) {
+        } else if let Some(this) = Self::from_short(url) {
             Ok(this)
-        } else if let Some(this) = Self::from_normal(&url) {
+        } else if let Some(this) = Self::from_normal(url) {
             Ok(this)
         } else {
             Err("couldn't match url from input".into())
@@ -434,7 +434,7 @@ impl YouTubePlayer {
             })
             .unwrap_or_default();
 
-        Self::from_id_and_time(&id, time)
+        Self::from_id_and_time(id, time)
     }
 
     fn from_short(url: &Url) -> Option<Self> {
@@ -452,7 +452,7 @@ impl YouTubePlayer {
             .map(Duration::from_secs)
             .unwrap_or_default();
 
-        Self::from_id_and_time(&id, time)
+        Self::from_id_and_time(id, time)
     }
 
     fn from_embed(url: &Url) -> Option<Self> {
@@ -475,7 +475,7 @@ impl YouTubePlayer {
             .map(Duration::from_secs)
             .unwrap_or_default();
 
-        Self::from_id_and_time(&id, time)
+        Self::from_id_and_time(id, time)
     }
 }
 
@@ -501,7 +501,7 @@ fn test_youtube() {
             ..Default::default()
         };
         for input in &inputs {
-            let yt = YouTubePlayer::from_input(&input).expect(input);
+            let yt = YouTubePlayer::from_input(input).expect(input);
             assert_eq!(yt.id, should.id);
         }
     }
@@ -527,7 +527,7 @@ fn test_youtube() {
             ..Default::default()
         };
         for input in &inputs {
-            let yt = YouTubePlayer::from_input(&input).expect(input);
+            let yt = YouTubePlayer::from_input(input).expect(input);
             assert_eq!(yt.id, should.id);
             assert_eq!(yt.time, should.time);
         }
@@ -561,7 +561,7 @@ fn test_youtube() {
                     ..Default::default()
                 };
                 {
-                    let yt = YouTubePlayer::from_input(&id).expect(id);
+                    let yt = YouTubePlayer::from_input(id).expect(id);
                     assert_eq!(yt.id, should.id);
                 }
                 {
@@ -587,7 +587,7 @@ fn test_youtube() {
                 ..Default::default()
             };
             for id in &ids {
-                let yt = YouTubePlayer::from_input(&id).expect(id);
+                let yt = YouTubePlayer::from_input(id).expect(id);
                 assert_eq!(yt.id, should.id);
             }
         }
@@ -605,7 +605,7 @@ fn test_youtube() {
                 ..Default::default()
             };
             for id in &ids {
-                let yt = YouTubePlayer::from_input(&id).expect(id);
+                let yt = YouTubePlayer::from_input(id).expect(id);
                 assert_eq!(yt.id, should.id);
                 assert_eq!(yt.time, should.time);
             }

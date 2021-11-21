@@ -33,7 +33,7 @@ pub async fn start_whispering(players: Vec<(u8, String)>) -> Result<()> {
     real_players.shuffle(&mut rand::thread_rng());
 
     for (_id, real_name) in real_players {
-        match outgoing::query_whisper(&real_name).await {
+        match outgoing::query_whisper(real_name).await {
             Ok(had_data) => {
                 if had_data {
                     break;

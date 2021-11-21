@@ -2,7 +2,7 @@ use super::{Player, PlayerTrait, VolumeMode, YouTubePlayer};
 use crate::{api, error::*};
 use tracing::*;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct PlayerBuilder {
     autoplay: Option<bool>,
     should_loop: Option<bool>,
@@ -10,19 +10,6 @@ pub struct PlayerBuilder {
     volume: Option<f32>,
     volume_mode: Option<VolumeMode>,
     use_youtube_playlist: bool,
-}
-
-impl Default for PlayerBuilder {
-    fn default() -> Self {
-        Self {
-            autoplay: None,
-            should_loop: None,
-            silent: None,
-            volume: None,
-            volume_mode: None,
-            use_youtube_playlist: false,
-        }
-    }
 }
 
 impl PlayerBuilder {

@@ -621,10 +621,10 @@ pub async fn handle_command(
 
                 entity
                     .player
-                    .set_current_time(&browser, Duration::from_secs_f32(seconds))?;
+                    .set_current_time(browser, Duration::from_secs_f32(seconds))?;
 
                 if !matches.is_present("no-autoplay") {
-                    entity.player.set_playing(&browser, true)?;
+                    entity.player.set_playing(browser, true)?;
                 }
 
                 Ok(())
@@ -734,7 +734,7 @@ pub async fn handle_command(
             EntityManager::with_entity((matches, player), |entity| {
                 let browser = entity.browser.as_ref().chain_err(|| "no browser")?;
 
-                entity.player.set_playing(&browser, true)?;
+                entity.player.set_playing(browser, true)?;
                 Ok(())
             })?;
 
@@ -745,7 +745,7 @@ pub async fn handle_command(
             EntityManager::with_entity((matches, player), |entity| {
                 let browser = entity.browser.as_ref().chain_err(|| "no browser")?;
 
-                entity.player.set_playing(&browser, false)?;
+                entity.player.set_playing(browser, false)?;
                 Ok(())
             })?;
 

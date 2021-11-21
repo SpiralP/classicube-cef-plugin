@@ -7,6 +7,7 @@ const APP_USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PK
 
 #[derive(Debug, Deserialize)]
 struct ApiError {
+    #[allow(dead_code)]
     code: u64,
     message: String,
 }

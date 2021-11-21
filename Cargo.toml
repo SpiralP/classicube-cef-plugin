@@ -49,10 +49,3 @@ ci = []
 tag-message = "Release version {{version}}"
 pre-release-commit-message = "Release {{version}}"
 post-release-commit-message = "Begin {{next_version}}"
-dev-version-ext = "alpha"
-
-
-
-# remove when ClassiCube 1.2.6
-[patch.'https://github.com/SpiralP/rust-classicube-sys.git']
-classicube-sys = { git = "https://github.com/SpiralP//rust-classicube-sys.git", branch = "next" }

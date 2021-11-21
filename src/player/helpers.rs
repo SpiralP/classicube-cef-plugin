@@ -7,7 +7,8 @@ use crate::{
 };
 use classicube_sys::{Camera, Vec3};
 use nalgebra::Vector3;
-use std::time::Duration;
+use reqwest::Url;
+use std::{path::Path, time::Duration};
 use tracing::*;
 
 pub async fn start_update_loop(entity_id: usize) {
@@ -179,4 +180,41 @@ async fn start_loop(entity_id: usize) -> Result<()> {
     }
 
     Ok(())
+}
+
+pub fn get_ext(url: &Url) -> Result<&str> {
+    url.fragment()
+        .and_then(|hash| {
+            if hash.is_empty() {
+                None
+            } else {
+                Some(Ok::<_, Error>(hash))
+            }
+        })
+        .unwrap_or_else(|| {
+            let parts = url.path_segments().chain_err(|| "no path segments")?;
+            let last_part = parts.last().chain_err(|| "no last_part")?;
+
+            let path = Path::new(last_part);
+            path.extension()
+                .chain_err(|| "no extension")?
+                .to_str()
+                .chain_err(|| "to_str")
+        })
+}
+
+#[test]
+fn test_get_ext() {
+    assert_eq!(
+        get_ext(&"https://what.the/heck.ogg".parse::<Url>().unwrap()).unwrap(),
+        "ogg"
+    );
+    assert_eq!(
+        get_ext(&"https://what.the/heck#hashyyy".parse::<Url>().unwrap()).unwrap(),
+        "hashyyy"
+    );
+    assert_eq!(
+        get_ext(&"https://what.the/heck.ogg#".parse::<Url>().unwrap()).unwrap(),
+        "ogg"
+    );
 }

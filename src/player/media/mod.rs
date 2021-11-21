@@ -1,4 +1,7 @@
-use super::{helpers::start_update_loop, PlayerTrait, VolumeMode, WebPlayer};
+use super::{
+    helpers::{get_ext, start_update_loop},
+    PlayerTrait, VolumeMode, WebPlayer,
+};
 use crate::{
     async_manager,
     cef::{RustRefBrowser, RustV8Value},
@@ -9,10 +12,7 @@ use crate::{
 use classicube_helpers::color;
 use futures::{future::RemoteHandle, prelude::*};
 use serde::{Deserialize, Serialize};
-use std::{
-    path::Path,
-    time::{Duration, Instant},
-};
+use std::time::{Duration, Instant};
 use tracing::*;
 use url::Url;
 
@@ -307,23 +307,12 @@ impl MediaPlayer {
         if url.scheme() != "http" && url.scheme() != "https" {
             Err("not http/https".into())
         } else {
-            let parts = url.path_segments().chain_err(|| "no path segments")?;
-            let last_part = parts.last().chain_err(|| "no last_part")?;
-
-            let path = Path::new(last_part);
-            let ext = path
-                .extension()
-                .chain_err(|| "no extension")?
-                .to_str()
-                .chain_err(|| "to_str")?;
-
-            match ext {
-                "mp3" | "wav" | "ogg" | "aac" | "mp4" | "webm" | "avi" | "3gp" | "mov" | "mkv" => {
-                    Ok(Self {
-                        url: url.to_string(),
-                        ..Default::default()
-                    })
-                }
+            match get_ext(url)? {
+                "mp3" | "wav" | "ogg" | "aac" | "mp4" | "webm" | "avi" | "3gp" | "mov" | "mkv"
+                | "media" => Ok(Self {
+                    url: url.to_string(),
+                    ..Default::default()
+                }),
 
                 _ => Err("url didn't end with a audio/video file extension".into()),
             }

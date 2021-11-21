@@ -46,6 +46,7 @@ async fn fade_all() -> Result<()> {
             match &mut entity.player {
                 Player::YouTube(player) => drop(player.update_loop_handle.take()),
                 Player::Dash(player) => drop(player.update_loop_handle.take()),
+                Player::Hls(player) => drop(player.update_loop_handle.take()),
                 Player::Media(player) => drop(player.update_loop_handle.take()),
                 Player::Image(_player) => {}
                 Player::Web(_player) => {}

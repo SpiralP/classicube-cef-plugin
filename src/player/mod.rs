@@ -1,6 +1,7 @@
 mod builder;
 mod dash;
 mod helpers;
+mod hls;
 mod image;
 mod media;
 mod volume_fade;
@@ -8,8 +9,8 @@ mod web;
 mod youtube;
 
 pub use self::{
-    builder::PlayerBuilder, dash::DashPlayer, image::ImagePlayer, media::MediaPlayer,
-    web::WebPlayer, youtube::YouTubePlayer,
+    builder::PlayerBuilder, dash::DashPlayer, hls::HlsPlayer, image::ImagePlayer,
+    media::MediaPlayer, web::WebPlayer, youtube::YouTubePlayer,
 };
 use crate::{cef::RustRefBrowser, error::*};
 use serde::{Deserialize, Serialize};
@@ -126,6 +127,7 @@ pub enum VolumeMode {
 pub enum Player {
     YouTube(YouTubePlayer),
     Dash(DashPlayer),
+    Hls(HlsPlayer),
     Media(MediaPlayer),
     Image(ImagePlayer),
     Web(WebPlayer),
@@ -136,6 +138,7 @@ impl PlayerTrait for Player {
         match self {
             Player::YouTube(player) => player.type_name(),
             Player::Dash(player) => player.type_name(),
+            Player::Hls(player) => player.type_name(),
             Player::Media(player) => player.type_name(),
             Player::Image(player) => player.type_name(),
             Player::Web(player) => player.type_name(),
@@ -149,24 +152,32 @@ impl PlayerTrait for Player {
                 match DashPlayer::from_input(input) {
                     Ok(player) => Ok(Player::Dash(player)),
                     Err(_) => {
-                        match MediaPlayer::from_input(input) {
-                            Ok(player) => Ok(Player::Media(player)),
+                        match HlsPlayer::from_input(input) {
+                            Ok(player) => Ok(Player::Hls(player)),
                             Err(_) => {
-                                match ImagePlayer::from_input(input) {
-                                    Ok(player) => Ok(Player::Image(player)),
+                                match MediaPlayer::from_input(input) {
+                                    Ok(player) => Ok(Player::Media(player)),
                                     Err(_) => {
-                                        match WebPlayer::from_input(input) {
-                                            Ok(player) => Ok(Player::Web(player)),
+                                        match ImagePlayer::from_input(input) {
+                                            Ok(player) => Ok(Player::Image(player)),
+                                            Err(_) => {
+                                                match WebPlayer::from_input(input) {
+                                                    Ok(player) => Ok(Player::Web(player)),
 
-                                            Err(e) => {
-                                                if !input.starts_with("http") {
-                                                    // if it didn't start with http, try again with https:// in front
-                                                    Player::from_input(&format!(
-                                                        "https://{}",
-                                                        input
-                                                    ))
-                                                } else {
-                                                    bail!("no player matched for input: {}", e);
+                                                    Err(e) => {
+                                                        if !input.starts_with("http") {
+                                                            // if it didn't start with http, try again with https:// in front
+                                                            Player::from_input(&format!(
+                                                                "https://{}",
+                                                                input
+                                                            ))
+                                                        } else {
+                                                            bail!(
+                                                                "no player matched for input: {}",
+                                                                e
+                                                            );
+                                                        }
+                                                    }
                                                 }
                                             }
                                         }
@@ -184,6 +195,7 @@ impl PlayerTrait for Player {
         match self {
             Player::YouTube(player) => player.on_create(),
             Player::Dash(player) => player.on_create(),
+            Player::Hls(player) => player.on_create(),
             Player::Media(player) => player.on_create(),
             Player::Image(player) => player.on_create(),
             Player::Web(player) => player.on_create(),
@@ -194,6 +206,7 @@ impl PlayerTrait for Player {
         match self {
             Player::YouTube(player) => player.on_page_loaded(entity_id, browser),
             Player::Dash(player) => player.on_page_loaded(entity_id, browser),
+            Player::Hls(player) => player.on_page_loaded(entity_id, browser),
             Player::Media(player) => player.on_page_loaded(entity_id, browser),
             Player::Image(player) => player.on_page_loaded(entity_id, browser),
             Player::Web(player) => player.on_page_loaded(entity_id, browser),
@@ -204,6 +217,7 @@ impl PlayerTrait for Player {
         match self {
             Player::YouTube(player) => player.on_title_change(entity_id, browser, title),
             Player::Dash(player) => player.on_title_change(entity_id, browser, title),
+            Player::Hls(player) => player.on_title_change(entity_id, browser, title),
             Player::Media(player) => player.on_title_change(entity_id, browser, title),
             Player::Image(player) => player.on_title_change(entity_id, browser, title),
             Player::Web(player) => player.on_title_change(entity_id, browser, title),
@@ -214,6 +228,7 @@ impl PlayerTrait for Player {
         match self {
             Player::YouTube(player) => player.get_current_time(),
             Player::Dash(player) => player.get_current_time(),
+            Player::Hls(player) => player.get_current_time(),
             Player::Media(player) => player.get_current_time(),
             Player::Image(player) => player.get_current_time(),
             Player::Web(player) => player.get_current_time(),
@@ -224,6 +239,7 @@ impl PlayerTrait for Player {
         match self {
             Player::YouTube(player) => player.set_current_time(browser, time),
             Player::Dash(player) => player.set_current_time(browser, time),
+            Player::Hls(player) => player.set_current_time(browser, time),
             Player::Media(player) => player.set_current_time(browser, time),
             Player::Image(player) => player.set_current_time(browser, time),
             Player::Web(player) => player.set_current_time(browser, time),
@@ -234,6 +250,7 @@ impl PlayerTrait for Player {
         match self {
             Player::YouTube(player) => player.get_volume(),
             Player::Dash(player) => player.get_volume(),
+            Player::Hls(player) => player.get_volume(),
             Player::Media(player) => player.get_volume(),
             Player::Image(player) => player.get_volume(),
             Player::Web(player) => player.get_volume(),
@@ -244,6 +261,7 @@ impl PlayerTrait for Player {
         match self {
             Player::YouTube(player) => player.set_volume(browser, percent),
             Player::Dash(player) => player.set_volume(browser, percent),
+            Player::Hls(player) => player.set_volume(browser, percent),
             Player::Media(player) => player.set_volume(browser, percent),
             Player::Image(player) => player.set_volume(browser, percent),
             Player::Web(player) => player.set_volume(browser, percent),
@@ -254,6 +272,7 @@ impl PlayerTrait for Player {
         match self {
             Player::YouTube(player) => player.get_volume_mode(),
             Player::Dash(player) => player.get_volume_mode(),
+            Player::Hls(player) => player.get_volume_mode(),
             Player::Media(player) => player.get_volume_mode(),
             Player::Image(player) => player.get_volume_mode(),
             Player::Web(player) => player.get_volume_mode(),
@@ -268,6 +287,7 @@ impl PlayerTrait for Player {
         match self {
             Player::YouTube(player) => player.set_volume_mode(browser, mode),
             Player::Dash(player) => player.set_volume_mode(browser, mode),
+            Player::Hls(player) => player.set_volume_mode(browser, mode),
             Player::Media(player) => player.set_volume_mode(browser, mode),
             Player::Image(player) => player.set_volume_mode(browser, mode),
             Player::Web(player) => player.set_volume_mode(browser, mode),
@@ -278,6 +298,7 @@ impl PlayerTrait for Player {
         match self {
             Player::YouTube(player) => player.get_autoplay(),
             Player::Dash(player) => player.get_autoplay(),
+            Player::Hls(player) => player.get_autoplay(),
             Player::Media(player) => player.get_autoplay(),
             Player::Image(player) => player.get_autoplay(),
             Player::Web(player) => player.get_autoplay(),
@@ -288,6 +309,7 @@ impl PlayerTrait for Player {
         match self {
             Player::YouTube(player) => player.set_autoplay(browser, autoplay),
             Player::Dash(player) => player.set_autoplay(browser, autoplay),
+            Player::Hls(player) => player.set_autoplay(browser, autoplay),
             Player::Media(player) => player.set_autoplay(browser, autoplay),
             Player::Image(player) => player.set_autoplay(browser, autoplay),
             Player::Web(player) => player.set_autoplay(browser, autoplay),
@@ -298,6 +320,7 @@ impl PlayerTrait for Player {
         match self {
             Player::YouTube(player) => player.get_loop(),
             Player::Dash(player) => player.get_loop(),
+            Player::Hls(player) => player.get_loop(),
             Player::Media(player) => player.get_loop(),
             Player::Image(player) => player.get_loop(),
             Player::Web(player) => player.get_loop(),
@@ -308,6 +331,7 @@ impl PlayerTrait for Player {
         match self {
             Player::YouTube(player) => player.set_loop(browser, should_loop),
             Player::Dash(player) => player.set_loop(browser, should_loop),
+            Player::Hls(player) => player.set_loop(browser, should_loop),
             Player::Media(player) => player.set_loop(browser, should_loop),
             Player::Image(player) => player.set_loop(browser, should_loop),
             Player::Web(player) => player.set_loop(browser, should_loop),
@@ -318,6 +342,7 @@ impl PlayerTrait for Player {
         match self {
             Player::YouTube(player) => player.get_url(),
             Player::Dash(player) => player.get_url(),
+            Player::Hls(player) => player.get_url(),
             Player::Media(player) => player.get_url(),
             Player::Image(player) => player.get_url(),
             Player::Web(player) => player.get_url(),
@@ -328,6 +353,7 @@ impl PlayerTrait for Player {
         match self {
             Player::YouTube(player) => player.get_title(),
             Player::Dash(player) => player.get_title(),
+            Player::Hls(player) => player.get_title(),
             Player::Media(player) => player.get_title(),
             Player::Image(player) => player.get_title(),
             Player::Web(player) => player.get_title(),
@@ -338,6 +364,7 @@ impl PlayerTrait for Player {
         match self {
             Player::YouTube(player) => player.is_finished_playing(),
             Player::Dash(player) => player.is_finished_playing(),
+            Player::Hls(player) => player.is_finished_playing(),
             Player::Media(player) => player.is_finished_playing(),
             Player::Image(player) => player.is_finished_playing(),
             Player::Web(player) => player.is_finished_playing(),
@@ -348,6 +375,7 @@ impl PlayerTrait for Player {
         match self {
             Player::YouTube(player) => player.set_playing(browser, playing),
             Player::Dash(player) => player.set_playing(browser, playing),
+            Player::Hls(player) => player.set_playing(browser, playing),
             Player::Media(player) => player.set_playing(browser, playing),
             Player::Image(player) => player.set_playing(browser, playing),
             Player::Web(player) => player.set_playing(browser, playing),
@@ -358,6 +386,7 @@ impl PlayerTrait for Player {
         match self {
             Player::YouTube(player) => player.set_silent(silent),
             Player::Dash(player) => player.set_silent(silent),
+            Player::Hls(player) => player.set_silent(silent),
             Player::Media(player) => player.set_silent(silent),
             Player::Image(player) => player.set_silent(silent),
             Player::Web(player) => player.set_silent(silent),
@@ -368,6 +397,7 @@ impl PlayerTrait for Player {
         match self {
             Player::YouTube(player) => player.set_speed(browser, speed),
             Player::Dash(player) => player.set_speed(browser, speed),
+            Player::Hls(player) => player.set_speed(browser, speed),
             Player::Media(player) => player.set_speed(browser, speed),
             Player::Image(player) => player.set_speed(browser, speed),
             Player::Web(player) => player.set_speed(browser, speed),

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>HLS Stream Loading</title>
+    <style>
+      body {
+        padding: 0;
+        margin: 0;
+        overflow: hidden;
+        background-color: #000000;
+      }
+      video {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+      }
+    </style>
+  </head>
+
+  <body>
+    <video autoplay id="player"></video>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <script>
+      var player = document.getElementById("player");
+      var manifestUri = "HLS_URL"; // https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8
+      player.volume = START_VOLUME;
+      window.player = player;
+
+      function domContentLoaded() {
+        if (Hls.isSupported()) {
+          var hls = new Hls();
+
+          hls.on(Hls.Events.MEDIA_ATTACHED, () => {
+            hls.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
+              player.play();
+
+              var url = new URL(manifestUri);
+              var host = url.host;
+              document.title = "HLS Stream " + host;
+            });
+            hls.loadSource(manifestUri);
+          });
+          hls.attachMedia(player);
+        } else {
+          console.error("Browser not supported!");
+        }
+      }
+      document.addEventListener("DOMContentLoaded", domContentLoaded);
+
+      function updateSize() {
+        player.width = window.innerWidth;
+        player.height = window.innerHeight;
+      }
+      window.addEventListener("resize", () => {
+        updateSize();
+      });
+      updateSize();
+    </script>
+  </body>
+</html>

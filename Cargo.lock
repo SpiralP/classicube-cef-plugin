@@ -253,7 +253,7 @@ dependencies = [
 
 [[package]]
 name = "classicube-cef-plugin"
-version = "1.5.1"
+version = "1.5.2"
 dependencies = [
  "async-dispatcher",
  "async-recursion",

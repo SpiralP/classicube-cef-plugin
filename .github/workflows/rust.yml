@@ -1,5 +1,13 @@
 name: Rust
+
 on: [push]
+
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
 
 jobs:
   windows:
@@ -17,7 +25,9 @@ jobs:
 
       - name: Install deps
         run: |
-          iwr -useb get.scoop.sh | iex
+          iwr -useb get.scoop.sh -outfile install-scoop.ps1
+          .\install-scoop.ps1 -RunAsAdmin
+          rm install-scoop.ps1
           echo "$HOME\scoop\shims" >> $env:GITHUB_PATH
           echo "C:\ProgramData\scoop\shims" >> $env:GITHUB_PATH
           scoop install aria2
@@ -264,7 +274,7 @@ jobs:
 
   mac:
     name: Build MacOS ${{ matrix.config.arch }}
-    runs-on: macOS-latest
+    runs-on: macos-latest
     strategy:
       fail-fast: false
       matrix:

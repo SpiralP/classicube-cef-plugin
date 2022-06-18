@@ -1,3 +1,12 @@
+use std::time::Duration;
+
+use clap::{App, AppSettings, Arg, ArgMatches};
+use classicube_helpers::color;
+use classicube_sys::{
+    Entities, Vec3, ENTITIES_SELF_ID, FACE_CONSTS, FACE_CONSTS_FACE_XMAX, FACE_CONSTS_FACE_XMIN,
+    FACE_CONSTS_FACE_YMAX, FACE_CONSTS_FACE_YMIN, FACE_CONSTS_FACE_ZMAX, FACE_CONSTS_FACE_ZMIN,
+};
+
 use super::{helpers::*, Chat};
 use crate::{
     api, async_manager,
@@ -6,13 +15,6 @@ use crate::{
     error::*,
     helpers::format_duration,
 };
-use clap::{App, AppSettings, Arg, ArgMatches};
-use classicube_helpers::color;
-use classicube_sys::{
-    Entities, Vec3, ENTITIES_SELF_ID, FACE_CONSTS, FACE_CONSTS_FACE_XMAX, FACE_CONSTS_FACE_XMIN,
-    FACE_CONSTS_FACE_YMAX, FACE_CONSTS_FACE_YMIN, FACE_CONSTS_FACE_ZMAX, FACE_CONSTS_FACE_ZMIN,
-};
-use std::time::Duration;
 
 // commands that should only run on the person who said them
 pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {

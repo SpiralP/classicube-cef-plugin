@@ -6,6 +6,20 @@ mod helpers;
 mod model;
 mod render_model_hook;
 
+use std::{
+    cell::{Cell, RefCell},
+    collections::HashMap,
+    os::raw::c_int,
+};
+
+use classicube_sys::Vec3;
+use futures::{
+    future::RemoteHandle,
+    prelude::*,
+    stream::{FuturesUnordered, StreamExt},
+};
+use tracing::*;
+
 pub use self::{cef_paint::cef_paint_callback, entity::CefEntity, entity_builder::EntityBuilder};
 use self::{context_handler::ContextHandler, model::CefModel};
 use crate::{
@@ -15,18 +29,6 @@ use crate::{
     error::*,
     player::PlayerTrait,
 };
-use classicube_sys::Vec3;
-use futures::{
-    future::RemoteHandle,
-    prelude::*,
-    stream::{FuturesUnordered, StreamExt},
-};
-use std::{
-    cell::{Cell, RefCell},
-    collections::HashMap,
-    os::raw::c_int,
-};
-use tracing::*;
 
 pub const TEXTURE_WIDTH: u16 = 2048;
 pub const TEXTURE_HEIGHT: u16 = 2048;

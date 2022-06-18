@@ -1,10 +1,11 @@
 #![allow(non_snake_case)]
 
+use std::cell::RefCell;
+
 use classicube_sys::{
     Gfx_BindTexture, Gfx_Make2DQuad, Gfx_SetVertexFormat, Gfx_UpdateDynamicVb_IndexedTris,
     OwnedGfxVertexBuffer, PackedCol, Texture, VertexFormat__VERTEX_FORMAT_TEXTURED,
 };
-use std::cell::RefCell;
 
 thread_local!(
     pub static TEX_VB: RefCell<Option<OwnedGfxVertexBuffer>> = RefCell::new(None);

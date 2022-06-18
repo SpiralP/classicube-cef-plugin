@@ -1,12 +1,14 @@
+use std::{cell::Cell, time::Duration};
+
+use futures::{future::RemoteHandle, prelude::*};
+use tracing::{debug, warn};
+
 use crate::{
     async_manager,
     entity_manager::EntityManager,
     error::*,
     player::{Player, PlayerTrait},
 };
-use futures::{future::RemoteHandle, prelude::*};
-use std::{cell::Cell, time::Duration};
-use tracing::{debug, warn};
 
 thread_local!(
     static FADING_HANDLE: Cell<Option<RemoteHandle<()>>> = Default::default();

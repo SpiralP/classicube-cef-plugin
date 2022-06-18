@@ -3,8 +3,11 @@ pub mod commands;
 pub mod helpers;
 pub mod hidden_communication;
 
-pub use self::chat_command::CefChatCommand;
-use crate::{async_manager, chat::helpers::is_continuation_message, error::*};
+use std::{
+    cell::{Cell, RefCell},
+    time::Duration,
+};
+
 use classicube_helpers::{
     entities::{Entities, ENTITY_SELF_ID},
     events::chat::{ChatReceivedEvent, ChatReceivedEventHandler},
@@ -13,11 +16,10 @@ use classicube_helpers::{
 use classicube_sys::{MsgType, MsgType_MSG_TYPE_NORMAL, Server, Vec3};
 use deunicode::deunicode;
 use futures::{future::RemoteHandle, prelude::*};
-use std::{
-    cell::{Cell, RefCell},
-    time::Duration,
-};
 use tracing::*;
+
+pub use self::chat_command::CefChatCommand;
+use crate::{async_manager, chat::helpers::is_continuation_message, error::*};
 
 thread_local!(
     static LAST_CHAT: RefCell<Option<String>> = RefCell::new(None);

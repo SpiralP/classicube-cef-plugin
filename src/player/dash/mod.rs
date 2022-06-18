@@ -1,3 +1,9 @@
+use classicube_helpers::color;
+use futures::{future::RemoteHandle, prelude::*};
+use serde::{Deserialize, Serialize};
+use tracing::debug;
+use url::Url;
+
 use super::{
     helpers::{get_ext, start_update_loop},
     PlayerTrait, VolumeMode, WebPlayer,
@@ -9,11 +15,6 @@ use crate::{
     error::*,
     options,
 };
-use classicube_helpers::color;
-use futures::{future::RemoteHandle, prelude::*};
-use serde::{Deserialize, Serialize};
-use tracing::debug;
-use url::Url;
 
 const PAGE_HTML: &str = include_str!("page.html");
 

@@ -1,8 +1,3 @@
-use async_dispatcher::{Dispatcher, DispatcherHandle, LocalDispatcherHandle};
-use classicube_helpers::{tick::TickEventHandler, OptionWithInner};
-use futures::{future::Either, prelude::*};
-use futures_timer::Delay;
-use lazy_static::lazy_static;
 use std::{
     cell::{Cell, RefCell},
     future::Future,
@@ -12,6 +7,12 @@ use std::{
     task::{Context, Poll},
     time::Duration,
 };
+
+use async_dispatcher::{Dispatcher, DispatcherHandle, LocalDispatcherHandle};
+use classicube_helpers::{tick::TickEventHandler, OptionWithInner};
+use futures::{future::Either, prelude::*};
+use futures_timer::Delay;
+use lazy_static::lazy_static;
 use tokio::task::{JoinError, JoinHandle};
 use tracing::debug;
 

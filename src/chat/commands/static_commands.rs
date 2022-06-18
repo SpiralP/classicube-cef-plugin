@@ -1,3 +1,6 @@
+use clap::{App, Arg, ArgMatches};
+use classicube_sys::{Chat_Send, OwnedString};
+
 use super::helpers::*;
 use crate::{
     async_manager,
@@ -6,8 +9,6 @@ use crate::{
     error::*,
     player::{Player, PlayerBuilder, VolumeMode},
 };
-use clap::{App, Arg, ArgMatches};
-use classicube_sys::{Chat_Send, OwnedString};
 
 // static commands not targetted at a specific entity
 pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {

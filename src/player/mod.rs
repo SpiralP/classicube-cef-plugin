@@ -8,13 +8,15 @@ mod volume_fade;
 mod web;
 mod youtube;
 
+use std::time::Duration;
+
+use serde::{Deserialize, Serialize};
+
 pub use self::{
     builder::PlayerBuilder, dash::DashPlayer, hls::HlsPlayer, image::ImagePlayer,
     media::MediaPlayer, web::WebPlayer, youtube::YouTubePlayer,
 };
 use crate::{cef::RustRefBrowser, error::*};
-use serde::{Deserialize, Serialize};
-use std::time::Duration;
 
 pub trait PlayerTrait: Clone {
     fn type_name(&self) -> &'static str;

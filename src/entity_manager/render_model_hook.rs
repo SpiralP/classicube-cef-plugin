@@ -1,10 +1,12 @@
-use super::ENTITIES;
-use classicube_sys::{Entities, Entity, EntityVTABLE, ENTITIES_SELF_ID};
 use std::{
     cell::Cell,
     os::raw::{c_double, c_float},
     pin::Pin,
 };
+
+use classicube_sys::{Entities, Entity, EntityVTABLE, ENTITIES_SELF_ID};
+
+use super::ENTITIES;
 
 thread_local!(
     static ORIGINAL_FN: Cell<Option<unsafe extern "C" fn(*mut Entity, c_double, c_float)>> =

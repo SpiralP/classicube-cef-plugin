@@ -1,3 +1,7 @@
+use std::collections::VecDeque;
+
+use tracing::*;
+
 use super::{CefEntity, EntityManager, ENTITIES, NAME_TO_ID};
 use crate::{
     cef::Cef,
@@ -5,8 +9,6 @@ use crate::{
     options::FRAME_RATE,
     player::{Player, PlayerTrait},
 };
-use std::collections::VecDeque;
-use tracing::*;
 
 pub struct EntityBuilder {
     player: Player,

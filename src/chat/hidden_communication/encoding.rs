@@ -1,12 +1,14 @@
+use std::{collections::VecDeque, time::Duration};
+
+use serde::{Deserialize, Serialize};
+use tracing::debug;
+
 use crate::{
     cef::Cef,
     entity_manager::{EntityBuilder, EntityManager},
     error::*,
     player::{Player, PlayerTrait},
 };
-use serde::{Deserialize, Serialize};
-use std::{collections::VecDeque, time::Duration};
-use tracing::debug;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct LightEntity {

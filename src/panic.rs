@@ -1,6 +1,7 @@
+use std::{ffi::CString, fs, io::Write, mem, panic, panic::PanicInfo, process, thread};
+
 use backtrace::Backtrace;
 use classicube_sys::{DateTime, DateTime_CurrentLocal, Window_ShowDialog};
-use std::{ffi::CString, fs, io::Write, mem, panic, panic::PanicInfo, process, thread};
 
 pub fn install_hook() {
     panic::set_hook(Box::new(panic_hook));

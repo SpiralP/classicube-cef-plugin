@@ -1,10 +1,12 @@
-use super::{helpers::Texture_RenderShaded, TEXTURE_HEIGHT, TEXTURE_WIDTH};
+use std::{ffi::CString, mem, pin::Pin};
+
 use classicube_sys::{
     Bitmap, Entity, Gfx_SetAlphaTest, Gfx_SetTexturing, Model, ModelTex, ModelVertex, Model_Init,
     Model_Register, OwnedGfxTexture, PackedCol, PackedCol_Make, SKIN_TYPE_SKIN_64x64,
     MODEL_BOX_VERTICES,
 };
-use std::{ffi::CString, mem, pin::Pin};
+
+use super::{helpers::Texture_RenderShaded, TEXTURE_HEIGHT, TEXTURE_WIDTH};
 
 const WHITE: PackedCol = PackedCol_Make(255, 255, 255, 255);
 

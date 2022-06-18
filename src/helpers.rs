@@ -1,6 +1,7 @@
+use std::time::Duration;
+
 use classicube_sys::Vec3;
 use nalgebra::Vector3;
-use std::time::Duration;
 
 pub fn vec3_to_vector3(v: &Vec3) -> Vector3<f32> {
     Vector3::new(v.X, v.Y, v.Z)

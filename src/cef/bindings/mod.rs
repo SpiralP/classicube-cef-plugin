@@ -1,16 +1,18 @@
 mod generated;
 
-pub use self::generated::*;
-use super::{javascript, javascript::RustV8Value};
-use crate::error::*;
 use std::{
     ffi::{CStr, CString},
     mem,
     os::raw::c_int,
     ptr, slice,
 };
+
 use tracing::*;
 use url::Url;
+
+pub use self::generated::*;
+use super::{javascript, javascript::RustV8Value};
+use crate::error::*;
 
 #[no_mangle]
 pub unsafe extern "C" fn rust_debug(c_str: *const ::std::os::raw::c_char) {

@@ -1,3 +1,7 @@
+use std::time::Duration;
+
+use tracing::debug;
+
 use super::{encoding, wait_for_message, SHOULD_BLOCK};
 use crate::{
     async_manager,
@@ -9,8 +13,6 @@ use crate::{
     },
     error::*,
 };
-use std::time::Duration;
-use tracing::debug;
 
 pub async fn query_whisper(real_name: &str) -> Result<bool> {
     debug!("query_whisper asking {}", real_name);

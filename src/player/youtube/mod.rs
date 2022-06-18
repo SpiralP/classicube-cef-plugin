@@ -1,3 +1,15 @@
+use std::{
+    collections::HashMap,
+    time::{Duration, Instant},
+};
+
+use classicube_helpers::color;
+use futures::{future::RemoteHandle, prelude::*};
+use regex::Regex;
+use serde::{Deserialize, Serialize};
+use tracing::*;
+use url::Url;
+
 use super::{helpers::start_update_loop, PlayerTrait, VolumeMode};
 use crate::{
     async_manager,
@@ -7,16 +19,6 @@ use crate::{
     options,
     options::SUBTITLES,
 };
-use classicube_helpers::color;
-use futures::{future::RemoteHandle, prelude::*};
-use regex::Regex;
-use serde::{Deserialize, Serialize};
-use std::{
-    collections::HashMap,
-    time::{Duration, Instant},
-};
-use tracing::*;
-use url::Url;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct YouTubePlayer {

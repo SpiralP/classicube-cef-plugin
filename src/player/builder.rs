@@ -1,6 +1,7 @@
+use tracing::*;
+
 use super::{Player, PlayerTrait, VolumeMode, YouTubePlayer};
 use crate::{api, error::*};
-use tracing::*;
 
 #[derive(Debug, Default)]
 pub struct PlayerBuilder {

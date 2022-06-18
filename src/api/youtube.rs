@@ -1,6 +1,7 @@
-use crate::{async_manager, error::*};
 use serde::Deserialize;
 use tracing::*;
+
+use crate::{async_manager, error::*};
 
 const API_URL: &str = "https://youtube-api.spiralp.xyz";
 const APP_USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"));

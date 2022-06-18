@@ -1,8 +1,10 @@
+use std::os::raw::{c_int, c_void};
+
+use classicube_sys::*;
+use tracing::warn;
+
 use super::EntityManager;
 use crate::cef::RustRefBrowser;
-use classicube_sys::*;
-use std::os::raw::{c_int, c_void};
-use tracing::warn;
 
 /// This gets called from cef browser's OnPaint
 #[tracing::instrument(fields(browser = browser.get_identifier(), new_pixels))]

@@ -4,12 +4,14 @@ mod screen_commands;
 mod self_commands;
 mod static_commands;
 
-use super::{Chat, PlayerSnapshot};
-use crate::{async_manager, error::*};
+use std::cell::RefCell;
+
 use clap::{App, AppSettings, Arg, ArgMatches};
 use classicube_helpers::OptionWithInner;
-use std::cell::RefCell;
 use tracing::{debug, warn};
+
+use super::{Chat, PlayerSnapshot};
+use crate::{async_manager, error::*};
 
 thread_local!(
     static COMMAND_APP: RefCell<Option<App<'static, 'static>>> = Default::default();

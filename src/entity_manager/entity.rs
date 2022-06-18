@@ -1,3 +1,20 @@
+use std::{
+    collections::VecDeque,
+    mem,
+    pin::Pin,
+    sync::{Arc, Mutex},
+    time::Duration,
+};
+
+use classicube_helpers::color;
+use classicube_sys::{
+    cc_bool, cc_int16, Bitmap, Entity, EntityVTABLE, Entity_Init, Entity_SetModel,
+    Gfx_UpdateTexturePart, LocationUpdate, Model_Render, OwnedGfxTexture, OwnedString, PackedCol,
+    Texture, TextureRec, PACKEDCOL_WHITE,
+};
+use futures::channel::oneshot;
+use tracing::*;
+
 use super::{BROWSER_ID_TO_ENTITY_ID, TEXTURE_HEIGHT, TEXTURE_WIDTH};
 use crate::{
     api, async_manager,
@@ -8,21 +25,6 @@ use crate::{
     helpers::format_duration,
     player::{Player, PlayerTrait, WebPlayer},
 };
-use classicube_helpers::color;
-use classicube_sys::{
-    cc_bool, cc_int16, Bitmap, Entity, EntityVTABLE, Entity_Init, Entity_SetModel,
-    Gfx_UpdateTexturePart, LocationUpdate, Model_Render, OwnedGfxTexture, OwnedString, PackedCol,
-    Texture, TextureRec, PACKEDCOL_WHITE,
-};
-use futures::channel::oneshot;
-use std::{
-    collections::VecDeque,
-    mem,
-    pin::Pin,
-    sync::{Arc, Mutex},
-    time::Duration,
-};
-use tracing::*;
 
 pub struct CefEntity {
     pub id: usize,

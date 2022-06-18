@@ -3,6 +3,17 @@ mod browser;
 mod javascript;
 mod mute_lose_focus;
 
+use std::{
+    cell::{Cell, RefCell},
+    collections::HashMap,
+    os::raw::c_int,
+};
+
+use classicube_helpers::{shared::FutureShared, OptionWithInner};
+use futures::stream::{FuturesUnordered, StreamExt};
+use tokio::sync::broadcast;
+use tracing::*;
+
 pub use self::{
     bindings::{Callbacks, RustRefApp, RustRefBrowser, RustRefClient},
     javascript::RustV8Value,
@@ -16,15 +27,6 @@ use crate::{
     entity_manager::{cef_paint_callback, TEXTURE_HEIGHT, TEXTURE_WIDTH},
     error::*,
 };
-use classicube_helpers::{shared::FutureShared, OptionWithInner};
-use futures::stream::{FuturesUnordered, StreamExt};
-use std::{
-    cell::{Cell, RefCell},
-    collections::HashMap,
-    os::raw::c_int,
-};
-use tokio::sync::broadcast;
-use tracing::*;
 
 pub const CEF_DEFAULT_WIDTH: u16 = 1920;
 pub const CEF_DEFAULT_HEIGHT: u16 = 1080;

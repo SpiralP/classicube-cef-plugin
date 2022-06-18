@@ -1,10 +1,11 @@
-use crate::{chat::PlayerSnapshot, entity_manager::CefEntity, error::*, helpers::vec3_to_vector3};
 use classicube_sys::{Camera, Entities, RayTracer, Vec3, ENTITIES_SELF_ID};
 use nalgebra::{Isometry3, Point3, Rotation3, UnitQuaternion, Vector3};
 use ncollide3d::{
     query::{Ray, RayCast, RayIntersection},
     shape::Plane,
 };
+
+use crate::{chat::PlayerSnapshot, entity_manager::CefEntity, error::*, helpers::vec3_to_vector3};
 
 pub fn move_entity(entity: &mut CefEntity, player: &PlayerSnapshot) {
     let dir = Vec3::get_dir_vector(player.Yaw.to_radians(), player.Pitch.to_radians());

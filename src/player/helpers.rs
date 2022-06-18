@@ -1,3 +1,10 @@
+use std::{path::Path, time::Duration};
+
+use classicube_sys::{Camera, Vec3};
+use nalgebra::Vector3;
+use reqwest::Url;
+use tracing::*;
+
 use super::{MediaPlayer, Player, PlayerTrait, VolumeMode, YouTubePlayer};
 use crate::{
     async_manager,
@@ -5,11 +12,6 @@ use crate::{
     error::*,
     helpers::vec3_to_vector3,
 };
-use classicube_sys::{Camera, Vec3};
-use nalgebra::Vector3;
-use reqwest::Url;
-use std::{path::Path, time::Duration};
-use tracing::*;
 
 pub async fn start_update_loop(entity_id: usize) {
     let result = start_loop(entity_id).await;

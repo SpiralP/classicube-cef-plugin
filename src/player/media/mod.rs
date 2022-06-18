@@ -1,3 +1,11 @@
+use std::time::{Duration, Instant};
+
+use classicube_helpers::color;
+use futures::{future::RemoteHandle, prelude::*};
+use serde::{Deserialize, Serialize};
+use tracing::*;
+use url::Url;
+
 use super::{
     helpers::{get_ext, start_update_loop},
     PlayerTrait, VolumeMode, WebPlayer,
@@ -9,12 +17,6 @@ use crate::{
     error::*,
     options,
 };
-use classicube_helpers::color;
-use futures::{future::RemoteHandle, prelude::*};
-use serde::{Deserialize, Serialize};
-use std::time::{Duration, Instant};
-use tracing::*;
-use url::Url;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct MediaPlayer {

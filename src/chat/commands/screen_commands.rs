@@ -1,3 +1,9 @@
+use std::time::{Duration, Instant};
+
+use async_recursion::async_recursion;
+use clap::{App, AppSettings, Arg, ArgMatches};
+use classicube_helpers::color;
+
 use super::helpers::*;
 use crate::{
     async_manager,
@@ -8,10 +14,6 @@ use crate::{
     helpers::format_duration,
     player::{PlayerBuilder, PlayerTrait, VolumeMode},
 };
-use async_recursion::async_recursion;
-use clap::{App, AppSettings, Arg, ArgMatches};
-use classicube_helpers::color;
-use std::time::{Duration, Instant};
 
 // static commands not targetted at a specific entity
 pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {

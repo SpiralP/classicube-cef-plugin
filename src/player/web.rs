@@ -1,9 +1,10 @@
-use super::PlayerTrait;
-use crate::{cef::RustRefBrowser, chat::Chat, error::*};
 use classicube_helpers::color;
 use serde::{Deserialize, Serialize};
 use tracing::debug;
 use url::Url;
+
+use super::PlayerTrait;
+use crate::{cef::RustRefBrowser, chat::Chat, error::*};
 
 #[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize)]
 pub struct WebPlayer {

@@ -13,11 +13,13 @@ mod panic;
 mod player;
 mod plugin;
 
-use self::plugin::Plugin;
+use std::{os::raw::c_int, ptr};
+
 use classicube_helpers::{time, time_silent};
 use classicube_sys::IGameComponent;
-use std::{os::raw::c_int, ptr};
 use tracing::debug;
+
+use self::plugin::Plugin;
 
 extern "C" fn init() {
     panic::install_hook();

@@ -77,7 +77,7 @@ extern "C" int cef_interface_delete_ref_string(const char* c_str) {
 extern "C" RustRefApp cef_interface_create_app(Callbacks callbacks) {
   CefRefPtr<MyApp> app = new MyApp(callbacks);
 
-  return cef_interface_add_ref_app(app);
+  return cef_interface_add_ref_app(app.get());
 }
 
 // Implementation of the factory for for creating schema handlers.
@@ -89,7 +89,7 @@ class LocalSchemeHandlerFactory : public CefSchemeHandlerFactory {
   CefRefPtr<CefResourceHandler> Create(CefRefPtr<CefBrowser> browser,
                                        CefRefPtr<CefFrame> frame,
                                        const CefString& scheme_name,
-                                       CefRefPtr<CefRequest> request) OVERRIDE {
+                                       CefRefPtr<CefRequest> request) override {
     CEF_REQUIRE_IO_THREAD();
 
     std::string scheme_name_utf8 = scheme_name.ToString();
@@ -220,11 +220,11 @@ extern "C" int cef_interface_create_browser(MyClient* client,
   settings.background_color = background_color;
   settings.windowless_frame_rate = frame_rate;
 
-  settings.universal_access_from_file_urls = STATE_DISABLED;
-  settings.file_access_from_file_urls = STATE_DISABLED;
+  // settings.universal_access_from_file_urls = STATE_DISABLED;
+  // settings.file_access_from_file_urls = STATE_DISABLED;
 
   settings.tab_to_links = STATE_DISABLED;
-  settings.plugins = STATE_DISABLED;
+  // settings.plugins = STATE_DISABLED;
   settings.javascript_dom_paste = STATE_DISABLED;
   settings.javascript_access_clipboard = STATE_DISABLED;
 
@@ -234,7 +234,7 @@ extern "C" int cef_interface_create_browser(MyClient* client,
   if (insecure) {
     // this is pretty useless because it needs to be on the subprocess's
     // OnBeforeCommandLineProcessing
-    settings.web_security = STATE_DISABLED;
+    // settings.web_security = STATE_DISABLED;
 
     // CefRequestContextSettings request_context_settings;
     // request_context_settings.ignore_certificate_errors = true;
@@ -413,7 +413,8 @@ extern "C" int cef_interface_browser_open_dev_tools(CefBrowser* browser) {
 
   CefBrowserSettings settings;
   CefPoint inspect_element_at;
-  browser_host->ShowDevTools(window_info, NULL, settings, inspect_element_at);
+  browser_host->ShowDevTools(window_info, nullptr, settings,
+                             inspect_element_at);
 
   return 0;
 }

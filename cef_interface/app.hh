@@ -12,24 +12,24 @@ class MyApp : public CefApp,
   MyApp(Callbacks callbacks);
 
   // CefApp methods:
-  CefRefPtr<CefBrowserProcessHandler> GetBrowserProcessHandler() OVERRIDE;
-  CefRefPtr<CefRenderProcessHandler> GetRenderProcessHandler() OVERRIDE;
+  CefRefPtr<CefBrowserProcessHandler> GetBrowserProcessHandler() override;
+  CefRefPtr<CefRenderProcessHandler> GetRenderProcessHandler() override;
 
   void OnBeforeCommandLineProcessing(
       const CefString& process_type,
-      CefRefPtr<CefCommandLine> command_line) OVERRIDE;
+      CefRefPtr<CefCommandLine> command_line) override;
 
   void OnRegisterCustomSchemes(
-      CefRawPtr<CefSchemeRegistrar> registrar) OVERRIDE;
+      CefRawPtr<CefSchemeRegistrar> registrar) override;
 
   // CefBrowserProcessHandler methods:
-  void OnContextInitialized() OVERRIDE;
+  void OnContextInitialized() override;
 
   // CefRenderProcessHandler methods:
   bool OnProcessMessageReceived(CefRefPtr<CefBrowser> browser,
                                 CefRefPtr<CefFrame> frame,
                                 CefProcessId source_process,
-                                CefRefPtr<CefProcessMessage> message) OVERRIDE;
+                                CefRefPtr<CefProcessMessage> message) override;
 
  private:
   Callbacks callbacks;

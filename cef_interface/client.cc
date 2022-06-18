@@ -174,14 +174,14 @@ CefRefPtr<CefResourceRequestHandler> MyClient::GetResourceRequestHandler(
     }
   }
 
-  return NULL;
+  return nullptr;
 }
 
 bool MyClient::OnCertificateError(CefRefPtr<CefBrowser> browser,
                                   cef_errorcode_t cert_error,
                                   const CefString& request_url,
                                   CefRefPtr<CefSSLInfo> ssl_info,
-                                  CefRefPtr<CefRequestCallback> callback) {
+                                  CefRefPtr<CefCallback> callback) {
   rust_warn("OnCertificateError");
   if (callbacks.on_certificate_error) {
     bool allow = callbacks.on_certificate_error(
@@ -190,7 +190,7 @@ bool MyClient::OnCertificateError(CefRefPtr<CefBrowser> browser,
     if (allow) {
       // Return true and call CefRequestCallback::Continue() either in this
       // method or at a later time to continue or cancel the request.
-      callback->Continue(true);
+      callback->Continue();
       return true;
     }
   }
@@ -204,7 +204,7 @@ CefResourceRequestHandler::ReturnValue MyClient::OnBeforeResourceLoad(
     CefRefPtr<CefBrowser> browser,
     CefRefPtr<CefFrame> frame,
     CefRefPtr<CefRequest> request,
-    CefRefPtr<CefRequestCallback> callback) {
+    CefRefPtr<CefCallback> callback) {
   // fix for some embedded youtube videos giving "video unavailable"
   // something to do with referrer not being set from our data: url
   auto new_referrer_url = L"https://www.youtube.com/";
@@ -240,11 +240,10 @@ bool MyClient::OnJSDialog(CefRefPtr<CefBrowser> browser,
 
 // CefDialogHandler methods:
 bool MyClient::OnFileDialog(CefRefPtr<CefBrowser> browser,
-                            CefDialogHandler::FileDialogMode mode,
+                            FileDialogMode mode,
                             const CefString& title,
                             const CefString& default_file_path,
                             const std::vector<CefString>& accept_filters,
-                            int selected_accept_filter,
                             CefRefPtr<CefFileDialogCallback> callback) {
   // To display a custom dialog return true and execute |callback| either inline
   // or at a later time.

@@ -16,7 +16,7 @@ use crate::{
     entity_manager::{cef_paint_callback, TEXTURE_HEIGHT, TEXTURE_WIDTH},
     error::*,
 };
-use classicube_helpers::{shared::FutureShared, CellGetSet, OptionWithInner};
+use classicube_helpers::{shared::FutureShared, OptionWithInner};
 use futures::stream::{FuturesUnordered, StreamExt};
 use std::{
     cell::{Cell, RefCell},

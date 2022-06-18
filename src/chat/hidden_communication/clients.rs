@@ -9,7 +9,7 @@ use crate::{
     error::*,
     plugin::APP_NAME,
 };
-use classicube_helpers::{tab_list::remove_color, CellGetSet, OptionWithInner};
+use classicube_helpers::{tab_list::remove_color, OptionWithInner};
 use classicube_sys::ENTITIES_SELF_ID;
 use futures::{future::RemoteHandle, prelude::*};
 use std::{cell::RefCell, collections::HashSet, sync::Once, time::Duration};

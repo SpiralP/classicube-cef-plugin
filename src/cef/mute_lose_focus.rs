@@ -1,5 +1,5 @@
 use crate::{cef::Cef, options::MUTE_LOSE_FOCUS};
-use classicube_helpers::{events::window::FocusChangedEventHandler, CellGetSet};
+use classicube_helpers::events::window::FocusChangedEventHandler;
 use classicube_sys::WindowInfo;
 use std::cell::{Cell, RefCell};
 

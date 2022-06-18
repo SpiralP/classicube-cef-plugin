@@ -9,7 +9,7 @@ use crate::{
     },
     error::*,
 };
-use classicube_helpers::{shared::FutureShared, CellGetSet, OptionWithInner};
+use classicube_helpers::{shared::FutureShared, OptionWithInner};
 use std::time::Duration;
 use tracing::{debug, info, warn};
 

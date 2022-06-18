@@ -11,7 +11,6 @@ use crate::{
     options,
     player::{PlayerBuilder, PlayerTrait, VolumeMode},
 };
-use classicube_helpers::CellGetSet;
 use classicube_sys::ENTITIES_SELF_ID;
 use futures::{channel::mpsc, future::RemoteHandle, prelude::*};
 use std::{

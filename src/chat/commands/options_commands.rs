@@ -7,7 +7,6 @@ use crate::{
     player::PlayerTrait,
 };
 use clap::{App, AppSettings, Arg, ArgMatches};
-use classicube_helpers::CellGetSet;
 
 // static commands not targetted at a specific entity
 pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {

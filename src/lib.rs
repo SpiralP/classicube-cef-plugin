@@ -1,4 +1,4 @@
-#![feature(const_fn_trait_bound)]
+#![feature(local_key_cell_methods)]
 
 mod api;
 mod async_manager;

@@ -26,7 +26,7 @@ pub fn initialize(debug: bool, other_crates: bool, flame: bool) {
         }
 
         let level = if debug { "debug" } else { "info" };
-        let my_crate_name = env!("CARGO_PKG_NAME").replace("-", "_");
+        let my_crate_name = env!("CARGO_PKG_NAME").replace('-', "_");
 
         let mut filter = EnvFilter::from_default_env();
 

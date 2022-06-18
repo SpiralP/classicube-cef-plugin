@@ -1,12 +1,12 @@
 use clap::{App, Arg, ArgMatches};
 use classicube_sys::{Chat_Send, OwnedString};
 
-use super::helpers::*;
+use super::helpers::move_entity;
 use crate::{
     async_manager,
     chat::PlayerSnapshot,
     entity_manager::{EntityBuilder, EntityManager, TargetEntity},
-    error::*,
+    error::{bail, Result},
     player::{Player, PlayerBuilder, VolumeMode},
 };
 
@@ -142,7 +142,7 @@ pub async fn handle_command(
 
             if let Some(name) = matches.value_of("name") {
                 if let Ok(id) = name.get_entity_id() {
-                    let _ = EntityManager::remove_entity(id).await;
+                    drop(EntityManager::remove_entity(id).await);
                 }
             }
 
@@ -175,7 +175,7 @@ pub async fn handle_command(
             }
 
             if transparent {
-                entity_builder = entity_builder.background_color(0x00FFFFFF);
+                entity_builder = entity_builder.background_color(0x00FF_FFFF);
             }
 
             if let Some(name) = matches.value_of("name") {

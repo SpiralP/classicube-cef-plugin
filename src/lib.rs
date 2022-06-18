@@ -1,4 +1,14 @@
 #![feature(local_key_cell_methods)]
+#![warn(clippy::pedantic)]
+#![allow(clippy::module_name_repetitions)]
+#![allow(clippy::unused_self)]
+#![allow(clippy::cast_lossless)]
+#![allow(clippy::cast_precision_loss)]
+#![allow(clippy::cast_possible_truncation)]
+#![allow(clippy::needless_pass_by_value)]
+#![allow(clippy::too_many_lines)]
+#![allow(clippy::struct_excessive_bools)]
+#![allow(clippy::items_after_statements)]
 
 mod api;
 mod async_manager;
@@ -35,7 +45,7 @@ extern "C" fn init() {
         time!("Plugin::initialize()", 5000, {
             Plugin::initialize();
         });
-    })
+    });
 }
 
 extern "C" fn free() {

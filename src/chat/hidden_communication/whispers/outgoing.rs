@@ -11,7 +11,7 @@ use crate::{
         },
         is_continuation_message, Chat,
     },
-    error::*,
+    error::{Error, Result, ResultExt},
 };
 
 pub async fn query_whisper(real_name: &str) -> Result<bool> {
@@ -81,5 +81,5 @@ pub async fn query_whisper(real_name: &str) -> Result<bool> {
     debug!("got encoded message length {}", full_message_encoded.len());
     let message = encoding::decode(full_message_encoded)?;
     debug!("decoded {:#?}", message);
-    Ok(encoding::received_message(message).await?)
+    encoding::received_message(message).await
 }

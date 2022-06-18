@@ -3,7 +3,7 @@ use std::time::{Duration, Instant};
 use classicube_helpers::color;
 use futures::{future::RemoteHandle, prelude::*};
 use serde::{Deserialize, Serialize};
-use tracing::*;
+use tracing::{debug, warn};
 use url::Url;
 
 use super::{
@@ -14,7 +14,7 @@ use crate::{
     async_manager,
     cef::{RustRefBrowser, RustV8Value},
     chat::Chat,
-    error::*,
+    error::{bail, Result},
     options,
 };
 
@@ -300,7 +300,7 @@ impl MediaPlayer {
 
     async fn eval(browser: &RustRefBrowser, method: &str) -> Result<RustV8Value> {
         let code = format!("window.{};", method);
-        Ok(browser.eval_javascript(code).await?)
+        browser.eval_javascript(code).await
     }
 }
 

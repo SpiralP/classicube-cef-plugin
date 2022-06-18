@@ -6,12 +6,12 @@ use tracing::{debug, warn};
 use crate::{
     async_manager,
     entity_manager::EntityManager,
-    error::*,
+    error::{Error, Result},
     player::{Player, PlayerTrait},
 };
 
 thread_local!(
-    static FADING_HANDLE: Cell<Option<RemoteHandle<()>>> = Default::default();
+    static FADING_HANDLE: Cell<Option<RemoteHandle<()>>> = Cell::default();
 );
 
 pub fn on_new_map() {

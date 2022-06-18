@@ -16,7 +16,10 @@ pub use self::{
     builder::PlayerBuilder, dash::DashPlayer, hls::HlsPlayer, image::ImagePlayer,
     media::MediaPlayer, web::WebPlayer, youtube::YouTubePlayer,
 };
-use crate::{cef::RustRefBrowser, error::*};
+use crate::{
+    cef::RustRefBrowser,
+    error::{bail, Result},
+};
 
 pub trait PlayerTrait: Clone {
     fn type_name(&self) -> &'static str;
@@ -62,10 +65,10 @@ pub trait PlayerTrait: Clone {
         true
     }
     fn set_autoplay(&mut self, _browser: Option<&RustRefBrowser>, autoplay: bool) -> Result<()> {
-        if !autoplay {
-            bail!("unsetting autoplay not supported");
-        } else {
+        if autoplay {
             Ok(())
+        } else {
+            bail!("unsetting autoplay not supported");
         }
     }
 
@@ -87,10 +90,10 @@ pub trait PlayerTrait: Clone {
     fn is_finished_playing(&self) -> bool;
 
     fn set_playing(&mut self, _browser: &RustRefBrowser, playing: bool) -> Result<()> {
-        if !playing {
-            bail!("pausing not supported");
-        } else {
+        if playing {
             Ok(())
+        } else {
+            bail!("pausing not supported");
         }
     }
 
@@ -167,17 +170,17 @@ impl PlayerTrait for Player {
                                                     Ok(player) => Ok(Player::Web(player)),
 
                                                     Err(e) => {
-                                                        if !input.starts_with("http") {
+                                                        if input.starts_with("http") {
+                                                            bail!(
+                                                                "no player matched for input: {}",
+                                                                e
+                                                            );
+                                                        } else {
                                                             // if it didn't start with http, try again with https:// in front
                                                             Player::from_input(&format!(
                                                                 "https://{}",
                                                                 input
                                                             ))
-                                                        } else {
-                                                            bail!(
-                                                                "no player matched for input: {}",
-                                                                e
-                                                            );
                                                         }
                                                     }
                                                 }

@@ -13,7 +13,7 @@ use classicube_sys::{
     Texture, TextureRec, PACKEDCOL_WHITE,
 };
 use futures::channel::oneshot;
-use tracing::*;
+use tracing::{debug, warn};
 
 use super::{BROWSER_ID_TO_ENTITY_ID, TEXTURE_HEIGHT, TEXTURE_WIDTH};
 use crate::{
@@ -21,7 +21,7 @@ use crate::{
     cef::RustRefBrowser,
     chat::Chat,
     entity_manager::{DEFAULT_MODEL_HEIGHT, DEFAULT_MODEL_WIDTH},
-    error::*,
+    error::{Error, Result, ResultExt},
     helpers::format_duration,
     player::{Player, PlayerTrait, WebPlayer},
 };

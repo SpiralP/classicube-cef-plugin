@@ -13,12 +13,12 @@ use crate::{
         hidden_communication::whispers::start_whispering,
         is_continuation_message, Chat, TAB_LIST,
     },
-    error::*,
+    error::{Result, ResultExt},
     plugin::APP_NAME,
 };
 
 thread_local!(
-    static CURRENT_RUNNING: RefCell<Option<RemoteHandle<()>>> = Default::default();
+    static CURRENT_RUNNING: RefCell<Option<RemoteHandle<()>>> = RefCell::default();
 );
 
 pub fn query() {

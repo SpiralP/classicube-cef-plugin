@@ -17,24 +17,24 @@ use tokio::task::{JoinError, JoinHandle};
 use tracing::debug;
 
 thread_local!(
-    static ASYNC_DISPATCHER: RefCell<Option<Dispatcher>> = Default::default();
+    static ASYNC_DISPATCHER: RefCell<Option<Dispatcher>> = RefCell::default();
 );
 
 thread_local!(
     static ASYNC_DISPATCHER_LOCAL_HANDLE: RefCell<Option<LocalDispatcherHandle>> =
-        Default::default();
+        RefCell::default();
 );
 
 lazy_static! {
-    static ref ASYNC_DISPATCHER_HANDLE: Mutex<Option<DispatcherHandle>> = Default::default();
+    static ref ASYNC_DISPATCHER_HANDLE: Mutex<Option<DispatcherHandle>> = Mutex::default();
 }
 
 lazy_static! {
-    static ref TOKIO_RUNTIME: Mutex<Option<tokio::runtime::Runtime>> = Default::default();
+    static ref TOKIO_RUNTIME: Mutex<Option<tokio::runtime::Runtime>> = Mutex::default();
 }
 
 thread_local!(
-    static TICK_HANDLER: RefCell<Option<TickEventHandler>> = Default::default();
+    static TICK_HANDLER: RefCell<Option<TickEventHandler>> = RefCell::default();
 );
 
 #[tracing::instrument]
@@ -110,7 +110,7 @@ pub fn shutdown() {
 }
 
 thread_local!(
-    static YIELDED_WAKERS: RefCell<Vec<Rc<Cell<bool>>>> = Default::default();
+    static YIELDED_WAKERS: RefCell<Vec<Rc<Cell<bool>>>> = RefCell::default();
 );
 
 pub fn step() {
@@ -168,7 +168,7 @@ pub async fn yield_now() {
             vec.push(waker);
         });
     }
-    YieldNow { waker }.await
+    YieldNow { waker }.await;
 }
 
 pub async fn timeout<T, F>(duration: Duration, f: F) -> Option<T>

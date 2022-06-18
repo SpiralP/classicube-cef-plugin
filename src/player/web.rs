@@ -4,9 +4,9 @@ use tracing::debug;
 use url::Url;
 
 use super::PlayerTrait;
-use crate::{cef::RustRefBrowser, chat::Chat, error::*};
+use crate::{cef::RustRefBrowser, chat::Chat, error::Result};
 
-#[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct WebPlayer {
     url: String,
 

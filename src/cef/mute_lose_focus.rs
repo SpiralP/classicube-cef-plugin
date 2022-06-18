@@ -10,7 +10,7 @@ thread_local!(
 );
 
 thread_local!(
-    static FOCUS_HANDLER: RefCell<Option<FocusChangedEventHandler>> = Default::default();
+    static FOCUS_HANDLER: RefCell<Option<FocusChangedEventHandler>> = RefCell::default();
 );
 
 pub fn initialize() {

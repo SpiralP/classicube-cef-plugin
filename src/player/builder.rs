@@ -1,7 +1,7 @@
-use tracing::*;
+use tracing::warn;
 
 use super::{Player, PlayerTrait, VolumeMode, YouTubePlayer};
-use crate::{api, error::*};
+use crate::{api, error::Result};
 
 #[derive(Debug, Default)]
 pub struct PlayerBuilder {
@@ -15,7 +15,7 @@ pub struct PlayerBuilder {
 
 impl PlayerBuilder {
     pub fn new() -> Self {
-        Default::default()
+        Self::default()
     }
 
     /// will always return at least 1 Player, or else Err about no results
@@ -28,10 +28,10 @@ impl PlayerBuilder {
                 if player.is_playlist {
                     match api::youtube::playlist(&player.id).await {
                         Ok(video_ids) => {
-                            if !video_ids.is_empty() {
-                                ids = video_ids;
-                            } else {
+                            if video_ids.is_empty() {
                                 warn!("playlist gave 0 results?!");
+                            } else {
+                                ids = video_ids;
                             }
                         }
                         Err(e) => {
@@ -92,7 +92,7 @@ impl PlayerBuilder {
         self
     }
 
-    /// if use_youtube_playlist is true, use YouTube's playlist instead of
+    /// if `use_youtube_playlist` is true, use YouTube's playlist instead of
     /// breaking up the playlist into individual players/videos
     pub fn use_youtube_playlist(mut self, use_youtube_playlist: bool) -> Self {
         self.use_youtube_playlist = use_youtube_playlist;

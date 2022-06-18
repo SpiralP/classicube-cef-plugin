@@ -6,7 +6,7 @@ use tracing::debug;
 use crate::{
     cef::Cef,
     entity_manager::{EntityBuilder, EntityManager},
-    error::*,
+    error::Result,
     player::{Player, PlayerTrait},
 };
 
@@ -43,7 +43,7 @@ pub fn decode<T: AsRef<[u8]>>(input: T) -> Result<Message> {
     Ok(bincode::deserialize(&data)?)
 }
 
-pub async fn create_message() -> Message {
+pub fn create_message() -> Message {
     let light_entities: Vec<_> = EntityManager::with_all_entities(|entities| {
         entities
             .iter()

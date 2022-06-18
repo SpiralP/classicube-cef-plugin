@@ -7,12 +7,12 @@ use classicube_sys::{
     FACE_CONSTS_FACE_YMAX, FACE_CONSTS_FACE_YMIN, FACE_CONSTS_FACE_ZMAX, FACE_CONSTS_FACE_ZMIN,
 };
 
-use super::{helpers::*, Chat};
+use super::{helpers::get_camera_trace, Chat};
 use crate::{
     api, async_manager,
     chat::{hidden_communication::whispers, PlayerSnapshot},
     entity_manager::EntityManager,
-    error::*,
+    error::{bail, Result, ResultExt},
     helpers::format_duration,
 };
 

@@ -5,7 +5,9 @@ use ncollide3d::{
     shape::Plane,
 };
 
-use crate::{chat::PlayerSnapshot, entity_manager::CefEntity, error::*, helpers::vec3_to_vector3};
+use crate::{
+    chat::PlayerSnapshot, entity_manager::CefEntity, error::Result, helpers::vec3_to_vector3,
+};
 
 pub fn move_entity(entity: &mut CefEntity, player: &PlayerSnapshot) {
     let dir = Vec3::get_dir_vector(player.Yaw.to_radians(), player.Pitch.to_radians());

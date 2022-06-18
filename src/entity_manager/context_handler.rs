@@ -2,7 +2,7 @@ use classicube_helpers::events::gfx::{ContextLostEventHandler, ContextRecreatedE
 use classicube_sys::{OwnedGfxVertexBuffer, VertexFormat__VERTEX_FORMAT_TEXTURED};
 use tracing::debug;
 
-use super::helpers::*;
+use super::helpers::TEX_VB;
 
 pub struct ContextHandler {
     context_lost_handler: ContextLostEventHandler,

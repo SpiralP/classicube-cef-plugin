@@ -12,7 +12,7 @@ use std::{
 use classicube_helpers::{shared::FutureShared, OptionWithInner};
 use futures::stream::{FuturesUnordered, StreamExt};
 use tokio::sync::broadcast;
-use tracing::*;
+use tracing::{debug, debug_span, error, warn, Instrument};
 
 pub use self::{
     bindings::{Callbacks, RustRefApp, RustRefBrowser, RustRefClient},
@@ -25,7 +25,7 @@ use self::{
 use crate::{
     async_manager,
     entity_manager::{cef_paint_callback, TEXTURE_HEIGHT, TEXTURE_WIDTH},
-    error::*,
+    error::{bail, Result, ResultExt},
 };
 
 pub const CEF_DEFAULT_WIDTH: u16 = 1920;
@@ -112,7 +112,7 @@ impl Cef {
             create_browser_mutex: FutureShared::new(()),
         };
 
-        let mut mutex = CEF.with(|mutex| mutex.clone());
+        let mut mutex = CEF.with(Clone::clone);
         let mut global_cef = mutex.lock().await;
         *global_cef = Some(cef);
 
@@ -127,7 +127,7 @@ impl Cef {
         // load a blank browser so that the next load is quicker
         async_manager::spawn_local_on_main_thread(
             async {
-                let browser = Self::create_browser("data:text/html,", 30, false, 0x00FFFFFF)
+                let browser = Self::create_browser("data:text/html,", 30, false, 0x00FF_FFFF)
                     .await
                     .unwrap();
                 Self::close_browser(&browser).await.unwrap();
@@ -141,7 +141,7 @@ impl Cef {
         mute_lose_focus::shutdown();
 
         let mut app = {
-            let mut mutex = CEF.with(|mutex| mutex.clone());
+            let mut mutex = CEF.with(Clone::clone);
             let mut global_cef = mutex.lock().await;
             if let Some(cef) = global_cef.take() {
                 debug!("shutting down all browsers");
@@ -197,7 +197,7 @@ impl Cef {
         background_color: u32,
     ) -> Result<RustRefBrowser> {
         let mut create_browser_mutex = {
-            let mut mutex = CEF.with(|mutex| mutex.clone());
+            let mut mutex = CEF.with(Clone::clone);
             let maybe_cef = mutex.lock().await;
             let cef = maybe_cef.as_ref().chain_err(|| "no cef")?;
 
@@ -210,7 +210,7 @@ impl Cef {
         let mutex = create_browser_mutex.lock().await;
 
         let (client, mut event_receiver) = {
-            let mut mutex = CEF.with(|mutex| mutex.clone());
+            let mut mutex = CEF.with(Clone::clone);
             let maybe_cef = mutex.lock().await;
             let cef = maybe_cef.as_ref().chain_err(|| "no cef")?;
 
@@ -320,7 +320,7 @@ impl Cef {
 
             sizes
                 .get(&browser_id)
-                .cloned()
+                .copied()
                 .unwrap_or((CEF_DEFAULT_WIDTH, CEF_DEFAULT_HEIGHT))
         })
     }

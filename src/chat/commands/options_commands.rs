@@ -4,7 +4,7 @@ use super::Chat;
 use crate::{
     chat::{hidden_communication::CURRENT_MAP_THEME, PlayerSnapshot},
     entity_manager::EntityManager,
-    error::*,
+    error::{Error, Result},
     options,
     player::PlayerTrait,
 };

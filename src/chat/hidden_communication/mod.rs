@@ -24,11 +24,11 @@ thread_local!(
 );
 
 thread_local!(
-    static WAITING_FOR_MESSAGE: RefCell<Vec<oneshot::Sender<String>>> = Default::default();
+    static WAITING_FOR_MESSAGE: RefCell<Vec<oneshot::Sender<String>>> = RefCell::default();
 );
 
 thread_local!(
-    static OLD_MESSAGE_HANDLER: RefCell<Net_Handler> = Default::default();
+    static OLD_MESSAGE_HANDLER: RefCell<Net_Handler> = RefCell::default();
 );
 
 extern "C" fn message_handler(data: *mut u8) {

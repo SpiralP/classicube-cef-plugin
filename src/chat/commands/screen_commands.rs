@@ -4,13 +4,13 @@ use async_recursion::async_recursion;
 use clap::{App, AppSettings, Arg, ArgMatches};
 use classicube_helpers::color;
 
-use super::helpers::*;
+use super::helpers::{get_click_coords, move_entity};
 use crate::{
     async_manager,
     cef::Cef,
     chat::{Chat, PlayerSnapshot},
-    entity_manager::EntityManager,
-    error::*,
+    entity_manager::{CefEntity, EntityManager},
+    error::{bail, ensure, Error, Result, ResultExt},
     helpers::format_duration,
     player::{PlayerBuilder, PlayerTrait, VolumeMode},
 };
@@ -361,7 +361,7 @@ pub async fn handle_command(
         }
 
         ("skip", Some(matches)) => {
-            EntityManager::with_entity((matches, player), |entity| entity.skip())?;
+            EntityManager::with_entity((matches, player), CefEntity::skip)?;
 
             Ok(true)
         }
@@ -401,7 +401,7 @@ pub async fn handle_command(
         // bail!("unimplemented");
         // }
         ("stop", Some(matches)) => {
-            EntityManager::with_entity((matches, player), |entity| entity.stop())?;
+            EntityManager::with_entity((matches, player), CefEntity::stop)?;
 
             Ok(true)
         }
@@ -800,8 +800,8 @@ pub async fn handle_command(
                 EntityManager::with_entity(entity_id, move |entity| {
                     Ok(match entity.player.get_volume_mode() {
                         VolumeMode::Global => entity.player.get_volume(),
-                        VolumeMode::Distance { multiplier, .. } => multiplier,
-                        VolumeMode::Panning { multiplier, .. } => multiplier,
+                        VolumeMode::Distance { multiplier, .. }
+                        | VolumeMode::Panning { multiplier, .. } => multiplier,
                     })
                 })?
             };

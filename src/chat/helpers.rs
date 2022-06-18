@@ -1,13 +1,13 @@
 pub fn is_outgoing_whisper(message: &str) -> bool {
     message.len() >= 6
-        && message.get(0..1).map(|a| a == "&").unwrap_or(false)
-        && message.get(2..6).map(|a| a == "[<] ").unwrap_or(false)
+        && message.get(0..1).map_or(false, |a| a == "&")
+        && message.get(2..6).map_or(false, |a| a == "[<] ")
 }
 
 pub fn is_incoming_whisper(message: &str) -> bool {
     message.len() >= 6
-        && message.get(0..1).map(|a| a == "&").unwrap_or(false)
-        && message.get(2..6).map(|a| a == "[>] ").unwrap_or(false)
+        && message.get(0..1).map_or(false, |a| a == "&")
+        && message.get(2..6).map_or(false, |a| a == "[>] ")
 }
 
 pub fn is_cef_request_whisper(message: &str) -> bool {
@@ -65,11 +65,8 @@ pub fn is_continuation_message(mut message: &str) -> Option<&str> {
 
 pub fn is_clients_start_message(message: &str) -> bool {
     message.len() >= 14
-        && message.get(0..1).map(|a| a == "&").unwrap_or(false)
-        && message
-            .get(2..)
-            .map(|a| a == "Players using:")
-            .unwrap_or(false)
+        && message.get(0..1).map_or(false, |a| a == "&")
+        && message.get(2..).map_or(false, |a| a == "Players using:")
 }
 
 pub fn is_clients_message(message: &str) -> Option<&str> {
@@ -80,8 +77,8 @@ pub fn is_clients_message(message: &str) -> Option<&str> {
     // > &7+ Pon: &fSpiralP
     // &7  ClassiCraft 1.1.3: &fFaeEmpress
     if message.len() >= 5
-        && message.get(0..1).map(|a| a == "&").unwrap_or(false)
-        && message.get(2..4).map(|a| a == "  ").unwrap_or(false)
+        && message.get(0..1).map_or(false, |a| a == "&")
+        && message.get(2..4).map_or(false, |a| a == "  ")
     {
         Some(message.get(4..)?)
     } else {
@@ -90,7 +87,7 @@ pub fn is_clients_message(message: &str) -> Option<&str> {
 }
 
 pub fn remove_color_left(mut text: &str) -> &str {
-    while text.len() >= 2 && text.get(0..1).map(|c| c == "&").unwrap_or(false) {
+    while text.len() >= 2 && text.get(0..1).map_or(false, |c| c == "&") {
         if let Some(trimmed) = text.get(2..) {
             text = trimmed;
         } else {

@@ -12,7 +12,7 @@ use crate::{
         },
         is_continuation_message, Chat, ENTITIES, TAB_LIST,
     },
-    error::*,
+    error::{Result, ResultExt},
 };
 
 pub async fn listen_loop() {
@@ -91,7 +91,7 @@ async fn handle_request(message: String) -> Result<()> {
 async fn send_reply(real_name: String) -> Result<()> {
     debug!("sending to {:?}", real_name);
 
-    let message = encoding::create_message().await;
+    let message = encoding::create_message();
 
     if message.entities.is_empty() {
         // don't send anything if nothing to send, asker will time out and ask someone else

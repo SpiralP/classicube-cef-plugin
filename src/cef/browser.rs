@@ -6,22 +6,22 @@ use std::{
 };
 
 use classicube_helpers::OptionWithInner;
-use tracing::*;
+use tracing::{debug, warn};
 
 use super::{bindings::RustRect, CefEvent, CEF_DEFAULT_HEIGHT, CEF_DEFAULT_WIDTH, EVENT_QUEUE};
 use crate::cef::RustRefBrowser;
 
 // identifier, browser
 thread_local!(
-    pub static BROWSERS: RefCell<HashMap<c_int, RustRefBrowser>> = RefCell::new(HashMap::new());
+    pub static BROWSERS: RefCell<HashMap<c_int, RustRefBrowser>> = RefCell::default();
 );
 
 thread_local!(
-    pub static BROWSER_SIZES: RefCell<HashMap<c_int, (u16, u16)>> = Default::default();
+    pub static BROWSER_SIZES: RefCell<HashMap<c_int, (u16, u16)>> = RefCell::default();
 );
 
 thread_local!(
-    pub static ALLOW_INSECURE: RefCell<HashMap<c_int, bool>> = Default::default();
+    pub static ALLOW_INSECURE: RefCell<HashMap<c_int, bool>> = RefCell::default();
 );
 
 // OnAfterCreated

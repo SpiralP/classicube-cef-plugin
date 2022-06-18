@@ -12,7 +12,7 @@ use crate::{
     async_manager,
     cef::{RustRefBrowser, RustV8Value},
     chat::Chat,
-    error::*,
+    error::{bail, Result},
     options,
 };
 
@@ -192,7 +192,7 @@ impl DashPlayer {
             "#,
             field
         );
-        Ok(browser.eval_javascript(code).await?)
+        browser.eval_javascript(code).await
     }
 }
 

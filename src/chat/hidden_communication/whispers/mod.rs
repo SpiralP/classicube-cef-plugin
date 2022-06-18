@@ -9,10 +9,10 @@ use rand::seq::SliceRandom;
 use tracing::{debug, warn};
 
 use super::{encoding, wait_for_message, SHOULD_BLOCK};
-use crate::{async_manager, chat::ENTITIES, error::*};
+use crate::{async_manager, chat::ENTITIES, error::Result};
 
 thread_local!(
-    static LISTENER: Cell<Option<RemoteHandle<()>>> = Default::default();
+    static LISTENER: Cell<Option<RemoteHandle<()>>> = Cell::default();
 );
 
 pub async fn start_whispering(players: Vec<(u8, String)>) -> Result<()> {

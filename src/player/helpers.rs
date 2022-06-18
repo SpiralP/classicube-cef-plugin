@@ -3,13 +3,13 @@ use std::{path::Path, time::Duration};
 use classicube_sys::{Camera, Vec3};
 use nalgebra::Vector3;
 use reqwest::Url;
-use tracing::*;
+use tracing::{debug, warn};
 
 use super::{MediaPlayer, Player, PlayerTrait, VolumeMode, YouTubePlayer};
 use crate::{
     async_manager,
     entity_manager::{CefEntity, EntityManager},
-    error::*,
+    error::{bail, Error, Result, ResultExt},
     helpers::vec3_to_vector3,
 };
 

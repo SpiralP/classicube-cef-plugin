@@ -11,10 +11,13 @@ use classicube_helpers::OptionWithInner;
 use tracing::{debug, warn};
 
 use super::{Chat, PlayerSnapshot};
-use crate::{async_manager, error::*};
+use crate::{
+    async_manager,
+    error::{bail, Error, Result},
+};
 
 thread_local!(
-    static COMMAND_APP: RefCell<Option<App<'static, 'static>>> = Default::default();
+    static COMMAND_APP: RefCell<Option<App<'static, 'static>>> = RefCell::default();
 );
 
 pub fn initialize() {

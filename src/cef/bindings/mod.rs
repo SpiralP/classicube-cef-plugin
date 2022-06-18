@@ -7,12 +7,12 @@ use std::{
     ptr, slice,
 };
 
-use tracing::*;
+use tracing::{debug, warn};
 use url::Url;
 
 pub use self::generated::*;
 use super::{javascript, javascript::RustV8Value};
-use crate::error::*;
+use crate::error::{bail, ErrorKind, Result, ResultExt};
 
 #[no_mangle]
 pub unsafe extern "C" fn rust_debug(c_str: *const ::std::os::raw::c_char) {

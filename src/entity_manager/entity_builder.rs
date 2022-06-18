@@ -1,11 +1,11 @@
 use std::collections::VecDeque;
 
-use tracing::*;
+use tracing::debug;
 
 use super::{CefEntity, EntityManager, ENTITIES, NAME_TO_ID};
 use crate::{
     cef::Cef,
-    error::*,
+    error::{Error, Result},
     options::FRAME_RATE,
     player::{Player, PlayerTrait},
 };

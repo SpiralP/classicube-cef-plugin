@@ -16,10 +16,10 @@ use classicube_helpers::{
 use classicube_sys::{MsgType, MsgType_MSG_TYPE_NORMAL, Server, Vec3};
 use deunicode::deunicode;
 use futures::{future::RemoteHandle, prelude::*};
-use tracing::*;
+use tracing::{debug, info, warn};
 
 pub use self::chat_command::CefChatCommand;
-use crate::{async_manager, chat::helpers::is_continuation_message, error::*};
+use crate::{async_manager, chat::helpers::is_continuation_message, error::Error};
 
 thread_local!(
     static LAST_CHAT: RefCell<Option<String>> = RefCell::new(None);
@@ -117,8 +117,6 @@ impl Chat {
                 }
             } else {
                 async_manager::spawn_local_on_main_thread(async {
-                    async_manager::sleep(Duration::from_millis(2000)).await;
-
                     async fn run(args: &[&str]) {
                         let player_snapshot =
                             PlayerSnapshot::from_entity_id(classicube_sys::ENTITIES_SELF_ID as _)
@@ -133,6 +131,7 @@ impl Chat {
                         .expect("don't worry about this error");
                     }
 
+                    async_manager::sleep(Duration::from_millis(2000)).await;
                     run(&["create", "-n", "ag", "-s", "4sk0uDbM5lc"]).await;
                     run(&["volume", "-n", "ag", "-p", "10"]).await;
 
@@ -255,7 +254,7 @@ fn handle_chat_received(message: String, message_type: MsgType) {
 
         let mut split = message
             .split(' ')
-            .map(|a| a.to_string())
+            .map(ToString::to_string)
             .collect::<Vec<String>>();
 
         // if you put a leading space " cef"
@@ -263,8 +262,7 @@ fn handle_chat_received(message: String, message_type: MsgType) {
 
         if split
             .get(0)
-            .map(|first| remove_color(first) == "cef")
-            .unwrap_or(false)
+            .map_or(false, |first| remove_color(first) == "cef")
         {
             // remove "cef"
             split.remove(0);
@@ -431,8 +429,8 @@ fn find_player_from_message(mut full_msg: String) -> Option<(u8, String, String)
             // TODO title is [ ] before nick, team is < > before nick, also there are rank
             // symbols? &f┬ &f♂&6 Goodly: &fhi
 
-            let full_nick = left.to_string();
-            let said_text = right.to_string();
+            let full_nick = (*left).to_string();
+            let said_text = (*right).to_string();
 
             // lookup entity id from nick_name by using TabList
             TAB_LIST.with(|cell| {

@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use url::Url;
 
 use super::{helpers::get_ext, PlayerTrait};
-use crate::{cef::RustRefBrowser, chat::Chat, error::*, player::WebPlayer};
+use crate::{cef::RustRefBrowser, chat::Chat, error::Result, player::WebPlayer};
 
 const PAGE_HTML: &str = include_str!("page.html");
 

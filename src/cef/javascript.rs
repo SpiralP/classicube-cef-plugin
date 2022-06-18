@@ -15,7 +15,7 @@ thread_local!(
 
 thread_local!(
     static WAITING_TASKS: RefCell<HashMap<u64, oneshot::Sender<FFIRustV8Response>>> =
-        Default::default();
+        RefCell::default();
 );
 
 #[derive(Debug)]

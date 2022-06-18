@@ -1,6 +1,6 @@
 use std::os::raw::{c_int, c_void};
 
-use classicube_sys::*;
+use classicube_sys::Bitmap;
 use tracing::warn;
 
 use super::EntityManager;

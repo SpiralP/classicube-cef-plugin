@@ -17,26 +17,26 @@ use crate::{
         is_continuation_message, Chat, PlayerSnapshot,
     },
     entity_manager::{EntityBuilder, EntityManager},
-    error::*,
+    error::{bail, Result},
     options,
     player::{PlayerBuilder, PlayerTrait, VolumeMode},
 };
 
 thread_local!(
-    pub static CURRENT_MAP_THEME: Cell<Option<usize>> = Default::default();
+    pub static CURRENT_MAP_THEME: Cell<Option<usize>> = Cell::default();
 );
 
 thread_local!(
-    static LISTENER: Cell<Option<RemoteHandle<()>>> = Default::default();
+    static LISTENER: Cell<Option<RemoteHandle<()>>> = Cell::default();
 );
 
 thread_local!(
-    static WORKER: Cell<Option<RemoteHandle<()>>> = Default::default();
+    static WORKER: Cell<Option<RemoteHandle<()>>> = Cell::default();
 );
 
 type Item = Pin<Box<dyn Future<Output = ()>>>;
 thread_local!(
-    static WORKER_SENDER: RefCell<Option<mpsc::UnboundedSender<Item>>> = Default::default();
+    static WORKER_SENDER: RefCell<Option<mpsc::UnboundedSender<Item>>> = RefCell::default();
 );
 
 pub fn start_listening() {

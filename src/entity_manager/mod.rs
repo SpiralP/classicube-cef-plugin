@@ -18,7 +18,7 @@ use futures::{
     prelude::*,
     stream::{FuturesUnordered, StreamExt},
 };
-use tracing::*;
+use tracing::{debug, warn};
 
 pub use self::{cef_paint::cef_paint_callback, entity::CefEntity, entity_builder::EntityBuilder};
 use self::{context_handler::ContextHandler, model::CefModel};
@@ -26,7 +26,7 @@ use crate::{
     async_manager,
     cef::{Cef, CefEvent, RustRefBrowser},
     chat::PlayerSnapshot,
-    error::*,
+    error::{bail, Error, Result},
     player::PlayerTrait,
 };
 
@@ -42,15 +42,15 @@ thread_local!(
 
 // entity_id, entity
 thread_local!(
-    static ENTITIES: RefCell<HashMap<usize, CefEntity>> = Default::default();
+    static ENTITIES: RefCell<HashMap<usize, CefEntity>> = RefCell::default();
 );
 
 thread_local!(
-    static NAME_TO_ID: RefCell<HashMap<String, usize>> = Default::default();
+    static NAME_TO_ID: RefCell<HashMap<String, usize>> = RefCell::default();
 );
 
 thread_local!(
-    static BROWSER_ID_TO_ENTITY_ID: RefCell<HashMap<c_int, usize>> = Default::default();
+    static BROWSER_ID_TO_ENTITY_ID: RefCell<HashMap<c_int, usize>> = RefCell::default();
 );
 
 pub struct EntityManager {

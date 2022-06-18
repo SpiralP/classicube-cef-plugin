@@ -7,7 +7,7 @@ use classicube_helpers::color;
 use futures::{future::RemoteHandle, prelude::*};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-use tracing::*;
+use tracing::{debug, warn};
 use url::Url;
 
 use super::{helpers::start_update_loop, PlayerTrait, VolumeMode};
@@ -15,7 +15,7 @@ use crate::{
     async_manager,
     cef::{RustRefBrowser, RustV8Value},
     chat::Chat,
-    error::*,
+    error::{bail, Result},
     options,
     options::SUBTITLES,
 };
@@ -100,7 +100,7 @@ impl PlayerTrait for YouTubePlayer {
             Self::from_url(&url).or_else(|e| {
                 // try with % replaced with &
                 // because & is sent as % from cc client
-                if let Ok(url) = Url::parse(&url_or_id.replace("%", "&")) {
+                if let Ok(url) = Url::parse(&url_or_id.replace('%', "&")) {
                     Self::from_url(&url).or(Err(e))
                 } else {
                     Err(e)
@@ -356,7 +356,7 @@ impl YouTubePlayer {
 
     async fn eval(browser: &RustRefBrowser, method: &str) -> Result<RustV8Value> {
         let code = format!("window.{};", method);
-        Ok(browser.eval_javascript(code).await?)
+        browser.eval_javascript(code).await
     }
 }
 

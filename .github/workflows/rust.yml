@@ -41,6 +41,9 @@ jobs:
           Get-ChildItem cef_binary_* | Rename-Item -NewName 'cef_binary'
           Move-Item -Path 'cef_binary' -Destination 'cef_interface'
 
+      - name: setup-msbuild
+        uses: microsoft/setup-msbuild@v1
+
       - name: Install nightly ${{ matrix.config.target }}
         uses: actions-rs/toolchain@v1
         with:

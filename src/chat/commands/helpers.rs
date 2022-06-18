@@ -109,14 +109,14 @@ pub fn get_click_coords(
         let forward = intersection.normal;
 
         let tmp = Vector3::y();
-        let left = Vector3::cross(&forward, &tmp);
+        let left = forward.cross(&tmp);
         let left = left.normalize();
-        let up = Vector3::cross(&left, &forward);
+        let up = left.cross(&forward);
         let up = up.normalize();
         let right = -left;
 
-        let width = entity_scale.X * f32::from(entity_size.0);
-        let height = entity_scale.Y * f32::from(entity_size.1);
+        let width = entity_scale.X * (entity_size.0 as f32);
+        let height = entity_scale.Y * (entity_size.1 as f32);
 
         let top_left = screen_pos - 0.5 * right * width + up * height;
 

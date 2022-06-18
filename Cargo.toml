@@ -2,7 +2,7 @@
 name = "classicube-cef-plugin"
 version = "1.6.0"
 authors = ["SpiralP <spiral.palmer@gmail.com>"]
-edition = "2018"
+edition = "2021"
 publish = false
 
 [lib]
@@ -46,6 +46,8 @@ ci = []
 
 
 [package.metadata.release]
-tag-message = "Release version {{version}}"
-pre-release-commit-message = "Release {{version}}"
+dev-version = true
+dev-version-ext = "alpha"
 post-release-commit-message = "Begin {{next_version}}"
+pre-release-commit-message = "Release {{version}}"
+tag-message = "Release version {{version}}"

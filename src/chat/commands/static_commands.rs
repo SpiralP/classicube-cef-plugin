@@ -110,8 +110,8 @@ pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {
         App::new("replytwo")
             .about("Run a \"/ReplyTwo\" command on the server")
             .long_about(
-                "Run a \"/ReplyTwo\" command on the server\nThis is useful to use in scripts to know \
-                 when cef commands have finished executing.  For example when screens are \
+                "Run a \"/ReplyTwo\" command on the server\nThis is useful to use in scripts to \
+                 know when cef commands have finished executing.  For example when screens are \
                  finished loading via \"cef create\".",
             )
             .arg(Arg::with_name("num").required(true)),

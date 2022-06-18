@@ -422,9 +422,10 @@ fn find_player_from_message(mut full_msg: String) -> Option<(u8, String, String)
             // > &fasdfasdf
 
             // &]SpiralP
-            let left = &full_msg[..pos]; // left without colon
-                                         // &faaa
-            let right = &full_msg[(pos + 2)..]; // right without colon
+            let left = &full_msg.get(..pos)?; // left without colon
+
+            // &faaa
+            let right = &full_msg.get((pos + 2)..)?; // right without colon
 
             // TODO title is [ ] before nick, team is < > before nick, also there are rank
             // symbols? &f┬ &f♂&6 Goodly: &fhi

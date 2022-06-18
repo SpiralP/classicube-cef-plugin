@@ -19,7 +19,7 @@ use futures::{future::RemoteHandle, prelude::*};
 use tracing::{debug, info, warn};
 
 pub use self::chat_command::CefChatCommand;
-use crate::{async_manager, chat::helpers::is_continuation_message, error::Error};
+use crate::{async_manager, chat::helpers::is_continuation_message};
 
 thread_local!(
     static LAST_CHAT: RefCell<Option<String>> = RefCell::new(None);
@@ -95,7 +95,7 @@ impl Chat {
 
         #[cfg(debug_assertions)]
         unsafe {
-            use classicube_helpers::OptionWithInner;
+            use classicube_helpers::WithInner;
             use classicube_sys::ENTITIES_SELF_ID;
 
             if Server.IsSinglePlayer == 0 {
@@ -103,8 +103,9 @@ impl Chat {
                     .with_inner(|entities| {
                         entities
                             .get(ENTITIES_SELF_ID as _)
-                            .map(|me| me.get_display_name() == "SpiralP2")
+                            .map(|me| Some(me.upgrade()?.get_display_name() == "SpiralP2"))
                     })
+                    .flatten()
                     .flatten()
                     .unwrap_or(false);
 
@@ -277,22 +278,19 @@ fn handle_chat_received(message: String, message_type: MsgType) {
                     id
                 );
 
-                let (id2, opt2) = ENTITIES
-                    .with(|cell| {
-                        let entities = &*cell.borrow();
-                        let entities = entities.as_ref().unwrap();
-                        for (new_id, e) in entities.get_all() {
+                let (id2, opt2) = ENTITIES.with(|cell| {
+                    let entities = &*cell.borrow();
+                    let entities = entities.as_ref().unwrap();
+                    for (new_id, e) in entities.get_all() {
+                        if let Some(e) = e.upgrade() {
                             if real_name == remove_color(e.get_display_name()) {
-                                return Ok::<_, Error>((
-                                    *new_id,
-                                    PlayerSnapshot::from_entity_id(*new_id),
-                                ));
+                                return (new_id, PlayerSnapshot::from_entity_id(new_id));
                             }
                         }
+                    }
 
-                        Ok::<_, Error>((id, None))
-                    })
-                    .unwrap();
+                    (id, None)
+                });
 
                 id = id2;
                 opt = opt2;
@@ -356,21 +354,21 @@ impl PlayerSnapshot {
         ENTITIES.with(|cell| {
             let entities = &*cell.borrow();
             let entities = entities.as_ref().unwrap();
-            entities.get(id).map(|entity| {
-                let position = entity.get_position();
-                let eye_position = entity.get_eye_position();
-                let head = entity.get_head();
-                let rot = entity.get_rot();
-                Self {
-                    id,
-                    Position: position,
-                    eye_position,
-                    Pitch: head[0],
-                    Yaw: head[1],
-                    RotX: rot[0],
-                    RotY: rot[1],
-                    RotZ: rot[2],
-                }
+            let entity = entities.get(id)?;
+            let entity = entity.upgrade()?;
+            let position = entity.get_position();
+            let eye_position = entity.get_eye_position();
+            let head = entity.get_head();
+            let rot = entity.get_rot();
+            Some(Self {
+                id,
+                Position: position,
+                eye_position,
+                Pitch: head[0],
+                Yaw: head[1],
+                RotX: rot[0],
+                RotY: rot[1],
+                RotZ: rot[2],
             })
         })
     }
@@ -439,8 +437,11 @@ fn find_player_from_message(mut full_msg: String) -> Option<(u8, String, String)
                     .as_ref()
                     .unwrap()
                     .find_entry_by_nick_name(&full_nick)
-                    .map(|entry| (entry.get_id(), entry.get_real_name().unwrap(), said_text))
-            })
+                    .map(|entry| {
+                        let entry = entry.upgrade()?;
+                        Some((entry.get_id(), entry.get_real_name(), said_text))
+                    })
+            })?
         } else {
             None
         }

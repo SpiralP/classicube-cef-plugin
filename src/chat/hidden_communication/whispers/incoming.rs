@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use classicube_helpers::{shared::FutureShared, OptionWithInner};
+use classicube_helpers::{shared::FutureShared, WithInner};
 use tracing::{debug, info, warn};
 
 use super::{encoding, wait_for_message, SHOULD_BLOCK};
@@ -56,13 +56,14 @@ async fn handle_request(message: String) -> Result<()> {
             tab_list
                 .find_entry_by_nick_name(nick_name)
                 .and_then(|entry| {
+                    let entry = entry.upgrade()?;
                     let id = entry.get_id();
 
                     // make sure they're real
                     ENTITIES
                         .with_inner(|entities| {
                             if entities.get(id).is_some() {
-                                Some(entry.get_real_name()?)
+                                Some(entry.get_real_name())
                             } else {
                                 None
                             }

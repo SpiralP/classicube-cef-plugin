@@ -10,20 +10,20 @@ crate-type = ["cdylib"]
 
 [dependencies]
 async-dispatcher = { git = "https://github.com/SpiralP/rust-async-dispatcher.git" }
-async-recursion = "0.3"
+async-recursion = "1"
 backtrace = "0.3"
 base64 = "0.13"
 bincode = "1"
 clap = { git = "https://github.com/SpiralP/clap-cc.git" }
-classicube-helpers = { git = "https://github.com/SpiralP/rust-classicube-helpers.git", features = ["futures"] }
+classicube-helpers = { git = "https://github.com/SpiralP/rust-classicube-helpers.git" }
 classicube-sys = { git = "https://github.com/SpiralP/rust-classicube-sys.git" }
 deunicode = "1"
 error-chain = "0.12"
 futures = "0.3"
 futures-timer = "3"
 lazy_static = "1"
-nalgebra = "0.29"
-ncollide3d = "0.32"
+nalgebra = "0.30"
+ncollide3d = "0.33"
 rand = "0.8"
 regex = "1"
 reqwest = "0.11"
@@ -31,14 +31,14 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tokio = { version = "1", features = ["full"] }
 tracing = "0.1"
-tracing-appender = "0.1"
-tracing-flame = "0.1"
+tracing-appender = "0.2"
+tracing-flame = "0.2"
 tracing-futures = "0.2"
-tracing-subscriber = "0.2"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 url = "2"
 
 [build-dependencies]
-bindgen = "0.59"
+bindgen = "0.60"
 cmake = "0.1"
 
 [features]

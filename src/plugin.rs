@@ -1,6 +1,6 @@
 use std::{cell::RefCell, ffi::CString};
 
-use classicube_helpers::{color, OptionWithInner};
+use classicube_helpers::{color, WithInner};
 use classicube_sys::{Server, String_AppendConst};
 use tracing::{debug, error};
 

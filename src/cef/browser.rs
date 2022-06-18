@@ -5,7 +5,7 @@ use std::{
     os::raw::{c_char, c_int},
 };
 
-use classicube_helpers::OptionWithInner;
+use classicube_helpers::WithInner;
 use tracing::{debug, warn};
 
 use super::{bindings::RustRect, CefEvent, CEF_DEFAULT_HEIGHT, CEF_DEFAULT_WIDTH, EVENT_QUEUE};

@@ -7,7 +7,7 @@ mod static_commands;
 use std::cell::RefCell;
 
 use clap::{App, AppSettings, Arg, ArgMatches};
-use classicube_helpers::OptionWithInner;
+use classicube_helpers::WithInner;
 use tracing::{debug, warn};
 
 use super::{Chat, PlayerSnapshot};

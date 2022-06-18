@@ -9,7 +9,7 @@ use std::{
     os::raw::c_int,
 };
 
-use classicube_helpers::{shared::FutureShared, OptionWithInner};
+use classicube_helpers::{shared::FutureShared, WithInner};
 use futures::stream::{FuturesUnordered, StreamExt};
 use tokio::sync::broadcast;
 use tracing::{debug, debug_span, error, warn, Instrument};

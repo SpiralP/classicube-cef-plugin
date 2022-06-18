@@ -3,7 +3,7 @@ pub mod outgoing;
 
 use std::cell::Cell;
 
-use classicube_helpers::OptionWithInner;
+use classicube_helpers::WithInner;
 use futures::{future::RemoteHandle, prelude::*};
 use rand::seq::SliceRandom;
 use tracing::{debug, warn};

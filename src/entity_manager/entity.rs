@@ -73,7 +73,7 @@ impl CefEntity {
             height: TEXTURE_HEIGHT as i32,
         };
 
-        let texture = OwnedGfxTexture::create(&mut bmp, true, false);
+        let texture = OwnedGfxTexture::new(&mut bmp, true, false);
 
         let mut this = Self {
             id,

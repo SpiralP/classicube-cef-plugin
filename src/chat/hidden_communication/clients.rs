@@ -1,6 +1,6 @@
 use std::{cell::RefCell, collections::HashSet, sync::Once, time::Duration};
 
-use classicube_helpers::{tab_list::remove_color, OptionWithInner};
+use classicube_helpers::{tab_list::remove_color, WithInner};
 use classicube_sys::ENTITIES_SELF_ID;
 use futures::{future::RemoteHandle, prelude::*};
 use tracing::{debug, warn};
@@ -179,11 +179,12 @@ async fn process_clients_response(messages: Vec<String>) -> Result<()> {
         .filter_map(|name| {
             TAB_LIST.with_inner(|tab_list| {
                 tab_list.find_entry_by_nick_name(&name).and_then(|entry| {
+                    let entry = entry.upgrade()?;
                     let id = entry.get_id();
                     if id == ENTITIES_SELF_ID as u8 {
                         None
                     } else {
-                        let real_name = entry.get_real_name()?;
+                        let real_name = entry.get_real_name();
                         Some((id, real_name))
                     }
                 })

@@ -9,7 +9,7 @@ use std::{
 };
 
 use async_dispatcher::{Dispatcher, DispatcherHandle, LocalDispatcherHandle};
-use classicube_helpers::{tick::TickEventHandler, OptionWithInner};
+use classicube_helpers::{tick::TickEventHandler, WithInner};
 use futures::{future::Either, prelude::*};
 use futures_timer::Delay;
 use lazy_static::lazy_static;

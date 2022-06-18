@@ -1,4 +1,7 @@
-use std::{env, fs, path::Path};
+use std::{
+    env, fs,
+    path::{Path, PathBuf},
+};
 
 fn main() {
     // just use Release cef-binary because Debug makes crt problems for windows
@@ -19,13 +22,6 @@ fn main() {
             // links to ucrtbased.dll
             println!("cargo:rustc-link-lib=static=ucrtd");
         }
-    }
-
-    #[cfg(target_os = "linux")]
-    {
-        // fixes undefined reference to `std::ios_base::Init::Init()'
-        // only errored on test
-        println!("cargo:rustc-link-lib=static=stdc++");
     }
 
     let out_dir = env::var("OUT_DIR").unwrap();
@@ -50,47 +46,32 @@ fn main() {
         .define("PROJECT_ARCH", env::var("CARGO_CFG_TARGET_ARCH").unwrap())
         .build();
 
-    // link to libcef_dll_wrapper
-    println!(
-        "cargo:rustc-link-search=native={}",
-        cmake_path.join("build/libcef_dll_wrapper").display()
-    );
-    println!(
-        "cargo:rustc-link-search=native={}",
-        cmake_path
-            .join("build/libcef_dll_wrapper")
-            .join(profile)
-            .display()
-    );
-
-    #[cfg(target_os = "windows")]
-    println!("cargo:rustc-link-lib=static=libcef_dll_wrapper");
-
-    #[cfg(not(target_os = "windows"))]
-    println!("cargo:rustc-link-lib=static=cef_dll_wrapper");
-
     // link to cef_interface
-    println!(
-        "cargo:rustc-link-search=native={}",
-        cmake_path.join("build/").display()
+    link(
+        "cef_interface",
+        &cmake_path.join("build/"),
+        LinkKind::Static,
     );
-    println!(
-        "cargo:rustc-link-search=native={}",
-        cmake_path.join("build/").join(profile).display()
+
+    // link to libcef_dll_wrapper
+    link(
+        "cef_dll_wrapper",
+        &cmake_path.join("build/libcef_dll_wrapper"),
+        LinkKind::Static,
     );
-    println!("cargo:rustc-link-lib=static=cef_interface");
 
     // link to libcef
-    println!(
-        "cargo:rustc-link-search=native=cef_interface/cef_binary/{}",
-        profile
+    link(
+        "cef",
+        format!("cef_interface/cef_binary/{}", profile),
+        LinkKind::Dynamic,
     );
 
-    #[cfg(target_os = "windows")]
-    println!("cargo:rustc-link-lib=dylib=libcef");
-
     #[cfg(target_os = "linux")]
-    println!("cargo:rustc-link-lib=dylib=cef");
+    {
+        // fixes undefined reference to c++ methods
+        println!("cargo:rustc-link-lib=static=stdc++");
+    }
 
     // The bindgen::Builder is the main entry point
     // to bindgen, and lets you build up options for
@@ -153,4 +134,22 @@ fn main() {
         Path::new(&out_dir).join(CEF_EXE_NAME),
     )
     .unwrap();
+}
+
+enum LinkKind {
+    Static,
+    Dynamic,
+}
+fn link<P: Into<PathBuf>>(name: &str, search_path: P, kind: LinkKind) {
+    let search_path = search_path.into();
+    let kind = match kind {
+        LinkKind::Static => "static",
+        LinkKind::Dynamic => "dylib",
+    };
+
+    #[cfg(target_os = "windows")]
+    let name = format!("lib{}", name);
+
+    println!("cargo:rustc-link-search=native={}", search_path.display());
+    println!("cargo:rustc-link-lib={}={}", kind, name);
 }

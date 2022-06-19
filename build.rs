@@ -51,6 +51,7 @@ fn main() {
         "cef_interface",
         &cmake_path.join("build/"),
         LinkKind::Static,
+        profile,
     );
 
     // link to libcef_dll_wrapper
@@ -58,6 +59,7 @@ fn main() {
         "cef_dll_wrapper",
         &cmake_path.join("build/libcef_dll_wrapper"),
         LinkKind::Static,
+        profile,
     );
 
     // link to libcef
@@ -65,6 +67,7 @@ fn main() {
         "cef",
         format!("cef_interface/cef_binary/{}", profile),
         LinkKind::Dynamic,
+        profile,
     );
 
     #[cfg(target_os = "linux")]
@@ -140,7 +143,7 @@ enum LinkKind {
     Static,
     Dynamic,
 }
-fn link<P: Into<PathBuf>>(name: &str, search_path: P, kind: LinkKind) {
+fn link<P: Into<PathBuf>>(name: &str, search_path: P, kind: LinkKind, profile: &str) {
     let search_path = search_path.into();
     let kind = match kind {
         LinkKind::Static => "static",
@@ -148,7 +151,18 @@ fn link<P: Into<PathBuf>>(name: &str, search_path: P, kind: LinkKind) {
     };
 
     #[cfg(target_os = "windows")]
-    let name = format!("lib{}", name);
+    let search_path = if search_path.join(profile).is_dir() {
+        search_path.join(profile)
+    } else {
+        search_path
+    };
+
+    #[cfg(target_os = "windows")]
+    let name = if search_path.join(format!("lib{}.lib", name)).is_file() {
+        format!("lib{}", name)
+    } else {
+        name.to_string()
+    };
 
     println!("cargo:rustc-link-search=native={}", search_path.display());
     println!("cargo:rustc-link-lib={}={}", kind, name);

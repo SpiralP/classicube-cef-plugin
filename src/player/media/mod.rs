@@ -1,6 +1,6 @@
 use std::time::{Duration, Instant};
 
-use classicube_helpers::color;
+use classicube_helpers::color::{SILVER, TEAL};
 use futures::{future::RemoteHandle, prelude::*};
 use serde::{Deserialize, Serialize};
 use tracing::{debug, warn};
@@ -132,12 +132,7 @@ impl PlayerTrait for MediaPlayer {
         }
 
         if !self.silent {
-            Chat::print(format!(
-                "{}Now playing {}{}",
-                color::TEAL,
-                color::SILVER,
-                title,
-            ));
+            Chat::print(format!("{TEAL}Now playing {SILVER}{title}"));
         }
 
         self.last_title = title;
@@ -200,7 +195,7 @@ impl PlayerTrait for MediaPlayer {
     ) -> Result<()> {
         if let Some(browser) = browser {
             if let VolumeMode::Panning { pan, .. } = mode {
-                Self::execute(browser, &format!("handlePanning({})", pan))?;
+                Self::execute(browser, &format!("handlePanning({pan})"))?;
             } else {
                 browser.execute_javascript(
                     r#"
@@ -247,7 +242,7 @@ impl PlayerTrait for MediaPlayer {
     }
 
     fn set_playing(&mut self, browser: &RustRefBrowser, playing: bool) -> Result<()> {
-        Self::execute(browser, &format!("setPlaying({})", playing))?;
+        Self::execute(browser, &format!("setPlaying({playing})"))?;
         Ok(())
     }
 
@@ -258,7 +253,7 @@ impl PlayerTrait for MediaPlayer {
 
     fn set_speed(&mut self, browser: Option<&RustRefBrowser>, speed: f32) -> Result<()> {
         if let Some(browser) = browser {
-            Self::execute(browser, &format!("setPlaybackRate({})", speed))?;
+            Self::execute(browser, &format!("setPlaybackRate({speed})"))?;
         }
 
         self.speed = speed;
@@ -293,13 +288,13 @@ impl MediaPlayer {
     }
 
     fn execute(browser: &RustRefBrowser, method: &str) -> Result<()> {
-        let code = format!("window.{};", method);
+        let code = format!("window.{method};");
         browser.execute_javascript(code)?;
         Ok(())
     }
 
     async fn eval(browser: &RustRefBrowser, method: &str) -> Result<RustV8Value> {
-        let code = format!("window.{};", method);
+        let code = format!("window.{method};");
         browser.eval_javascript(code).await
     }
 }

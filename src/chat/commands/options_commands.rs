@@ -71,7 +71,7 @@ pub async fn handle_command(
                         options::MUTE_LOSE_FOCUS.get()?
                     ));
                 } else {
-                    Chat::print(format!("mute-lose-focus: {}", value));
+                    Chat::print(format!("mute-lose-focus: {value}"));
                 }
 
                 Ok(true)
@@ -95,7 +95,7 @@ pub async fn handle_command(
                         let _ignore = EntityManager::remove_entity(entity_id).await;
                     }
                 } else {
-                    Chat::print(format!("autoplay-map-themes: {}", value));
+                    Chat::print(format!("autoplay-map-themes: {value}"));
                 }
 
                 Ok(true)
@@ -114,7 +114,7 @@ pub async fn handle_command(
                         options::SUBTITLES.get()?
                     ));
                 } else {
-                    Chat::print(format!("subtitles: {}", value));
+                    Chat::print(format!("subtitles: {value}"));
                 }
 
                 Ok(true)
@@ -127,7 +127,7 @@ pub async fn handle_command(
                     let volume = volume.parse()?;
 
                     options::VOLUME.set(volume);
-                    Chat::print(format!("volume: {} -> {}", value, options::VOLUME.get()?));
+                    Chat::print(format!("volume: {value} -> {}", options::VOLUME.get()?));
 
                     if let Some(entity_id) = CURRENT_MAP_THEME.get() {
                         EntityManager::with_entity(entity_id, |entity| {
@@ -150,7 +150,7 @@ pub async fn handle_command(
                         Ok::<_, Error>(())
                     })?;
                 } else {
-                    Chat::print(format!("volume: {}", value));
+                    Chat::print(format!("volume: {value}"));
                 }
 
                 Ok(true)
@@ -190,7 +190,7 @@ pub async fn handle_command(
                         Ok::<_, Error>(())
                     })?;
                 } else {
-                    Chat::print(format!("map-theme-volume: {}", value));
+                    Chat::print(format!("map-theme-volume: {value}"));
                 }
 
                 Ok(true)
@@ -209,7 +209,7 @@ pub async fn handle_command(
                         options::FRAME_RATE.get()?
                     ));
                 } else {
-                    Chat::print(format!("frame-rate: {}", value));
+                    Chat::print(format!("frame-rate: {value}"));
                 }
 
                 Ok(true)

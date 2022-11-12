@@ -1,4 +1,4 @@
-use classicube_helpers::color;
+use classicube_helpers::color::{SILVER, TEAL};
 use futures::{future::RemoteHandle, prelude::*};
 use serde::{Deserialize, Serialize};
 use tracing::debug;
@@ -96,12 +96,7 @@ impl PlayerTrait for DashPlayer {
             return;
         }
 
-        Chat::print(format!(
-            "{}Now playing {}{}",
-            color::TEAL,
-            color::SILVER,
-            title,
-        ));
+        Chat::print(format!("{TEAL}Now playing {SILVER}{title}"));
 
         self.last_title = title;
     }

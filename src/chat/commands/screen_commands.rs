@@ -2,7 +2,7 @@ use std::time::{Duration, Instant};
 
 use async_recursion::async_recursion;
 use clap::{App, AppSettings, Arg, ArgMatches};
-use classicube_helpers::color;
+use classicube_helpers::color::{GOLD, SILVER, TEAL};
 
 use super::helpers::{get_click_coords, move_entity};
 use crate::{
@@ -339,13 +339,7 @@ pub async fn handle_command(
                     if let Some(queue_size) = entity.queue(p)? {
                         Chat::print(format!(
                             "{}Queued {}{} {}{} {}{}",
-                            color::TEAL,
-                            color::GOLD,
-                            queue_size,
-                            color::TEAL,
-                            kind,
-                            color::SILVER,
-                            url
+                            TEAL, GOLD, queue_size, TEAL, kind, SILVER, url
                         ));
 
                         if skip {
@@ -683,44 +677,30 @@ pub async fn handle_command(
                     let title = entity.player.get_title();
 
                     if !title.is_empty() {
-                        Chat::print(format!(
-                            "{}Playing {}{} ",
-                            color::TEAL,
-                            color::SILVER,
-                            title
-                        ));
+                        Chat::print(format!("{TEAL}Playing {SILVER}{title}"));
                     }
 
                     if let Ok(time) = entity.player.get_current_time() {
-                        Chat::print(format!("At time {}", format_duration(time)));
+                        let time = format_duration(time);
+                        Chat::print(format!("At time {time}"));
                     }
 
                     Chat::print(url);
 
                     if !entity.queue.is_empty() {
-                        Chat::print(format!(
-                            "{}{} {}items in queue:",
-                            color::GOLD,
-                            entity.queue.len(),
-                            color::TEAL,
-                        ));
+                        let len = entity.queue.len();
+                        Chat::print(format!("{GOLD}{len} {TEAL}items in queue:"));
 
                         for (i, (player, title)) in entity.queue.iter().enumerate() {
                             let url = player.get_url();
 
-                            Chat::print(format!(
-                                "{}{} {}{} {}{}",
-                                color::GOLD,
-                                i + 1,
-                                color::TEAL,
-                                player.type_name(),
-                                color::SILVER,
-                                url
-                            ));
+                            let index = i + 1;
+                            let type_name = player.type_name();
+                            Chat::print(format!("{GOLD}{index} {TEAL}{type_name} {SILVER}{url}"));
 
                             let title = title.lock().unwrap();
                             if let Some(title) = &*title {
-                                Chat::print(format!("{}{}", color::SILVER, title));
+                                Chat::print(format!("{SILVER}{title}"));
                             }
                         }
                     }

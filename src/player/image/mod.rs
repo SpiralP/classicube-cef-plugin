@@ -1,4 +1,4 @@
-use classicube_helpers::color;
+use classicube_helpers::color::{SILVER, TEAL};
 use serde::{Deserialize, Serialize};
 use url::Url;
 
@@ -53,12 +53,7 @@ impl PlayerTrait for ImagePlayer {
         }
 
         if !self.silent {
-            Chat::print(format!(
-                "{}Now showing {}{}",
-                color::TEAL,
-                color::SILVER,
-                title,
-            ));
+            Chat::print(format!("{TEAL}Now showing {SILVER}{title}"));
         }
 
         self.last_title = title;

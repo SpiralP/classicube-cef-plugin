@@ -23,7 +23,7 @@ pub struct CefModel {
 impl CefModel {
     pub fn register() -> Self {
         let name = "cef";
-        let default_texture_name = format!("{}_texture", name);
+        let default_texture_name = format!("{name}_texture");
 
         let model = Box::pin(unsafe { mem::zeroed() });
         let name = Box::pin(CString::new(name).unwrap());

@@ -108,7 +108,7 @@ async fn get_clients() -> Result<Vec<String>> {
                     SHOULD_BLOCK.set(true);
 
                     let last_message = messages.last_mut().unwrap();
-                    *last_message = format!("{} {}", last_message, message);
+                    *last_message = format!("{last_message} {message}");
                     continue;
                 }
             }
@@ -201,7 +201,7 @@ async fn process_clients_response(messages: Vec<String>) -> Result<()> {
         let len = players_with_cef.len();
         static ONCE: Once = Once::new();
         ONCE.call_once(move || {
-            Chat::print(format!("{} other players with cef!", len));
+            Chat::print(format!("{len} other players with cef!"));
         });
 
         start_whispering(players_with_cef).await?;

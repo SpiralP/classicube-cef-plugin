@@ -33,7 +33,7 @@ pub fn initialize(debug: bool, other_crates: bool, flame: bool) {
         if other_crates {
             filter = filter.add_directive(level.parse().unwrap());
         } else {
-            filter = filter.add_directive(format!("{}={}", my_crate_name, level).parse().unwrap());
+            filter = filter.add_directive(format!("{my_crate_name}={level}").parse().unwrap());
         }
 
         let mut guards = Vec::with_capacity(2);

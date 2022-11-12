@@ -22,9 +22,9 @@ pub fn is_map_theme_message(message: &str) -> Option<&str> {
     let message = remove_color_left(message);
 
     if message.to_ascii_lowercase().starts_with("map theme:") {
-        Some(remove_color_left(message["map theme:".len()..].trim()).trim())
+        Some(remove_color_left(message.get("map theme:".len()..)?.trim()).trim())
     } else if message.to_ascii_lowercase().starts_with("map theme song:") {
-        Some(remove_color_left(message["map theme song:".len()..].trim()).trim())
+        Some(remove_color_left(message.get("map theme song:".len()..)?.trim()).trim())
     } else {
         None
     }

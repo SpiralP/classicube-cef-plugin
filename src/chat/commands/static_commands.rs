@@ -217,7 +217,7 @@ pub async fn handle_command(
 
         ("reply", Some(matches)) => {
             let num = matches.value_of_lossy("num").unwrap();
-            let owned_string = OwnedString::new(format!("/Reply {}", num));
+            let owned_string = OwnedString::new(format!("/Reply {num}"));
             unsafe {
                 Chat_Send(owned_string.as_cc_string(), 0);
             }
@@ -227,7 +227,7 @@ pub async fn handle_command(
 
         ("replytwo", Some(matches)) => {
             let num = matches.value_of_lossy("num").unwrap();
-            let owned_string = OwnedString::new(format!("/ReplyTwo {}", num));
+            let owned_string = OwnedString::new(format!("/ReplyTwo {num}"));
             unsafe {
                 Chat_Send(owned_string.as_cc_string(), 0);
             }

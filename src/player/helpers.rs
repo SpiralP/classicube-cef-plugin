@@ -63,7 +63,7 @@ fn compute_real_volume(entity: &CefEntity) -> Option<(f32, VolumeMode)> {
 
     let diff = my_pos - ent_pos;
     let percent = diff.magnitude() / distance;
-    let percent = (1.0 - percent).max(0.0).min(1.0) * multiplier;
+    let percent = (1.0 - percent).clamp(0.0, 1.0) * multiplier;
 
     if panning {
         let up = Vector3::y();

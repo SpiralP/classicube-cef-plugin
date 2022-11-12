@@ -1,6 +1,6 @@
 use std::{cell::RefCell, ffi::CString};
 
-use classicube_helpers::{color, WithInner};
+use classicube_helpers::{color::RED, WithInner};
 use classicube_sys::{Server, String_AppendConst};
 use tracing::{debug, error};
 
@@ -28,7 +28,7 @@ impl Plugin {
 
             Chat::print(format!("Cef v{} initializing", env!("CARGO_PKG_VERSION")));
 
-            let append_app_name = CString::new(format!(" + {}", APP_NAME)).unwrap();
+            let append_app_name = CString::new(format!(" + {APP_NAME}")).unwrap();
             let c_str = append_app_name.as_ptr();
             unsafe {
                 String_AppendConst(&mut Server.AppName, c_str);
@@ -42,7 +42,7 @@ impl Plugin {
             async_manager::spawn_local_on_main_thread(async {
                 if let Err(e) = Cef::initialize().await {
                     error!("Cef::initialize(): {}", e);
-                    Chat::print(format!("{}Cef Initialize failed! {}", color::RED, e));
+                    Chat::print(format!("{RED}Cef Initialize failed! {e}"));
                 }
             });
 

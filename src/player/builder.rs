@@ -92,7 +92,7 @@ impl PlayerBuilder {
         self
     }
 
-    /// if `use_youtube_playlist` is true, use YouTube's playlist instead of
+    /// if `use_youtube_playlist` is true, use youtube's playlist instead of
     /// breaking up the playlist into individual players/videos
     pub fn use_youtube_playlist(mut self, use_youtube_playlist: bool) -> Self {
         self.use_youtube_playlist = use_youtube_playlist;

@@ -6,7 +6,7 @@ use std::{
     time::Duration,
 };
 
-use classicube_helpers::color;
+use classicube_helpers::color::SILVER;
 use classicube_sys::{
     cc_bool, cc_int16, Bitmap, Entity, EntityVTABLE, Entity_Init, Entity_SetModel,
     Gfx_UpdateTexturePart, LocationUpdate, Model_Render, OwnedGfxTexture, OwnedString, PackedCol,
@@ -251,7 +251,7 @@ impl CefEntity {
                         *shared = Some(title.clone());
 
                         async_manager::spawn_on_main_thread(async move {
-                            Chat::print(format!("{}{}", color::SILVER, title));
+                            Chat::print(format!("{SILVER}{title}"));
                         });
 
                         Ok::<_, Error>(())

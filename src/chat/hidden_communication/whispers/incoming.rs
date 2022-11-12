@@ -105,7 +105,7 @@ async fn send_reply(real_name: String) -> Result<()> {
 
     // my outgoing info reply whisper
     async_manager::timeout(Duration::from_secs(5), async {
-        Chat::send(format!("@{} !CEF!{}", real_name, encoded));
+        Chat::send(format!("@{real_name} !CEF!{encoded}"));
 
         loop {
             let message = wait_for_message().await;

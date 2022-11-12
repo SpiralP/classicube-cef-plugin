@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use clap::{App, AppSettings, Arg, ArgMatches};
-use classicube_helpers::color;
+use classicube_helpers::color::SILVER;
 use classicube_sys::{
     Entities, Vec3, ENTITIES_SELF_ID, FACE_CONSTS, FACE_CONSTS_FACE_XMAX, FACE_CONSTS_FACE_XMIN,
     FACE_CONSTS_FACE_YMAX, FACE_CONSTS_FACE_YMIN, FACE_CONSTS_FACE_ZMAX, FACE_CONSTS_FACE_ZMIN,
@@ -76,9 +76,10 @@ pub async fn handle_command(
                 video.title,
                 format_duration(Duration::from_secs(video.duration_seconds as _))
             );
-            Chat::print(format!("{}{}", color::SILVER, title));
+            Chat::print(format!("{SILVER}{title}"));
 
-            Chat::send(format!("cef play {}", video.id));
+            let video_id = video.id;
+            Chat::send(format!("cef play {video_id}"));
 
             Ok(true)
         }
@@ -110,18 +111,13 @@ pub async fn handle_command(
             let position = Vec3::from(trace.pos) + mult;
             // let position = position - Vec3::new(0.5, 0.0, 0.5);
 
-            Chat::send(format!(
-                "cef at{} {} {} {} {} {}",
-                matches
-                    .value_of("name")
-                    .map(|name| format!(" -n {}", name))
-                    .unwrap_or_default(),
-                position.X,
-                position.Y,
-                position.Z,
-                yaw,
-                0.0
-            ));
+            let maybe_name = matches
+                .value_of("name")
+                .map(|name| format!(" -n {name}"))
+                .unwrap_or_default();
+            let Vec3 { X, Y, Z } = position;
+            let pitch = 0.0;
+            Chat::send(format!("cef at{maybe_name} {X} {Y} {Z} {yaw} {pitch}"));
 
             Ok(true)
         }

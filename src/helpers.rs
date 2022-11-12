@@ -18,9 +18,9 @@ pub fn format_duration(duration: Duration) -> String {
     let seconds = seconds - hours * 3600 - minutes * 60;
 
     if hours == 0 {
-        format!("{:02}:{:02}", minutes, seconds)
+        format!("{minutes:02}:{seconds:02}")
     } else {
-        format!("{:02}:{:02}:{:02}", hours, minutes, seconds)
+        format!("{hours:02}:{minutes:02}:{seconds:02}")
     }
 }
 

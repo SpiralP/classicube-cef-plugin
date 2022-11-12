@@ -49,7 +49,7 @@ fn main() {
     // link to cef_interface
     link(
         "cef_interface",
-        &cmake_path.join("build/"),
+        cmake_path.join("build/"),
         LinkKind::Static,
         profile,
     );
@@ -57,7 +57,7 @@ fn main() {
     // link to libcef_dll_wrapper
     link(
         "cef_dll_wrapper",
-        &cmake_path.join("build/libcef_dll_wrapper"),
+        cmake_path.join("build/libcef_dll_wrapper"),
         LinkKind::Static,
         profile,
     );
@@ -143,6 +143,8 @@ enum LinkKind {
     Static,
     Dynamic,
 }
+
+#[allow(unused_variables)]
 fn link<P: Into<PathBuf>>(name: &str, search_path: P, kind: LinkKind, profile: &str) {
     let search_path = search_path.into();
     let kind = match kind {

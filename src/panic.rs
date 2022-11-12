@@ -58,14 +58,14 @@ fn panic_hook(info: &PanicInfo<'_>) {
         )
     };
 
-    eprintln!("{}", stderr_message);
+    eprintln!("{stderr_message}");
 
     if let Ok(mut file) = fs::OpenOptions::new()
         .create(true)
         .append(true)
         .open("cef-crashes.log")
     {
-        drop(writeln!(file, "{}", verbose_message));
+        drop(writeln!(file, "{verbose_message}"));
         drop(file.flush());
         drop(file);
     }

@@ -35,7 +35,7 @@ pub async fn video(id: &str) -> Result<VideoResponse> {
     let result = async_manager::spawn(async move {
         let client = make_client();
         let bytes = client
-            .get(&format!("{}/video/{}", API_URL, id))
+            .get(&format!("{API_URL}/video/{id}"))
             .send()
             .await?
             .bytes()
@@ -59,7 +59,7 @@ pub async fn playlist(id: &str) -> Result<Vec<String>> {
     let result = async_manager::spawn(async move {
         let client = make_client();
         let bytes = client
-            .get(&format!("{}/playlist/{}", API_URL, id))
+            .get(&format!("{API_URL}/playlist/{id}"))
             .send()
             .await?
             .bytes()
@@ -91,7 +91,7 @@ pub async fn search(query: &str) -> Result<SearchResponse> {
     let result = async_manager::spawn(async move {
         let client = make_client();
         let bytes = client
-            .get(&format!("{}/search", API_URL))
+            .get(&format!("{API_URL}/search"))
             .query(&[("q", &query)])
             .send()
             .await?

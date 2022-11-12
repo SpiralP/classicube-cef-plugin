@@ -103,7 +103,7 @@ pub async fn run(
             warn!("{:#?}", e);
 
             if show_errors || is_self {
-                chat_print_lines(&format!("{}", e));
+                chat_print_lines(&format!("{e}"));
             }
 
             // TODO
@@ -123,7 +123,7 @@ fn chat_print_lines(s: &str) {
     let mut last_color = None;
     for line in lines {
         let message = if let Some(last_color) = last_color.filter(|c| *c != 'f') {
-            format!("&{}{}", last_color, line)
+            format!("&{last_color}{line}")
         } else {
             line
         };

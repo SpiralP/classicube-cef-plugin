@@ -1,4 +1,4 @@
-use classicube_helpers::color;
+use classicube_helpers::color::{SILVER, TEAL};
 use serde::{Deserialize, Serialize};
 use tracing::debug;
 use url::Url;
@@ -41,12 +41,7 @@ impl PlayerTrait for WebPlayer {
             return;
         }
 
-        Chat::print(format!(
-            "{}Now viewing {}{}",
-            color::TEAL,
-            color::SILVER,
-            title,
-        ));
+        Chat::print(format!("{TEAL}Now viewing {SILVER}{title}"));
 
         self.last_title = title;
     }

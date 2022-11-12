@@ -56,7 +56,7 @@ where
     }
 
     pub fn set(&'static self, value: T) {
-        super::set(self.key, format!("{}", value));
+        super::set(self.key, format!("{value}"));
         self.cache.set(None);
     }
 

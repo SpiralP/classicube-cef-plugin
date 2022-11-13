@@ -1,4 +1,4 @@
-FROM debian:bookworm
+FROM debian:bullseye
 
 RUN export DEBIAN_FRONTEND=noninteractive \
     && apt-get -y update \
@@ -8,7 +8,7 @@ RUN export DEBIAN_FRONTEND=noninteractive \
     # openssl-sys <- reqwest
     libssl-dev \
     # bindgen <- classicube-sys
-    clang-11 \
+    clang-13 \
     # classicube-cef-plugin
     cmake \
     # cef ld linking
@@ -20,3 +20,8 @@ RUN export DEBIAN_FRONTEND=noninteractive \
     && curl -sS 'https://sh.rustup.rs' | sh -s -- -y --default-toolchain none \
     && ~/.cargo/bin/rustup default nightly \
     && ~/.cargo/bin/rustup component add rls rust-analysis rust-src rustfmt clippy
+
+RUN apt-get -y install wget \
+    && wget -O /tmp/cmake-install.sh 'https://github.com/Kitware/CMake/releases/download/v3.24.3/cmake-3.24.3-linux-x86_64.sh' \
+    && sh /tmp/cmake-install.sh --skip-license --prefix=/usr \
+    && rm /tmp/cmake-install.sh

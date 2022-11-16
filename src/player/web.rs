@@ -22,6 +22,16 @@ impl PlayerTrait for WebPlayer {
     fn from_input(url: &str) -> Result<Self> {
         let url = Url::parse(url)?;
 
+        #[cfg(debug_assertions)]
+        unsafe {
+            // allow any url in debug singleplayer
+            if classicube_sys::Server.IsSinglePlayer != 0 {
+                if let Some(this) = Self::from_url(url.clone()) {
+                    return Ok(this);
+                }
+            }
+        }
+
         if url.scheme() != "http" && url.scheme() != "https" {
             Err("not http/https".into())
         } else if let Some(this) = Self::from_url(url) {
@@ -63,6 +73,17 @@ impl PlayerTrait for WebPlayer {
 
 impl WebPlayer {
     pub fn from_url(url: Url) -> Option<Self> {
+        #[cfg(debug_assertions)]
+        unsafe {
+            // allow any url in debug singleplayer
+            if classicube_sys::Server.IsSinglePlayer != 0 {
+                return Some(Self {
+                    url: url.to_string(),
+                    ..Default::default()
+                });
+            }
+        }
+
         let has_tld = url.host().map_or(false, |host| {
             if let url::Host::Domain(s) = host {
                 s.contains('.')

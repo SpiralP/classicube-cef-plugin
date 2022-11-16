@@ -16,17 +16,37 @@ CefRefPtr<CefRenderProcessHandler> MyApp::GetRenderProcessHandler() {
   return this;
 }
 
+void add_switch(CefRefPtr<CefCommandLine> command_line, const CefString& name) {
+  if (!command_line->HasSwitch(name)) {
+    command_line->AppendSwitch(name);
+  }
+}
+
 void MyApp::OnBeforeCommandLineProcessing(
     const CefString& process_type,
     CefRefPtr<CefCommandLine> command_line) {
   command_line->AppendSwitchWithValue("autoplay-policy",
                                       "no-user-gesture-required");
-  command_line->AppendSwitch("disable-extensions");
-  // command_line->AppendSwitch("disable-web-security");
-  // command_line->AppendSwitch("ignore-certificate-errors");
+
+  // can't disable extensions anymore due to:
+  // "Check failed: extension_browser_client"
+  // add_switch(command_line, "disable-extensions");
+  add_switch(command_line, "disable-pdf-extension");
+
+  // see CefSharp SetOffScreenRenderingBestPerformanceArgs
+  add_switch(command_line, "disable-gpu");
+  add_switch(command_line, "disable-gpu-compositing");
+  add_switch(command_line, "enable-begin-frame-scheduling");
+  add_switch(command_line, "disable-gpu-vsync");
+
+  add_switch(command_line, "disable-renderer-accessibility");
+  add_switch(command_line, "no-proxy-server");
 
   // to make execute_javascript_on_frame work
-  command_line->AppendSwitch("disable-site-isolation-trials");
+  add_switch(command_line, "disable-site-isolation-trials");
+
+  // fix "Error contacting kwalletd5" on linux
+  command_line->AppendSwitchWithValue("password-store", "basic");
 
   // don't show up in media info on windows volume change popup
   std::string new_value("HardwareMediaKeyHandling");
@@ -36,6 +56,15 @@ void MyApp::OnBeforeCommandLineProcessing(
     new_value += old_value;
   }
   command_line->AppendSwitchWithValue("disable-features", new_value);
+
+  // add_switch(command_line, "disable-web-security");
+  // add_switch(command_line, "ignore-certificate-errors");
+
+  // auto s = command_line->GetCommandLineString().ToString();
+  // rust_warn(s.c_str());
+
+  // opens new command prompts, one per cef process
+  // add_switch(command_line, "enable-logging");
 }
 
 void MyApp::OnRegisterCustomSchemes(CefRawPtr<CefSchemeRegistrar> registrar) {

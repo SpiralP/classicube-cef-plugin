@@ -4,7 +4,7 @@ use std::{
     pin::Pin,
     rc::Rc,
     sync::Mutex,
-    task::{Context, Poll},
+    task::{Context, Poll, Waker},
     time::Duration,
 };
 
@@ -109,15 +109,22 @@ pub fn shutdown() {
     }
 }
 
+struct WakerState {
+    waker: Rc<Cell<Option<Waker>>>,
+    woke: Rc<Cell<bool>>,
+}
 thread_local!(
-    static YIELDED_WAKERS: RefCell<Vec<Rc<Cell<bool>>>> = RefCell::default();
+    static YIELDED_WAKERS: RefCell<Vec<WakerState>> = RefCell::default();
 );
 
 pub fn step() {
     YIELDED_WAKERS.with(move |cell| {
         let vec = &mut *cell.borrow_mut();
-        for waker in vec.drain(..) {
-            waker.set(true);
+        for state in vec.drain(..) {
+            state.woke.set(true);
+            if let Some(waker) = state.waker.take() {
+                waker.wake();
+            }
         }
     });
 
@@ -144,31 +151,34 @@ pub async fn sleep(duration: Duration) {
 
 pub async fn yield_now() {
     struct YieldNow {
-        waker: Rc<Cell<bool>>,
+        waker: Rc<Cell<Option<Waker>>>,
+        woke: Rc<Cell<bool>>,
     }
 
     impl Future for YieldNow {
         type Output = ();
 
         fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
-            cx.waker().wake_by_ref();
-            if self.waker.get() {
+            if self.woke.get() {
                 Poll::Ready(())
             } else {
+                self.waker.set(Some(cx.waker().clone()));
                 Poll::Pending
             }
         }
     }
 
-    let waker = Rc::new(Cell::new(false));
+    let waker = Rc::new(Cell::new(None));
+    let woke = Rc::new(Cell::new(false));
     {
         let waker = waker.clone();
-        YIELDED_WAKERS.with(move |cell| {
-            let vec = &mut *cell.borrow_mut();
-            vec.push(waker);
+        let woke = woke.clone();
+        YIELDED_WAKERS.with(move |ref_cell| {
+            let vec = &mut *ref_cell.borrow_mut();
+            vec.push(WakerState { waker, woke });
         });
     }
-    YieldNow { waker }.await;
+    YieldNow { waker, woke }.await;
 }
 
 pub async fn timeout<T, F>(duration: Duration, f: F) -> Option<T>

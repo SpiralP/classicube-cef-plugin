@@ -8,9 +8,9 @@ use std::{
 
 use classicube_helpers::color::SILVER;
 use classicube_sys::{
-    cc_bool, cc_int16, Bitmap, Entity, EntityVTABLE, Entity_Init, Entity_SetModel,
-    Gfx_UpdateTexturePart, LocationUpdate, Model_Render, OwnedGfxTexture, OwnedString, PackedCol,
-    Texture, TextureRec, PACKEDCOL_WHITE,
+    cc_int16, Bitmap, Entity, EntityVTABLE, Entity_Init, Entity_SetModel, Gfx_UpdateTexturePart,
+    LocationUpdate, Model_Render, OwnedGfxTexture, OwnedString, PackedCol, Texture, TextureRec,
+    PACKEDCOL_WHITE,
 };
 use futures::channel::oneshot;
 use tracing::{debug, warn};
@@ -104,12 +104,7 @@ impl CefEntity {
 
     unsafe extern "C" fn despawn(_entity: *mut Entity) {}
 
-    unsafe extern "C" fn set_location(
-        _entity: *mut Entity,
-        _update: *mut LocationUpdate,
-        _interpolate: cc_bool,
-    ) {
-    }
+    unsafe extern "C" fn set_location(_entity: *mut Entity, _update: *mut LocationUpdate) {}
 
     unsafe extern "C" fn get_col(_entity: *mut Entity) -> PackedCol {
         PACKEDCOL_WHITE

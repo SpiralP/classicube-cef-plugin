@@ -126,6 +126,7 @@ extern "C" int cef_interface_initialize(MyApp* app) {
 
   // Populate this structure to customize CEF behavior.
   CefSettings settings;
+
   // sandboxing needs you to "use the same executable for the browser process
   // and all sub-processes" so we disable it
   settings.no_sandbox = true;
@@ -220,33 +221,30 @@ extern "C" int cef_interface_create_browser(MyClient* client,
   settings.background_color = background_color;
   settings.windowless_frame_rate = frame_rate;
 
-  // settings.universal_access_from_file_urls = STATE_DISABLED;
-  // settings.file_access_from_file_urls = STATE_DISABLED;
-
   settings.tab_to_links = STATE_DISABLED;
-  // settings.plugins = STATE_DISABLED;
+  settings.javascript_close_windows = STATE_DISABLED;
   settings.javascript_dom_paste = STATE_DISABLED;
   settings.javascript_access_clipboard = STATE_DISABLED;
 
   CefRefPtr<CefDictionaryValue> extra_info = nullptr;
   CefRefPtr<CefRequestContext> request_context = nullptr;
 
-  if (insecure) {
-    // this is pretty useless because it needs to be on the subprocess's
-    // OnBeforeCommandLineProcessing
-    // settings.web_security = STATE_DISABLED;
+  // if (insecure) {
+  // this is pretty useless because it needs to be on the subprocess's
+  // OnBeforeCommandLineProcessing
+  // settings.web_security = STATE_DISABLED;
 
-    // CefRequestContextSettings request_context_settings;
-    // request_context_settings.ignore_certificate_errors = true;
+  // CefRequestContextSettings request_context_settings;
+  // request_context_settings.ignore_certificate_errors = true;
 
-    // request_context =
-    //     CefRequestContext::CreateContext(request_context_settings, nullptr);
+  // request_context =
+  //     CefRequestContext::CreateContext(request_context_settings, nullptr);
 
-    // if (!request_context->RegisterSchemeHandlerFactory(
-    //         "test", "", new TestSchemeFactory())) {
-    //   rust_warn("CefRegisterSchemeHandlerFactory");
-    // }
-  }
+  // if (!request_context->RegisterSchemeHandlerFactory(
+  //         "test", "", new TestSchemeFactory())) {
+  //   rust_warn("CefRegisterSchemeHandlerFactory");
+  // }
+  // }
 
   bool browser = CefBrowserHost::CreateBrowser(
       window_info, client, url, settings, extra_info, request_context);

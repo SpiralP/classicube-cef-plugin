@@ -234,7 +234,7 @@ dependencies = [
 [[package]]
 name = "classicube-sys"
 version = "1.3.4"
-source = "git+https://github.com/SpiralP/rust-classicube-sys.git#aea64463f75bf7b81f9174a3409e8ab4730034f4"
+source = "git+https://github.com/SpiralP/rust-classicube-sys.git#407513529d6cb0e24a03cb47b7073bc7b4be9442"
 dependencies = [
  "bindgen",
  "cc",

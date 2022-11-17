@@ -22,7 +22,7 @@ impl PlayerTrait for WebPlayer {
     fn from_input(url: &str) -> Result<Self> {
         let url = Url::parse(url)?;
 
-        #[cfg(debug_assertions)]
+        #[cfg(all(not(test), debug_assertions))]
         unsafe {
             // allow any url in debug singleplayer
             if classicube_sys::Server.IsSinglePlayer != 0 {
@@ -73,7 +73,7 @@ impl PlayerTrait for WebPlayer {
 
 impl WebPlayer {
     pub fn from_url(url: Url) -> Option<Self> {
-        #[cfg(debug_assertions)]
+        #[cfg(all(not(test), debug_assertions))]
         unsafe {
             // allow any url in debug singleplayer
             if classicube_sys::Server.IsSinglePlayer != 0 {

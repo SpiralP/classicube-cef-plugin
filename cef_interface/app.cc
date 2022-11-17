@@ -45,6 +45,9 @@ void MyApp::OnBeforeCommandLineProcessing(
   // to make execute_javascript_on_frame work
   add_switch(command_line, "disable-site-isolation-trials");
 
+  // don't show popup for "Chromium Safe Storage" on mac
+  add_switch(command_line, "use-mock-keychain");
+
   // fix "Error contacting kwalletd5" on linux
   command_line->AppendSwitchWithValue("password-store", "basic");
 

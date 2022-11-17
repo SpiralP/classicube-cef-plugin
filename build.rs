@@ -63,6 +63,7 @@ fn main() {
     );
 
     // link to libcef
+    #[cfg(not(target_os = "macos"))]
     link(
         "cef",
         format!("cef_interface/cef_binary/{}", profile),

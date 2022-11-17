@@ -22,6 +22,6 @@ RUN export DEBIAN_FRONTEND=noninteractive \
     && ~/.cargo/bin/rustup component add rls rust-analysis rust-src rustfmt clippy
 
 RUN apt-get -y install wget \
-    && wget -O /tmp/cmake-install.sh 'https://github.com/Kitware/CMake/releases/download/v3.24.3/cmake-3.24.3-linux-x86_64.sh' \
+    && wget -O /tmp/cmake-install.sh 'https://github.com/Kitware/CMake/releases/download/v3.25.0/cmake-3.25.0-linux-x86_64.sh' \
     && sh /tmp/cmake-install.sh --skip-license --prefix=/usr \
     && rm /tmp/cmake-install.sh

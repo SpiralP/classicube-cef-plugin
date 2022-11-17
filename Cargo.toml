@@ -38,7 +38,7 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 url = "2"
 
 [build-dependencies]
-bindgen = "0.61"
+bindgen = "0.62"
 cmake = "0.1"
 
 [features]
@@ -46,8 +46,5 @@ ci = []
 
 
 [package.metadata.release]
-dev-version = true
-dev-version-ext = "alpha"
-post-release-commit-message = "Begin {{next_version}}"
 pre-release-commit-message = "Release {{version}}"
 tag-message = "Release version {{version}}"

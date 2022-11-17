@@ -95,7 +95,7 @@ fn main() {
         .parse_callbacks(Box::new(bindgen::CargoCallbacks))
         .allowlist_function("cef_interface_.*")
         .allowlist_type("RustSchemeReturn")
-        .rustified_enum("FFIRustV8Value_Tag")
+        .rustified_enum("FFIRustV8ValueTag")
         // Finish the builder and generate the bindings.
         .generate()
         // Unwrap the Result and panic on failure.

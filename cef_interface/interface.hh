@@ -72,24 +72,24 @@ struct RustRect {
 
 typedef RustRect (*GetViewRectCallback)(RustRefBrowser browser);
 
-struct FFIRustV8Value {
-  enum class Tag : uint8_t {
-    Unknown,
-    Array,
-    ArrayBuffer,
-    Bool,
-    Date,
-    Double,
-    Function,
-    Int,
-    Null,
-    Object,
-    String,
-    UInt,
-    Undefined,
-  };
+enum FFIRustV8ValueTag : uint8_t {
+  Unknown,
+  Array,
+  ArrayBuffer,
+  Bool,
+  Date,
+  Double,
+  Function,
+  Int,
+  Null,
+  Object,
+  String,
+  UInt,
+  Undefined,
+};
 
-  Tag tag;
+struct FFIRustV8Value {
+  FFIRustV8ValueTag tag;
   union {
     bool bool_;
     double double_;

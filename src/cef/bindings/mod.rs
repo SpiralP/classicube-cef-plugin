@@ -307,21 +307,19 @@ impl FFIRustV8Value {
 
         unsafe {
             match self.tag {
-                FFIRustV8Value_Tag::Unknown => RustV8Value::Unknown,
-                FFIRustV8Value_Tag::Array => RustV8Value::Array,
-                FFIRustV8Value_Tag::ArrayBuffer => RustV8Value::ArrayBuffer,
-                FFIRustV8Value_Tag::Bool => RustV8Value::Bool(*inner.bool_.as_ref()),
-                FFIRustV8Value_Tag::Date => RustV8Value::Date,
-                FFIRustV8Value_Tag::Double => RustV8Value::Double(*inner.double_.as_ref()),
-                FFIRustV8Value_Tag::Function => RustV8Value::Function,
-                FFIRustV8Value_Tag::Int => RustV8Value::Int(*inner.int_.as_ref()),
-                FFIRustV8Value_Tag::Null => RustV8Value::Null,
-                FFIRustV8Value_Tag::Object => RustV8Value::Object,
-                FFIRustV8Value_Tag::String => {
-                    RustV8Value::String(inner.string.as_ref().to_string())
-                }
-                FFIRustV8Value_Tag::UInt => RustV8Value::UInt(*inner.uint.as_ref()),
-                FFIRustV8Value_Tag::Undefined => RustV8Value::Undefined,
+                FFIRustV8ValueTag::Unknown => RustV8Value::Unknown,
+                FFIRustV8ValueTag::Array => RustV8Value::Array,
+                FFIRustV8ValueTag::ArrayBuffer => RustV8Value::ArrayBuffer,
+                FFIRustV8ValueTag::Bool => RustV8Value::Bool(*inner.bool_.as_ref()),
+                FFIRustV8ValueTag::Date => RustV8Value::Date,
+                FFIRustV8ValueTag::Double => RustV8Value::Double(*inner.double_.as_ref()),
+                FFIRustV8ValueTag::Function => RustV8Value::Function,
+                FFIRustV8ValueTag::Int => RustV8Value::Int(*inner.int_.as_ref()),
+                FFIRustV8ValueTag::Null => RustV8Value::Null,
+                FFIRustV8ValueTag::Object => RustV8Value::Object,
+                FFIRustV8ValueTag::String => RustV8Value::String(inner.string.as_ref().to_string()),
+                FFIRustV8ValueTag::UInt => RustV8Value::UInt(*inner.uint.as_ref()),
+                FFIRustV8ValueTag::Undefined => RustV8Value::Undefined,
             }
         }
     }
@@ -333,19 +331,19 @@ impl Drop for FFIRustV8Value {
 
             // hack to make sure the union fields call our drop
             match self.tag {
-                FFIRustV8Value_Tag::Bool => mem::swap(inner.bool_.as_mut(), &mut mem::zeroed()),
-                FFIRustV8Value_Tag::Double => mem::swap(inner.double_.as_mut(), &mut mem::zeroed()),
-                FFIRustV8Value_Tag::Int => mem::swap(inner.int_.as_mut(), &mut mem::zeroed()),
-                FFIRustV8Value_Tag::String => mem::swap(inner.string.as_mut(), &mut mem::zeroed()),
-                FFIRustV8Value_Tag::UInt => mem::swap(inner.uint.as_mut(), &mut mem::zeroed()),
-                FFIRustV8Value_Tag::Unknown
-                | FFIRustV8Value_Tag::Array
-                | FFIRustV8Value_Tag::ArrayBuffer
-                | FFIRustV8Value_Tag::Date
-                | FFIRustV8Value_Tag::Function
-                | FFIRustV8Value_Tag::Null
-                | FFIRustV8Value_Tag::Object
-                | FFIRustV8Value_Tag::Undefined => {}
+                FFIRustV8ValueTag::Bool => mem::swap(inner.bool_.as_mut(), &mut mem::zeroed()),
+                FFIRustV8ValueTag::Double => mem::swap(inner.double_.as_mut(), &mut mem::zeroed()),
+                FFIRustV8ValueTag::Int => mem::swap(inner.int_.as_mut(), &mut mem::zeroed()),
+                FFIRustV8ValueTag::String => mem::swap(inner.string.as_mut(), &mut mem::zeroed()),
+                FFIRustV8ValueTag::UInt => mem::swap(inner.uint.as_mut(), &mut mem::zeroed()),
+                FFIRustV8ValueTag::Unknown
+                | FFIRustV8ValueTag::Array
+                | FFIRustV8ValueTag::ArrayBuffer
+                | FFIRustV8ValueTag::Date
+                | FFIRustV8ValueTag::Function
+                | FFIRustV8ValueTag::Null
+                | FFIRustV8ValueTag::Object
+                | FFIRustV8ValueTag::Undefined => {}
             }
         }
     }

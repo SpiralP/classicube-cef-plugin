@@ -1,5 +1,6 @@
 use classicube_helpers::color::{SILVER, TEAL};
 use serde::{Deserialize, Serialize};
+use tracing::debug;
 use url::Url;
 
 use super::{helpers::get_ext, PlayerTrait};
@@ -37,14 +38,26 @@ impl PlayerTrait for ImagePlayer {
         WebPlayer::from_input(url)?;
 
         let url = Url::parse(url)?;
-        Self::from_url(&url)
+        match get_ext(&url)? {
+            "png" | "jpg" | "jpeg" | "gif" | "webp" | "svg" | "apng" | "avif" | "jfif"
+            | "pjpeg" | "pjp" | "image" => Ok(Self {
+                url: url.to_string(),
+                ..Default::default()
+            }),
+
+            _ => Err("url didn't end with an image file extension".into()),
+        }
     }
 
-    fn on_create(&mut self) -> String {
-        format!(
+    fn on_create(&mut self) -> Result<String> {
+        let url = self.url.to_string();
+        Self::from_input(&url)?;
+        debug!("ImagePlayer on_create {}", url);
+
+        Ok(format!(
             "data:text/html;base64,{}",
             base64::encode(PAGE_HTML.replace("IMAGE_URL", &self.url))
-        )
+        ))
     }
 
     fn on_title_change(&mut self, _entity_id: usize, _browser: &RustRefBrowser, title: String) {
@@ -76,23 +89,5 @@ impl PlayerTrait for ImagePlayer {
     fn set_silent(&mut self, silent: bool) -> Result<()> {
         self.silent = silent;
         Ok(())
-    }
-}
-
-impl ImagePlayer {
-    pub fn from_url(url: &Url) -> Result<Self> {
-        if url.scheme() != "http" && url.scheme() != "https" {
-            Err("not http/https".into())
-        } else {
-            match get_ext(url)? {
-                "png" | "jpg" | "jpeg" | "gif" | "webp" | "svg" | "apng" | "avif" | "jfif"
-                | "pjpeg" | "pjp" | "image" => Ok(Self {
-                    url: url.to_string(),
-                    ..Default::default()
-                }),
-
-                _ => Err("url didn't end with an image file extension".into()),
-            }
-        }
     }
 }

@@ -46,7 +46,7 @@ impl EntityBuilder {
 
     pub async fn create(mut self) -> Result<usize> {
         let name = self.name.take();
-        let url = self.player.on_create();
+        let url = self.player.on_create()?;
 
         let entity_id = EntityManager::get_new_id();
         {

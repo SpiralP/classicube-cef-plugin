@@ -26,24 +26,41 @@ impl PlayerTrait for WebPlayer {
         unsafe {
             // allow any url in debug singleplayer
             if classicube_sys::Server.IsSinglePlayer != 0 {
-                if let Some(this) = Self::from_url(url.clone()) {
-                    return Ok(this);
-                }
+                return Ok(Self {
+                    url: url.to_string(),
+                    ..Default::default()
+                });
             }
         }
 
         if url.scheme() != "http" && url.scheme() != "https" {
-            Err("not http/https".into())
-        } else if let Some(this) = Self::from_url(url) {
-            Ok(this)
+            return Err("not http/https".into());
+        }
+
+        let has_tld = url.host().map_or(false, |host| {
+            if let url::Host::Domain(s) = host {
+                s.contains('.')
+            } else {
+                // allow direct ips
+                true
+            }
+        });
+
+        if has_tld {
+            Ok(Self {
+                url: url.to_string(),
+                ..Default::default()
+            })
         } else {
             Err("not a normal url".into())
         }
     }
 
-    fn on_create(&mut self) -> String {
-        debug!("WebPlayer on_create {}", self.url);
-        self.url.to_string()
+    fn on_create(&mut self) -> Result<String> {
+        let url = self.url.to_string();
+        Self::from_input(&url)?;
+        debug!("WebPlayer on_create {}", url);
+        Ok(url)
     }
 
     fn on_title_change(&mut self, _entity_id: usize, _browser: &RustRefBrowser, title: String) {
@@ -72,37 +89,6 @@ impl PlayerTrait for WebPlayer {
 }
 
 impl WebPlayer {
-    pub fn from_url(url: Url) -> Option<Self> {
-        #[cfg(all(not(test), debug_assertions))]
-        unsafe {
-            // allow any url in debug singleplayer
-            if classicube_sys::Server.IsSinglePlayer != 0 {
-                return Some(Self {
-                    url: url.to_string(),
-                    ..Default::default()
-                });
-            }
-        }
-
-        let has_tld = url.host().map_or(false, |host| {
-            if let url::Host::Domain(s) = host {
-                s.contains('.')
-            } else {
-                // allow direct ips
-                true
-            }
-        });
-
-        if has_tld {
-            Some(Self {
-                url: url.to_string(),
-                ..Default::default()
-            })
-        } else {
-            None
-        }
-    }
-
     pub fn blank_page() -> Self {
         Self {
             url: "data:text/html,".to_string(),

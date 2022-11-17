@@ -269,7 +269,7 @@ impl CefEntity {
     }
 
     pub fn play(&mut self, mut player: Player) -> Result<()> {
-        let url = player.on_create();
+        let url = player.on_create()?;
 
         // TODO move this into the Player enum's on_create
 

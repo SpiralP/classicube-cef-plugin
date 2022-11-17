@@ -29,7 +29,7 @@ pub trait PlayerTrait: Clone {
         Self: Sized;
 
     /// Called before creating the browser, returns a url
-    fn on_create(&mut self) -> String;
+    fn on_create(&mut self) -> Result<String>;
 
     /// Called after page is loaded
     fn on_page_loaded(&mut self, _entity_id: usize, _browser: &RustRefBrowser) {}
@@ -196,7 +196,7 @@ impl PlayerTrait for Player {
         }
     }
 
-    fn on_create(&mut self) -> String {
+    fn on_create(&mut self) -> Result<String> {
         match self {
             Player::YouTube(player) => player.on_create(),
             Player::Dash(player) => player.on_create(),

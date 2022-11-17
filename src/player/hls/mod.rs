@@ -69,20 +69,29 @@ impl PlayerTrait for HlsPlayer {
         WebPlayer::from_input(url)?;
 
         let url = Url::parse(url)?;
-        Self::from_url(&url)
+        match get_ext(&url)? {
+            "m3u8" | "hls" => Ok(Self {
+                url: url.to_string(),
+                ..Default::default()
+            }),
+
+            _ => Err("url didn't end with a HLS .m3u8 file extension".into()),
+        }
     }
 
-    fn on_create(&mut self) -> String {
-        debug!("HlsPlayer on_create {}", self.url);
+    fn on_create(&mut self) -> Result<String> {
+        let url = self.url.to_string();
+        Self::from_input(&url)?;
+        debug!("HlsPlayer on_create {}", url);
 
-        format!(
+        Ok(format!(
             "data:text/html;base64,{}",
             base64::encode(
                 PAGE_HTML
                     .replace("HLS_URL", &self.url)
                     .replace("START_VOLUME", &format!("{}", self.volume))
             )
-        )
+        ))
     }
 
     fn on_page_loaded(&mut self, entity_id: usize, _browser: &RustRefBrowser) {
@@ -188,22 +197,5 @@ impl HlsPlayer {
             field
         );
         browser.eval_javascript(code).await
-    }
-}
-
-impl HlsPlayer {
-    pub fn from_url(url: &Url) -> Result<Self> {
-        if url.scheme() != "http" && url.scheme() != "https" {
-            Err("not http/https".into())
-        } else {
-            match get_ext(url)? {
-                "m3u8" | "hls" => Ok(Self {
-                    url: url.to_string(),
-                    ..Default::default()
-                }),
-
-                _ => Err("url didn't end with a HLS .m3u8 file extension".into()),
-            }
-        }
     }
 }

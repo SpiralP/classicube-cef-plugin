@@ -93,11 +93,22 @@ impl PlayerTrait for MediaPlayer {
         WebPlayer::from_input(url)?;
 
         let url = Url::parse(url)?;
-        Self::from_url(&url)
+
+        match get_ext(&url)? {
+            "mp3" | "wav" | "ogg" | "aac" | "mp4" | "webm" | "avi" | "3gp" | "mov" | "mkv"
+            | "media" => Ok(Self {
+                url: url.to_string(),
+                ..Default::default()
+            }),
+
+            _ => Err("url didn't end with a audio/video file extension".into()),
+        }
     }
 
-    fn on_create(&mut self) -> String {
-        debug!("MediaPlayer on_create {}", self.url);
+    fn on_create(&mut self) -> Result<String> {
+        let url = self.url.to_string();
+        Self::from_input(&url)?;
+        debug!("MediaPlayer on_create {}", url);
         self.create_time = Some(Instant::now());
 
         let mut params = vec![
@@ -115,9 +126,9 @@ impl PlayerTrait for MediaPlayer {
             params.push(("loop", "1".to_string()));
         }
 
-        Url::parse_with_params("local://media/", &params)
+        Ok(Url::parse_with_params("local://media/", &params)
             .unwrap()
-            .into()
+            .into())
     }
 
     fn on_page_loaded(&mut self, entity_id: usize, _browser: &RustRefBrowser) {
@@ -296,23 +307,5 @@ impl MediaPlayer {
     async fn eval(browser: &RustRefBrowser, method: &str) -> Result<RustV8Value> {
         let code = format!("window.{method};");
         browser.eval_javascript(code).await
-    }
-}
-
-impl MediaPlayer {
-    pub fn from_url(url: &Url) -> Result<Self> {
-        if url.scheme() != "http" && url.scheme() != "https" {
-            Err("not http/https".into())
-        } else {
-            match get_ext(url)? {
-                "mp3" | "wav" | "ogg" | "aac" | "mp4" | "webm" | "avi" | "3gp" | "mov" | "mkv"
-                | "media" => Ok(Self {
-                    url: url.to_string(),
-                    ..Default::default()
-                }),
-
-                _ => Err("url didn't end with a audio/video file extension".into()),
-            }
-        }
     }
 }

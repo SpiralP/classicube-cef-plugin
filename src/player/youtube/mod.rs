@@ -113,7 +113,7 @@ impl PlayerTrait for YouTubePlayer {
         }
     }
 
-    fn on_create(&mut self) -> String {
+    fn on_create(&mut self) -> Result<String> {
         debug!("YouTubePlayer on_create {}", self.id);
         self.create_time = Some(Instant::now());
 
@@ -140,9 +140,7 @@ impl PlayerTrait for YouTubePlayer {
             params.push(("playlist", "1".to_string()));
         }
 
-        Url::parse_with_params("local://youtube/", &params)
-            .unwrap()
-            .into()
+        Ok(Url::parse_with_params("local://youtube/", &params)?.into())
     }
 
     fn on_page_loaded(&mut self, entity_id: usize, _browser: &RustRefBrowser) {

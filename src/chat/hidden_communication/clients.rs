@@ -1,4 +1,4 @@
-use std::{cell::RefCell, collections::HashSet, sync::Once, time::Duration};
+use std::{cell::RefCell, collections::HashSet, time::Duration};
 
 use classicube_helpers::{tab_list::remove_color, WithInner};
 use classicube_sys::ENTITIES_SELF_ID;
@@ -193,17 +193,6 @@ async fn process_clients_response(messages: Vec<String>) -> Result<()> {
         .collect();
 
     if !players_with_cef.is_empty() {
-        // let names: Vec<&str> = players_with_cef
-        //     .iter()
-        //     .map(|(_id, name)| name.as_str())
-        //     .collect();
-
-        let len = players_with_cef.len();
-        static ONCE: Once = Once::new();
-        ONCE.call_once(move || {
-            Chat::print(format!("{len} other players with cef!"));
-        });
-
         start_whispering(players_with_cef).await?;
     }
 

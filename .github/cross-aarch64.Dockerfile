@@ -1,4 +1,4 @@
-# docker build -t cross-aarch64 -f .github/cross-aarch64.Dockerfile .
+# docker build --pull -t cross-aarch64 -f .github/cross-aarch64.Dockerfile .
 # cross build --target aarch64-unknown-linux-gnu
 
 # ubuntu-like
@@ -9,7 +9,7 @@ FROM ghcr.io/cross-rs/aarch64-unknown-linux-gnu:main
 RUN export DEBIAN_FRONTEND=noninteractive \
     && dpkg --add-architecture arm64 \
     && apt-get -y update \
-    && apt-get -y install --no-install-recommends \
+    && apt-get -y install \
     wget curl git gcc g++ build-essential cmake clang-12 pkg-config \
     gcc-aarch64-linux-gnu g++-aarch64-linux-gnu libc6-dev-i386 \
     libssl-dev:arm64 libglib2.0-dev:arm64 libpango1.0-dev:arm64 libatk1.0-dev:arm64 libgtk-3-dev:arm64 \

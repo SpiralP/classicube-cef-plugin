@@ -2,7 +2,7 @@ FROM debian:bullseye
 
 RUN export DEBIAN_FRONTEND=noninteractive \
     && apt-get -y update \
-    && apt-get -y install --no-install-recommends \
+    && apt-get -y install \
     # common
     curl ca-certificates git gcc g++ build-essential pkg-config \
     # openssl-sys <- reqwest

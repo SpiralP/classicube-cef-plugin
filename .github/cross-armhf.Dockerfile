@@ -1,4 +1,4 @@
-# docker build -t cross-armhf -f .github/cross-armhf.Dockerfile .
+# docker build --pull -t cross-armhf -f .github/cross-armhf.Dockerfile .
 # cross build --target armv7-unknown-linux-gnueabihf
 
 # ubuntu-like
@@ -8,7 +8,7 @@ FROM ghcr.io/cross-rs/armv7-unknown-linux-gnueabihf:0.2.4
 RUN export DEBIAN_FRONTEND=noninteractive \
     && dpkg --add-architecture armhf \
     && apt-get -y update \
-    && apt-get -y install --no-install-recommends \
+    && apt-get -y install \
     wget curl git gcc g++ build-essential cmake clang-8 pkg-config \
     gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf libc6-dev-i386 \
     libglib2.0-dev:armhf libpango1.0-dev:armhf libatk1.0-dev:armhf libgtk-3-dev:armhf libgdk-pixbuf2.0-dev:armhf \

@@ -130,9 +130,9 @@ jobs:
         if: matrix.config.arch == 'x86_64'
         run: |
           sudo apt-get -y update \
-          && sudo apt-get -y install aria2 git gcc g++ build-essential cmake clang-10 pkg-config \
+          && sudo apt-get -y install aria2 wget curl git gcc g++ build-essential cmake clang pkg-config \
             libssl-dev libglib2.0-dev libpango1.0-dev libatk1.0-dev libgtk-3-dev libgdk-pixbuf2.0-dev \
-            libssl1.1 libnss3 libasound2 libxss1 libnspr4 \
+            libnss3 libasound2 libxss1 libnspr4 \
           && aria2c 'https://cef-builds.spotifycdn.com/cef_binary_107.1.9%2Bg1f0a21a%2Bchromium-107.0.5304.110_linux64.tar.bz2' -o cef_binary.tar.bz2 --max-connection-per-server=4 \
           && tar -xjf cef_binary.tar.bz2 \
           && rm cef_binary.tar.bz2 \

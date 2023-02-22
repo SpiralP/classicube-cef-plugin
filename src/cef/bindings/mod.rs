@@ -285,7 +285,7 @@ impl Clone for RustRefBrowser {
 
 impl ToString for RustRefString {
     fn to_string(&self) -> String {
-        let s = unsafe { slice::from_raw_parts(self.ptr.cast::<u8>(), self.len as usize) };
+        let s = unsafe { slice::from_raw_parts(self.ptr.cast::<u8>(), self.len) };
         String::from_utf8_lossy(s).into_owned()
     }
 }

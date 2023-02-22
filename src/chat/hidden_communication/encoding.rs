@@ -1,5 +1,6 @@
 use std::{collections::VecDeque, time::Duration};
 
+use base64::{prelude::BASE64_STANDARD, Engine};
 use serde::{Deserialize, Serialize};
 use tracing::debug;
 
@@ -33,12 +34,12 @@ pub struct Message {
 pub fn encode(message: &Message) -> Result<String> {
     let data = bincode::serialize(message)?;
 
-    Ok(base64::encode(data))
+    Ok(BASE64_STANDARD.encode(data))
 }
 
 /// from base64
 pub fn decode<T: AsRef<[u8]>>(input: T) -> Result<Message> {
-    let data = base64::decode(input)?;
+    let data = BASE64_STANDARD.decode(input)?;
 
     Ok(bincode::deserialize(&data)?)
 }

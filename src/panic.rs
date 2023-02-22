@@ -37,13 +37,11 @@ fn panic_hook(info: &PanicInfo<'_>) {
 
         (
             format!(
-                "CEF crashed: '{}', {}\nMore details were written to 'cef-crashes.log'\nPlease \
-                 report this file to a developer!",
-                panic_message, panic_location
+                "CEF crashed: '{panic_message}', {panic_location}\nMore details were written to \
+                 'cef-crashes.log'\nPlease report this file to a developer!"
             ),
             format!(
-                "thread '{}' panicked at '{}', {}\n{:?}",
-                thread_name, panic_message, panic_location, bt
+                "thread '{thread_name}' panicked at '{panic_message}', {panic_location}\n{bt:?}"
             ),
             format!(
                 "----------------------------------------\nCEF version {} crashed at {}\nthread \

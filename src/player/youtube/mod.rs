@@ -235,12 +235,11 @@ impl PlayerTrait for YouTubePlayer {
                                 window.context = context;
                             }}
                             window.panner.pan.setTargetAtTime(
-                                {},
+                                {pan},
                                 window.context.currentTime,
                                 0.02
                             );
-                        "#,
-                        pan
+                        "#
                     ),
                 );
             } else {

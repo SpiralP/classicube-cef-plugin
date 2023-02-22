@@ -1,3 +1,4 @@
+use base64::{prelude::BASE64_STANDARD, Engine};
 use classicube_helpers::color::{SILVER, TEAL};
 use futures::{future::RemoteHandle, prelude::*};
 use serde::{Deserialize, Serialize};
@@ -86,7 +87,7 @@ impl PlayerTrait for DashPlayer {
 
         Ok(format!(
             "data:text/html;base64,{}",
-            base64::encode(
+            BASE64_STANDARD.encode(
                 PAGE_HTML
                     .replace("DASH_URL", &self.url)
                     .replace("START_VOLUME", &format!("{}", self.volume))
@@ -178,10 +179,9 @@ impl DashPlayer {
         let _ignore = browser.execute_javascript(format!(
             r#"
                 if (typeof window.player !== "undefined") {{
-                    window.player.{};
+                    window.player.{field};
                 }}
-            "#,
-            field
+            "#
         ));
     }
 
@@ -190,11 +190,10 @@ impl DashPlayer {
             r#"
                 (() => {{
                     if (typeof window.player !== "undefined") {{
-                        return window.player.{};
+                        return window.player.{field};
                     }}
                 }})()
-            "#,
-            field
+            "#
         );
         browser.eval_javascript(code).await
     }

@@ -1,3 +1,4 @@
+use base64::{prelude::BASE64_STANDARD, Engine};
 use classicube_helpers::color::{SILVER, TEAL};
 use serde::{Deserialize, Serialize};
 use tracing::debug;
@@ -56,7 +57,7 @@ impl PlayerTrait for ImagePlayer {
 
         Ok(format!(
             "data:text/html;base64,{}",
-            base64::encode(PAGE_HTML.replace("IMAGE_URL", &self.url))
+            BASE64_STANDARD.encode(PAGE_HTML.replace("IMAGE_URL", &self.url))
         ))
     }
 

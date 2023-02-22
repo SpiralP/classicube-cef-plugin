@@ -338,8 +338,7 @@ pub async fn handle_command(
                 EntityManager::with_entity((matches, player), |entity| {
                     if let Some(queue_size) = entity.queue(p)? {
                         Chat::print(format!(
-                            "{}Queued {}{} {}{} {}{}",
-                            TEAL, GOLD, queue_size, TEAL, kind, SILVER, url
+                            "{TEAL}Queued {GOLD}{queue_size} {TEAL}{kind} {SILVER}{url}"
                         ));
 
                         if skip {

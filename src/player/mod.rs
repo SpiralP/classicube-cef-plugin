@@ -178,8 +178,7 @@ impl PlayerTrait for Player {
                                                         } else {
                                                             // if it didn't start with http, try again with https:// in front
                                                             Player::from_input(&format!(
-                                                                "https://{}",
-                                                                input
+                                                                "https://{input}"
                                                             ))
                                                         }
                                                     }

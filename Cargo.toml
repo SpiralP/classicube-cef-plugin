@@ -12,7 +12,7 @@ crate-type = ["cdylib"]
 async-dispatcher = { git = "https://github.com/SpiralP/rust-async-dispatcher.git" }
 async-recursion = "1"
 backtrace = "0.3"
-base64 = "0.13"
+base64 = "0.21"
 bincode = "1"
 clap = { git = "https://github.com/SpiralP/clap-cc.git" }
 classicube-helpers = { git = "https://github.com/SpiralP/rust-classicube-helpers.git" }
@@ -38,7 +38,7 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 url = "2"
 
 [build-dependencies]
-bindgen = "0.62"
+bindgen = "0.64"
 cmake = "0.1"
 
 [features]

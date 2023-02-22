@@ -33,7 +33,7 @@ jobs:
           scoop install aria2
           scoop install --arch ${{ matrix.config.bits }}bit llvm
           echo "LIBCLANG_PATH=$HOME\scoop\apps\llvm\current\bin" >> $env:GITHUB_ENV
-          aria2c 'https://cef-builds.spotifycdn.com/cef_binary_107.1.9%2Bg1f0a21a%2Bchromium-107.0.5304.110_windows${{ matrix.config.bits }}.tar.bz2' -o cef_binary.tar.bz2 --max-connection-per-server=4
+          aria2c 'https://cef-builds.spotifycdn.com/cef_binary_110.0.26%2Bg732747f%2Bchromium-110.0.5481.97_windows${{ matrix.config.bits }}.tar.bz2' -o cef_binary.tar.bz2 --max-connection-per-server=4
           7z x -y 'cef_binary.tar.bz2'
           Remove-Item 'cef_binary.tar.bz2'
           7z x -y 'cef_binary.tar'
@@ -133,7 +133,7 @@ jobs:
           && sudo apt-get -y install aria2 wget curl git gcc g++ build-essential cmake clang pkg-config \
             libssl-dev libglib2.0-dev libpango1.0-dev libatk1.0-dev libgtk-3-dev libgdk-pixbuf2.0-dev \
             libnss3 libasound2 libxss1 libnspr4 \
-          && aria2c 'https://cef-builds.spotifycdn.com/cef_binary_107.1.9%2Bg1f0a21a%2Bchromium-107.0.5304.110_linux64.tar.bz2' -o cef_binary.tar.bz2 --max-connection-per-server=4 \
+          && aria2c 'https://cef-builds.spotifycdn.com/cef_binary_110.0.26%2Bg732747f%2Bchromium-110.0.5481.97_linux64.tar.bz2' -o cef_binary.tar.bz2 --max-connection-per-server=4 \
           && tar -xjf cef_binary.tar.bz2 \
           && rm cef_binary.tar.bz2 \
           && mv cef_binary_* cef_interface/cef_binary
@@ -206,7 +206,7 @@ jobs:
         if: matrix.config.arch == 'armhf'
         run: |
           docker build --pull -t cross-armhf -f .github/cross-armhf.Dockerfile . \
-          && aria2c 'https://cef-builds.spotifycdn.com/cef_binary_107.1.9%2Bg1f0a21a%2Bchromium-107.0.5304.110_linuxarm.tar.bz2' -o cef_binary.tar.bz2 --max-connection-per-server=4 \
+          && aria2c 'https://cef-builds.spotifycdn.com/cef_binary_110.0.26%2Bg732747f%2Bchromium-110.0.5481.97_linuxarm.tar.bz2' -o cef_binary.tar.bz2 --max-connection-per-server=4 \
           && tar -xjf cef_binary.tar.bz2 \
           && rm cef_binary.tar.bz2 \
           && mv cef_binary_* cef_interface/cef_binary
@@ -215,7 +215,7 @@ jobs:
         if: matrix.config.arch == 'aarch64'
         run: |
           docker build --pull -t cross-aarch64 -f .github/cross-aarch64.Dockerfile . \
-          && aria2c 'https://cef-builds.spotifycdn.com/cef_binary_107.1.9%2Bg1f0a21a%2Bchromium-107.0.5304.110_linuxarm64.tar.bz2' -o cef_binary.tar.bz2 --max-connection-per-server=4 \
+          && aria2c 'https://cef-builds.spotifycdn.com/cef_binary_110.0.26%2Bg732747f%2Bchromium-110.0.5481.97_linuxarm64.tar.bz2' -o cef_binary.tar.bz2 --max-connection-per-server=4 \
           && tar -xjf cef_binary.tar.bz2 \
           && rm cef_binary.tar.bz2 \
           && mv cef_binary_* cef_interface/cef_binary
@@ -279,7 +279,7 @@ jobs:
       - name: Install deps
         run: |
           brew install aria2 cmake \
-          && aria2c 'https://cef-builds.spotifycdn.com/cef_binary_107.1.9%2Bg1f0a21a%2Bchromium-107.0.5304.110_macosx64.tar.bz2' -o cef_binary.tar.bz2 --max-connection-per-server=4 \
+          && aria2c 'https://cef-builds.spotifycdn.com/cef_binary_110.0.26%2Bg732747f%2Bchromium-110.0.5481.97_macosx64.tar.bz2' -o cef_binary.tar.bz2 --max-connection-per-server=4 \
           && tar -xjf cef_binary.tar.bz2 \
           && rm cef_binary.tar.bz2 \
           && mv cef_binary_* cef_interface/cef_binary

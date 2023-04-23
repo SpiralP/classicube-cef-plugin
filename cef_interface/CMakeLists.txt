@@ -233,7 +233,7 @@ add_subdirectory(${CEF_LIBCEF_DLL_WRAPPER_PATH} libcef_dll_wrapper)
 # endif()
 
 # Display configuration settings.
-PRINT_CEF_CONFIG()
+# PRINT_CEF_CONFIG()
 
 # link_directories("cef_binary/Debug")
 # include_directories("cef_binary")
@@ -262,71 +262,58 @@ set(CEF_INTERFACE_SRCS
   interface.cc
   )
 
-APPEND_PLATFORM_SOURCES(CEF_INTERFACE_SRCS)
-source_group(cef_interface FILES ${CEF_INTERFACE_SRCS})
-
-set(CEF_INTERFACE_SRCS
-  ${CEF_INTERFACE_SRCS}
-  )
-
-
-APPEND_PLATFORM_SOURCES(CEF_INTERFACE_HELPER_SRCS)
-source_group(cef_interface FILES ${CEF_INTERFACE_HELPER_SRCS})
-
-
-
 #
 # Shared configuration.
 #
 
-# Target executable names.
-set(CEF_TARGET "cef_interface")
 # Logical target used to link the libcef library.
 ADD_LOGICAL_TARGET("libcef_lib" "${CEF_LIB_DEBUG}" "${CEF_LIB_RELEASE}")
-
 
 # Determine the target output directory.
 SET_CEF_TARGET_OUT_DIR()
 
 
-
-add_library(${CEF_TARGET} STATIC ${CEF_INTERFACE_SRCS})
-SET_EXECUTABLE_TARGET_PROPERTIES(${CEF_TARGET})
-add_dependencies(${CEF_TARGET} libcef_dll_wrapper)
+add_library(cef_interface STATIC ${CEF_INTERFACE_SRCS})
+SET_EXECUTABLE_TARGET_PROPERTIES(cef_interface)
+add_dependencies(cef_interface libcef_dll_wrapper)
 
 if(OS_WINDOWS OR OS_LINUX)
-  target_link_libraries(${CEF_TARGET} libcef_lib libcef_dll_wrapper ${CEF_STANDARD_LIBS})
+  target_link_libraries(cef_interface libcef_lib libcef_dll_wrapper ${CEF_STANDARD_LIBS})
 elseif(OS_MAC)
-  target_link_libraries(${CEF_TARGET} libcef_dll_wrapper ${CEF_STANDARD_LIBS})
+  target_link_libraries(cef_interface libcef_dll_wrapper ${CEF_STANDARD_LIBS})
 endif()
 
 if(OS_LINUX)
   # Set rpath so that libraries can be placed next to the executable.
-  set_target_properties(${CEF_TARGET} PROPERTIES INSTALL_RPATH "$ORIGIN")
-  set_target_properties(${CEF_TARGET} PROPERTIES BUILD_WITH_INSTALL_RPATH TRUE)
-  set_target_properties(${CEF_TARGET} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CEF_TARGET_OUT_DIR})
+  set_target_properties(cef_interface PROPERTIES INSTALL_RPATH "$ORIGIN")
+  set_target_properties(cef_interface PROPERTIES BUILD_WITH_INSTALL_RPATH TRUE)
+  set_target_properties(cef_interface PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CEF_TARGET_OUT_DIR})
 endif()
 
-COPY_FILES("${CEF_TARGET}" "${CEF_BINARY_FILES}" "${CEF_BINARY_DIR}" "${CEF_TARGET_OUT_DIR}")
-COPY_FILES("${CEF_TARGET}" "${CEF_RESOURCE_FILES}" "${CEF_RESOURCE_DIR}" "${CEF_TARGET_OUT_DIR}")
+COPY_FILES("cef_interface" "${CEF_BINARY_FILES}" "${CEF_BINARY_DIR}" "${CEF_TARGET_OUT_DIR}")
+COPY_FILES("cef_interface" "${CEF_RESOURCE_FILES}" "${CEF_RESOURCE_DIR}" "${CEF_TARGET_OUT_DIR}")
 
 
 # cef_exe
 
 if(OS_WINDOWS)
-  add_executable(cef_exe WIN32 cef_exe.cc ${CEF_INTERFACE_SRCS})
-elseif(OS_LINUX OR OS_MAC)
-  add_executable(cef_exe cef_exe.cc ${CEF_INTERFACE_SRCS})
+  add_executable(cef_exe WIN32 cef_exe.cc)
+elseif(OS_LINUX)
+  # dependencies from libcef.so (nix didn't like them missing)
+  FIND_LINUX_LIBRARIES("glib-2.0 nss atk cups libdrm xcomposite xdamage xrandr xext xfixes gbm expat xcb xkbcommon dbus-1 pango cairo alsa")
+  add_executable(cef_exe cef_exe.cc)
+elseif(OS_MAC)
+  add_executable(cef_exe cef_exe.cc)
 endif()
 
 SET_EXECUTABLE_TARGET_PROPERTIES(cef_exe)
-add_dependencies(cef_exe libcef_dll_wrapper)
+add_dependencies(cef_exe cef_interface libcef_dll_wrapper)
 
 
 if(OS_WINDOWS OR OS_LINUX)
-  target_link_libraries(cef_exe libcef_lib libcef_dll_wrapper ${CEF_STANDARD_LIBS})
+  target_link_libraries(cef_exe cef_interface libcef_lib libcef_dll_wrapper ${CEF_STANDARD_LIBS})
 elseif(OS_MAC)
-  target_link_libraries(cef_exe libcef_dll_wrapper ${CEF_STANDARD_LIBS})
+  target_link_libraries(cef_exe cef_interface libcef_dll_wrapper ${CEF_STANDARD_LIBS})
 endif()
 
 

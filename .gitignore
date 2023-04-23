@@ -7,3 +7,5 @@ cef.log
 cef-binary.log
 .vscode/launch.json
 .vscode/tasks.json
+/result
+build

@@ -22,7 +22,9 @@
                 date = "2023-04-23";
                 channel = "nightly";
                 sha256 = "sha256-f+dMK7oRvMx2VYzqJru4ElIngARn4d2q2GkAPdlZrW0=";
-              }).rust;
+              }).rust.override {
+                extensions = [ "rust-src" ];
+              };
             in
             pkgs.makeRustPlatform {
               cargo = rust;
@@ -34,8 +36,8 @@
             src =
               let
                 cef_binary = pkgs.fetchzip {
-                  url = "https://cef-builds.spotifycdn.com/cef_binary_110.0.26%2Bg732747f%2Bchromium-110.0.5481.97_linux64.tar.bz2";
-                  sha256 = "sha256-9E0upw0zvrg4gks90moylmZpHhzGrtAVZ/HpneX5WAI=";
+                  url = "https://cef-builds.spotifycdn.com/cef_binary_112.3.0%2Bgb09c4ca%2Bchromium-112.0.5615.165_linux64.tar.bz2";
+                  sha256 = "sha256-0Ehf8u9aFtl9i7Rt7+Qtm7UUIBO15VaRbUs3cxtg3kk=";
                 };
 
                 code = lib.cleanSourceWith rec {
@@ -66,7 +68,7 @@
                   && chmod +w $out/cef_interface \
                   && ln -s ${cef_binary}/ $out/cef_interface/cef_binary
               '';
-            cargoSha256 = "sha256-ord8dllGjFcA1M2tONxXmHxbD9/Z8E9WtTDhC/QSZ3w=";
+            cargoSha256 = "sha256-bExFwQ88tybYGSeR38kilDz3R3ml8L65KUwjUUpL7UM=";
             nativeBuildInputs = with pkgs; [
               cmake
               pkg-config

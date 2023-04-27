@@ -68,7 +68,7 @@
                   && chmod +w $out/cef_interface \
                   && ln -s ${cef_binary}/ $out/cef_interface/cef_binary
               '';
-            cargoSha256 = "sha256-bExFwQ88tybYGSeR38kilDz3R3ml8L65KUwjUUpL7UM=";
+            cargoSha256 = "sha256-YMkd0ZheDtMBG+gAs7gVMl+V4tjPpJvisEFdvmebXlQ=";
             nativeBuildInputs = with pkgs; [
               cmake
               pkg-config

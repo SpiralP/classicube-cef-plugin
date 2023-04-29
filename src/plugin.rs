@@ -26,7 +26,7 @@ impl Plugin {
         PLUGIN.with(|cell| {
             assert!(cell.borrow().is_none());
 
-            Chat::print(format!("Cef v{} initializing", env!("CARGO_PKG_VERSION")));
+            Chat::print(format!("Loading Cef v{}", env!("CARGO_PKG_VERSION")));
 
             let append_app_name = CString::new(format!(" + {APP_NAME}")).unwrap();
             let c_str = append_app_name.as_ptr();

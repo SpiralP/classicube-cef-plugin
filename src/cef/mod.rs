@@ -3,14 +3,15 @@ mod browser;
 mod javascript;
 mod mute_lose_focus;
 
+use classicube_helpers::async_manager;
+use classicube_helpers::CellGetSet;
+use classicube_helpers::{shared::FutureShared, WithInner};
+use futures::stream::{FuturesUnordered, StreamExt};
 use std::{
     cell::{Cell, RefCell},
     collections::HashMap,
     os::raw::c_int,
 };
-
-use classicube_helpers::{shared::FutureShared, WithInner};
-use futures::stream::{FuturesUnordered, StreamExt};
 use tokio::sync::broadcast;
 use tracing::{debug, debug_span, error, warn, Instrument};
 
@@ -23,7 +24,6 @@ use self::{
     mute_lose_focus::IS_FOCUSED,
 };
 use crate::{
-    async_manager,
     entity_manager::{cef_paint_callback, TEXTURE_HEIGHT, TEXTURE_WIDTH},
     error::{bail, Result, ResultExt},
 };

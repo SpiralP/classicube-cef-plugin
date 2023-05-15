@@ -1,10 +1,10 @@
 use std::{cell::RefCell, ffi::CString};
 
-use classicube_helpers::{color::RED, WithInner};
+use classicube_helpers::{async_manager, color::RED, WithInner};
 use classicube_sys::{Server, String_AppendConst};
 use tracing::{debug, error};
 
-use crate::{async_manager, cef::Cef, chat::Chat, entity_manager::EntityManager, player};
+use crate::{cef::Cef, chat::Chat, entity_manager::EntityManager, player};
 
 thread_local!(
     static PLUGIN: RefCell<Option<Plugin>> = RefCell::new(None);

@@ -11,10 +11,8 @@ use classicube_helpers::WithInner;
 use tracing::{debug, warn};
 
 use super::{Chat, PlayerSnapshot};
-use crate::{
-    async_manager,
-    error::{bail, Error, Result},
-};
+use crate::error::{bail, Error, Result};
+use classicube_helpers::async_manager;
 
 thread_local!(
     static COMMAND_APP: RefCell<Option<App<'static, 'static>>> = RefCell::default();
@@ -153,7 +151,7 @@ fn get_last_color(text: &str) -> Option<char> {
 #[test]
 fn test_commands() {
     crate::logger::initialize(true, true, false);
-    crate::async_manager::initialize();
+    async_manager::initialize();
     self::initialize();
 
     async_manager::spawn_local_on_main_thread(async {
@@ -176,6 +174,6 @@ fn test_commands() {
         .unwrap();
     });
 
-    crate::async_manager::run();
-    crate::async_manager::shutdown();
+    async_manager::run();
+    async_manager::shutdown();
 }

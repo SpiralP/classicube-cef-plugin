@@ -3,12 +3,12 @@ use classicube_sys::{Chat_Send, OwnedString};
 
 use super::helpers::move_entity;
 use crate::{
-    async_manager,
     chat::PlayerSnapshot,
     entity_manager::{EntityBuilder, EntityManager, TargetEntity},
     error::{bail, Result},
     player::{Player, PlayerBuilder, VolumeMode},
 };
+use classicube_helpers::async_manager;
 
 // static commands not targetted at a specific entity
 pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {

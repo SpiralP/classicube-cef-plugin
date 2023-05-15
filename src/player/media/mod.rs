@@ -11,12 +11,12 @@ use super::{
     PlayerTrait, VolumeMode, WebPlayer,
 };
 use crate::{
-    async_manager,
     cef::{RustRefBrowser, RustV8Value},
     chat::Chat,
     error::{bail, Result},
     options,
 };
+use classicube_helpers::async_manager;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct MediaPlayer {

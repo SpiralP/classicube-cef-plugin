@@ -1,19 +1,19 @@
 use std::time::Duration;
 
-use clap::{App, AppSettings, Arg, ArgMatches};
-use classicube_helpers::color::SILVER;
-use classicube_sys::{
-    Entities, Vec3, ENTITIES_SELF_ID, FACE_CONSTS, FACE_CONSTS_FACE_XMAX, FACE_CONSTS_FACE_XMIN,
-    FACE_CONSTS_FACE_YMAX, FACE_CONSTS_FACE_YMIN, FACE_CONSTS_FACE_ZMAX, FACE_CONSTS_FACE_ZMIN,
-};
-
 use super::{helpers::get_camera_trace, Chat};
 use crate::{
-    api, async_manager,
+    api,
     chat::{hidden_communication::whispers, PlayerSnapshot},
     entity_manager::EntityManager,
     error::{bail, Result, ResultExt},
     helpers::format_duration,
+};
+use clap::{App, AppSettings, Arg, ArgMatches};
+use classicube_helpers::async_manager;
+use classicube_helpers::color::SILVER;
+use classicube_sys::{
+    Entities, Vec3, ENTITIES_SELF_ID, FACE_CONSTS, FACE_CONSTS_FACE_XMAX, FACE_CONSTS_FACE_XMIN,
+    FACE_CONSTS_FACE_YMAX, FACE_CONSTS_FACE_YMIN, FACE_CONSTS_FACE_ZMAX, FACE_CONSTS_FACE_ZMIN,
 };
 
 // commands that should only run on the person who said them
@@ -96,8 +96,8 @@ pub async fn handle_command(
                 FACE_CONSTS_FACE_YMIN | FACE_CONSTS_FACE_YMAX => {
                     let me = unsafe { &*Entities.List[ENTITIES_SELF_ID as usize] };
                     let snap = (me.Yaw + 45.0 / 2.0) / 45.0;
-                    let snap = snap as u32 * 45;
-                    let snap = snap as f32 + 180f32;
+                    let snap = snap.abs().floor() * 45.0;
+                    let snap = snap + 180f32;
 
                     (Vec3::new(0.5, 1.0, 0.5), snap)
                 }

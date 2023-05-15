@@ -1,10 +1,5 @@
-use std::time::Duration;
-
-use tracing::debug;
-
 use super::{encoding, wait_for_message, SHOULD_BLOCK};
 use crate::{
-    async_manager,
     chat::{
         helpers::{
             is_cef_reply_whisper, is_cef_request_whisper, is_incoming_whisper, is_outgoing_whisper,
@@ -13,6 +8,10 @@ use crate::{
     },
     error::{Error, Result, ResultExt},
 };
+use classicube_helpers::async_manager;
+use classicube_helpers::CellGetSet;
+use std::time::Duration;
+use tracing::debug;
 
 pub async fn query_whisper(real_name: &str) -> Result<bool> {
     debug!("query_whisper asking {}", real_name);

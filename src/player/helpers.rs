@@ -7,11 +7,11 @@ use tracing::{debug, warn};
 
 use super::{MediaPlayer, Player, PlayerTrait, VolumeMode, YouTubePlayer};
 use crate::{
-    async_manager,
     entity_manager::{CefEntity, EntityManager},
     error::{bail, Error, Result, ResultExt},
     helpers::vec3_to_vector3,
 };
+use classicube_helpers::async_manager;
 
 pub async fn start_update_loop(entity_id: usize) {
     let result = start_loop(entity_id).await;

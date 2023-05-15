@@ -4,11 +4,11 @@ use futures::{future::RemoteHandle, prelude::*};
 use tracing::{debug, warn};
 
 use crate::{
-    async_manager,
     entity_manager::EntityManager,
     error::{Error, Result},
     player::{Player, PlayerTrait},
 };
+use classicube_helpers::async_manager;
 
 thread_local!(
     static FADING_HANDLE: Cell<Option<RemoteHandle<()>>> = Cell::default();

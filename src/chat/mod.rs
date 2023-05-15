@@ -9,9 +9,11 @@ use std::{
 };
 
 use classicube_helpers::{
+    async_manager,
     entities::{Entities, ENTITY_SELF_ID},
     events::chat::{ChatReceivedEvent, ChatReceivedEventHandler},
     tab_list::{remove_color, TabList},
+    CellGetSet,
 };
 use classicube_sys::{MsgType, MsgType_MSG_TYPE_NORMAL, Server, Vec3};
 use deunicode::deunicode;
@@ -19,7 +21,7 @@ use futures::{future::RemoteHandle, prelude::*};
 use tracing::{debug, info, warn};
 
 pub use self::chat_command::CefChatCommand;
-use crate::{async_manager, chat::helpers::is_continuation_message};
+use crate::chat::helpers::is_continuation_message;
 
 thread_local!(
     static LAST_CHAT: RefCell<Option<String>> = RefCell::new(None);

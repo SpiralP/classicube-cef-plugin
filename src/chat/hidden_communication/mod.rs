@@ -3,21 +3,20 @@ pub mod encoding;
 pub mod global_control;
 pub mod whispers;
 
-use std::{
-    cell::{Cell, RefCell},
-    slice,
-};
-
+pub use self::global_control::CURRENT_MAP_THEME;
+use super::SIMULATING;
+use classicube_helpers::async_manager;
+use classicube_helpers::CellGetSet;
 use classicube_sys::{
     MsgType_MSG_TYPE_NORMAL, Net_Handler, Protocol, Server, UNSAFE_GetString,
     OPCODE__OPCODE_MESSAGE,
 };
 use futures::channel::oneshot;
+use std::{
+    cell::{Cell, RefCell},
+    slice,
+};
 use tracing::debug;
-
-pub use self::global_control::CURRENT_MAP_THEME;
-use super::SIMULATING;
-use crate::async_manager;
 
 thread_local!(
     static SHOULD_BLOCK: Cell<bool> = Cell::new(false);

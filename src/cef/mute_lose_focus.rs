@@ -1,9 +1,8 @@
-use std::cell::{Cell, RefCell};
-
-use classicube_helpers::events::window::FocusChangedEventHandler;
-use classicube_sys::WindowInfo;
-
 use crate::{cef::Cef, options::MUTE_LOSE_FOCUS};
+use classicube_helpers::events::window::FocusChangedEventHandler;
+use classicube_helpers::CellGetSet;
+use classicube_sys::WindowInfo;
+use std::cell::{Cell, RefCell};
 
 thread_local!(
     pub static IS_FOCUSED: Cell<bool> = Cell::new(true);

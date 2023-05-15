@@ -1,10 +1,8 @@
 use serde::Deserialize;
 use tracing::debug;
 
-use crate::{
-    async_manager,
-    error::{bail, Error, Result},
-};
+use crate::error::{bail, Error, Result};
+use classicube_helpers::async_manager;
 
 const API_URL: &str = "https://youtube-api.spiralp.xyz";
 const APP_USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"));
@@ -109,54 +107,28 @@ pub async fn search(query: &str) -> Result<SearchResponse> {
     Ok(result)
 }
 
-#[cfg(test)]
-#[no_mangle]
-static mut Entities: () = ();
-
-#[cfg(test)]
-#[no_mangle]
-static mut Camera: () = ();
-
-macro_rules! test_noop {
-    ($name:tt) => {
-        #[cfg(test)]
-        #[no_mangle]
-        pub extern "C" fn $name() {}
-    };
-}
-
-test_noop!(Entity_SetModel);
-test_noop!(Options_Get);
-test_noop!(Options_Set);
-test_noop!(Chat_Send);
-test_noop!(ScheduledTask_Add);
-test_noop!(Chat_AddOf);
-test_noop!(Chat_Add);
-test_noop!(Gfx_CreateTexture);
-test_noop!(Gfx_DeleteTexture);
-
 #[test]
 fn test_youtube_search() {
     crate::logger::initialize(true, false, false);
-    crate::async_manager::initialize();
+    async_manager::initialize();
 
-    crate::async_manager::spawn_local_on_main_thread(async {
+    async_manager::spawn_local_on_main_thread(async {
         println!("{:#?}", search("nyan").await.unwrap());
     });
 
-    crate::async_manager::run();
-    crate::async_manager::shutdown();
+    async_manager::run();
+    async_manager::shutdown();
 }
 
 #[test]
 fn test_youtube_video() {
     crate::logger::initialize(true, false, false);
-    crate::async_manager::initialize();
+    async_manager::initialize();
 
-    crate::async_manager::spawn_local_on_main_thread(async {
+    async_manager::spawn_local_on_main_thread(async {
         println!("{:#?}", video("QH2-TGUlwu4").await.unwrap());
     });
 
-    crate::async_manager::run();
-    crate::async_manager::shutdown();
+    async_manager::run();
+    async_manager::shutdown();
 }

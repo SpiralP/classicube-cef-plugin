@@ -6,7 +6,6 @@ use classicube_helpers::color::{GOLD, SILVER, TEAL};
 
 use super::helpers::{get_click_coords, move_entity};
 use crate::{
-    async_manager,
     cef::Cef,
     chat::{Chat, PlayerSnapshot},
     entity_manager::{CefEntity, EntityManager},
@@ -14,6 +13,7 @@ use crate::{
     helpers::format_duration,
     player::{PlayerBuilder, PlayerTrait, VolumeMode},
 };
+use classicube_helpers::async_manager;
 
 // static commands not targetted at a specific entity
 pub fn add_commands(app: App<'static, 'static>) -> App<'static, 'static> {

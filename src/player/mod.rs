@@ -151,45 +151,35 @@ impl PlayerTrait for Player {
     }
 
     fn from_input(input: &str) -> Result<Self> {
-        match YouTubePlayer::from_input(input) {
-            Ok(player) => Ok(Player::YouTube(player)),
-            Err(_) => {
-                match DashPlayer::from_input(input) {
-                    Ok(player) => Ok(Player::Dash(player)),
-                    Err(_) => {
-                        match HlsPlayer::from_input(input) {
-                            Ok(player) => Ok(Player::Hls(player)),
-                            Err(_) => {
-                                match MediaPlayer::from_input(input) {
-                                    Ok(player) => Ok(Player::Media(player)),
-                                    Err(_) => {
-                                        match ImagePlayer::from_input(input) {
-                                            Ok(player) => Ok(Player::Image(player)),
-                                            Err(_) => {
-                                                match WebPlayer::from_input(input) {
-                                                    Ok(player) => Ok(Player::Web(player)),
+        if let Ok(player) = YouTubePlayer::from_input(input) {
+            return Ok(Player::YouTube(player));
+        }
 
-                                                    Err(e) => {
-                                                        if input.starts_with("http") {
-                                                            bail!(
-                                                                "no player matched for input: {}",
-                                                                e
-                                                            );
-                                                        } else {
-                                                            // if it didn't start with http, try again with https:// in front
-                                                            Player::from_input(&format!(
-                                                                "https://{input}"
-                                                            ))
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
+        if let Ok(player) = DashPlayer::from_input(input) {
+            return Ok(Player::Dash(player));
+        }
+
+        if let Ok(player) = HlsPlayer::from_input(input) {
+            return Ok(Player::Hls(player));
+        }
+
+        if let Ok(player) = MediaPlayer::from_input(input) {
+            return Ok(Player::Media(player));
+        }
+
+        if let Ok(player) = ImagePlayer::from_input(input) {
+            return Ok(Player::Image(player));
+        }
+
+        match WebPlayer::from_input(input) {
+            Ok(player) => Ok(Player::Web(player)),
+
+            Err(e) => {
+                if input.starts_with("http") {
+                    bail!("no player matched for input: {}", e);
+                } else {
+                    // if it didn't start with http, try again with https:// in front
+                    Player::from_input(&format!("https://{input}"))
                 }
             }
         }

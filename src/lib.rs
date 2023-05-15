@@ -1,4 +1,5 @@
-#![feature(local_key_cell_methods)]
+// TODO remove when with_borrow_mut stabilizes
+#![allow(unstable_name_collisions)]
 #![warn(clippy::pedantic)]
 #![allow(clippy::module_name_repetitions)]
 #![allow(clippy::unused_self)]
@@ -11,7 +12,6 @@
 #![allow(clippy::items_after_statements)]
 
 mod api;
-mod async_manager;
 mod cef;
 mod chat;
 mod entity_manager;
@@ -23,13 +23,11 @@ mod panic;
 mod player;
 mod plugin;
 
-use std::{os::raw::c_int, ptr};
-
-use classicube_helpers::{time, time_silent};
-use classicube_sys::IGameComponent;
-use tracing::debug;
-
 use self::plugin::Plugin;
+use classicube_helpers::{test_noop_fn, test_noop_static, time, time_silent};
+use classicube_sys::IGameComponent;
+use std::{os::raw::c_int, ptr};
+use tracing::debug;
 
 extern "C" fn init() {
     panic::install_hook();
@@ -99,3 +97,16 @@ pub static mut Plugin_Component: IGameComponent = IGameComponent {
     // Next component in linked list of components.
     next: ptr::null_mut(),
 };
+
+test_noop_static!(Entities);
+test_noop_static!(Camera);
+
+test_noop_fn!(Entity_SetModel);
+test_noop_fn!(Options_Get);
+test_noop_fn!(Options_Set);
+test_noop_fn!(ScheduledTask_Add);
+test_noop_fn!(Chat_Add);
+test_noop_fn!(Chat_AddOf);
+test_noop_fn!(Chat_Send);
+test_noop_fn!(Gfx_CreateTexture);
+test_noop_fn!(Gfx_DeleteTexture);

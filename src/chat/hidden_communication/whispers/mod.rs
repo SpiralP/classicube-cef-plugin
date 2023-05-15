@@ -3,13 +3,13 @@ pub mod outgoing;
 
 use std::cell::Cell;
 
-use classicube_helpers::WithInner;
+use classicube_helpers::{async_manager, WithInner};
 use futures::{future::RemoteHandle, prelude::*};
 use rand::seq::SliceRandom;
 use tracing::{debug, warn};
 
 use super::{encoding, wait_for_message, SHOULD_BLOCK};
-use crate::{async_manager, chat::ENTITIES, error::Result};
+use crate::{chat::ENTITIES, error::Result};
 
 thread_local!(
     static LISTENER: Cell<Option<RemoteHandle<()>>> = Cell::default();

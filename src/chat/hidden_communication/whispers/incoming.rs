@@ -1,11 +1,5 @@
-use std::time::Duration;
-
-use classicube_helpers::{shared::FutureShared, WithInner};
-use tracing::{debug, info, warn};
-
 use super::{encoding, wait_for_message, SHOULD_BLOCK};
 use crate::{
-    async_manager,
     chat::{
         helpers::{
             is_cef_reply_whisper, is_cef_request_whisper, is_incoming_whisper, is_outgoing_whisper,
@@ -14,6 +8,11 @@ use crate::{
     },
     error::{Result, ResultExt},
 };
+use classicube_helpers::async_manager;
+use classicube_helpers::CellGetSet;
+use classicube_helpers::{shared::FutureShared, WithInner};
+use std::time::Duration;
+use tracing::{debug, info, warn};
 
 pub async fn listen_loop() {
     loop {

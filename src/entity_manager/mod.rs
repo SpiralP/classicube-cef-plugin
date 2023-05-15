@@ -23,12 +23,12 @@ use tracing::{debug, warn};
 pub use self::{cef_paint::cef_paint_callback, entity::CefEntity, entity_builder::EntityBuilder};
 use self::{context_handler::ContextHandler, model::CefModel};
 use crate::{
-    async_manager,
     cef::{Cef, CefEvent, RustRefBrowser},
     chat::PlayerSnapshot,
     error::{bail, Error, Result},
     player::PlayerTrait,
 };
+use classicube_helpers::async_manager;
 
 pub const TEXTURE_WIDTH: u16 = 2048;
 pub const TEXTURE_HEIGHT: u16 = 2048;

@@ -1,13 +1,5 @@
-use std::{cell::RefCell, collections::HashSet, time::Duration};
-
-use classicube_helpers::{tab_list::remove_color, WithInner};
-use classicube_sys::ENTITIES_SELF_ID;
-use futures::{future::RemoteHandle, prelude::*};
-use tracing::{debug, warn};
-
 use super::{wait_for_message, SHOULD_BLOCK};
 use crate::{
-    async_manager,
     chat::{
         helpers::{is_clients_message, is_clients_start_message},
         hidden_communication::whispers::start_whispering,
@@ -16,6 +8,13 @@ use crate::{
     error::{Result, ResultExt},
     plugin::APP_NAME,
 };
+use classicube_helpers::async_manager;
+use classicube_helpers::CellGetSet;
+use classicube_helpers::{tab_list::remove_color, WithInner};
+use classicube_sys::ENTITIES_SELF_ID;
+use futures::{future::RemoteHandle, prelude::*};
+use std::{cell::RefCell, collections::HashSet, time::Duration};
+use tracing::{debug, warn};
 
 thread_local!(
     static CURRENT_RUNNING: RefCell<Option<RemoteHandle<()>>> = RefCell::default();
@@ -202,8 +201,7 @@ async fn process_clients_response(messages: Vec<String>) -> Result<()> {
 #[test]
 fn test_get_names_with_cef() {
     let lines = vec![format!(
-        "ClassiCube 1.2.4 + {} +cs3.5.15 + Ponies v2.1: name",
-        APP_NAME
+        "ClassiCube 1.2.4 + {APP_NAME} +cs3.5.15 + Ponies v2.1: name",
     )];
 
     let r = get_names_with_cef(&lines).unwrap();
@@ -213,7 +211,7 @@ fn test_get_names_with_cef() {
 #[test]
 fn test_get_clients() {
     crate::logger::initialize(true, false, false);
-    crate::async_manager::initialize();
+    async_manager::initialize();
 
     async_manager::spawn_local_on_main_thread(async {
         let r = get_clients().await.unwrap();
@@ -250,11 +248,10 @@ fn test_get_clients() {
         assert_eq!(
             super::handle_chat_message(message),
             should_block,
-            "{:?}",
-            message
+            "{message:?}"
         );
     }
 
     async_manager::run();
-    crate::async_manager::shutdown();
+    async_manager::shutdown();
 }

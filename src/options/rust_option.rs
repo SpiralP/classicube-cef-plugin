@@ -1,6 +1,6 @@
-use std::{cell::Cell, fmt::Display, marker::PhantomData, str::FromStr, thread::LocalKey};
-
 use crate::error::{Result, ResultExt};
+use classicube_helpers::CellGetSet;
+use std::{cell::Cell, fmt::Display, marker::PhantomData, str::FromStr, thread::LocalKey};
 
 pub struct RustOption<T>
 where

@@ -20,8 +20,8 @@ pub extern "C" fn cef_paint_callback(
         if entity.get_scale() != 0.0 {
             let part = Bitmap {
                 scan0: new_pixels as *mut _,
-                width: new_width as i32,
-                height: new_height as i32,
+                width: new_width,
+                height: new_height,
             };
 
             entity.update_texture(part);

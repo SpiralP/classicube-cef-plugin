@@ -90,8 +90,8 @@ pub async fn handle_command(
             // the block's hit face
             let (mult, yaw) = match trace.Closest as FACE_CONSTS {
                 FACE_CONSTS_FACE_XMIN => (Vec3::new(-0.01, 0.0, 0.0), 270.0),
-                FACE_CONSTS_FACE_XMAX => (Vec3::new(1.01, 0.0, 0.0), 90.0),
-                FACE_CONSTS_FACE_ZMIN => (Vec3::new(0.0, 0.0, -0.01), 0.0),
+                FACE_CONSTS_FACE_XMAX => (Vec3::new(1.01, 0.0, 1.0), 90.0),
+                FACE_CONSTS_FACE_ZMIN => (Vec3::new(1.0, 0.0, -0.01), 0.0),
                 FACE_CONSTS_FACE_ZMAX => (Vec3::new(0.0, 0.0, 1.01), 180.0),
                 FACE_CONSTS_FACE_YMIN | FACE_CONSTS_FACE_YMAX => {
                     let me = unsafe { &*Entities.List[ENTITIES_SELF_ID as usize] };

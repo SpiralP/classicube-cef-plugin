@@ -14,7 +14,7 @@ async-recursion = "1"
 backtrace = "0.3"
 base64 = "0.21"
 bincode = "1"
-clap = { git = "https://github.com/SpiralP/clap-cc.git" }
+clap = { git = "https://github.com/SpiralP/rust-clap-classicube.git", features = ["derive"] }
 classicube-helpers = { git = "https://github.com/SpiralP/rust-classicube-helpers.git" }
 classicube-sys = { git = "https://github.com/SpiralP/rust-classicube-sys.git" }
 deunicode = "1"

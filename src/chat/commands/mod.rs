@@ -1,62 +1,46 @@
+mod global;
 mod helpers;
-mod options_commands;
-mod screen_commands;
-mod self_commands;
-mod static_commands;
-
-use std::cell::RefCell;
-
-use clap::{App, AppSettings, Arg, ArgMatches};
-use classicube_helpers::WithInner;
-use tracing::{debug, warn};
+mod local;
+mod options;
+mod screen;
 
 use super::{Chat, PlayerSnapshot};
-use crate::error::{bail, Error, Result};
+use crate::error::{Error, Result};
+use clap::{Parser, Subcommand};
 use classicube_helpers::async_manager;
+use tracing::{debug, warn};
 
-thread_local!(
-    static COMMAND_APP: RefCell<Option<App<'static, 'static>>> = RefCell::default();
-);
+/// Cef video player
+#[derive(Parser, Debug)]
+#[command(
+    author,
+    version,
+    subcommand_required(true),
+    arg_required_else_help(true),
+    disable_version_flag(true)
+)]
+pub struct CefArgs {
+    /// Run command in background/spawn it
+    #[arg(short, long)]
+    background: bool,
 
-pub fn initialize() {
-    let app = App::new("cef")
-        .setting(AppSettings::SubcommandRequiredElseHelp)
-        .global_setting(AppSettings::DisableVersion)
-        .global_setting(AppSettings::ColoredHelp)
-        .arg(
-            Arg::with_name("background")
-                .long("background")
-                .short("b")
-                .help("Run task in background/spawn it"),
-        );
-
-    #[cfg(not(test))]
-    let app = app.global_setting(AppSettings::ColorAlways);
-
-    #[cfg(test)]
-    let app = app.global_setting(AppSettings::ColorNever);
-
-    let app = static_commands::add_commands(app);
-    let app = self_commands::add_commands(app);
-    let app = options_commands::add_commands(app);
-    let app = screen_commands::add_commands(app);
-
-    COMMAND_APP.with(|cell| {
-        let cell = &mut *cell.borrow_mut();
-        *cell = Some(app);
-    });
+    #[command(subcommand)]
+    sub: CefArgsSub,
 }
 
-pub fn get_matches(args: &[String]) -> Result<ArgMatches<'static>> {
-    // we MUST clone here or we get a strange bug where reusing the same App gives different output
-    // for example doing "cef -- help" then "cef help" will give
-    //
-    // error: The subcommand 'help' wasn't recognized
-    //        Did you mean 'help'?
-    //
-    Ok(COMMAND_APP
-        .with_inner_mut(|app| app.clone().get_matches_from_safe(args))
-        .unwrap()?)
+#[derive(Subcommand, Debug)]
+pub enum CefArgsSub {
+    #[command(flatten)]
+    Options(options::Commands),
+
+    #[command(flatten)]
+    Local(local::Commands),
+
+    #[command(flatten)]
+    Global(global::Commands),
+
+    #[command(flatten)]
+    Screen(screen::Commands),
 }
 
 #[tracing::instrument(name = "commands::run", fields(player, is_self, show_errors, args = args.join(" ").as_str()))]
@@ -70,23 +54,32 @@ pub async fn run(
 
     debug!("command {:?}", args);
 
-    match get_matches(&args) {
-        Ok(matches) => {
-            let background = matches.is_present("background");
-
+    match CefArgs::try_parse_from(args) {
+        Ok(args) => {
             let fut = async move {
-                if static_commands::handle_command(&player, &matches).await?
-                    || (is_self && self_commands::handle_command(&player, &matches).await?)
-                    || (is_self && options_commands::handle_command(&player, &matches).await?)
-                    || screen_commands::handle_command(&player, &matches).await?
-                {
-                    Ok::<_, Error>(())
-                } else {
-                    bail!("command not handled? {:?}", args);
+                match args.sub {
+                    CefArgsSub::Global(args) => {
+                        global::run(player, args).await?;
+                    }
+                    CefArgsSub::Local(args) => {
+                        if is_self {
+                            local::run(player, args).await?;
+                        }
+                    }
+                    CefArgsSub::Options(args) => {
+                        if is_self {
+                            options::run(args).await?;
+                        }
+                    }
+                    CefArgsSub::Screen(args) => {
+                        screen::run(player, args).await?;
+                    }
                 }
+
+                Ok::<_, Error>(())
             };
 
-            if background {
+            if args.background {
                 async_manager::spawn_local_on_main_thread(async move {
                     if let Err(e) = fut.await {
                         warn!("backgrounded command: {}", e);
@@ -104,7 +97,6 @@ pub async fn run(
                 chat_print_lines(&format!("{e}"));
             }
 
-            // TODO
             // don't error here because we already printed the error
         }
     }
@@ -152,12 +144,11 @@ fn get_last_color(text: &str) -> Option<char> {
 fn test_commands() {
     crate::logger::initialize(true, true, false);
     async_manager::initialize();
-    self::initialize();
 
     async_manager::spawn_local_on_main_thread(async {
         run(
             unsafe { std::mem::zeroed() },
-            vec!["--".into(), "help".into()],
+            "-- help".split(' ').map(str::to_string).collect(),
             true,
             true,
         )
@@ -166,7 +157,19 @@ fn test_commands() {
 
         run(
             unsafe { std::mem::zeroed() },
-            vec!["help".into()],
+            "-b".split(' ').map(str::to_string).collect(),
+            true,
+            true,
+        )
+        .await
+        .unwrap();
+
+        run(
+            unsafe { std::mem::zeroed() },
+            "help config mute-lose-focus"
+                .split(' ')
+                .map(str::to_string)
+                .collect(),
             true,
             true,
         )

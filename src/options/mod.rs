@@ -1,12 +1,11 @@
 mod rust_option;
 
-use std::{cell::Cell, ffi::CString, os::raw::c_char};
-
-use classicube_sys::{cc_string, Options_Get, Options_Set, OwnedString, STRING_SIZE};
-
 use self::rust_option::RustOption;
+use classicube_sys::{cc_string, Options_Get, Options_Set, OwnedString, STRING_SIZE};
+use std::cell::Cell;
+use std::{ffi::CString, os::raw::c_char};
 
-pub fn get<S: Into<Vec<u8>>>(key: S) -> Option<String> {
+fn get<S: Into<Vec<u8>>>(key: S) -> Option<String> {
     let c_key = CString::new(key).unwrap();
     let c_default = CString::new("").unwrap();
 
@@ -30,7 +29,7 @@ pub fn get<S: Into<Vec<u8>>>(key: S) -> Option<String> {
     }
 }
 
-pub fn set<S: Into<Vec<u8>>>(key: S, value: String) {
+fn set<S: Into<Vec<u8>>>(key: S, value: String) {
     let c_key = CString::new(key).unwrap();
 
     let cc_string_value = OwnedString::new(value);
@@ -50,9 +49,9 @@ macro_rules! option {
     }};
 }
 
-pub const MUTE_LOSE_FOCUS: RustOption<bool> = option!("cef-mute-lose-focus", "true", bool);
-pub const AUTOPLAY_MAP_THEMES: RustOption<bool> = option!("cef-autoplay-map-themes", "true", bool);
-pub const VOLUME: RustOption<f32> = option!("cef-volume", "1.0", f32);
-pub const MAP_THEME_VOLUME: RustOption<f32> = option!("cef-map-theme-volume", "0.4", f32);
-pub const FRAME_RATE: RustOption<u16> = option!("cef-frame-rate", "30", u16);
-pub const SUBTITLES: RustOption<bool> = option!("cef-subtitles", "true", bool);
+pub const MUTE_LOSE_FOCUS: RustOption<bool> = option!("cef-mute-lose-focus", true, bool);
+pub const AUTOPLAY_MAP_THEMES: RustOption<bool> = option!("cef-autoplay-map-themes", true, bool);
+pub const VOLUME: RustOption<f32> = option!("cef-volume", 1.0, f32);
+pub const MAP_THEME_VOLUME: RustOption<f32> = option!("cef-map-theme-volume", 0.4, f32);
+pub const FRAME_RATE: RustOption<u16> = option!("cef-frame-rate", 30, u16);
+pub const SUBTITLES: RustOption<bool> = option!("cef-subtitles", true, bool);

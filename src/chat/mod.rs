@@ -82,8 +82,6 @@ impl Chat {
         });
 
         hidden_communication::initialize();
-
-        commands::initialize();
     }
 
     pub fn on_new_map(&mut self) {

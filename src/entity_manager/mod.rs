@@ -6,29 +6,26 @@ mod helpers;
 mod model;
 mod render_model_hook;
 
-use std::{
-    cell::{Cell, RefCell},
-    collections::HashMap,
-    os::raw::c_int,
+pub use self::{cef_paint::cef_paint_callback, entity::CefEntity, entity_builder::EntityBuilder};
+use self::{context_handler::ContextHandler, model::CefModel};
+use crate::{
+    cef::{Cef, CefEvent, RustRefBrowser},
+    error::{bail, Error, Result},
+    player::PlayerTrait,
 };
-
+use classicube_helpers::async_manager;
 use classicube_sys::Vec3;
 use futures::{
     future::RemoteHandle,
     prelude::*,
     stream::{FuturesUnordered, StreamExt},
 };
-use tracing::{debug, warn};
-
-pub use self::{cef_paint::cef_paint_callback, entity::CefEntity, entity_builder::EntityBuilder};
-use self::{context_handler::ContextHandler, model::CefModel};
-use crate::{
-    cef::{Cef, CefEvent, RustRefBrowser},
-    chat::PlayerSnapshot,
-    error::{bail, Error, Result},
-    player::PlayerTrait,
+use std::{
+    cell::{Cell, RefCell},
+    collections::HashMap,
+    os::raw::c_int,
 };
-use classicube_helpers::async_manager;
+use tracing::{debug, warn};
 
 pub const TEXTURE_WIDTH: u16 = 2048;
 pub const TEXTURE_HEIGHT: u16 = 2048;
@@ -408,15 +405,5 @@ impl TargetEntity for Vec3 {
 impl TargetEntity for Box<dyn TargetEntity> {
     fn get_entity_id(&self) -> Result<usize> {
         self.as_ref().get_entity_id()
-    }
-}
-
-impl<'a> TargetEntity for (&'a clap::ArgMatches<'_>, &'a PlayerSnapshot) {
-    fn get_entity_id(&self) -> Result<usize> {
-        let &(matches, player) = self;
-        matches.value_of("name").map_or_else(
-            || player.eye_position.get_entity_id(),
-            |name| name.get_entity_id(),
-        )
     }
 }

@@ -1,6 +1,6 @@
 use crate::error::{Result, ResultExt};
 use classicube_helpers::CellGetSet;
-use std::{cell::Cell, fmt::Display, marker::PhantomData, str::FromStr, thread::LocalKey};
+use std::{cell::Cell, fmt::Display, str::FromStr, thread::LocalKey};
 
 pub struct RustOption<T>
 where
@@ -9,12 +9,9 @@ where
 {
     key: &'static str,
 
-    // has to be static str because we use default() in the static clap app
-    default: &'static str,
+    default: T,
 
     cache: LocalKey<Cell<Option<T>>>,
-
-    _phantom: PhantomData<T>,
 }
 
 impl<T> RustOption<T>
@@ -23,16 +20,11 @@ where
     Self: 'static,
     <T as FromStr>::Err: std::error::Error + Send + 'static,
 {
-    pub const fn new(
-        key: &'static str,
-        default: &'static str,
-        cache: LocalKey<Cell<Option<T>>>,
-    ) -> Self {
+    pub const fn new(key: &'static str, default: T, cache: LocalKey<Cell<Option<T>>>) -> Self {
         Self {
             key,
             default,
             cache,
-            _phantom: PhantomData,
         }
     }
 
@@ -46,8 +38,6 @@ where
                     .chain_err(|| format!("couldn't parse options key {}", self.key))?
             } else {
                 self.default
-                    .parse()
-                    .chain_err(|| format!("couldn't parse default {}", self.key))?
             };
             self.cache.set(Some(value));
 
@@ -60,7 +50,7 @@ where
         self.cache.set(None);
     }
 
-    pub fn default(&'static self) -> &'static str {
+    pub const fn default(&'static self) -> T {
         self.default
     }
 }

@@ -284,9 +284,6 @@ elseif(OS_MAC)
 endif()
 
 if(OS_LINUX)
-  # Set rpath so that libraries can be placed next to the executable.
-  set_target_properties(cef_interface PROPERTIES INSTALL_RPATH "$ORIGIN")
-  set_target_properties(cef_interface PROPERTIES BUILD_WITH_INSTALL_RPATH TRUE)
   set_target_properties(cef_interface PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CEF_TARGET_OUT_DIR})
 endif()
 
@@ -318,8 +315,8 @@ endif()
 
 
 if(OS_LINUX)
-  # Set rpath so that libraries can be placed next to the executable.
-  set_target_properties(cef_exe PROPERTIES INSTALL_RPATH "$ORIGIN")
+  # Set rpath so that the cef bin can be see where the libraries are.
+  set_target_properties(cef_exe PROPERTIES INSTALL_RPATH "$ORIGIN/../cef/cef_binary")
   set_target_properties(cef_exe PROPERTIES BUILD_WITH_INSTALL_RPATH TRUE)
   set_target_properties(cef_exe PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CEF_TARGET_OUT_DIR})
 endif()

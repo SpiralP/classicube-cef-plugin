@@ -8,8 +8,10 @@
     let
       inherit (nixpkgs) lib;
 
-      makePackage = (system: dev:
+      makePackage = (system: dev: cef_debug:
         let
+          cef_profile = if cef_debug then "Debug" else "Release";
+
           pkgs = import nixpkgs {
             inherit system;
             overlays = [ nixpkgs-mozilla.overlays.rust ];
@@ -29,7 +31,7 @@
               rustc = rust;
             };
         in
-        rustPlatform.buildRustPackage {
+        rustPlatform.buildRustPackage rec {
           name = "classicube-cef-plugin";
           src =
             let
@@ -62,9 +64,9 @@
               };
             in
             pkgs.runCommand "src" { } ''
-              cp -a ${code} $out \
-                && chmod +w $out/cef_interface \
-                && ln -s ${cef_binary}/ $out/cef_interface/cef_binary
+              cp -va ${code} $out
+              chmod u+w $out/cef_interface
+              cp -va ${cef_binary} $out/cef_interface/cef_binary
             '';
 
           cargoLock = {
@@ -95,6 +97,7 @@
             xorg.libXrandr
             xorg.libXext
             xorg.libXfixes
+            xorg.libX11
             mesa
             expat
             xorg.libxcb
@@ -108,25 +111,61 @@
             gdk-pixbuf
             gtk3
             openssl
+
+            # needed to fix "FATAL:udev_loader.cc(37)] Check failed: false."
+            libudev0-shim
           ];
 
-          postBuild = with pkgs; ''
-            mkdir -p $out/bin \
-              && cp -va ./target/${rust.toRustTargetSpec stdenv.hostPlatform}/release/build/classicube-cef-plugin-*/out/cef $out/bin/cef
+          postPatch = with pkgs; if cef_debug then ''
+            substituteInPlace build.rs \
+              --replace 'let profile = "Release";' 'let profile = "Debug";'
+          '' else "";
+
+          preBuild = ''
+            chmod -c u+w cef_interface/cef_binary/${cef_profile}/*.so
+            patchelf \
+              --add-rpath "${lib.makeLibraryPath buildInputs}" \
+              cef_interface/cef_binary/${cef_profile}/*.so
           '';
 
-          # TODO need to `patchelf --set-interpreter /lib64/ld-linux-x86-64.so.2 cef`
-          # for a normal linux
+          dontUseCargoParallelTests = true;
+          checkPhase = ''
+            LD_LIBRARY_PATH=./cef_interface/cef_binary/${cef_profile} cargoCheckHook
+          '';
+          checkFlags = [
+            # skip tests that require internet
+            "--skip=api::youtube::test_youtube_search"
+            "--skip=api::youtube::test_youtube_video"
+          ];
 
-          # TODO ld: warning: libgobject-2.0.so.0, needed by cef_interface/cef_binary/Release/libcef.so, not found
-          doCheck = false;
+          postInstall = with pkgs; ''
+            install -Dm755 ./target/${rust.toRustTargetSpec stdenv.hostPlatform}/release/build/classicube-cef-plugin-*/out/cef -t $out/bin
+          '';
+
+          postFixup = with pkgs; ''
+            mv -v $out/lib $out/plugins
+            mv -v $out/bin $out/cef
+
+            mkdir -vp $out/cef/cef_binary
+            cp -va cef_interface/cef_binary/${cef_profile}/* cef_interface/cef_binary/Resources/* $out/cef/cef_binary/
+
+            patchelf --debug \
+              --add-rpath "\$ORIGIN/../cef/cef_binary" \
+              $out/plugins/libclassicube_cef_plugin.so \
+              $out/cef/cef
+          '';
+
+          hardeningDisable = if cef_debug then [ "fortify" ] else [ ];
         }
       );
     in
     builtins.foldl' lib.recursiveUpdate { } (builtins.map
       (system: {
-        devShells.${system}.default = makePackage system true;
-        packages.${system}.default = makePackage system false;
+        devShells.${system}.default = makePackage system true false;
+        packages.${system} = {
+          default = makePackage system false false;
+          debug = makePackage system false true;
+        };
       })
       lib.systems.flakeExposed);
 }

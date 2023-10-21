@@ -11,7 +11,6 @@ use crate::{
     player::{PlayerBuilder, PlayerTrait, VolumeMode},
 };
 use classicube_helpers::async_manager;
-use classicube_helpers::CellGetSet;
 use classicube_sys::ENTITIES_SELF_ID;
 use futures::{channel::mpsc, future::RemoteHandle, prelude::*};
 use std::{
@@ -171,7 +170,7 @@ pub async fn listen_loop() {
 
             async_manager::spawn_local_on_main_thread(async move {
                 match handle_map_theme_url(full_input).await {
-                    Ok(_) => {}
+                    Ok(()) => {}
 
                     Err(e) => {
                         warn!("map_theme listen_loop: {}", e);

@@ -1,5 +1,3 @@
-// TODO remove when with_borrow_mut stabilizes
-#![allow(unstable_name_collisions)]
 #![warn(clippy::pedantic)]
 #![allow(clippy::module_name_repetitions)]
 #![allow(clippy::unused_self)]

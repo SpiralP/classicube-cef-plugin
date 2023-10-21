@@ -13,7 +13,6 @@ use classicube_helpers::{
     entities::{Entities, ENTITY_SELF_ID},
     events::chat::{ChatReceivedEvent, ChatReceivedEventHandler},
     tab_list::{remove_color, TabList},
-    CellGetSet,
 };
 use classicube_sys::{MsgType, MsgType_MSG_TYPE_NORMAL, Server, Vec3};
 use deunicode::deunicode;

@@ -1,5 +1,4 @@
 use super::bindings::{FFIRustV8Response, RustRefBrowser};
-use classicube_helpers::CellGetSet;
 use futures::channel::oneshot;
 use std::{
     cell::{Cell, RefCell},

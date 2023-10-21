@@ -9,7 +9,6 @@ use crate::{
     error::{Error, Result, ResultExt},
 };
 use classicube_helpers::async_manager;
-use classicube_helpers::CellGetSet;
 use std::time::Duration;
 use tracing::debug;
 

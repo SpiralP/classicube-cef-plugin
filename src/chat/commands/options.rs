@@ -9,7 +9,6 @@ use crate::{
     player::PlayerTrait,
 };
 use clap::Subcommand;
-use classicube_helpers::CellGetSet;
 
 #[derive(Debug, Subcommand)]
 pub enum Commands {

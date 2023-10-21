@@ -9,7 +9,6 @@ use crate::{
     error::{Result, ResultExt},
 };
 use classicube_helpers::async_manager;
-use classicube_helpers::CellGetSet;
 use classicube_helpers::{shared::FutureShared, WithInner};
 use std::time::Duration;
 use tracing::{debug, info, warn};
@@ -26,7 +25,7 @@ pub async fn listen_loop() {
 
             async_manager::spawn_local_on_main_thread(async move {
                 match handle_request(message).await {
-                    Ok(_) => {}
+                    Ok(()) => {}
 
                     Err(e) => {
                         warn!("whisper handle_request: {}", e);

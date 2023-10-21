@@ -9,7 +9,6 @@ use crate::{
     plugin::APP_NAME,
 };
 use classicube_helpers::async_manager;
-use classicube_helpers::CellGetSet;
 use classicube_helpers::{tab_list::remove_color, WithInner};
 use classicube_sys::ENTITIES_SELF_ID;
 use futures::{future::RemoteHandle, prelude::*};

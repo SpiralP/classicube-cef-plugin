@@ -29,13 +29,13 @@ A ClassiCube plugin that allows placing web browser screens in-game!
 
 ## Install (Windows)
 
-- Copy these files to the same folder as the `ClassiCube` executable:
-  - All files in `./cef_binary/Release/`
-  - All files in `./cef_binary/Resources/`
-  - Our `cef.exe` file
-    - Rename this to `cef.exe` if it wasn't already
+In a directory with the `ClassiCube` executable:
 
-* Copy our plugin `classicube_cef_plugin.dll` to `./plugins/`
+- Copy:
+  - All files in `./cef_binary/Release/` and `./cef_binary/Resources/` to `./` (same folder as ClassiCube.exe)
+  - The `cef.exe` file to `./cef/cef.exe`
+
+* Copy our plugin `classicube_cef_plugin.dll` to `./plugins/classicube_cef_plugin.dll`
 
 ## Build (Linux)
 
@@ -50,10 +50,10 @@ A ClassiCube plugin that allows placing web browser screens in-game!
 In a directory with the `ClassiCube` executable:
 
 - Copy:
-  - All files in `./cef_binary/Release/` and `./cef_binary/Resources/` to `./cef/cef_binary/`
-  - The `cef` file into `./cef/`
+  - All files in `./cef_binary/Release/*` and `./cef_binary/Resources/*` to `./cef/cef_binary/`
+  - The `cef` file to `./cef/cef`
 
-* Copy our plugin `libclassicube_cef_plugin.so` to `./plugins/`
+* Copy our plugin `libclassicube_cef_plugin.so` to `./plugins/libclassicube_cef_plugin.so`
 
 ## Build and Install With ([Nix](https://nixos.org/))
 

@@ -14,7 +14,9 @@ async-recursion = "1"
 backtrace = "0.3"
 base64 = "0.21"
 bincode = "1"
-clap = { git = "https://github.com/SpiralP/rust-clap-classicube.git", features = ["derive"] }
+clap = { git = "https://github.com/SpiralP/rust-clap-classicube.git", features = [
+    "derive",
+] }
 classicube-helpers = { git = "https://github.com/SpiralP/rust-classicube-helpers.git" }
 classicube-sys = { git = "https://github.com/SpiralP/rust-classicube-sys.git" }
 deunicode = "1"
@@ -38,7 +40,7 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 url = "2"
 
 [build-dependencies]
-bindgen = "0.65"
+bindgen = "0.68"
 cmake = "0.1"
 
 [features]

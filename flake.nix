@@ -1,6 +1,6 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-22.11";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-23.05";
     nixpkgs-mozilla.url = "github:mozilla/nixpkgs-mozilla/master";
   };
 
@@ -18,8 +18,8 @@
           rustPlatform =
             let
               rust = (pkgs.rustChannelOf {
-                channel = "1.69.0";
-                sha256 = "sha256-eMJethw5ZLrJHmoN2/l0bIyQjoTX1NsvalWSscTixpI=";
+                channel = "1.73.0";
+                sha256 = "sha256-rLP8+fTxnPHoR96ZJiCa/5Ans1OojI7MLsmSqR2ip8o=";
               }).rust.override {
                 extensions = if dev then [ "rust-src" ] else [ ];
               };
@@ -34,8 +34,8 @@
           src =
             let
               cef_binary = pkgs.fetchzip {
-                url = "https://cef-builds.spotifycdn.com/cef_binary_112.3.0%2Bgb09c4ca%2Bchromium-112.0.5615.165_linux64.tar.bz2";
-                sha256 = "sha256-0Ehf8u9aFtl9i7Rt7+Qtm7UUIBO15VaRbUs3cxtg3kk=";
+                url = "https://cef-builds.spotifycdn.com/cef_binary_117.2.5%2Bgda4c36a%2Bchromium-117.0.5938.152_linux64.tar.bz2";
+                hash = "sha256-9+4XRnbRbI22VMa/7CftXLbFQHHsKgDX4kJS7TCoR94=";
               };
 
               code = lib.cleanSourceWith rec {
@@ -71,9 +71,9 @@
             lockFile = ./Cargo.lock;
             outputHashes = {
               "async-dispatcher-0.1.0" = "sha256-rqpQ176/PnI9vvPrwQvK3GJbryjb3hHkb+o1RyCZ3Vg=";
-              "clap-4.2.7" = "sha256-vbbpD7skFdtTXI/Dhj92Gi5l33qZTLZecFr5b0knnqQ=";
-              "classicube-helpers-2.0.0+classicube.1.3.5" = "sha256-E9ORHAO8rGVCMXTq2TvsQwrSV5H5WF3bAj5+OJ2f7jA=";
-              "classicube-sys-2.0.0+classicube.1.3.5" = "sha256-VXHyJwF8cdX3PlTn7xgbviGg3D5bsRRh375I+DRpE4g=";
+              "clap-4.2.7" = "sha256-Ijwpk9tDIxQVYPE8t4wI1RS9CyhxB/UC5MVD9jnsXGc=";
+              "classicube-helpers-2.0.0+classicube.1.3.6" = "sha256-yUl0B0E8P618S0662u70zUGRAG2bETVmb4G7Tbv+ZP4=";
+              "classicube-sys-3.0.0+classicube.1.3.6" = "sha256-algb9pgkJdXaswcB6m8DITzORGtOQkSgkhVvwgNXAhI=";
             };
           };
 
@@ -103,6 +103,7 @@
             pango
             cairo
             alsa-lib
+            nspr
 
             gdk-pixbuf
             gtk3

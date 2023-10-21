@@ -284,7 +284,7 @@ extern "C" int cef_interface_browser_execute_javascript_on_frame(
     CefBrowser* browser,
     const char* frame_name,
     const char* code) {
-  std::vector<int64> ids;
+  std::vector<int64_t> ids;
   browser->GetFrameIdentifiers(ids);
 
   for (auto id : ids) {
@@ -327,7 +327,7 @@ extern "C" int cef_interface_browser_eval_javascript_on_frame(
     const char* frame_name,
     uint64_t task_id,
     const char* code) {
-  std::vector<int64> ids;
+  std::vector<int64_t> ids;
   browser->GetFrameIdentifiers(ids);
 
   for (auto id : ids) {

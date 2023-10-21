@@ -118,6 +118,7 @@
           # TODO need to `patchelf --set-interpreter /lib64/ld-linux-x86-64.so.2 cef`
           # for a normal linux
 
+          # TODO ld: warning: libgobject-2.0.so.0, needed by cef_interface/cef_binary/Release/libcef.so, not found
           doCheck = false;
         }
       );

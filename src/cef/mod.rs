@@ -9,6 +9,7 @@ use futures::stream::{FuturesUnordered, StreamExt};
 use std::{
     cell::{Cell, RefCell},
     collections::HashMap,
+    mem,
     os::raw::c_int,
 };
 use tokio::sync::broadcast;
@@ -262,7 +263,7 @@ impl Cef {
         // must clone here or we will recurse into `close` and borrow multiple times
         let browsers: HashMap<c_int, RustRefBrowser> = BROWSERS.with(|cell| {
             let browsers = &mut *cell.borrow_mut();
-            browsers.drain().collect()
+            mem::take(browsers)
         });
 
         let mut ids: FuturesUnordered<_> = browsers

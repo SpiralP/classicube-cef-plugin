@@ -1,6 +1,6 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-23.05";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-23.11";
     nixpkgs-mozilla.url = "github:mozilla/nixpkgs-mozilla/master";
   };
 
@@ -20,8 +20,8 @@
           rustPlatform =
             let
               rust = (pkgs.rustChannelOf {
-                channel = "1.73.0";
-                sha256 = "sha256-rLP8+fTxnPHoR96ZJiCa/5Ans1OojI7MLsmSqR2ip8o=";
+                channel = "1.75.0";
+                sha256 = "sha256-SXRtAuO4IqNOQq+nLbrsDFbVk+3aVA8NNpSZsKlVH/8=";
               }).rust.override {
                 extensions = if dev then [ "rust-src" ] else [ ];
               };
@@ -36,8 +36,14 @@
           src =
             let
               cef_binary = pkgs.fetchzip {
-                url = "https://cef-builds.spotifycdn.com/cef_binary_117.2.5%2Bgda4c36a%2Bchromium-117.0.5938.152_linux64.tar.bz2";
-                hash = "sha256-9+4XRnbRbI22VMa/7CftXLbFQHHsKgDX4kJS7TCoR94=";
+                url =
+                  let
+                    version = builtins.replaceStrings
+                      [ "+" ] [ "%2B" ]
+                      "121.3.3+gc6b2e4d+chromium-121.0.6167.86";
+                  in
+                  "https://cef-builds.spotifycdn.com/cef_binary_${version}_linux64.tar.bz2";
+                hash = "sha256-Eed/6Zr11A0aJwQ4IH3u/NofFncUIY0WCPlncSouAOc=";
               };
 
               code = lib.cleanSourceWith rec {
@@ -73,7 +79,7 @@
             lockFile = ./Cargo.lock;
             outputHashes = {
               "async-dispatcher-0.1.0" = "sha256-rqpQ176/PnI9vvPrwQvK3GJbryjb3hHkb+o1RyCZ3Vg=";
-              "clap-4.2.7" = "sha256-Ijwpk9tDIxQVYPE8t4wI1RS9CyhxB/UC5MVD9jnsXGc=";
+              "clap-4.2.7" = "sha256-P8Thh4miozjn/0/EMQzB91ZsEVucZAg8XwMDf6D4vP8=";
               "classicube-helpers-2.0.0+classicube.1.3.6" = "sha256-yUl0B0E8P618S0662u70zUGRAG2bETVmb4G7Tbv+ZP4=";
               "classicube-sys-3.0.0+classicube.1.3.6" = "sha256-qz42+MfU0q1w6jtvyY5YDcMWtRVQ5ltlv/JkPcKy7t8=";
             };
@@ -85,22 +91,22 @@
             rustPlatform.bindgenHook
           ];
 
-          buildInputs = with pkgs; [
+          buildInputs = with pkgs; with xorg; [
             # things found on libcef.so that were missing
             glib
             nss
             at-spi2-atk
             cups
             libdrm
-            xorg.libXcomposite
-            xorg.libXdamage
-            xorg.libXrandr
-            xorg.libXext
-            xorg.libXfixes
-            xorg.libX11
+            libXcomposite
+            libXdamage
+            libXrandr
+            libXext
+            libXfixes
+            libX11
             mesa
             expat
-            xorg.libxcb
+            libxcb
             libxkbcommon
             dbus
             pango

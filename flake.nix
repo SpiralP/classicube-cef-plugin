@@ -132,11 +132,6 @@
           checkPhase = ''
             LD_LIBRARY_PATH=./cef_interface/cef_binary/${cef_profile} cargoCheckHook
           '';
-          checkFlags = [
-            # skip tests that require internet
-            "--skip=api::youtube::test_youtube_search"
-            "--skip=api::youtube::test_youtube_video"
-          ];
 
           postInstall = with pkgs; ''
             install -Dm755 ./target/${rust.toRustTargetSpec stdenv.hostPlatform}/release/build/classicube-cef-plugin-*/out/cef -t $out/bin

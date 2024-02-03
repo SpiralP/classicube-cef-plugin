@@ -93,7 +93,7 @@ fn main() {
         )
         // Tell cargo to invalidate the built crate whenever any of the
         // included header files changed.
-        .parse_callbacks(Box::new(bindgen::CargoCallbacks))
+        .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
         .allowlist_function("cef_interface_.*")
         .allowlist_type("RustSchemeReturn")
         .rustified_enum("FFIRustV8ValueTag")

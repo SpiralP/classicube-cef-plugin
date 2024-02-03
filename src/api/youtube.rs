@@ -108,6 +108,7 @@ pub async fn search(query: &str) -> Result<SearchResponse> {
 }
 
 #[test]
+#[ignore]
 fn test_youtube_search() {
     crate::logger::initialize(true, false, false);
     async_manager::initialize();
@@ -121,6 +122,7 @@ fn test_youtube_search() {
 }
 
 #[test]
+#[ignore]
 fn test_youtube_video() {
     crate::logger::initialize(true, false, false);
     async_manager::initialize();

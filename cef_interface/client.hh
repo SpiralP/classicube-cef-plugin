@@ -1,6 +1,7 @@
 #pragma once
 
 #include <include/cef_client.h>
+#include <include/cef_version.h>
 #include <include/wrapper/cef_helpers.h>
 
 #include <unordered_map>
@@ -112,12 +113,22 @@ class MyClient : public CefClient,
                   bool& suppress_message) override;
 
   // CefDialogHandler methods:
+#if CEF_VERSION_MAJOR > 101
   bool OnFileDialog(CefRefPtr<CefBrowser> browser,
                     FileDialogMode mode,
                     const CefString& title,
                     const CefString& default_file_path,
                     const std::vector<CefString>& accept_filters,
                     CefRefPtr<CefFileDialogCallback> callback) override;
+#else
+  bool OnFileDialog(CefRefPtr<CefBrowser> browser,
+                    FileDialogMode mode,
+                    const CefString& title,
+                    const CefString& default_file_path,
+                    const std::vector<CefString>& accept_filters,
+                    int selected_accept_filter,
+                    CefRefPtr<CefFileDialogCallback> callback) override;
+#endif
 
   // CefDownloadHandler methods:
   void OnBeforeDownload(CefRefPtr<CefBrowser> browser,

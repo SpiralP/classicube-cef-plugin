@@ -17,8 +17,14 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - { arch: x86_64, bits: 64, target: x86_64-pc-windows-msvc }
-          - { arch: i686, bits: 32, target: i686-pc-windows-msvc }
+          - arch: x86_64
+            bits: 64
+            target: x86_64-pc-windows-msvc
+            url: https://cef-builds.spotifycdn.com/cef_binary_121.3.3%2Bgc6b2e4d%2Bchromium-121.0.6167.86_windows64.tar.bz2
+          - arch: i686
+            bits: 32
+            target: i686-pc-windows-msvc
+            url: https://cef-builds.spotifycdn.com/cef_binary_121.3.4%2Bg2af7b91%2Bchromium-121.0.6167.139_windows32.tar.bz2
 
     steps:
       - uses: actions/checkout@v2
@@ -33,7 +39,7 @@ jobs:
           scoop install aria2
           scoop install --arch ${{ matrix.config.bits }}bit llvm
           echo "LIBCLANG_PATH=$HOME\scoop\apps\llvm\current\bin" >> $env:GITHUB_ENV
-          aria2c 'https://cef-builds.spotifycdn.com/cef_binary_121.3.3%2Bgc6b2e4d%2Bchromium-121.0.6167.86_windows${{ matrix.config.bits }}.tar.bz2' -o cef_binary.tar.bz2 --max-connection-per-server=4
+          aria2c '${{ matrix.config.url }}' -o cef_binary.tar.bz2 --max-connection-per-server=4
           7z x -y 'cef_binary.tar.bz2'
           Remove-Item 'cef_binary.tar.bz2'
           7z x -y 'cef_binary.tar'
@@ -44,11 +50,11 @@ jobs:
       - name: setup-msbuild
         uses: microsoft/setup-msbuild@v1
 
-      - name: Install nightly ${{ matrix.config.target }}
+      - name: Install rust for ${{ matrix.config.target }}
         uses: actions-rs/toolchain@v1
         with:
           # we have to use this toolchain because "libclang.dll: invalid DLL (32-bit)"
-          toolchain: nightly-${{ matrix.config.target }}
+          toolchain: stable-${{ matrix.config.target }}
           target: ${{ matrix.config.target }}
           override: true
           components: rustfmt
@@ -121,7 +127,14 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - { arch: x86_64, target: x86_64-unknown-linux-gnu }
+          - arch: x86_64
+            target: x86_64-unknown-linux-gnu
+            url: https://cef-builds.spotifycdn.com/cef_binary_121.3.3%2Bgc6b2e4d%2Bchromium-121.0.6167.86_linux64.tar.bz2
+          - arch: i686
+            target: i686-unknown-linux-gnu
+            # Linux x86 32-bit builds are discontinued after version 101 (details)
+            # https://cef-builds.spotifycdn.com/index.html#linux32
+            url: https://cef-builds.spotifycdn.com/cef_binary_101.0.18%2Bg367b4a0%2Bchromium-101.0.4951.67_linux32.tar.bz2
 
     steps:
       - uses: actions/checkout@v2
@@ -133,15 +146,30 @@ jobs:
           && sudo apt-get -y install aria2 wget curl git gcc g++ build-essential cmake clang pkg-config \
             libssl-dev libglib2.0-dev libpango1.0-dev libatk1.0-dev libgtk-3-dev libgdk-pixbuf2.0-dev \
             libnss3 libasound2 libxss1 libnspr4 \
-          && aria2c 'https://cef-builds.spotifycdn.com/cef_binary_121.3.3%2Bgc6b2e4d%2Bchromium-121.0.6167.86_linux64.tar.bz2' -o cef_binary.tar.bz2 --max-connection-per-server=4 \
+          && aria2c '${{ matrix.config.url }}' -o cef_binary.tar.bz2 --max-connection-per-server=4 \
           && tar -xjf cef_binary.tar.bz2 \
           && rm cef_binary.tar.bz2 \
           && mv cef_binary_* cef_interface/cef_binary
 
-      - name: Install nightly ${{ matrix.config.target }}
+      - name: Install i686 deps
+        if: matrix.config.arch == 'i686'
+        run: |
+          sudo dpkg --add-architecture i386 \
+          && sudo apt-get -y update \
+          && sudo apt-get -y install aria2 wget curl git gcc g++ build-essential cmake clang pkg-config:i386 \
+            gcc-multilib g++-multilib \
+            libssl-dev:i386 libglib2.0-dev:i386 libpango1.0-dev:i386 libatk1.0-dev:i386 libgtk-3-dev:i386 libgdk-pixbuf2.0-dev:i386 \
+            libssl3:i386 libnss3:i386 libasound2:i386 libxss1:i386 libnspr4:i386 \
+            && aria2c '${{ matrix.config.url }}' -o cef_binary.tar.bz2 --max-connection-per-server=4 \
+            && tar -xjf cef_binary.tar.bz2 \
+          && rm cef_binary.tar.bz2 \
+          && mv cef_binary_* cef_interface/cef_binary \
+          && echo "PKG_CONFIG_ALLOW_CROSS=1" >> "$GITHUB_ENV"
+
+      - name: Install rust for ${{ matrix.config.target }}
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly
+          toolchain: stable
           target: ${{ matrix.config.target }}
           override: true
           components: rustfmt
@@ -210,8 +238,12 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - { arch: armhf, target: armv7-unknown-linux-gnueabihf }
-          - { arch: aarch64, target: aarch64-unknown-linux-gnu }
+          - arch: armhf
+            target: armv7-unknown-linux-gnueabihf
+            url: https://cef-builds.spotifycdn.com/cef_binary_121.3.3%2Bgc6b2e4d%2Bchromium-121.0.6167.86_linuxarm.tar.bz2
+          - arch: aarch64
+            target: aarch64-unknown-linux-gnu
+            url: https://cef-builds.spotifycdn.com/cef_binary_121.3.3%2Bgc6b2e4d%2Bchromium-121.0.6167.86_linuxarm64.tar.bz2
 
     steps:
       - uses: actions/checkout@v2
@@ -220,7 +252,7 @@ jobs:
         if: matrix.config.arch == 'armhf'
         run: |
           docker build --pull -t cross-armhf -f .github/cross-armhf.Dockerfile . \
-          && aria2c 'https://cef-builds.spotifycdn.com/cef_binary_121.3.3%2Bgc6b2e4d%2Bchromium-121.0.6167.86_linuxarm.tar.bz2' -o cef_binary.tar.bz2 --max-connection-per-server=4 \
+          && aria2c '${{ matrix.config.url }}' -o cef_binary.tar.bz2 --max-connection-per-server=4 \
           && tar -xjf cef_binary.tar.bz2 \
           && rm cef_binary.tar.bz2 \
           && mv cef_binary_* cef_interface/cef_binary
@@ -229,15 +261,15 @@ jobs:
         if: matrix.config.arch == 'aarch64'
         run: |
           docker build --pull -t cross-aarch64 -f .github/cross-aarch64.Dockerfile . \
-          && aria2c 'https://cef-builds.spotifycdn.com/cef_binary_121.3.3%2Bgc6b2e4d%2Bchromium-121.0.6167.86_linuxarm64.tar.bz2' -o cef_binary.tar.bz2 --max-connection-per-server=4 \
+          && aria2c '${{ matrix.config.url }}' -o cef_binary.tar.bz2 --max-connection-per-server=4 \
           && tar -xjf cef_binary.tar.bz2 \
           && rm cef_binary.tar.bz2 \
           && mv cef_binary_* cef_interface/cef_binary
 
-      - name: Install nightly ${{ matrix.config.target }}
+      - name: Install rust for ${{ matrix.config.target }}
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly
+          toolchain: stable
           target: ${{ matrix.config.target }}
           override: true
           components: rustfmt
@@ -285,7 +317,9 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - { arch: x86_64, bits: 64, target: x86_64-apple-darwin }
+          - arch: x86_64
+            target: x86_64-apple-darwin
+            url: https://cef-builds.spotifycdn.com/cef_binary_121.3.3%2Bgc6b2e4d%2Bchromium-121.0.6167.86_macosx64.tar.bz2
 
     steps:
       - uses: actions/checkout@v2
@@ -293,15 +327,15 @@ jobs:
       - name: Install deps
         run: |
           brew install aria2 cmake \
-          && aria2c 'https://cef-builds.spotifycdn.com/cef_binary_121.3.3%2Bgc6b2e4d%2Bchromium-121.0.6167.86_macosx64.tar.bz2' -o cef_binary.tar.bz2 --max-connection-per-server=4 \
+          && aria2c '${{ matrix.config.url }}' -o cef_binary.tar.bz2 --max-connection-per-server=4 \
           && tar -xjf cef_binary.tar.bz2 \
           && rm cef_binary.tar.bz2 \
           && mv cef_binary_* cef_interface/cef_binary
 
-      - name: Install nightly ${{ matrix.config.target }}
+      - name: Install rust for ${{ matrix.config.target }}
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly
+          toolchain: stable
           target: ${{ matrix.config.target }}
           override: true
           components: rustfmt

@@ -1,7 +1,7 @@
 use std::{path::Path, time::Duration};
 
 use classicube_sys::{Camera, Vec3};
-use nalgebra::Vector3;
+use ncollide3d::na::Vector3;
 use reqwest::Url;
 use tracing::{debug, warn};
 

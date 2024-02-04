@@ -257,7 +257,6 @@ dependencies = [
  "futures",
  "futures-timer",
  "lazy_static",
- "nalgebra",
  "ncollide3d",
  "rand",
  "regex",

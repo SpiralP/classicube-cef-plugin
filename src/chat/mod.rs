@@ -261,7 +261,7 @@ fn handle_chat_received(message: String, message_type: MsgType) {
         // you get ["&f", "cef"]
 
         if split
-            .get(0)
+            .first()
             .map_or(false, |first| remove_color(first) == "cef")
         {
             // remove "cef"

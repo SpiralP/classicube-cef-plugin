@@ -81,7 +81,7 @@
               "async-dispatcher-0.1.0" = "sha256-rqpQ176/PnI9vvPrwQvK3GJbryjb3hHkb+o1RyCZ3Vg=";
               "clap-4.2.7" = "sha256-P8Thh4miozjn/0/EMQzB91ZsEVucZAg8XwMDf6D4vP8=";
               "classicube-helpers-2.0.0+classicube.1.3.6" = "sha256-yUl0B0E8P618S0662u70zUGRAG2bETVmb4G7Tbv+ZP4=";
-              "classicube-sys-3.0.0+classicube.1.3.6" = "sha256-qz42+MfU0q1w6jtvyY5YDcMWtRVQ5ltlv/JkPcKy7t8=";
+              "classicube-sys-3.0.0+classicube.1.3.6" = "sha256-4bBs3xiwy9AcuBFO7s2q5eASe2ZeGcGvjNpMGchKoQ4=";
             };
           };
 

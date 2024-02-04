@@ -35,16 +35,16 @@
           name = "classicube-cef-plugin";
           src =
             let
-              cef_binary = pkgs.fetchzip {
-                url =
-                  let
-                    version = builtins.replaceStrings
-                      [ "+" ] [ "%2B" ]
-                      "121.3.3+gc6b2e4d+chromium-121.0.6167.86";
-                  in
-                  "https://cef-builds.spotifycdn.com/cef_binary_${version}_linux64.tar.bz2";
-                hash = "sha256-Eed/6Zr11A0aJwQ4IH3u/NofFncUIY0WCPlncSouAOc=";
-              };
+              cef_binary =
+                let
+                  version = "121.3.4+g2af7b91+chromium-121.0.6167.139";
+                  version_url = builtins.replaceStrings [ "+" ] [ "%2B" ] version;
+                in
+                pkgs.fetchzip {
+                  name = "cef_binary-${version}";
+                  url = "https://cef-builds.spotifycdn.com/cef_binary_${version_url}_linux64.tar.bz2";
+                  hash = "sha256-LhQpTo1SgCvXd2eY+SmfYaJw3BfoomJf1mySvy7dG9s=";
+                };
 
               code = lib.cleanSourceWith rec {
                 src = ./.;

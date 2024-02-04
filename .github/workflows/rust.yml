@@ -10,7 +10,7 @@ permissions:
   contents: write
 
 jobs:
-  windows:
+  windows_x86:
     name: Build Windows ${{ matrix.config.arch }}
     runs-on: windows-latest
     strategy:
@@ -20,7 +20,7 @@ jobs:
           - arch: x86_64
             bits: 64
             target: x86_64-pc-windows-msvc
-            url: https://cef-builds.spotifycdn.com/cef_binary_121.3.3%2Bgc6b2e4d%2Bchromium-121.0.6167.86_windows64.tar.bz2
+            url: https://cef-builds.spotifycdn.com/cef_binary_121.3.4%2Bg2af7b91%2Bchromium-121.0.6167.139_windows64.tar.bz2
           - arch: i686
             bits: 32
             target: i686-pc-windows-msvc
@@ -120,7 +120,7 @@ jobs:
             classicube_cef_windows_${{ matrix.config.arch }}.pdb
             cef-windows-${{ matrix.config.arch }}.exe
 
-  linux:
+  linux_x86:
     name: Build Linux ${{ matrix.config.arch }}
     runs-on: ubuntu-latest
     strategy:
@@ -129,7 +129,7 @@ jobs:
         config:
           - arch: x86_64
             target: x86_64-unknown-linux-gnu
-            url: https://cef-builds.spotifycdn.com/cef_binary_121.3.3%2Bgc6b2e4d%2Bchromium-121.0.6167.86_linux64.tar.bz2
+            url: https://cef-builds.spotifycdn.com/cef_binary_121.3.4%2Bg2af7b91%2Bchromium-121.0.6167.139_linux64.tar.bz2
           - arch: i686
             target: i686-unknown-linux-gnu
             # Linux x86 32-bit builds are discontinued after version 101 (details)
@@ -240,10 +240,10 @@ jobs:
         config:
           - arch: armhf
             target: armv7-unknown-linux-gnueabihf
-            url: https://cef-builds.spotifycdn.com/cef_binary_121.3.3%2Bgc6b2e4d%2Bchromium-121.0.6167.86_linuxarm.tar.bz2
+            url: https://cef-builds.spotifycdn.com/cef_binary_121.3.4%2Bg2af7b91%2Bchromium-121.0.6167.139_linuxarm.tar.bz2
           - arch: aarch64
             target: aarch64-unknown-linux-gnu
-            url: https://cef-builds.spotifycdn.com/cef_binary_121.3.3%2Bgc6b2e4d%2Bchromium-121.0.6167.86_linuxarm64.tar.bz2
+            url: https://cef-builds.spotifycdn.com/cef_binary_121.3.4%2Bg2af7b91%2Bchromium-121.0.6167.139_linuxarm64.tar.bz2
 
     steps:
       - uses: actions/checkout@v2
@@ -310,7 +310,7 @@ jobs:
             classicube_cef_linux_${{ matrix.config.arch }}.so
             cef-linux-${{ matrix.config.arch }}
 
-  mac:
+  mac_x86:
     name: Build MacOS ${{ matrix.config.arch }}
     runs-on: macos-latest
     strategy:
@@ -319,7 +319,7 @@ jobs:
         config:
           - arch: x86_64
             target: x86_64-apple-darwin
-            url: https://cef-builds.spotifycdn.com/cef_binary_121.3.3%2Bgc6b2e4d%2Bchromium-121.0.6167.86_macosx64.tar.bz2
+            url: https://cef-builds.spotifycdn.com/cef_binary_121.3.4%2Bg2af7b91%2Bchromium-121.0.6167.139_macosx64.tar.bz2
 
     steps:
       - uses: actions/checkout@v2

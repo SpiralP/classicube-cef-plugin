@@ -34,13 +34,13 @@
             let
               cef_binary =
                 let
-                  version = "121.3.4+g2af7b91+chromium-121.0.6167.139";
+                  version = "121.3.9+g1e0a38f+chromium-121.0.6167.184";
                   version_url = builtins.replaceStrings [ "+" ] [ "%2B" ] version;
                 in
                 pkgs.fetchzip {
                   name = "cef_binary-${version}";
                   url = "https://cef-builds.spotifycdn.com/cef_binary_${version_url}_linux64.tar.bz2";
-                  hash = "sha256-LhQpTo1SgCvXd2eY+SmfYaJw3BfoomJf1mySvy7dG9s=";
+                  hash = "sha256-dcqR6GeRWrH2jpVp7pmQLQdfMQiRiHCp84bxBoTJNlA=";
                 };
 
               code = lib.cleanSourceWith rec {

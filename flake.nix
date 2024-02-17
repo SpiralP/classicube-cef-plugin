@@ -17,19 +17,16 @@
             overlays = [ nixpkgs-mozilla.overlays.rust ];
           };
 
-          rustPlatform =
-            let
-              rust = (pkgs.rustChannelOf {
-                channel = "1.75.0";
-                sha256 = "sha256-SXRtAuO4IqNOQq+nLbrsDFbVk+3aVA8NNpSZsKlVH/8=";
-              }).rust.override {
-                extensions = if dev then [ "rust-src" ] else [ ];
-              };
-            in
-            pkgs.makeRustPlatform {
-              cargo = rust;
-              rustc = rust;
-            };
+          rust = (pkgs.rustChannelOf {
+            channel = "1.75.0";
+            sha256 = "sha256-SXRtAuO4IqNOQq+nLbrsDFbVk+3aVA8NNpSZsKlVH/8=";
+          }).rust.override {
+            extensions = if dev then [ "rust-src" ] else [ ];
+          };
+          rustPlatform = pkgs.makeRustPlatform {
+            cargo = rust;
+            rustc = rust;
+          };
         in
         rustPlatform.buildRustPackage rec {
           name = "classicube-cef-plugin";
@@ -81,7 +78,7 @@
               "async-dispatcher-0.1.0" = "sha256-rqpQ176/PnI9vvPrwQvK3GJbryjb3hHkb+o1RyCZ3Vg=";
               "clap-4.2.7" = "sha256-P8Thh4miozjn/0/EMQzB91ZsEVucZAg8XwMDf6D4vP8=";
               "classicube-helpers-2.0.0+classicube.1.3.6" = "sha256-yUl0B0E8P618S0662u70zUGRAG2bETVmb4G7Tbv+ZP4=";
-              "classicube-sys-3.0.0+classicube.1.3.6" = "sha256-4bBs3xiwy9AcuBFO7s2q5eASe2ZeGcGvjNpMGchKoQ4=";
+              "classicube-sys-3.0.2+classicube.1.3.6" = "sha256-hW+voft8uHb0VwvHAFrC0Mw/V+MvwHiGYQLd+hDrHug=";
             };
           };
 
@@ -140,7 +137,7 @@
           '';
 
           postInstall = with pkgs; ''
-            install -Dm755 ./target/${rust.toRustTargetSpec stdenv.hostPlatform}/release/build/classicube-cef-plugin-*/out/cef -t $out/bin
+            install -Dm755 ./target/${pkgs.rust.toRustTargetSpec stdenv.hostPlatform}/release/build/classicube-cef-plugin-*/out/cef -t $out/bin
           '';
 
           postFixup = with pkgs; ''

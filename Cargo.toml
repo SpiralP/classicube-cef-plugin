@@ -37,6 +37,7 @@ tracing-flame = "0.2"
 tracing-futures = "0.2"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 url = "2"
+zstd = "0.13"
 
 [build-dependencies]
 bindgen = "0.69"

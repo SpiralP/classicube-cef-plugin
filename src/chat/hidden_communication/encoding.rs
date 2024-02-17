@@ -1,4 +1,4 @@
-use std::{collections::VecDeque, time::Duration};
+use std::{collections::VecDeque, io::Cursor, time::Duration};
 
 use base64::{prelude::BASE64_STANDARD, Engine};
 use serde::{Deserialize, Serialize};
@@ -33,13 +33,15 @@ pub struct Message {
 /// to base64
 pub fn encode(message: &Message) -> Result<String> {
     let data = bincode::serialize(message)?;
+    let compressed_data = zstd::encode_all(Cursor::new(&data), 0).unwrap();
 
-    Ok(BASE64_STANDARD.encode(data))
+    Ok(BASE64_STANDARD.encode(compressed_data))
 }
 
 /// from base64
 pub fn decode<T: AsRef<[u8]>>(input: T) -> Result<Message> {
-    let data = BASE64_STANDARD.decode(input)?;
+    let compressed_data = BASE64_STANDARD.decode(input)?;
+    let data = zstd::decode_all(Cursor::new(&compressed_data)).unwrap();
 
     Ok(bincode::deserialize(&data)?)
 }

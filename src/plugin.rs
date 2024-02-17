@@ -109,7 +109,7 @@ impl Plugin {
 
     /// Called to reset the component's state. (e.g. reconnecting to server)
     pub fn reset() {
-        debug!("plugin shutdown");
+        debug!("plugin reset");
 
         PLUGIN
             .with_inner_mut(|plugin| {

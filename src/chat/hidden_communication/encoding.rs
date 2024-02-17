@@ -33,7 +33,7 @@ pub struct Message {
 /// to base64
 pub fn encode(message: &Message) -> Result<String> {
     let data = bincode::serialize(message)?;
-    let compressed_data = zstd::encode_all(Cursor::new(&data), 0).unwrap();
+    let compressed_data = zstd::encode_all(Cursor::new(&data), 0)?;
 
     Ok(BASE64_STANDARD.encode(compressed_data))
 }
@@ -41,7 +41,7 @@ pub fn encode(message: &Message) -> Result<String> {
 /// from base64
 pub fn decode<T: AsRef<[u8]>>(input: T) -> Result<Message> {
     let compressed_data = BASE64_STANDARD.decode(input)?;
-    let data = zstd::decode_all(Cursor::new(&compressed_data)).unwrap();
+    let data = zstd::decode_all(Cursor::new(&compressed_data))?;
 
     Ok(bincode::deserialize(&data)?)
 }

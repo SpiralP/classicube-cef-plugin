@@ -128,7 +128,6 @@ pub async fn run(player: PlayerSnapshot, commands: Commands) -> Result<()> {
             }
 
             // TODO 0 args, randomly chosen? maybe everyone like map join?
-            bail!("0 args TODO");
         }
 
         Commands::Crash => {

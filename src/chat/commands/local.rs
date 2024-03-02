@@ -5,7 +5,7 @@ use crate::{
     api,
     chat::{hidden_communication::whispers, PlayerSnapshot},
     entity_manager::{EntityManager, TargetEntity},
-    error::{bail, Result, ResultExt},
+    error::{Result, ResultExt},
     helpers::format_duration,
 };
 use clap::Subcommand;

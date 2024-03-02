@@ -284,11 +284,19 @@ extern "C" int cef_interface_browser_execute_javascript_on_frame(
     CefBrowser* browser,
     const char* frame_name,
     const char* code) {
+#if CEF_VERSION_MAJOR >= 122
+  std::vector<CefString> ids;
+#else
   std::vector<int64_t> ids;
+#endif
   browser->GetFrameIdentifiers(ids);
 
   for (auto id : ids) {
+#if CEF_VERSION_MAJOR >= 122
+    auto frame = browser->GetFrameByIdentifier(id);
+#else
     auto frame = browser->GetFrame(id);
+#endif
     if (frame) {
       std::string url = frame->GetURL().ToString();
       if (url.rfind(frame_name, 0) == 0) {
@@ -327,11 +335,19 @@ extern "C" int cef_interface_browser_eval_javascript_on_frame(
     const char* frame_name,
     uint64_t task_id,
     const char* code) {
+#if CEF_VERSION_MAJOR >= 122
+  std::vector<CefString> ids;
+#else
   std::vector<int64_t> ids;
+#endif
   browser->GetFrameIdentifiers(ids);
 
   for (auto id : ids) {
+#if CEF_VERSION_MAJOR >= 122
+    auto frame = browser->GetFrameByIdentifier(id);
+#else
     auto frame = browser->GetFrame(id);
+#endif
     if (frame) {
       std::string url = frame->GetURL().ToString();
       if (url.rfind(frame_name, 0) == 0) {

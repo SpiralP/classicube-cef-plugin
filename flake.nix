@@ -7,154 +7,161 @@
     let
       inherit (nixpkgs) lib;
 
-      makePackage = (system: dev: cef_debug:
+      makePackages = (system: dev:
         let
-          cef_profile = if cef_debug then "Debug" else "Release";
-
           pkgs = import nixpkgs {
             inherit system;
           };
-        in
-        pkgs.rustPlatform.buildRustPackage rec {
-          name = "classicube-cef-plugin";
-          src =
+
+          cef_binary =
             let
-              cef_binary =
-                let
-                  version = "121.3.9+g1e0a38f+chromium-121.0.6167.184";
-                  version_url = builtins.replaceStrings [ "+" ] [ "%2B" ] version;
-                in
-                pkgs.fetchzip {
-                  name = "cef_binary-${version}";
-                  url = "https://cef-builds.spotifycdn.com/cef_binary_${version_url}_linux64.tar.bz2";
-                  hash = "sha256-dcqR6GeRWrH2jpVp7pmQLQdfMQiRiHCp84bxBoTJNlA=";
-                };
-
-              code = lib.cleanSourceWith rec {
-                src = ./.;
-                filter = path: type:
-                  lib.cleanSourceFilter path type
-                  && (
-                    let
-                      baseName = builtins.baseNameOf (builtins.toString path);
-                      relPath = lib.removePrefix (builtins.toString ./.) (builtins.toString path);
-                    in
-                    lib.any (re: builtins.match re relPath != null) [
-                      "/build.rs"
-                      "/Cargo.toml"
-                      "/Cargo.lock"
-                      "/\.cargo"
-                      "/\.cargo/.*"
-                      "/cef_interface"
-                      "/cef_interface/.*"
-                      "/src"
-                      "/src/.*"
-                    ]
-                  );
-              };
+              version = "122.1.9+gd14e051+chromium-122.0.6261.94";
+              version_url = builtins.replaceStrings [ "+" ] [ "%2B" ] version;
             in
-            pkgs.runCommand "src" { } ''
-              cp -va ${code} $out
-              chmod u+w $out/cef_interface
-              cp -va ${cef_binary} $out/cef_interface/cef_binary
-            '';
-
-          cargoLock = {
-            lockFile = ./Cargo.lock;
-            outputHashes = {
-              "async-dispatcher-0.1.0" = "sha256-rqpQ176/PnI9vvPrwQvK3GJbryjb3hHkb+o1RyCZ3Vg=";
-              "clap-4.2.7" = "sha256-P8Thh4miozjn/0/EMQzB91ZsEVucZAg8XwMDf6D4vP8=";
-              "classicube-helpers-2.0.0+classicube.1.3.6" = "sha256-V5PBZR0rj42crA1fGUjMk4rDh0ZpjjNcbMCe6bgotW8=";
+            pkgs.fetchzip {
+              name = "cef_binary-${version}";
+              url = "https://cef-builds.spotifycdn.com/cef_binary_${version_url}_linux64.tar.bz2";
+              hash = "sha256-JEMISufyDg7hgBjsz329diKJhGTBNIObD5nykROAzMQ=";
             };
-          };
 
-          nativeBuildInputs = with pkgs; [
-            cmake
-            pkg-config
-            rustPlatform.bindgenHook
-          ] ++ (if dev then
-            with pkgs; [
-              clippy
-              rustfmt
-              rust-analyzer
-            ] else [ ]);
+          makePackage = (cef_debug:
+            let
+              cef_profile = if cef_debug then "Debug" else "Release";
+            in
+            pkgs.rustPlatform.buildRustPackage rec {
+              name = "classicube-cef-plugin";
+              src =
+                let
+                  code = lib.cleanSourceWith rec {
+                    src = ./.;
+                    filter = path: type:
+                      lib.cleanSourceFilter path type
+                      && (
+                        let
+                          baseName = builtins.baseNameOf (builtins.toString path);
+                          relPath = lib.removePrefix (builtins.toString ./.) (builtins.toString path);
+                        in
+                        lib.any (re: builtins.match re relPath != null) [
+                          "/build.rs"
+                          "/Cargo.toml"
+                          "/Cargo.lock"
+                          "/\.cargo"
+                          "/\.cargo/.*"
+                          "/cef_interface"
+                          "/cef_interface/.*"
+                          "/src"
+                          "/src/.*"
+                        ]
+                      );
+                  };
+                in
+                pkgs.runCommand "src" { } ''
+                  cp -va ${code} $out
+                  chmod u+w $out/cef_interface
+                  cp -va ${cef_binary} $out/cef_interface/cef_binary
+                '';
 
-          buildInputs = with pkgs; with xorg; [
-            # things found on libcef.so that were missing
-            glib
-            nss
-            at-spi2-atk
-            cups
-            libdrm
-            libXcomposite
-            libXdamage
-            libXrandr
-            libXext
-            libXfixes
-            libX11
-            mesa
-            expat
-            libxcb
-            libxkbcommon
-            dbus
-            pango
-            cairo
-            alsa-lib
-            nspr
+              cargoLock = {
+                lockFile = ./Cargo.lock;
+                outputHashes = {
+                  "async-dispatcher-0.1.0" = "sha256-rqpQ176/PnI9vvPrwQvK3GJbryjb3hHkb+o1RyCZ3Vg=";
+                  "clap-4.2.7" = "sha256-P8Thh4miozjn/0/EMQzB91ZsEVucZAg8XwMDf6D4vP8=";
+                  "classicube-helpers-2.0.0+classicube.1.3.6" = "sha256-V5PBZR0rj42crA1fGUjMk4rDh0ZpjjNcbMCe6bgotW8=";
+                };
+              };
 
-            gdk-pixbuf
-            gtk3
-            openssl
+              nativeBuildInputs = with pkgs; [
+                cmake
+                pkg-config
+                rustPlatform.bindgenHook
+              ] ++ (if dev then
+                with pkgs; [
+                  clippy
+                  rustfmt
+                  rust-analyzer
+                ] else [ ]);
 
-            # needed to fix "FATAL:udev_loader.cc(37)] Check failed: false."
-            libudev0-shim
-          ];
+              buildInputs = with pkgs; with xorg; [
+                # things found on libcef.so that were missing
+                glib
+                nss
+                at-spi2-atk
+                cups
+                libdrm
+                libXcomposite
+                libXdamage
+                libXrandr
+                libXext
+                libXfixes
+                libX11
+                mesa
+                expat
+                libxcb
+                libxkbcommon
+                dbus
+                pango
+                cairo
+                alsa-lib
+                nspr
 
-          postPatch = with pkgs; if cef_debug then ''
-            substituteInPlace build.rs \
-              --replace 'let profile = "Release";' 'let profile = "Debug";'
-          '' else "";
+                gdk-pixbuf
+                gtk3
+                openssl
 
-          preBuild = ''
-            chmod -c u+w cef_interface/cef_binary/${cef_profile}/*.so
-            patchelf \
-              --add-rpath "${lib.makeLibraryPath buildInputs}" \
-              cef_interface/cef_binary/${cef_profile}/*.so
-          '';
+                # needed to fix "FATAL:udev_loader.cc(37)] Check failed: false."
+                libudev0-shim
+              ];
 
-          dontUseCargoParallelTests = true;
-          checkPhase = ''
-            LD_LIBRARY_PATH=./cef_interface/cef_binary/${cef_profile} cargoCheckHook
-          '';
+              postPatch =
+                if cef_debug then ''
+                  substituteInPlace build.rs \
+                    --replace 'let profile = "Release";' 'let profile = "Debug";'
+                '' else "";
 
-          postInstall = with pkgs; ''
-            install -Dm755 ./target/${pkgs.rust.toRustTargetSpec stdenv.hostPlatform}/release/build/classicube-cef-plugin-*/out/cef -t $out/bin
-          '';
+              preBuild = ''
+                chmod -c u+w cef_interface/cef_binary/${cef_profile}/*.so
+                patchelf \
+                  --add-rpath "${lib.makeLibraryPath buildInputs}" \
+                  cef_interface/cef_binary/${cef_profile}/*.so
+              '';
 
-          postFixup = with pkgs; ''
-            mv -v $out/lib $out/plugins
-            mv -v $out/bin $out/cef
+              dontUseCargoParallelTests = true;
+              checkPhase = ''
+                LD_LIBRARY_PATH=./cef_interface/cef_binary/${cef_profile} cargoCheckHook
+              '';
 
-            mkdir -vp $out/cef/cef_binary
-            cp -va cef_interface/cef_binary/${cef_profile}/* cef_interface/cef_binary/Resources/* $out/cef/cef_binary/
+              postInstall = ''
+                install -Dm755 ./target/${pkgs.rust.toRustTargetSpec pkgs.stdenv.hostPlatform}/release/build/classicube-cef-plugin-*/out/cef -t $out/bin
+              '';
 
-            patchelf --debug \
-              --add-rpath "\$ORIGIN/../cef/cef_binary" \
-              $out/plugins/libclassicube_cef_plugin.so \
-              $out/cef/cef
-          '';
+              postFixup = ''
+                mv -v $out/lib $out/plugins
+                mv -v $out/bin $out/cef
 
-          hardeningDisable = if cef_debug then [ "fortify" ] else [ ];
+                mkdir -vp $out/cef/cef_binary
+                cp -va cef_interface/cef_binary/${cef_profile}/* cef_interface/cef_binary/Resources/* $out/cef/cef_binary/
+
+                patchelf --debug \
+                  --add-rpath "\$ORIGIN/../cef/cef_binary" \
+                  $out/plugins/libclassicube_cef_plugin.so \
+                  $out/cef/cef
+              '';
+
+              hardeningDisable = if cef_debug then [ "fortify" ] else [ ];
+            });
+        in
+        rec {
+          inherit cef_binary;
+
+          default = makePackage false;
+          debug = makePackage true;
         }
       );
     in
     builtins.foldl' lib.recursiveUpdate { } (builtins.map
       (system: {
-        devShells.${system}.default = makePackage system true false;
-        packages.${system} = {
-          default = makePackage system false false;
-          debug = makePackage system false true;
-        };
+        devShells.${system} = makePackages system true;
+        packages.${system} = makePackages system false;
       })
       lib.systems.flakeExposed);
 }

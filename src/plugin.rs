@@ -28,7 +28,7 @@ impl Plugin {
 
             Chat::print(format!("Loading Cef v{}", env!("CARGO_PKG_VERSION")));
 
-            let append_app_name = CString::new(format!(" + {APP_NAME}")).unwrap();
+            let append_app_name = CString::new(format!(" {APP_NAME}")).unwrap();
             let c_str = append_app_name.as_ptr();
             unsafe {
                 String_AppendConst(&mut Server.AppName, c_str);

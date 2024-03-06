@@ -199,12 +199,50 @@ async fn process_clients_response(messages: Vec<String>) -> Result<()> {
 
 #[test]
 fn test_get_names_with_cef() {
-    let lines = vec![format!(
-        "ClassiCube 1.2.4 + {APP_NAME} +cs3.5.15 + Ponies v2.1: name",
-    )];
+    let parts = APP_NAME
+        .get(3..)
+        .unwrap()
+        .splitn(3, '.')
+        .collect::<Vec<_>>();
+    let without_last_number = format!(
+        "cef{}",
+        parts.iter().copied().take(2).collect::<Vec<_>>().join(".")
+    );
 
-    let r = get_names_with_cef(&lines).unwrap();
-    assert!(r.contains("name"));
+    {
+        let lines = vec![
+            format!("ClassiCube 1.2.4 + {APP_NAME}: name1"),
+            format!("ClassiCube 1.2.4 {APP_NAME} +cs3.5.15 + Ponies v2.1: name2"),
+            format!("ClassiCube 1.2.4 + {APP_NAME} +cs3.5.15 + Ponies v2.1: name3"),
+            format!("ClassiCube 1.2.4 {APP_NAME} cs3.5.15 + Ponies v2.1: name4"),
+            format!("ClassiCube 1.2.4 {}.0: name5", without_last_number),
+            format!("ClassiCube 1.2.4 {}.: name6", without_last_number),
+        ];
+
+        let r = get_names_with_cef(&lines).unwrap();
+        assert!(r.contains("name1"));
+        assert!(r.contains("name2"));
+        assert!(r.contains("name3"));
+        assert!(r.contains("name4"));
+        assert!(r.contains("name5"));
+        assert!(r.contains("name6"));
+    }
+
+    {
+        let with_next_minor = format!("cef{}.99.0", parts[0]);
+        let lines = vec![
+            format!("ClassiCube 1.2.4 {}: name7", with_next_minor),
+            format!("ClassiCube 1.2.4 + {}: name8", with_next_minor),
+            format!("ClassiCube 1.2.4 cef0.0.0: name9"),
+            format!("ClassiCube 1.2.4 + cef0.0.0: name10"),
+        ];
+
+        let r = get_names_with_cef(&lines).unwrap();
+        assert!(!r.contains("name7"));
+        assert!(!r.contains("name8"));
+        assert!(!r.contains("name9"));
+        assert!(!r.contains("name10"));
+    }
 }
 
 #[test]

@@ -13,16 +13,58 @@
             inherit system;
           };
 
-          cef_binary =
-            let
-              version = "122.1.9+gd14e051+chromium-122.0.6261.94";
-              version_url = builtins.replaceStrings [ "+" ] [ "%2B" ] version;
-            in
-            pkgs.fetchzip {
+          cef_binary = pkgs.stdenv.mkDerivation rec {
+            pname = "cef_binary";
+            version = "122.1.9+gd14e051+chromium-122.0.6261.94";
+
+            src = pkgs.fetchzip {
               name = "cef_binary-${version}";
-              url = "https://cef-builds.spotifycdn.com/cef_binary_${version_url}_linux64.tar.bz2";
+              url = "https://cef-builds.spotifycdn.com/cef_binary_${builtins.replaceStrings [ "+" ] [ "%2B" ] version}_linux64.tar.bz2";
               hash = "sha256-JEMISufyDg7hgBjsz329diKJhGTBNIObD5nykROAzMQ=";
             };
+
+            buildInputs = with pkgs; with xorg; [
+              # things found on libcef.so that were missing
+              glib
+              nss
+              at-spi2-atk
+              cups
+              libdrm
+              libXcomposite
+              libXdamage
+              libXrandr
+              libXext
+              libXfixes
+              libX11
+              mesa
+              expat
+              libxcb
+              libxkbcommon
+              dbus
+              pango
+              cairo
+              alsa-lib
+              nspr
+
+              gdk-pixbuf
+              gtk3
+              openssl
+
+              # needed to fix "FATAL:udev_loader.cc(37)] Check failed: false."
+              libudev0-shim
+            ];
+
+            buildPhase = ''
+              patchelf \
+                --add-rpath "${lib.makeLibraryPath buildInputs}" \
+                Release/*.so Debug/*.so
+            '';
+
+            installPhase = ''
+              mkdir -v $out
+              mv -v * $out/
+            '';
+          };
 
           makePackage = (cef_debug:
             let
@@ -30,36 +72,28 @@
             in
             pkgs.rustPlatform.buildRustPackage rec {
               name = "classicube-cef-plugin";
-              src =
-                let
-                  code = lib.cleanSourceWith rec {
-                    src = ./.;
-                    filter = path: type:
-                      lib.cleanSourceFilter path type
-                      && (
-                        let
-                          baseName = builtins.baseNameOf (builtins.toString path);
-                          relPath = lib.removePrefix (builtins.toString ./.) (builtins.toString path);
-                        in
-                        lib.any (re: builtins.match re relPath != null) [
-                          "/build.rs"
-                          "/Cargo.toml"
-                          "/Cargo.lock"
-                          "/\.cargo"
-                          "/\.cargo/.*"
-                          "/cef_interface"
-                          "/cef_interface/.*"
-                          "/src"
-                          "/src/.*"
-                        ]
-                      );
-                  };
-                in
-                pkgs.runCommand "src" { } ''
-                  cp -va ${code} $out
-                  chmod u+w $out/cef_interface
-                  cp -va ${cef_binary} $out/cef_interface/cef_binary
-                '';
+              src = lib.cleanSourceWith rec {
+                src = ./.;
+                filter = path: type:
+                  lib.cleanSourceFilter path type
+                  && (
+                    let
+                      baseName = builtins.baseNameOf (builtins.toString path);
+                      relPath = lib.removePrefix (builtins.toString ./.) (builtins.toString path);
+                    in
+                    lib.any (re: builtins.match re relPath != null) [
+                      "/build.rs"
+                      "/Cargo.toml"
+                      "/Cargo.lock"
+                      "/\.cargo"
+                      "/\.cargo/.*"
+                      "/cef_interface"
+                      "/cef_interface/.*"
+                      "/src"
+                      "/src/.*"
+                    ]
+                  );
+              };
 
               cargoLock = {
                 lockFile = ./Cargo.lock;
@@ -75,42 +109,13 @@
                 pkg-config
                 rustPlatform.bindgenHook
               ] ++ (if dev then
-                with pkgs; [
+                with pkgs; ([
                   clippy
                   rustfmt
                   rust-analyzer
-                ] else [ ]);
+                ]) else [ ]);
 
-              buildInputs = with pkgs; with xorg; [
-                # things found on libcef.so that were missing
-                glib
-                nss
-                at-spi2-atk
-                cups
-                libdrm
-                libXcomposite
-                libXdamage
-                libXrandr
-                libXext
-                libXfixes
-                libX11
-                mesa
-                expat
-                libxcb
-                libxkbcommon
-                dbus
-                pango
-                cairo
-                alsa-lib
-                nspr
-
-                gdk-pixbuf
-                gtk3
-                openssl
-
-                # needed to fix "FATAL:udev_loader.cc(37)] Check failed: false."
-                libudev0-shim
-              ];
+              buildInputs = cef_binary.buildInputs;
 
               postPatch =
                 if cef_debug then ''
@@ -119,10 +124,8 @@
                 '' else "";
 
               preBuild = ''
-                chmod -c u+w cef_interface/cef_binary/${cef_profile}/*.so
-                patchelf \
-                  --add-rpath "${lib.makeLibraryPath buildInputs}" \
-                  cef_interface/cef_binary/${cef_profile}/*.so
+                chmod -c u+w cef_interface
+                cp -va ${cef_binary} cef_interface/cef_binary
               '';
 
               dontUseCargoParallelTests = true;

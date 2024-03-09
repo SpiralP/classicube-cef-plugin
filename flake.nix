@@ -15,12 +15,12 @@
 
           cef_binary = pkgs.stdenv.mkDerivation rec {
             pname = "cef_binary";
-            version = "122.1.9+gd14e051+chromium-122.0.6261.94";
+            version = "122.1.10+gc902316+chromium-122.0.6261.112";
 
             src = pkgs.fetchzip {
               name = "cef_binary-${version}";
               url = "https://cef-builds.spotifycdn.com/cef_binary_${builtins.replaceStrings [ "+" ] [ "%2B" ] version}_linux64.tar.bz2";
-              hash = "sha256-JEMISufyDg7hgBjsz329diKJhGTBNIObD5nykROAzMQ=";
+              hash = "sha256-4EGKJgfRon4vkbwq14V5gSlph0Z5sjVnrzWv9nlQ20Q=";
             };
 
             buildInputs = with pkgs; with xorg; [

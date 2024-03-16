@@ -15,12 +15,12 @@
 
           cef_binary = pkgs.stdenv.mkDerivation rec {
             pname = "cef_binary";
-            version = "122.1.10+gc902316+chromium-122.0.6261.112";
+            version = "122.1.13+gde5b724+chromium-122.0.6261.130";
 
             src = pkgs.fetchzip {
               name = "cef_binary-${version}";
               url = "https://cef-builds.spotifycdn.com/cef_binary_${builtins.replaceStrings [ "+" ] [ "%2B" ] version}_linux64.tar.bz2";
-              hash = "sha256-4EGKJgfRon4vkbwq14V5gSlph0Z5sjVnrzWv9nlQ20Q=";
+              hash = "sha256-14t5gAwIvbBxdOdVJSE5DqwRWLXx3qO4nYkbsPi6crM=";
             };
 
             buildInputs = with pkgs; with xorg; [
@@ -70,15 +70,14 @@
             let
               cef_profile = if cef_debug then "Debug" else "Release";
             in
-            pkgs.rustPlatform.buildRustPackage rec {
+            pkgs.rustPlatform.buildRustPackage {
               name = "classicube-cef-plugin";
-              src = lib.cleanSourceWith rec {
+              src = lib.cleanSourceWith {
                 src = ./.;
                 filter = path: type:
                   lib.cleanSourceFilter path type
                   && (
                     let
-                      baseName = builtins.baseNameOf (builtins.toString path);
                       relPath = lib.removePrefix (builtins.toString ./.) (builtins.toString path);
                     in
                     lib.any (re: builtins.match re relPath != null) [
@@ -153,7 +152,7 @@
               hardeningDisable = if cef_debug then [ "fortify" ] else [ ];
             });
         in
-        rec {
+        {
           inherit cef_binary;
 
           default = makePackage false;

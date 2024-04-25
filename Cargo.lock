@@ -227,6 +227,7 @@ dependencies = [
  "base64",
  "bincode",
  "bindgen",
+ "cc",
  "clap",
  "classicube-helpers",
  "classicube-sys",

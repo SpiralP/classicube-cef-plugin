@@ -179,6 +179,10 @@ extern "C" int cef_interface_initialize(MyApp* app) {
   locales_dir_path += "/cef_binary";
   locales_dir_path += "/locales";
   CefString(&settings.locales_dir_path).FromString(locales_dir_path);
+
+  std::string resources_dir_path(cef_dir_path);
+  resources_dir_path += "/cef_binary";
+  CefString(&settings.resources_dir_path).FromString(resources_dir_path);
 #endif
 
   // Specify the path for the sub-process executable.

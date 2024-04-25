@@ -41,6 +41,7 @@ zstd = "0.13"
 
 [build-dependencies]
 bindgen = "0.69"
+cc = "1"
 cmake = "0.1"
 
 [features]

@@ -14,64 +14,64 @@
           };
           inherit (lib.importTOML ./Cargo.toml) package;
 
-          cef_binary = pkgs.stdenv.mkDerivation rec {
-            pname = "cef_binary";
+          cef_binary = pkgs.libcef.overrideAttrs (prev: rec {
             version = "124.3.6+g30772e7+chromium-124.0.6367.119";
 
             src = pkgs.fetchzip {
               name = "cef_binary-${version}";
-              url = "https://cef-builds.spotifycdn.com/cef_binary_${builtins.replaceStrings [ "+" ] [ "%2B" ] version}_linux64.tar.bz2";
+              url = "https://cef-builds.spotifycdn.com/cef_binary_${version}_linux64.tar.bz2";
               hash = "sha256-w9ctBOZujlgqjqfsVedeNDY+IA0p+1xi+jTZjNwDzAA=";
             };
 
-            buildInputs = with pkgs; with xorg; [
-              # things found on libcef.so that were missing
-              glib
-              nss
-              at-spi2-atk
-              cups
-              libdrm
-              libXcomposite
-              libXdamage
-              libXrandr
-              libXext
-              libXfixes
-              libX11
-              mesa
-              expat
-              libxcb
-              libxkbcommon
-              dbus
-              pango
-              cairo
-              alsa-lib
-              nspr
+            installPhase =
+              let
+                prevInstallPhase = pkgs.runCommand "prevInstallPhase"
+                  {
+                    prevInstallPhase = prev.installPhase;
+                    passAsFile = (prev.passAsFile or [ ]) ++ [ "prevInstallPhase" ];
+                  }
+                  ''
+                    substituteInPlace "$prevInstallPhasePath" \
+                      --replace '/Release/libcef.so' '/Release/*.so' \
+                      --replace 'out/lib/libcef.so' 'out/lib/*.so'
+                    cat "$prevInstallPhasePath" > $out
+                  '';
 
-              gdk-pixbuf
-              gtk3
-              openssl
+                rpathAppend = with pkgs; with xorg; lib.makeLibraryPath [
+                  libudev0-shim
+                ];
+              in
+              ''
+                ${builtins.readFile prevInstallPhase} 
+                # cef wants icu file next to the .so
+                mv -v $out/share/cef/* $out/lib/
+                rmdir $out/share/cef $out/share
 
-              # needed to fix "FATAL:udev_loader.cc(37)] Check failed: false."
-              libudev0-shim
-            ];
+                # needed to fix:
+                # - FATAL:udev_loader.cc(37)] Check failed: false.
+                # - ERROR:zygote_linux.cc(625)] Zygote could not fork: process_type gpu-process numfds 3 child_pid -1
+                patchelf --add-rpath "${rpathAppend}" $out/lib/*.so
+              '';
 
-            buildPhase = ''
-              patchelf \
-                --add-rpath "${lib.makeLibraryPath buildInputs}" \
-                Release/*.so Debug/*.so
-            '';
+            passthru = {
+              debug = pkgs.libcef.overrideAttrs (prev: {
+                inherit version src;
 
-            installPhase = ''
-              mkdir -v $out
-              mv -v * $out/
-            '';
-          };
+                pname = "${prev.pname}-debug";
+
+                hardeningDisable = [ "fortify" ];
+                cmakeBuildType = "Debug";
+
+                installPhase = builtins.replaceStrings [ "/Release/" ] [ "/Debug/" ] installPhase;
+              });
+            };
+          });
 
           makePackage = (cef_debug:
             let
               cef_profile = if cef_debug then "Debug" else "Release";
             in
-            pkgs.rustPlatform.buildRustPackage {
+            pkgs.rustPlatform.buildRustPackage rec {
               pname = package.name;
               version = package.version;
 
@@ -104,23 +104,32 @@
                   rust-analyzer
                 ]) else [ ]);
 
-              buildInputs = cef_binary.buildInputs;
+              LIBCEF_LIB_DIR = "${cef_binary}/lib";
+              LIBCEF_INCLUDE_DIR = "${cef_binary}/include";
+              LIBCEF_DLL_WRAPPER_LIB_DIR = LIBCEF_LIB_DIR;
 
-              postPatch =
-                if cef_debug then ''
-                  substituteInPlace build.rs \
-                    --replace 'let profile = "Release";' 'let profile = "Debug";'
-                '' else "";
+              buildInputs = with pkgs; [
+                # gdk-pixbuf
+                # gtk3
+                cef_binary
+                openssl
 
-              preBuild = ''
-                chmod -c u+w cef_interface
-                cp -va ${cef_binary} cef_interface/cef_binary
-              '';
+                # needed to fix "FATAL:udev_loader.cc(37)] Check failed: false."
+                # libudev0-shim
+              ];
+
+              # TODO profiles
+              # postPatch =
+              #   if cef_debug then ''
+              #     substituteInPlace build.rs \
+              #       --replace 'let profile = "Release";' 'let profile = "Debug";'
+              #   '' else "";
 
               dontUseCargoParallelTests = true;
-              checkPhase = ''
-                LD_LIBRARY_PATH=./cef_interface/cef_binary/${cef_profile} cargoCheckHook
-              '';
+              # TODO
+              # checkPhase = ''
+              #   LD_LIBRARY_PATH=./cef_interface/cef_binary/${cef_profile} cargoCheckHook
+              # '';
 
               postInstall = ''
                 install -Dm755 ./target/${pkgs.rust.toRustTargetSpec pkgs.stdenv.hostPlatform}/release/build/classicube-cef-plugin-*/out/cef -t $out/bin
@@ -131,12 +140,13 @@
                 mv -v $out/bin $out/cef
 
                 mkdir -vp $out/cef/cef_binary
-                cp -va cef_interface/cef_binary/${cef_profile}/* cef_interface/cef_binary/Resources/* $out/cef/cef_binary/
+                ln -vs ${cef_binary}/lib/* $out/cef/cef_binary/
 
-                patchelf --debug \
-                  --add-rpath "\$ORIGIN/../cef/cef_binary" \
-                  $out/plugins/libclassicube_cef_plugin.so \
-                  $out/cef/cef
+                # TODO
+                # patchelf --debug \
+                #   --add-rpath "\$ORIGIN/../cef/cef_binary" \
+                #   $out/plugins/libclassicube_cef_plugin.so \
+                #   $out/cef/cef
               '';
 
               hardeningDisable = if cef_debug then [ "fortify" ] else [ ];

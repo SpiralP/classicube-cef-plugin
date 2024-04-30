@@ -76,9 +76,11 @@ pub fn is_clients_message(message: &str) -> Option<&str> {
     // > &7Poni: &fSpiralP
     // > &7+ Pon: &fSpiralP
     // &7  ClassiCraft 1.1.3: &fFaeEmpress
-    if message.len() >= 5
+    if message.len() >= 16
         && message.get(0..1).map_or(false, |a| a == "&")
-        && message.get(2..4).map_or(false, |a| a == "  ")
+        // limit to "ClassiCube" or else we hide other messages with spaces at the beginning,
+        // like /mapinfo and /whois
+        && message.get(2..15).map_or(false, |a| a == "  ClassiCube ")
     {
         Some(message.get(4..)?)
     } else {
@@ -96,4 +98,28 @@ pub fn remove_color_left(mut text: &str) -> &str {
     }
 
     text
+}
+
+#[test]
+fn test_is_clients_message() {
+    for (input, output) in [
+        ("hello", None),
+        ("", None),
+        ("&7", None),
+        ("&7 ", None),
+        ("&7  ", None),
+        ("&7 ClassiCube", None),
+        ("&7  ClassiCube", None),
+        ("&7  ClassiCube ", None),
+        ("&7 ClassiCube ", None),
+        ("&7 ClassiCube a", None),
+        ("&7  ClassiCube a", Some("ClassiCube a")),
+        ("&7  not ClassiCube a", None),
+        (
+            "&7  ClassiCube 1.1.6 + cef0.9.4 + Ponies v2.1: &f¿ Mew, ┌ Glim",
+            Some("ClassiCube 1.1.6 + cef0.9.4 + Ponies v2.1: &f¿ Mew, ┌ Glim"),
+        ),
+    ] {
+        assert_eq!(is_clients_message(input), output);
+    }
 }

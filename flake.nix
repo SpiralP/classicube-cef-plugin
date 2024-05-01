@@ -109,6 +109,7 @@
                 rustPlatform.bindgenHook
               ] ++ (if dev then
                 with pkgs; ([
+                  cargo-release
                   clippy
                   rustfmt
                   rust-analyzer

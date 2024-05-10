@@ -12,6 +12,7 @@
           pkgs = import nixpkgs {
             inherit system;
           };
+          inherit (lib.importTOML ./Cargo.toml) package;
 
           cef_binary = pkgs.stdenv.mkDerivation rec {
             pname = "cef_binary";
@@ -71,7 +72,9 @@
               cef_profile = if cef_debug then "Debug" else "Release";
             in
             pkgs.rustPlatform.buildRustPackage {
-              name = "classicube-cef-plugin";
+              pname = package.name;
+              version = package.version;
+
               src = lib.sourceByRegex ./. [
                 "^\.cargo(/.*)?$"
                 "^build\.rs$"

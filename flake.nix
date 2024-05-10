@@ -72,27 +72,13 @@
             in
             pkgs.rustPlatform.buildRustPackage {
               name = "classicube-cef-plugin";
-              src = lib.cleanSourceWith {
-                src = ./.;
-                filter = path: type:
-                  lib.cleanSourceFilter path type
-                  && (
-                    let
-                      relPath = lib.removePrefix (builtins.toString ./.) (builtins.toString path);
-                    in
-                    lib.any (re: builtins.match re relPath != null) [
-                      "/build.rs"
-                      "/Cargo.toml"
-                      "/Cargo.lock"
-                      "/\.cargo"
-                      "/\.cargo/.*"
-                      "/cef_interface"
-                      "/cef_interface/.*"
-                      "/src"
-                      "/src/.*"
-                    ]
-                  );
-              };
+              src = lib.sourceByRegex ./. [
+                "^\.cargo(/.*)?$"
+                "^build\.rs$"
+                "^Cargo\.(lock|toml)$"
+                "^cef_interface(/.*)?$"
+                "^src(/.*)?$"
+              ];
 
               cargoLock = {
                 lockFile = ./Cargo.lock;

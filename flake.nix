@@ -16,12 +16,12 @@
 
           cef_binary = pkgs.stdenv.mkDerivation rec {
             pname = "cef_binary";
-            version = "124.3.6+g30772e7+chromium-124.0.6367.119";
+            version = "125.0.21+gc8b1a8c+chromium-125.0.6422.142";
 
             src = pkgs.fetchzip {
               name = "cef_binary-${version}";
-              url = "https://cef-builds.spotifycdn.com/cef_binary_${builtins.replaceStrings [ "+" ] [ "%2B" ] version}_linux64.tar.bz2";
-              hash = "sha256-w9ctBOZujlgqjqfsVedeNDY+IA0p+1xi+jTZjNwDzAA=";
+              url = "https://cef-builds.spotifycdn.com/cef_binary_${version}_linux64.tar.bz2";
+              hash = "sha256-g0V7PhXo0fd/bk2OWVa7NYd/oQMmfdQRwRNttqbD2vs=";
             };
 
             buildInputs = with pkgs; with xorg; [
@@ -104,7 +104,15 @@
                   rust-analyzer
                 ]) else [ ]);
 
-              buildInputs = cef_binary.buildInputs;
+              ZSTD_SYS_USE_PKG_CONFIG = "1";
+              OPENSSL_LIB_DIR = "${lib.getLib pkgs.openssl}/lib";
+              OPENSSL_INCLUDE_DIR = "${lib.getDev pkgs.openssl}/include";
+              buildInputs = with pkgs; [
+                cef_binary
+                openssl
+                zstd
+              ]
+              ++ cef_binary.buildInputs;
 
               postPatch =
                 if cef_debug then ''

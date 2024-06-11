@@ -267,6 +267,23 @@ bool MyClient::OnFileDialog(CefRefPtr<CefBrowser> browser,
 #endif
 
 // CefDownloadHandler methods:
+bool MyClient::CanDownload(CefRefPtr<CefBrowser> browser,
+                           const CefString& url,
+                           const CefString& request_method) {
+  return false;
+}
+
+#if CEF_VERSION_MAJOR >= 125
+bool MyClient::OnBeforeDownload(CefRefPtr<CefBrowser> browser,
+                                CefRefPtr<CefDownloadItem> download_item,
+                                const CefString& suggested_name,
+                                CefRefPtr<CefBeforeDownloadCallback> callback) {
+  // By default the download will be canceled.
+  rust_debug("OnBeforeDownload");
+  // Return false to proceed with default handling
+  return true;
+}
+#else
 void MyClient::OnBeforeDownload(CefRefPtr<CefBrowser> browser,
                                 CefRefPtr<CefDownloadItem> download_item,
                                 const CefString& suggested_name,
@@ -274,6 +291,7 @@ void MyClient::OnBeforeDownload(CefRefPtr<CefBrowser> browser,
   // By default the download will be canceled.
   rust_debug("OnBeforeDownload");
 }
+#endif
 
 void MyClient::OnDownloadUpdated(CefRefPtr<CefBrowser> browser,
                                  CefRefPtr<CefDownloadItem> download_item,

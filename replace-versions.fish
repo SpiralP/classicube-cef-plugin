@@ -13,5 +13,6 @@ set to_encoded (string replace --all '+' '%2B' $to)
 sd --fixed-strings $from_encoded $to_encoded .github/workflows/rust.yml
 sd --fixed-strings $from $to flake.nix
 set sha256 (nix-prefetch-url --unpack --type sha256 --name "cef_binary-$to" "https://cef-builds.spotifycdn.com/cef_binary_$to_encoded""_linux64.tar.bz2")
-set hash (nix-hash --to-base64 --type sha256 $sha256)
-sd 'hash = "sha256-.+";' "hash = \"sha256-$hash\";" flake.nix
+set hash sha256-(nix-hash --to-base64 --type sha256 $sha256)
+echo "$hash"
+sd 'hash = "sha256-.+";' "hash = \"$hash\";" flake.nix

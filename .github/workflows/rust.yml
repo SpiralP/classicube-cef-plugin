@@ -20,11 +20,11 @@ jobs:
           - arch: x86_64
             bits: 64
             target: x86_64-pc-windows-msvc
-            url: https://cef-builds.spotifycdn.com/cef_binary_124.3.6%2Bg30772e7%2Bchromium-124.0.6367.119_windows64.tar.bz2
+            url: https://cef-builds.spotifycdn.com/cef_binary_125.0.21%2Bgc8b1a8c%2Bchromium-125.0.6422.142_windows64.tar.bz2
           - arch: i686
             bits: 32
             target: i686-pc-windows-msvc
-            url: https://cef-builds.spotifycdn.com/cef_binary_124.3.6%2Bg30772e7%2Bchromium-124.0.6367.119_windows32.tar.bz2
+            url: https://cef-builds.spotifycdn.com/cef_binary_125.0.21%2Bgc8b1a8c%2Bchromium-125.0.6422.142_windows32.tar.bz2
 
     steps:
       - uses: actions/checkout@v2
@@ -129,7 +129,7 @@ jobs:
         config:
           - arch: x86_64
             target: x86_64-unknown-linux-gnu
-            url: https://cef-builds.spotifycdn.com/cef_binary_124.3.6%2Bg30772e7%2Bchromium-124.0.6367.119_linux64.tar.bz2
+            url: https://cef-builds.spotifycdn.com/cef_binary_125.0.21%2Bgc8b1a8c%2Bchromium-125.0.6422.142_linux64.tar.bz2
           - arch: i686
             target: i686-unknown-linux-gnu
             # Linux x86 32-bit builds are discontinued after version 101 (details)
@@ -240,10 +240,10 @@ jobs:
         config:
           - arch: armhf
             target: armv7-unknown-linux-gnueabihf
-            url: https://cef-builds.spotifycdn.com/cef_binary_124.3.6%2Bg30772e7%2Bchromium-124.0.6367.119_linuxarm.tar.bz2
+            url: https://cef-builds.spotifycdn.com/cef_binary_125.0.21%2Bgc8b1a8c%2Bchromium-125.0.6422.142_linuxarm.tar.bz2
           - arch: aarch64
             target: aarch64-unknown-linux-gnu
-            url: https://cef-builds.spotifycdn.com/cef_binary_124.3.6%2Bg30772e7%2Bchromium-124.0.6367.119_linuxarm64.tar.bz2
+            url: https://cef-builds.spotifycdn.com/cef_binary_125.0.21%2Bgc8b1a8c%2Bchromium-125.0.6422.142_linuxarm64.tar.bz2
 
     steps:
       - uses: actions/checkout@v2
@@ -319,7 +319,7 @@ jobs:
         config:
           - arch: x86_64
             target: x86_64-apple-darwin
-            url: https://cef-builds.spotifycdn.com/cef_binary_124.3.6%2Bg30772e7%2Bchromium-124.0.6367.119_macosx64.tar.bz2
+            url: https://cef-builds.spotifycdn.com/cef_binary_125.0.21%2Bgc8b1a8c%2Bchromium-125.0.6422.142_macosx64.tar.bz2
 
     steps:
       - uses: actions/checkout@v2

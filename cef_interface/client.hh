@@ -113,7 +113,17 @@ class MyClient : public CefClient,
                   bool& suppress_message) override;
 
   // CefDialogHandler methods:
-#if CEF_VERSION_MAJOR > 101
+#if CEF_VERSION_MAJOR >= 126
+  bool OnFileDialog(CefRefPtr<CefBrowser> browser,
+                    FileDialogMode mode,
+                    const CefString& title,
+                    const CefString& default_file_path,
+                    const std::vector<CefString>& accept_filters,
+                    const std::vector<CefString>& accept_extensions,
+                    const std::vector<CefString>& accept_descriptions,
+                    CefRefPtr<CefFileDialogCallback> callback) override;
+
+#elif CEF_VERSION_MAJOR > 101
   bool OnFileDialog(CefRefPtr<CefBrowser> browser,
                     FileDialogMode mode,
                     const CefString& title,

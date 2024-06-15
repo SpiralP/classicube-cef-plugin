@@ -62,3 +62,8 @@ In a directory with the `ClassiCube` executable:
 - `nix build github:SpiralP/classicube-cef-plugin`
 - `cp -va result/* . && chmod -cR u+w cef plugins`
 - if using on another linux os: `patchelf --set-interpreter /lib64/ld-linux-x86-64.so.2 ./cef/cef`
+
+## Errors
+
+- Linux: `cannot allocate memory in static TLS block`
+  - `GLIBC_TUNABLES=glibc.rtld.optional_static_tls=16384 ./ClassiCube`

@@ -239,7 +239,21 @@ bool MyClient::OnJSDialog(CefRefPtr<CefBrowser> browser,
 }
 
 // CefDialogHandler methods:
-#if CEF_VERSION_MAJOR > 101
+#if CEF_VERSION_MAJOR >= 126
+bool MyClient::OnFileDialog(CefRefPtr<CefBrowser> browser,
+                            FileDialogMode mode,
+                            const CefString& title,
+                            const CefString& default_file_path,
+                            const std::vector<CefString>& accept_filters,
+                            const std::vector<CefString>& accept_extensions,
+                            const std::vector<CefString>& accept_descriptions,
+                            CefRefPtr<CefFileDialogCallback> callback) {
+  // To display a custom dialog return true and execute |callback| either inline
+  // or at a later time.
+  callback->Cancel();
+  return true;
+}
+#elif CEF_VERSION_MAJOR > 101
 bool MyClient::OnFileDialog(CefRefPtr<CefBrowser> browser,
                             FileDialogMode mode,
                             const CefString& title,
@@ -252,6 +266,7 @@ bool MyClient::OnFileDialog(CefRefPtr<CefBrowser> browser,
   return true;
 }
 #else
+// old discontinued 32 bit linux build 101
 bool MyClient::OnFileDialog(CefRefPtr<CefBrowser> browser,
                             FileDialogMode mode,
                             const CefString& title,

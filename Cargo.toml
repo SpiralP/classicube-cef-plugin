@@ -20,6 +20,7 @@ clap = { git = "https://github.com/SpiralP/rust-clap-classicube.git", features =
 classicube-helpers = { git = "https://github.com/SpiralP/rust-classicube-helpers.git" }
 classicube-sys = "3"
 deunicode = "1"
+dirs = "5"
 error-chain = "0.12"
 futures = "0.3"
 futures-timer = "3"

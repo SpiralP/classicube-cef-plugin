@@ -118,7 +118,11 @@ impl RustRefApp {
         #[cfg(target_os = "linux")]
         let browser_subprocess_path = cef_dir_path.join("cef");
 
-        let root_cache_path = cef_dir_path.join("cache");
+        // TODO allow multiple apps to run at once, maybe by using pid/uuid/random
+        // TODO then, how to cleanup unused cache? maybe in cef-loader?
+        let root_cache_path = dirs::cache_dir()
+            .unwrap_or_else(|| cef_dir_path.join("cache"))
+            .join("ClassiCube-cef");
 
         let resources_dir_path = cef_dir_path.join("cef_binary");
         let locales_dir_path = cef_dir_path.join("cef_binary").join("locales");

@@ -5,17 +5,20 @@ error_chain! {
     foreign_links {
         Fmt(::std::fmt::Error);
         Io(::std::io::Error);
+        NulError(::std::ffi::NulError);
+        ParseBoolError(::std::str::ParseBoolError);
         ParseFloatError(::std::num::ParseFloatError);
         ParseIntError(::std::num::ParseIntError);
-        ParseBoolError(::std::str::ParseBoolError);
         Utf8Error(::std::str::Utf8Error);
-        Url(url::ParseError);
-        Tokio(tokio::task::JoinError);
-        Bincode(bincode::Error);
+
         Base64(base64::DecodeError);
+        Bincode(bincode::Error);
         Clap(clap::Error);
-        SerdeJson(serde_json::Error);
+        FuturesCanceled(futures::channel::oneshot::Canceled);
         Reqwest(reqwest::Error);
+        SerdeJson(serde_json::Error);
+        Tokio(tokio::task::JoinError);
+        Url(url::ParseError);
     }
 
     errors {

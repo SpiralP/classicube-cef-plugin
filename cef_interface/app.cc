@@ -63,11 +63,11 @@ void MyApp::OnBeforeCommandLineProcessing(
   // add_switch(command_line, "disable-web-security");
   // add_switch(command_line, "ignore-certificate-errors");
 
-  // auto s = command_line->GetCommandLineString().ToString();
-  // rust_warn(s.c_str());
-
   // opens new command prompts, one per cef process
   // add_switch(command_line, "enable-logging");
+
+  // auto s = command_line->GetCommandLineString().ToString();
+  // rust_debug(s.c_str());
 }
 
 void MyApp::OnRegisterCustomSchemes(CefRawPtr<CefSchemeRegistrar> registrar) {

@@ -1,6 +1,7 @@
 mod generated;
 
 use std::{
+    env,
     ffi::{CStr, CString},
     mem,
     os::raw::c_int,
@@ -102,7 +103,51 @@ impl RustRefApp {
     }
 
     pub fn initialize(&self) -> Result<()> {
-        to_result(unsafe { cef_interface_initialize(self.ptr) })
+        let cef_dir_path = env::current_dir()
+            .chain_err(|| "current_dir() None")?
+            .join("cef");
+
+        #[cfg(target_os = "windows")]
+        let browser_subprocess_path = cef_dir_path.join("cef.exe");
+        #[cfg(target_os = "macos")]
+        let browser_subprocess_path = cef_dir_path
+            .join("cef.app")
+            .join("Contents")
+            .join("MacOS")
+            .join("cef");
+        #[cfg(target_os = "linux")]
+        let browser_subprocess_path = cef_dir_path.join("cef");
+
+        let root_cache_path = cef_dir_path.join("cache");
+
+        let resources_dir_path = cef_dir_path.join("cef_binary");
+        let locales_dir_path = cef_dir_path.join("cef_binary").join("locales");
+
+        let main_bundle_path = cef_dir_path.clone();
+        let framework_dir_path = cef_dir_path.join("Chromium Embedded Framework.framework");
+
+        let browser_subprocess_path =
+            CString::new(format!("{}", browser_subprocess_path.display()))?;
+        let root_cache_path = CString::new(format!("{}", root_cache_path.display()))?;
+
+        let resources_dir_path = CString::new(format!("{}", resources_dir_path.display()))?;
+        let locales_dir_path = CString::new(format!("{}", locales_dir_path.display()))?;
+
+        let main_bundle_path = CString::new(format!("{}", main_bundle_path.display()))?;
+        let framework_dir_path = CString::new(format!("{}", framework_dir_path.display()))?;
+
+        let paths = CefInitializePaths {
+            browser_subprocess_path: browser_subprocess_path.as_ptr(),
+            root_cache_path: root_cache_path.as_ptr(),
+
+            resources_dir_path: resources_dir_path.as_ptr(),
+            locales_dir_path: locales_dir_path.as_ptr(),
+
+            main_bundle_path: main_bundle_path.as_ptr(),
+            framework_dir_path: framework_dir_path.as_ptr(),
+        };
+
+        to_result(unsafe { cef_interface_initialize(self.ptr, paths) })
     }
 
     pub fn step() -> Result<()> {
@@ -132,7 +177,7 @@ impl RustRefClient {
         insecure: bool,
         background_color: u32,
     ) -> Result<()> {
-        let startup_url = CString::new(startup_url).unwrap();
+        let startup_url = CString::new(startup_url)?;
 
         to_result(unsafe {
             cef_interface_create_browser(
@@ -162,13 +207,13 @@ impl RustRefBrowser {
     }
 
     pub fn load_url<T: Into<Vec<u8>>>(&self, url: T) -> Result<()> {
-        let url = CString::new(url).unwrap();
+        let url = CString::new(url)?;
 
         to_result(unsafe { cef_interface_browser_load_url(self.ptr, url.as_ptr()) })
     }
 
     pub fn execute_javascript<T: Into<Vec<u8>>>(&self, code: T) -> Result<()> {
-        let code = CString::new(code).unwrap();
+        let code = CString::new(code)?;
 
         to_result(unsafe { cef_interface_browser_execute_javascript(self.ptr, code.as_ptr()) })
     }
@@ -178,8 +223,8 @@ impl RustRefBrowser {
         frame_name: T,
         code: U,
     ) -> Result<()> {
-        let frame_name = CString::new(frame_name).unwrap();
-        let code = CString::new(code).unwrap();
+        let frame_name = CString::new(frame_name)?;
+        let code = CString::new(code)?;
 
         to_result(unsafe {
             cef_interface_browser_execute_javascript_on_frame(
@@ -191,7 +236,7 @@ impl RustRefBrowser {
     }
 
     pub async fn eval_javascript<T: Into<Vec<u8>>>(&self, code: T) -> Result<RustV8Value> {
-        let code = CString::new(code).unwrap();
+        let code = CString::new(code)?;
 
         let (receiver, task_id) = javascript::create_task();
 
@@ -199,7 +244,7 @@ impl RustRefBrowser {
             cef_interface_browser_eval_javascript(self.ptr, task_id, code.as_ptr())
         })?;
 
-        let response = receiver.await.unwrap();
+        let response = receiver.await?;
 
         if response.success {
             let ffi_v8_value = unsafe { response.__bindgen_anon_1.result.as_ref() };
@@ -217,8 +262,8 @@ impl RustRefBrowser {
         frame_name: T,
         code: U,
     ) -> Result<RustV8Value> {
-        let frame_name = CString::new(frame_name).unwrap();
-        let code = CString::new(code).unwrap();
+        let frame_name = CString::new(frame_name)?;
+        let code = CString::new(code)?;
 
         let (receiver, task_id) = javascript::create_task();
 
@@ -231,7 +276,7 @@ impl RustRefBrowser {
             )
         })?;
 
-        let response = receiver.await.unwrap();
+        let response = receiver.await?;
 
         if response.success {
             let ffi_v8_value = unsafe { response.__bindgen_anon_1.result.as_ref() };
@@ -248,7 +293,7 @@ impl RustRefBrowser {
     }
 
     pub fn send_text<T: Into<Vec<u8>>>(&self, text: T) -> Result<()> {
-        let text = CString::new(text).unwrap();
+        let text = CString::new(text)?;
         to_result(unsafe { cef_interface_browser_send_text(self.ptr, text.as_ptr()) })
     }
 

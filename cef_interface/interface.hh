@@ -125,6 +125,17 @@ struct Callbacks {
   OnCertificateErrorCallback on_certificate_error;
 };
 
+struct CefInitializePaths {
+  const char* browser_subprocess_path;
+  const char* root_cache_path;
+
+  const char* resources_dir_path;
+  const char* locales_dir_path;
+
+  const char* main_bundle_path;
+  const char* framework_dir_path;
+};
+
 // functions to rust
 
 extern "C" RustRefApp cef_interface_create_app(Callbacks callbacks);
@@ -132,7 +143,7 @@ extern "C" RustRefApp cef_interface_create_app(Callbacks callbacks);
 extern "C" int cef_interface_shutdown();
 extern "C" int cef_interface_step();
 
-extern "C" int cef_interface_initialize(MyApp* app);
+extern "C" int cef_interface_initialize(MyApp* app, CefInitializePaths paths);
 
 // Browser
 

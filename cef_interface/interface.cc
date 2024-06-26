@@ -112,7 +112,7 @@ class LocalSchemeHandlerFactory : public CefSchemeHandlerFactory {
   DISALLOW_COPY_AND_ASSIGN(LocalSchemeHandlerFactory);
 };
 
-extern "C" int cef_interface_initialize(MyApp* app) {
+extern "C" int cef_interface_initialize(MyApp* app, CefInitializePaths paths) {
 #if defined(OS_MACOSX)
   if (!cef_load_library("./cef/Chromium Embedded Framework.framework/Chromium "
                         "Embedded Framework")) {
@@ -143,47 +143,16 @@ extern "C" int cef_interface_initialize(MyApp* app) {
 
   CefString(&settings.log_file).FromASCII("cef-binary.log");
 
-  char* c_cwd = getcwd(NULL, 0);
-  std::string cwd(c_cwd);
-  free(c_cwd);
-
-  std::string cef_dir_path(cwd);
-
-#if defined(_WIN64) || defined(_WIN32)
-  cef_dir_path += "\\cef";
-
-  std::string browser_subprocess_path(cef_dir_path);
-  browser_subprocess_path += "/cef.exe";
-#elif defined(OS_MACOSX)
-  cef_dir_path += "/cef";
-
-  std::string browser_subprocess_path(cef_dir_path);
-  browser_subprocess_path += "/cef.app";
-  browser_subprocess_path += "/Contents";
-  browser_subprocess_path += "/MacOS";
-  browser_subprocess_path += "/cef";
-
-  CefString(&settings.main_bundle_path).FromString(cef_dir_path);
-
-  std::string framework_dir_path(cef_dir_path);
-  framework_dir_path += "/Chromium Embedded Framework.framework";
-  CefString(&settings.framework_dir_path).FromString(framework_dir_path);
-#else
-  cef_dir_path += "/cef";
-
-  std::string browser_subprocess_path(cef_dir_path);
-  browser_subprocess_path += "/cef";
-
-  // linux had trouble finding locales
-  std::string locales_dir_path(cef_dir_path);
-  locales_dir_path += "/cef_binary";
-  locales_dir_path += "/locales";
-  CefString(&settings.locales_dir_path).FromString(locales_dir_path);
-#endif
-
-  // Specify the path for the sub-process executable.
   CefString(&settings.browser_subprocess_path)
-      .FromString(browser_subprocess_path);
+      .FromString(paths.browser_subprocess_path);
+
+  CefString(&settings.root_cache_path).FromString(paths.root_cache_path);
+
+  CefString(&settings.resources_dir_path).FromString(paths.resources_dir_path);
+  CefString(&settings.locales_dir_path).FromString(paths.locales_dir_path);
+
+  CefString(&settings.main_bundle_path).FromString(paths.main_bundle_path);
+  CefString(&settings.framework_dir_path).FromString(paths.framework_dir_path);
 
   // Initialize CEF in the main process.
   if (!CefInitialize(main_args, settings, app, NULL)) {

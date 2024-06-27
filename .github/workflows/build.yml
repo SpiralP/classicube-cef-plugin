@@ -1,15 +1,23 @@
-name: Rust
+name: Build
 
-on: [push]
+on:
+  pull_request:
+    branches: [master, main]
+  push:
+    branches: [master, main]
+  workflow_dispatch:
 
 concurrency:
-  group: ${{ github.ref }}
+  group: build-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
   contents: write
 
 jobs:
+  linux_nix:
+    uses: SpiralP/github-reusable-workflows/.github/workflows/build.yml@main
+
   windows_x86:
     name: Build Windows ${{ matrix.config.arch }}
     runs-on: windows-latest
@@ -216,20 +224,6 @@ jobs:
           files: |
             classicube_cef_linux_${{ matrix.config.arch }}.so
             cef-linux-${{ matrix.config.arch }}
-
-  linux_nix:
-    name: Nix Build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: cachix/install-nix-action@v22
-      - run: nix build --print-build-logs .
-      - uses: actions/upload-artifact@v3
-        with:
-          name: nix result
-          path: |
-            result/cef/cef
-            result/plugins/
 
   linux_arm:
     name: Build Linux ${{ matrix.config.arch }}

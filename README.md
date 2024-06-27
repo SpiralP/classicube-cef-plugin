@@ -9,7 +9,7 @@ A ClassiCube plugin that allows placing web browser screens in-game!
 ## Prerequisites
 
 - [Rust](https://www.rust-lang.org/) stable
-- Some other stuff; you can look in [the GitHub Actions script](.github/workflows/rust.yml) for platform-specific dependencies
+- Some other stuff; you can look in [the GitHub Actions script](.github/workflows/build.yml) for platform-specific dependencies
 
 ## Setup
 

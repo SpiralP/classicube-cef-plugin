@@ -67,3 +67,6 @@ In a directory with the `ClassiCube` executable:
 
 - Linux: `cannot allocate memory in static TLS block`
   - `GLIBC_TUNABLES=glibc.rtld.optional_static_tls=16384 ./ClassiCube`
+- Mac:
+  - in order to run ClassiCube with CEF on macOS 11+, you have to run without 10.16 compatibility:
+    `SYSTEM_VERSION_COMPAT=0 ./ClassiCube`

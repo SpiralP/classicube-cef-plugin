@@ -140,6 +140,7 @@ fn main() {
     .unwrap();
 }
 
+#[allow(dead_code)]
 enum LinkKind {
     Static,
     Dynamic,

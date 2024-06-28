@@ -148,11 +148,11 @@ extern "C" int cef_interface_initialize(MyApp* app, CefInitializePaths paths) {
 
   CefString(&settings.root_cache_path).FromString(paths.root_cache_path);
 
-  CefString(&settings.resources_dir_path).FromString(paths.resources_dir_path);
-  CefString(&settings.locales_dir_path).FromString(paths.locales_dir_path);
-
   CefString(&settings.main_bundle_path).FromString(paths.main_bundle_path);
   CefString(&settings.framework_dir_path).FromString(paths.framework_dir_path);
+
+  CefString(&settings.resources_dir_path).FromString(paths.resources_dir_path);
+  CefString(&settings.locales_dir_path).FromString(paths.locales_dir_path);
 
   // Initialize CEF in the main process.
   if (!CefInitialize(main_args, settings, app, NULL)) {

@@ -103,9 +103,8 @@ impl RustRefApp {
     }
 
     pub fn initialize(&self) -> Result<()> {
-        let cef_dir_path = env::current_dir()
-            .chain_err(|| "current_dir() None")?
-            .join("cef");
+        let current_dir_path = env::current_dir().chain_err(|| "current_dir() None")?;
+        let cef_dir_path = current_dir_path.join("cef");
 
         #[cfg(target_os = "windows")]
         let browser_subprocess_path = cef_dir_path.join("cef.exe");
@@ -124,31 +123,43 @@ impl RustRefApp {
             .unwrap_or_else(|| cef_dir_path.join("cache"))
             .join("ClassiCube-cef");
 
-        let resources_dir_path = cef_dir_path.join("cef_binary");
-        let locales_dir_path = cef_dir_path.join("cef_binary").join("locales");
-
-        let main_bundle_path = cef_dir_path.clone();
+        // ClassiCube doesn't need to run as an app bundle, but
+        // this has to be set or else we get errors, although it seems to work with any non-empty string
+        // ERROR:mach_port_rendezvous.cc(380)] bootstrap_look_up com.classicube.game.cef.MachPortRendezvousServer.16540: Unknown service name (1102)
+        // ERROR:shared_memory_switch.cc(237)] No rendezvous client, terminating process (parent died?)
+        let main_bundle_path = current_dir_path.clone();
         let framework_dir_path = cef_dir_path.join("Chromium Embedded Framework.framework");
+
+        #[cfg(not(target_os = "macos"))]
+        let resources_dir_path = cef_dir_path.join("cef_binary");
+        #[cfg(target_os = "macos")]
+        let resources_dir_path = framework_dir_path.join("Resources");
+
+        #[cfg(not(target_os = "macos"))]
+        let locales_dir_path = cef_dir_path.join("cef_binary").join("locales");
+        // This value is ignored on MacOS
+        #[cfg(target_os = "macos")]
+        let locales_dir_path = std::path::PathBuf::new();
 
         let browser_subprocess_path =
             CString::new(format!("{}", browser_subprocess_path.display()))?;
         let root_cache_path = CString::new(format!("{}", root_cache_path.display()))?;
 
-        let resources_dir_path = CString::new(format!("{}", resources_dir_path.display()))?;
-        let locales_dir_path = CString::new(format!("{}", locales_dir_path.display()))?;
-
         let main_bundle_path = CString::new(format!("{}", main_bundle_path.display()))?;
         let framework_dir_path = CString::new(format!("{}", framework_dir_path.display()))?;
 
+        let resources_dir_path = CString::new(format!("{}", resources_dir_path.display()))?;
+        let locales_dir_path = CString::new(format!("{}", locales_dir_path.display()))?;
+
         let paths = CefInitializePaths {
-            browser_subprocess_path: browser_subprocess_path.as_ptr(),
+                browser_subprocess_path: browser_subprocess_path.as_ptr(),
             root_cache_path: root_cache_path.as_ptr(),
 
             resources_dir_path: resources_dir_path.as_ptr(),
             locales_dir_path: locales_dir_path.as_ptr(),
 
-            main_bundle_path: main_bundle_path.as_ptr(),
-            framework_dir_path: framework_dir_path.as_ptr(),
+                main_bundle_path: main_bundle_path.as_ptr(),
+                framework_dir_path: framework_dir_path.as_ptr(),
         };
 
         to_result(unsafe { cef_interface_initialize(self.ptr, paths) })

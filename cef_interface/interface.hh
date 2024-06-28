@@ -72,7 +72,7 @@ struct RustRect {
 
 typedef RustRect (*GetViewRectCallback)(RustRefBrowser browser);
 
-enum FFIRustV8ValueTag : uint8_t {
+enum class FFIRustV8ValueTag : uint8_t {
   Unknown,
   Array,
   ArrayBuffer,

@@ -98,9 +98,9 @@ jobs:
           Move-Item `
             -Path 'target\${{ matrix.config.target }}\release\classicube_cef_plugin.pdb' `
             -Destination 'classicube_cef_windows_${{ matrix.config.arch }}.pdb'
-          Get-ChildItem `
-            target\${{ matrix.config.target }}\release\build\classicube-cef-plugin-*\out\cef.exe `
-            | Move-Item -Destination '.\cef-windows-${{ matrix.config.arch }}.exe'
+          Move-Item `
+            -Path 'target\${{ matrix.config.target }}\release\cef.exe' `
+            -Destination '.\cef-windows-${{ matrix.config.arch }}.exe'
 
       - name: VirusTotal Scan
         uses: crazy-max/ghaction-virustotal@v2
@@ -212,7 +212,7 @@ jobs:
           mv 'target/${{ matrix.config.target }}/release/libclassicube_cef_plugin.so' \
             './classicube_cef_linux_${{ matrix.config.arch }}.so' \
           && file './classicube_cef_linux_${{ matrix.config.arch }}.so' \
-          && mv target/${{ matrix.config.target }}/release/build/classicube-cef-plugin-*/out/cef \
+          && mv target/${{ matrix.config.target }}/release/cef \
             './cef-linux-${{ matrix.config.arch }}' \
           && file './cef-linux-${{ matrix.config.arch }}'
 
@@ -291,7 +291,7 @@ jobs:
           mv 'target/${{ matrix.config.target }}/release/libclassicube_cef_plugin.so' \
             './classicube_cef_linux_${{ matrix.config.arch }}.so' \
           && file './classicube_cef_linux_${{ matrix.config.arch }}.so' \
-          && mv target/${{ matrix.config.target }}/release/build/classicube-cef-plugin-*/out/cef \
+          && mv target/${{ matrix.config.target }}/release/cef \
             './cef-linux-${{ matrix.config.arch }}' \
           && file './cef-linux-${{ matrix.config.arch }}'
 
@@ -361,7 +361,7 @@ jobs:
         run: |
           mv 'target/${{ matrix.config.target }}/release/libclassicube_cef_plugin.dylib' './classicube_cef_macos_${{ matrix.config.arch }}.dylib' \
           && file './classicube_cef_macos_${{ matrix.config.arch }}.dylib' \
-          && mv target/${{ matrix.config.target }}/release/build/classicube-cef-plugin-*/out/cef './cef-macos-${{ matrix.config.arch }}' \
+          && mv target/${{ matrix.config.target }}/release/cef './cef-macos-${{ matrix.config.arch }}' \
           && file './cef-macos-${{ matrix.config.arch }}'
 
       - name: Upload Release

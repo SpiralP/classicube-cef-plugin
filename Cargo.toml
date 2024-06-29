@@ -1,12 +1,16 @@
 [package]
 name = "classicube-cef-plugin"
 version = "1.11.0"
-authors = ["SpiralP <spiral.palmer@gmail.com>"]
 edition = "2021"
 publish = false
 
 [lib]
-crate-type = ["cdylib"]
+crate-type = ["cdylib", "lib"]
+
+[[bin]]
+name = "cef"
+path = "src/cef_exe.rs"
+
 
 [dependencies]
 async-dispatcher = { git = "https://github.com/SpiralP/rust-async-dispatcher.git" }
@@ -40,8 +44,13 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 url = "2"
 zstd = "0.13"
 
+[target.'cfg(windows)'.dependencies]
+sysinfo = { version = "0.30", default-features = false }
+windows = { version = "0.57", features = ["Win32_System_Console"] }
+
 [build-dependencies]
 bindgen = "0.69"
+cc = "1"
 cmake = "0.1"
 
 [features]

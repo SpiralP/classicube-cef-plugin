@@ -10,7 +10,7 @@
 #![allow(clippy::items_after_statements)]
 
 mod api;
-mod cef;
+pub mod cef;
 mod chat;
 mod entity_manager;
 mod error;

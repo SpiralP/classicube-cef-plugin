@@ -1,4 +1,4 @@
-mod bindings;
+pub mod bindings;
 mod browser;
 mod javascript;
 mod mute_lose_focus;

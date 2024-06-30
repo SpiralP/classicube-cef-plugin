@@ -5,6 +5,7 @@ on:
     branches: [master, main]
   push:
     branches: [master, main]
+    tags: ["*"]
   workflow_dispatch:
 
 concurrency:

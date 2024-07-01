@@ -53,7 +53,8 @@ fn build_libcef(links: &mut Vec<Link>) -> PathBuf {
     // but normally does set rpath for dynamic link search paths.
     // On mac libcef is actually a framework called "Chromium Embedded Framework",
     // and although we can link it, it uses an rpath of "../Frameworks/Chromium Embedded Framework.framework".
-    #[cfg(target_os = "windows")]
+    // TODO remove linux
+    #[cfg(any(target_os = "windows", target_os = "linux"))]
     let libcef_lib_dir = {
         use std::fs;
 

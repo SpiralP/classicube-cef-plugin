@@ -47,6 +47,29 @@ fn build_libcef(links: &mut Vec<Link>) -> PathBuf {
         libcef_lib_dir
     );
 
+    // Fixes windows not being able to `cargo test` because STATUS_DLL_NOT_FOUND;
+    // It seems that linked files must be in OUT_DIR or else `cargo test` won't link to them?
+    // Noting that linux won't set rpath if the .so is a relative path like above,
+    // but normally does set rpath for dynamic link search paths.
+    // On mac libcef is actually a framework called "Chromium Embedded Framework",
+    // and although we can link it, it uses an rpath of "../Frameworks/Chromium Embedded Framework.framework".
+    #[cfg(target_os = "windows")]
+    let libcef_lib_dir = {
+        use std::fs;
+
+        let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
+        let new_libcef_lib_dir = out_dir.join("libcef");
+
+        fs::create_dir_all(&new_libcef_lib_dir).unwrap();
+        for entry in fs::read_dir(libcef_lib_dir).unwrap() {
+            let entry = entry.unwrap();
+            let ty = entry.file_type().unwrap();
+            fs::copy(entry.path(), new_libcef_lib_dir.join(entry.file_name())).unwrap();
+        }
+
+        new_libcef_lib_dir
+    };
+
     println!("cargo:rerun-if-env-changed=LIBCEF_INCLUDE_DIR");
     let mut libcef_include_dir = if let Ok(p) = env::var("LIBCEF_INCLUDE_DIR") {
         PathBuf::from(p)
@@ -65,13 +88,13 @@ fn build_libcef(links: &mut Vec<Link>) -> PathBuf {
     );
     assert!(libcef_include_dir.pop());
 
-    // on mac libcef is actually a framework called
-    // "Chromium Embedded Framework", and although we can link it,
-    // it uses an rpath of "../Frameworks/Chromium Embedded Framework.framework"
-    // which isn't the actual location of where we want cef;
-    // so use cef_load_library instead
-    // TODO should we just use cef_load_library on all platformss?
+    // TODO should we just use cef_load_library on all platforms?
     // TODO could remove the rpath weirdness on linux then?
+    // windows has to link in order to see exported symbols;
+    // linux and mac won't actually link to libcef.so/dylib,
+    // but will call cef_load_library to load the lib at runtime
+    // TODO linux lib builds, but bin wants libcef symbols?
+    // #[cfg(target_os = "windows")]
     #[cfg(not(target_os = "macos"))]
     links.push(Link::new(
         LinkKind::Dynamic,

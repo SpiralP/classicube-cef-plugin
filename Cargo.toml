@@ -53,6 +53,9 @@ bindgen = "0.69"
 cc = "1"
 cmake = "0.1"
 
+[dev-dependencies]
+proc-todo = { path = "proc-todo" }
+
 [features]
 ci = []
 

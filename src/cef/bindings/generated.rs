@@ -4,7 +4,9 @@
     non_snake_case,
     deref_nullptr,
     dead_code,
-    clippy::transmute_ptr_to_ptr
+    clippy::pub_underscore_fields,
+    clippy::transmute_ptr_to_ptr,
+    clippy::must_use_candidate
 )]
 
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));

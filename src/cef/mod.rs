@@ -1,8 +1,9 @@
-pub mod bindings;
+mod bindings;
 mod browser;
 mod javascript;
 mod mute_lose_focus;
 
+pub use self::bindings::cef_interface_execute_process;
 use classicube_helpers::async_manager;
 use classicube_helpers::{shared::FutureShared, WithInner};
 use futures::stream::{FuturesUnordered, StreamExt};

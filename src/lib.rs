@@ -15,7 +15,7 @@
 )]
 
 mod api;
-pub mod cef;
+mod cef;
 mod chat;
 mod entity_manager;
 mod error;
@@ -26,6 +26,7 @@ mod panic;
 mod player;
 mod plugin;
 
+pub use self::cef::cef_interface_execute_process;
 use self::plugin::Plugin;
 use classicube_helpers::{test_noop_fn, test_noop_static, time, time_silent};
 use classicube_sys::IGameComponent;

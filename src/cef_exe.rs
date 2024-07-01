@@ -1,6 +1,6 @@
 #![cfg_attr(target_os = "windows", windows_subsystem = "windows")]
 
-use classicube_cef_plugin::cef::bindings::cef_interface_execute_process;
+use classicube_cef_plugin::cef_interface_execute_process;
 use std::{env, ffi::CString, os::raw::c_int, process};
 use tracing::{debug, warn};
 use tracing_subscriber::EnvFilter;

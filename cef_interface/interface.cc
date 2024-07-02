@@ -80,7 +80,6 @@ extern "C" int cef_interface_execute_process(int argc,
                                              const char* const argv[]) {
   rust_debug("cef_interface_execute_process");
 
-  // TODO maybe do for all plats?
 #if defined(OS_MACOSX)
   if (!cef_load_library("./cef/Chromium Embedded Framework.framework/Chromium "
                         "Embedded Framework")) {

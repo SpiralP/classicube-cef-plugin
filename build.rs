@@ -52,24 +52,38 @@ fn build_libcef(links: &mut Vec<Link>) -> PathBuf {
     // Noting that linux won't set rpath if the .so is a relative path like above,
     // but normally does set rpath for dynamic link search paths.
     // On mac libcef is actually a framework called "Chromium Embedded Framework",
-    // and although we can link it, it uses an rpath of "../Frameworks/Chromium Embedded Framework.framework".
-    // TODO remove linux
-    #[cfg(any(target_os = "windows", target_os = "linux"))]
-    let libcef_lib_dir = {
-        use std::fs;
+    // and although we can link it, it then uses an rpath of
+    // "../Frameworks/Chromium Embedded Framework.framework".
+    // (mac is also required to call cef_load_library instead of normal linking)
+    // TODO still needed after mocking?
+    // #[cfg(target_os = "windows")]
+    // let libcef_lib_dir = {
+    //     use std::fs;
 
-        let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
-        let new_libcef_lib_dir = out_dir.join("libcef");
+    //     let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
+    //     let new_libcef_lib_dir = out_dir.join("libcef");
 
-        fs::create_dir_all(&new_libcef_lib_dir).unwrap();
-        for entry in fs::read_dir(libcef_lib_dir).unwrap() {
-            let entry = entry.unwrap();
-            let ty = entry.file_type().unwrap();
-            fs::copy(entry.path(), new_libcef_lib_dir.join(entry.file_name())).unwrap();
-        }
+    //     fs::create_dir_all(&new_libcef_lib_dir).unwrap();
+    //     for entry in fs::read_dir(libcef_lib_dir).unwrap() {
+    //         let entry = entry.unwrap();
+    //         let file_type = entry.file_type().unwrap();
+    //         let file_name = entry.file_name();
+    //         let file_name = file_name.to_str().unwrap();
+    //         if file_type.is_file() && (file_name.ends_with(".so") || file_name.ends_with(".dll")) {
+    //             let to = new_libcef_lib_dir.join(file_name);
+    //             fs::copy(entry.path(), &to).unwrap();
+    //             #[cfg(target_os = "linux")]
+    //             {
+    //                 use std::os::unix::fs::PermissionsExt;
+    //                 let mut perms = to.metadata().unwrap().permissions();
+    //                 perms.set_mode(0o755);
+    //                 fs::set_permissions(to, perms).unwrap();
+    //             }
+    //         }
+    //     }
 
-        new_libcef_lib_dir
-    };
+    //     new_libcef_lib_dir
+    // };
 
     println!("cargo:rerun-if-env-changed=LIBCEF_INCLUDE_DIR");
     let mut libcef_include_dir = if let Ok(p) = env::var("LIBCEF_INCLUDE_DIR") {
@@ -89,19 +103,20 @@ fn build_libcef(links: &mut Vec<Link>) -> PathBuf {
     );
     assert!(libcef_include_dir.pop());
 
-    // TODO should we just use cef_load_library on all platforms?
-    // TODO could remove the rpath weirdness on linux then?
-    // windows has to link in order to see exported symbols;
-    // linux and mac won't actually link to libcef.so/dylib,
-    // but will call cef_load_library to load the lib at runtime
-    // TODO linux lib builds, but bin wants libcef symbols?
-    // #[cfg(target_os = "windows")]
+    // mac calls cef_load_library to load libcef at runtime
     #[cfg(not(target_os = "macos"))]
     links.push(Link::new(
         LinkKind::Dynamic,
         "cef".to_string(),
         Some(libcef_lib_dir.to_path_buf()),
     ));
+
+    // help ./cef/cef and ./plugins/plugin.so find libcef.so
+    #[cfg(target_os = "linux")]
+    {
+        println!("cargo:rustc-link-arg-bins=-Wl,-rpath,$ORIGIN/cef_binary");
+        println!("cargo:rustc-cdylib-link-arg=-Wl,-rpath,$ORIGIN/../cef/cef_binary");
+    }
 
     libcef_include_dir
 }

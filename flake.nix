@@ -74,6 +74,7 @@
               "^Cargo\.(lock|toml)$"
               "^cef_interface(/.*)?$"
               "^src(/.*)?$"
+              "^proc-todo(/.*)?$"
             ];
 
             cargoLock = {

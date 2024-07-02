@@ -27,6 +27,7 @@ test_mock_fn!(cef_interface_browser_was_resized, 1, c_int);
 test_mock_fn!(cef_interface_create_app, 1, RustRefApp);
 test_mock_fn!(cef_interface_create_browser, 5, c_int);
 test_mock_fn!(cef_interface_delete_ref_string, 1, c_int);
+test_mock_fn!(cef_interface_execute_process, 2, c_int);
 test_mock_fn!(cef_interface_initialize, 2, c_int);
 test_mock_fn!(cef_interface_new_ref_string, 2, RustRefString);
 test_mock_fn!(cef_interface_release_ref_app, 1, c_int);

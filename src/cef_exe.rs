@@ -85,33 +85,15 @@ fn main() {
         }
     };
 
-    // TODO
-    #[cfg(target_os = "macos")]
-    if (!cef_load_library(
-        "./cef/Chromium Embedded Framework.framework/Chromium Embedded Framework",
-    )) {
-        rust_warn("cef_interface_execute_process cef_load_library");
-        return 1;
-    }
+    let arg_v = env::args()
+        .map(|s| CString::new(s).unwrap())
+        .collect::<Vec<_>>();
+    let arg_c = arg_v.len() as c_int;
 
-    let ret = {
-        let arg_v = env::args()
-            .map(|s| CString::new(s).unwrap())
-            .collect::<Vec<_>>();
-        let arg_c = arg_v.len() as c_int;
+    let arg_v = arg_v.iter().map(|arg| arg.as_ptr()).collect::<Vec<_>>();
 
-        let arg_v = arg_v.iter().map(|arg| arg.as_ptr()).collect::<Vec<_>>();
-
-        unsafe { cef_interface_execute_process(arg_c, arg_v.as_ptr()) }
-    };
+    let ret = unsafe { cef_interface_execute_process(arg_c, arg_v.as_ptr()) };
     warn!(?ret, "cef_interface_execute_process");
-
-    // TODO
-    #[cfg(target_os = "macos")]
-    if (!cef_unload_library()) {
-        rust_warn("cef_interface_execute_process cef_unload_library");
-        return 1;
-    }
 
     #[cfg(target_os = "windows")]
     stop_parent_watcher();

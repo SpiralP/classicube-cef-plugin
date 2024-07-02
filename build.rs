@@ -47,43 +47,42 @@ fn build_libcef(links: &mut Vec<Link>) -> PathBuf {
         libcef_lib_dir
     );
 
-    // Fixes windows not being able to `cargo test` because STATUS_DLL_NOT_FOUND;
-    // It seems that linked files must be in OUT_DIR or else `cargo test` won't link to them?
-    // Noting that linux won't set rpath if the .so is a relative path like above,
-    // but normally does set rpath for dynamic link search paths.
-    // On mac libcef is actually a framework called "Chromium Embedded Framework",
-    // and although we can link it, it then uses an rpath of
-    // "../Frameworks/Chromium Embedded Framework.framework".
-    // (mac is also required to call cef_load_library instead of normal linking)
-    // TODO still needed after mocking?
-    // #[cfg(target_os = "windows")]
-    // let libcef_lib_dir = {
-    //     use std::fs;
+    // Fixes linux/windows not being able to `cargo test` because STATUS_DLL_NOT_FOUND;
+    // Putting the lib files in OUT_DIR will let `cargo test` link them at runtime.
+    // https://doc.rust-lang.org/cargo/reference/environment-variables.html#dynamic-library-paths
+    // Only doing this for dev test builds so that nothing strange happens for release builds.
+    #[cfg(all(debug_assertions, not(target_os = "macos")))]
+    let libcef_lib_dir = {
+        use std::fs;
 
-    //     let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
-    //     let new_libcef_lib_dir = out_dir.join("libcef");
+        let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
+        let new_libcef_lib_dir = out_dir.join("libcef");
 
-    //     fs::create_dir_all(&new_libcef_lib_dir).unwrap();
-    //     for entry in fs::read_dir(libcef_lib_dir).unwrap() {
-    //         let entry = entry.unwrap();
-    //         let file_type = entry.file_type().unwrap();
-    //         let file_name = entry.file_name();
-    //         let file_name = file_name.to_str().unwrap();
-    //         if file_type.is_file() && (file_name.ends_with(".so") || file_name.ends_with(".dll")) {
-    //             let to = new_libcef_lib_dir.join(file_name);
-    //             fs::copy(entry.path(), &to).unwrap();
-    //             #[cfg(target_os = "linux")]
-    //             {
-    //                 use std::os::unix::fs::PermissionsExt;
-    //                 let mut perms = to.metadata().unwrap().permissions();
-    //                 perms.set_mode(0o755);
-    //                 fs::set_permissions(to, perms).unwrap();
-    //             }
-    //         }
-    //     }
+        fs::create_dir_all(&new_libcef_lib_dir).unwrap();
+        for entry in fs::read_dir(libcef_lib_dir.canonicalize().unwrap()).unwrap() {
+            let entry = entry.unwrap();
+            let file_type = entry.file_type().unwrap();
+            let file_name = entry.file_name();
+            let file_name = file_name.to_str().unwrap();
+            if file_type.is_file()
+                && (file_name.ends_with(".so")
+                    || file_name.ends_with(".dll")
+                    || file_name.ends_with(".lib"))
+            {
+                let from = entry.path();
+                let to = new_libcef_lib_dir.join(file_name);
+                let _ = fs::remove_file(&to).ok();
 
-    //     new_libcef_lib_dir
-    // };
+                #[cfg(target_os = "windows")]
+                fs::copy(&from, &to).unwrap();
+
+                #[cfg(target_os = "linux")]
+                std::os::unix::fs::symlink(&from, &to).unwrap();
+            }
+        }
+
+        new_libcef_lib_dir
+    };
 
     println!("cargo:rerun-if-env-changed=LIBCEF_INCLUDE_DIR");
     let mut libcef_include_dir = if let Ok(p) = env::var("LIBCEF_INCLUDE_DIR") {
@@ -103,7 +102,7 @@ fn build_libcef(links: &mut Vec<Link>) -> PathBuf {
     );
     assert!(libcef_include_dir.pop());
 
-    // mac calls cef_load_library to load libcef at runtime
+    // mac calls cef_load_library to load libcef at runtime, so never link libcef
     #[cfg(not(target_os = "macos"))]
     links.push(Link::new(
         LinkKind::Dynamic,

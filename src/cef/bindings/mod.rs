@@ -152,14 +152,14 @@ impl RustRefApp {
         let locales_dir_path = CString::new(format!("{}", locales_dir_path.display()))?;
 
         let paths = CefInitializePaths {
-                browser_subprocess_path: browser_subprocess_path.as_ptr(),
+            browser_subprocess_path: browser_subprocess_path.as_ptr(),
             root_cache_path: root_cache_path.as_ptr(),
 
             resources_dir_path: resources_dir_path.as_ptr(),
             locales_dir_path: locales_dir_path.as_ptr(),
 
-                main_bundle_path: main_bundle_path.as_ptr(),
-                framework_dir_path: framework_dir_path.as_ptr(),
+            main_bundle_path: main_bundle_path.as_ptr(),
+            framework_dir_path: framework_dir_path.as_ptr(),
         };
 
         to_result(unsafe { cef_interface_initialize(self.ptr, paths) })
@@ -362,6 +362,7 @@ impl Clone for RustRefString {
 }
 
 impl FFIRustV8Value {
+    #[must_use]
     pub fn to_v8_value(&self) -> RustV8Value {
         let inner = &self.__bindgen_anon_1;
 

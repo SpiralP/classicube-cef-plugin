@@ -24,8 +24,7 @@ A ClassiCube plugin that allows placing web browser screens in-game!
 - Run `cargo build --release`
   - This will create:
     - `./target/release/classicube_cef_plugin.dll`
-    - `./target/release/build/classicube-cef-plugin-*/out/cef.exe`
-      - There will be 2 folders named `classicube-cef-plugin-*`, look in both to find `out/cef.exe`
+    - `./target/release/cef.exe`
 
 ## Install (Windows)
 
@@ -42,8 +41,7 @@ In a directory with the `ClassiCube` executable:
 - Run `cargo build --release`
   - This will create:
     - `./target/release/libclassicube_cef_plugin.so`
-    - `./target/release/build/classicube-cef-plugin-*/out/cef`
-      - There will be 2 folders named `classicube-cef-plugin-*`, look in both to find `out/cef`
+    - `./target/release/cef`
 
 ## Install (Linux)
 

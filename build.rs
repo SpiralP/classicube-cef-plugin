@@ -1,92 +1,218 @@
 use std::{
-    env, fs,
+    env,
     path::{Path, PathBuf},
 };
 
-fn main() {
-    // just use Release cef-binary because Debug makes crt problems for windows
-    // istringstream would crash on destructor
-    let profile = "Release";
-    // if cfg!(debug_assertions) {
-    //     "Debug"
-    // } else {
-    //     "Release"
-    // };
+const PROFILE: &str = if cfg!(debug_assertions) {
+    "Debug"
+} else {
+    "Release"
+};
 
-    #[cfg(target_os = "windows")]
-    {
-        // this must be linked first!
-        // or else we get debug assertion popups about heap corruption/crt memory
-        // also you can't build debug cef without linking this
-        if profile == "Debug" {
-            // links to ucrtbased.dll
-            println!("cargo:rustc-link-lib=static=ucrtd");
-        }
+fn main() {
+    let mut links = Vec::new();
+
+    // fixes undefined reference to c++ methods;
+    // required here because libcef/libcef_dll_wrapper depend on it,
+    // also note we do cargo_metadata(false) on cc::Build
+    #[cfg(target_os = "linux")]
+    links.push(Link::new(LinkKind::Dynamic, "stdc++".to_string(), None));
+
+    #[cfg(target_os = "macos")]
+    links.push(Link::new(LinkKind::Dynamic, "c++".to_string(), None));
+
+    let libcef_include_dir = build_libcef(&mut links);
+    build_libcef_dll_wrapper(&mut links);
+    build_cef_interface(&libcef_include_dir, &mut links);
+
+    links.reverse();
+    for link in links {
+        link.print();
     }
 
-    let out_dir = env::var("OUT_DIR").unwrap();
+    build_bindings(&libcef_include_dir);
+}
 
-    println!("cargo:rerun-if-changed=cef_interface/cef_binary/CMakeLists.txt");
-    println!("cargo:rerun-if-changed=cef_interface/CMakeLists.txt");
-    println!("cargo:rerun-if-changed=cef_interface/interface.hh");
-    println!("cargo:rerun-if-changed=cef_interface/interface.cc");
+#[allow(unused_variables)]
+fn build_libcef(links: &mut Vec<Link>) -> PathBuf {
+    println!("cargo:rerun-if-env-changed=LIBCEF_LIB_DIR");
+    let libcef_lib_dir = if let Ok(p) = env::var("LIBCEF_LIB_DIR") {
+        PathBuf::from(p)
+    } else {
+        PathBuf::from("cef_interface/cef_binary").join(PROFILE)
+    };
+    assert!(
+        libcef_lib_dir.is_dir(),
+        "libcef_lib_dir {:?} is_dir",
+        libcef_lib_dir
+    );
+
+    // Fixes linux/windows not being able to `cargo test` because STATUS_DLL_NOT_FOUND;
+    // Putting the lib files in OUT_DIR will let `cargo test` link them at runtime.
+    // https://doc.rust-lang.org/cargo/reference/environment-variables.html#dynamic-library-paths
+    // Only doing this for dev test builds so that nothing strange happens for release builds.
+    #[cfg(all(debug_assertions, not(target_os = "macos")))]
+    let libcef_lib_dir = {
+        use std::fs;
+
+        let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
+        let new_libcef_lib_dir = out_dir.join("libcef");
+
+        fs::create_dir_all(&new_libcef_lib_dir).unwrap();
+        for entry in fs::read_dir(libcef_lib_dir.canonicalize().unwrap()).unwrap() {
+            let entry = entry.unwrap();
+            let file_type = entry.file_type().unwrap();
+            let file_name = entry.file_name();
+            let file_name = file_name.to_str().unwrap();
+            if file_type.is_file()
+                && (file_name.ends_with(".so")
+                    || file_name.ends_with(".dll")
+                    || file_name.ends_with(".lib"))
+            {
+                let from = entry.path();
+                let to = new_libcef_lib_dir.join(file_name);
+                let _ = fs::remove_file(&to).ok();
+
+                #[cfg(target_os = "windows")]
+                fs::copy(&from, &to).unwrap();
+
+                #[cfg(target_os = "linux")]
+                std::os::unix::fs::symlink(&from, &to).unwrap();
+            }
+        }
+
+        new_libcef_lib_dir
+    };
+
+    println!("cargo:rerun-if-env-changed=LIBCEF_INCLUDE_DIR");
+    let mut libcef_include_dir = if let Ok(p) = env::var("LIBCEF_INCLUDE_DIR") {
+        PathBuf::from(p)
+    } else {
+        PathBuf::from("cef_interface/cef_binary/include")
+    };
+    assert!(
+        libcef_include_dir.is_dir(),
+        "libcef_include_dir {:?} is_dir",
+        libcef_include_dir
+    );
+    assert_eq!(
+        libcef_include_dir.file_name().expect("file_name"),
+        "include",
+        "LIBCEF_INCLUDE_DIR directory needs to be named 'include' because of strange cef #include's"
+    );
+    assert!(libcef_include_dir.pop());
+
+    // mac calls cef_load_library to load libcef at runtime, so never link libcef
+    #[cfg(not(target_os = "macos"))]
+    links.push(Link::new(
+        LinkKind::Dynamic,
+        "cef".to_string(),
+        Some(libcef_lib_dir.to_path_buf()),
+    ));
+
+    // help ./cef/cef and ./plugins/plugin.so find libcef.so
+    #[cfg(target_os = "linux")]
+    {
+        println!("cargo:rustc-link-arg-bins=-Wl,-rpath,$ORIGIN/cef_binary");
+        println!("cargo:rustc-cdylib-link-arg=-Wl,-rpath,$ORIGIN/../cef/cef_binary");
+    }
+
+    libcef_include_dir
+}
+
+fn build_libcef_dll_wrapper(links: &mut Vec<Link>) {
+    println!("cargo:rerun-if-env-changed=LIBCEF_DLL_WRAPPER_LIB_DIR");
+
+    let libcef_dll_wrapper_lib_dir = if let Ok(p) = env::var("LIBCEF_DLL_WRAPPER_LIB_DIR") {
+        PathBuf::from(p)
+    } else {
+        println!("cargo:rerun-if-changed=cef_interface/cef_binary/CMakeLists.txt");
+
+        let mut build = cmake::Config::new("cef_interface/cef_binary");
+
+        // rust builds with /MT (static C-RunTime), but libcef_dll_wrapper uses /MTd,
+        // and windows does NOT like this! So remove the "d" in a big hack
+        #[cfg(target_os = "windows")]
+        let build = if PROFILE == "Debug" {
+            build
+                .configure_arg("-DCEF_RUNTIME_LIBRARY_FLAG=/DSUPER_HACK_IGNORE_DEBUG_D_HERE_")
+                .configure_arg("-DCEF_COMPILER_FLAGS=/MT")
+        } else {
+            &mut build
+        };
+
+        #[cfg(any(target_os = "linux", target_os = "macos"))]
+        let build = build.build_arg("-j16");
+
+        build
+            .static_crt(true) // /MT (uses /MTd when profile is Debug)
+            .build_target("libcef_dll_wrapper")
+            .profile(PROFILE)
+            .define("USE_SANDBOX", "OFF")
+            .define(
+                // see cef_binary/cmake/cef_variables.cmake
+                "PROJECT_ARCH",
+                match env::var("CARGO_CFG_TARGET_ARCH").unwrap().as_str() {
+                    "x86" => "x86",
+                    "x86_64" => "x86_64",
+                    "arm" => "arm",
+                    "aarch64" => "arm64",
+                    other => panic!("unsupported target arch {:?}", other),
+                },
+            )
+            .build()
+            .join("build")
+            .join("libcef_dll_wrapper")
+    };
+    assert!(
+        libcef_dll_wrapper_lib_dir.is_dir(),
+        "libcef_dll_wrapper_lib_dir {:?} is_dir",
+        libcef_dll_wrapper_lib_dir
+    );
+
+    links.push(Link::new(
+        LinkKind::Static,
+        "cef_dll_wrapper".to_string(),
+        Some(libcef_dll_wrapper_lib_dir.to_path_buf()),
+    ));
+}
+
+fn build_cef_interface(libcef_include_dir: &Path, links: &mut Vec<Link>) {
     println!("cargo:rerun-if-changed=cef_interface/app.cc");
     println!("cargo:rerun-if-changed=cef_interface/app.hh");
     println!("cargo:rerun-if-changed=cef_interface/client.cc");
     println!("cargo:rerun-if-changed=cef_interface/client.hh");
+    println!("cargo:rerun-if-changed=cef_interface/interface.cc");
+    println!("cargo:rerun-if-changed=cef_interface/interface.hh");
     println!("cargo:rerun-if-changed=cef_interface/serialize.cc");
     println!("cargo:rerun-if-changed=cef_interface/serialize.hh");
-    println!("cargo:rerun-if-changed=cef_interface/cef_exe.cc");
 
-    let cmake_path = cmake::Config::new("cef_interface")
-        .static_crt(true)
-        .build_target("cef_interface")
-        .profile(profile)
-        .define("USE_SANDBOX", "OFF")
-        .define("PROJECT_ARCH", env::var("CARGO_CFG_TARGET_ARCH").unwrap())
-        .build();
+    cc::Build::new()
+        .cpp(true)
+        .std("c++17")
+        .static_crt(true) // only ever uses /MT, never /MTd
+        .cargo_metadata(false)
+        .warnings(!cfg!(debug_assertions))
+        .include(libcef_include_dir)
+        .file("cef_interface/app.cc")
+        .file("cef_interface/client.cc")
+        .file("cef_interface/interface.cc")
+        .file("cef_interface/serialize.cc")
+        .compile("cef_interface");
 
-    // link to cef_interface
-    link(
-        "cef_interface",
-        cmake_path.join("build/"),
+    links.push(Link::new(
         LinkKind::Static,
-        profile,
-    );
+        "cef_interface".to_string(),
+        Some(PathBuf::from(env::var("OUT_DIR").unwrap())),
+    ));
+}
 
-    // link to libcef_dll_wrapper
-    link(
-        "cef_dll_wrapper",
-        cmake_path.join("build/libcef_dll_wrapper"),
-        LinkKind::Static,
-        profile,
-    );
-
-    // link to libcef
-    #[cfg(not(target_os = "macos"))]
-    link(
-        "cef",
-        format!("cef_interface/cef_binary/{}", profile),
-        LinkKind::Dynamic,
-        profile,
-    );
-
-    #[cfg(target_os = "linux")]
-    {
-        // fixes undefined reference to c++ methods
-        println!("cargo:rustc-link-lib=static=stdc++");
-    }
-
-    // The bindgen::Builder is the main entry point
-    // to bindgen, and lets you build up options for
-    // the resulting bindings.
-    let bindings = bindgen::Builder::default()
+fn build_bindings(libcef_include_dir: &Path) {
+    bindgen::Builder::default()
         .derive_copy(false)
         .clang_arg("-Icef_interface")
-        .clang_arg("-Icef_interface/cef_binary")
+        .clang_arg(format!("-I{}", libcef_include_dir.display()))
         .clang_arg("-xc++")
-        // The input header we would like to generate
-        // bindings for.
         .header_contents(
             "bindgen.hpp",
             "#include \"interface.hh\"",
@@ -97,77 +223,107 @@ fn main() {
         .allowlist_function("cef_interface_.*")
         .allowlist_type("RustSchemeReturn")
         .rustified_enum("FFIRustV8ValueTag")
-        // Finish the builder and generate the bindings.
         .generate()
-        // Unwrap the Result and panic on failure.
-        .expect("Unable to generate bindings");
-
-    // Write the bindings to the $OUT_DIR/bindings.rs file.
-    let out_path = Path::new(&out_dir);
-    bindings
-        .write_to_file(out_path.join("bindings.rs"))
+        .expect("Unable to generate bindings") 
+        .write_to_file(PathBuf::from(env::var("OUT_DIR").unwrap()).join("bindings.rs"))
         .expect("Couldn't write bindings!");
-
-    // build cef_exe
-    let cmake_path = cmake::Config::new("cef_interface")
-        .static_crt(true)
-        .build_target("cef_exe")
-        .profile(profile)
-        .define("USE_SANDBOX", "OFF")
-        .define("PROJECT_ARCH", env::var("CARGO_CFG_TARGET_ARCH").unwrap())
-        .build();
-
-    #[cfg(target_os = "windows")]
-    const CEF_EXE_NAME: &str = "cef.exe";
-
-    #[cfg(target_os = "windows")]
-    const CEF_EXE_OLD_NAME: &str = "cef_exe.exe";
-
-    #[cfg(not(target_os = "windows"))]
-    const CEF_EXE_NAME: &str = "cef";
-
-    #[cfg(not(target_os = "windows"))]
-    const CEF_EXE_OLD_NAME: &str = "cef_exe";
-
-    let _ignore = fs::remove_dir_all(Path::new(&out_dir).join(CEF_EXE_NAME));
-    fs::copy(
-        cmake_path
-            .join("build")
-            .join(profile)
-            .join(CEF_EXE_OLD_NAME),
-        Path::new(&out_dir).join(CEF_EXE_NAME),
-    )
-    .unwrap();
 }
 
 #[allow(dead_code)]
-enum LinkKind {
+pub enum LinkKind {
     Static,
     Dynamic,
+    Framework,
 }
 
-#[allow(unused_variables)]
-fn link<P: Into<PathBuf>>(name: &str, search_path: P, kind: LinkKind, profile: &str) {
-    let search_path = search_path.into();
-    let kind = match kind {
-        LinkKind::Static => "static",
-        LinkKind::Dynamic => "dylib",
-    };
+pub struct Link {
+    kind: LinkKind,
+    name: String,
+    search_path: Option<PathBuf>,
+}
 
-    #[cfg(target_os = "windows")]
-    let search_path = if search_path.join(profile).is_dir() {
-        search_path.join(profile)
-    } else {
-        search_path
-    };
+impl Link {
+    pub fn new(kind: LinkKind, name: String, search_path: Option<PathBuf>) -> Self {
+        let (name, search_path) = if let Some(search_path) = search_path {
+            // cmake puts things in Release/Debug folders (on windows only)
+            #[cfg(target_os = "windows")]
+            let search_path = if search_path.join(PROFILE).is_dir() {
+                search_path.join(PROFILE)
+            } else {
+                search_path.to_path_buf()
+            };
 
-    #[cfg(target_os = "windows")]
-    let name = if search_path.join(format!("lib{}.lib", name)).is_file() {
-        format!("lib{}", name)
-    } else {
-        name.to_string()
-    };
+            assert!(
+                search_path.is_dir(),
+                "search_path {:?} is_dir",
+                search_path.display()
+            );
 
-    println!("cargo:rustc-link-search=native={}", search_path.display());
-    println!("cargo:rustc-link-lib={}={}", kind, name);
+            #[cfg(target_os = "windows")]
+            let name = {
+                // they are sometimes named with lib in front: libcef.lib, libcef_dll_wrapper.lib
+                let name = if search_path.join(format!("lib{}.lib", name)).is_file() {
+                    format!("lib{}", name)
+                } else {
+                    name
+                };
+
+                // only .lib needs to exist on windows for both kinds
+                let lib_path = search_path.join(format!("{}.lib", name));
+                assert!(
+                    lib_path.is_file(),
+                    "lib_path {:?} is_file",
+                    lib_path.display()
+                );
+
+                name
+            };
+
+            #[cfg(target_os = "linux")]
+            {
+                let lib_path = search_path.join(format!(
+                    "lib{}.{}",
+                    name,
+                    match kind {
+                        LinkKind::Static => "a",
+                        LinkKind::Dynamic => "so",
+                        _ => panic!("can't use framework on linux"),
+                    }
+                ));
+                assert!(
+                    lib_path.is_file(),
+                    "lib_path {:?} is_file",
+                    lib_path.display()
+                );
+            }
+
+            (name, Some(search_path))
+        } else {
+            (name, None)
+        };
+
+        Self {
+            kind,
+            name,
+            search_path,
+        }
+    }
+
+    pub fn print(&self) {
+        if let Some(search_path) = &self.search_path {
+            let kind = match self.kind {
+                LinkKind::Static => "native",
+                LinkKind::Dynamic => "native",
+                LinkKind::Framework => "framework",
+            };
+            println!("cargo:rustc-link-search={}={}", kind, search_path.display());
+        }
+
+        let kind = match self.kind {
+            LinkKind::Static => "static",
+            LinkKind::Dynamic => "dylib",
+            LinkKind::Framework => "framework",
+        };
+        println!("cargo:rustc-link-lib={}={}", kind, self.name);
+    }
 }

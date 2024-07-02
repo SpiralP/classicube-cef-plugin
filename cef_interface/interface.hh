@@ -138,6 +138,9 @@ struct CefInitializePaths {
 
 // functions to rust
 
+extern "C" int cef_interface_execute_process(int argc,
+                                             const char* const argv[]);
+
 extern "C" RustRefApp cef_interface_create_app(Callbacks callbacks);
 
 extern "C" int cef_interface_shutdown();

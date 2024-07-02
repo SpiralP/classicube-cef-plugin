@@ -1,13 +1,18 @@
 #![warn(clippy::pedantic)]
-#![allow(clippy::module_name_repetitions)]
-#![allow(clippy::unused_self)]
-#![allow(clippy::cast_lossless)]
-#![allow(clippy::cast_precision_loss)]
-#![allow(clippy::cast_possible_truncation)]
-#![allow(clippy::needless_pass_by_value)]
-#![allow(clippy::too_many_lines)]
-#![allow(clippy::struct_excessive_bools)]
-#![allow(clippy::items_after_statements)]
+#![allow(
+    clippy::cast_lossless,
+    clippy::cast_possible_truncation,
+    clippy::cast_precision_loss,
+    clippy::items_after_statements,
+    clippy::missing_errors_doc,
+    clippy::missing_safety_doc,
+    clippy::module_name_repetitions,
+    clippy::needless_pass_by_value,
+    clippy::struct_excessive_bools,
+    clippy::to_string_trait_impl,
+    clippy::too_many_lines,
+    clippy::unused_self
+)]
 
 mod api;
 mod cef;
@@ -21,6 +26,7 @@ mod panic;
 mod player;
 mod plugin;
 
+pub use self::cef::cef_interface_execute_process;
 use self::plugin::Plugin;
 use classicube_helpers::{test_noop_fn, test_noop_static, time, time_silent};
 use classicube_sys::IGameComponent;

@@ -80,15 +80,6 @@ extern "C" int cef_interface_execute_process(int argc,
                                              const char* const argv[]) {
   rust_debug("cef_interface_execute_process");
 
-  // TODO maybe do for all plats?
-#if defined(OS_MACOSX)
-  if (!cef_load_library("./cef/Chromium Embedded Framework.framework/Chromium "
-                        "Embedded Framework")) {
-    rust_warn("cef_interface_execute_process cef_load_library");
-    return 1;
-  }
-#endif
-
 #if defined(_WIN64) || defined(_WIN32)
   CefMainArgs main_args(GetModuleHandle(NULL));
 #else
@@ -100,16 +91,7 @@ extern "C" int cef_interface_execute_process(int argc,
   // CEF applications have multiple sub-processes (render, plugin, GPU, etc)
   // that share the same executable. This function checks the command-line and,
   // if this is a sub-process, executes the appropriate logic.
-  int exit_code = CefExecuteProcess(main_args, app, nullptr);
-
-#if defined(OS_MACOSX)
-  if (!cef_unload_library()) {
-    rust_warn("cef_interface_execute_process cef_unload_library");
-    return 1;
-  }
-#endif
-
-  return exit_code;
+  return CefExecuteProcess(main_args, app, nullptr);
 }
 
 extern "C" RustRefApp cef_interface_create_app(Callbacks callbacks) {

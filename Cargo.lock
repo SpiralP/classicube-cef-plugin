@@ -245,7 +245,6 @@ dependencies = [
  "futures-timer",
  "lazy_static",
  "ncollide3d",
- "proc-todo",
  "rand",
  "regex",
  "reqwest",
@@ -1244,10 +1243,6 @@ checksum = "5e719e8df665df0d1c8fbfd238015744736151d4445ec0836b8e628aae103b77"
 dependencies = [
  "unicode-ident",
 ]
-
-[[package]]
-name = "proc-todo"
-version = "0.1.0"
 
 [[package]]
 name = "quote"

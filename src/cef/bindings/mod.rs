@@ -1,7 +1,4 @@
-#[cfg(not(test))]
 mod generated;
-#[cfg(test)]
-mod generated_mock;
 
 use std::{
     env,
@@ -14,10 +11,7 @@ use std::{
 use tracing::{debug, warn};
 use url::Url;
 
-#[cfg(not(test))]
 pub use self::generated::*;
-#[cfg(test)]
-pub use self::generated_mock::*;
 use super::{javascript, javascript::RustV8Value};
 use crate::error::{bail, ErrorKind, Result, ResultExt};
 

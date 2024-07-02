@@ -1,7 +1,7 @@
 #![cfg_attr(target_os = "windows", windows_subsystem = "windows")]
 
 use classicube_cef_plugin::cef_interface_execute_process;
-use std::{env, ffi::CString, os::raw::c_int, process};
+use std::{env, ffi::CString, os::raw::c_int, process, sync::mpsc::RecvTimeoutError};
 use tracing::{debug, warn};
 use tracing_subscriber::EnvFilter;
 
@@ -33,54 +33,50 @@ fn main() {
     // so this needs to only be run on Windows. (I've only seen this issue on Windows.)
     // I see references to PR_SET_PDEATHSIG in linux chromium, so it is probably fine there.
     //
-    // on mac, i can't seem to reproduce the child process staying after killall -9 ClassiCube
+    // on mac, i can't seem to reproduce the child process staying after `killall -9 ClassiCube`
     #[cfg(target_os = "windows")]
     let stop_parent_watcher = {
-        use std::{
-            sync::{Arc, Mutex},
-            thread,
-            time::Duration,
-        };
+        use std::{sync::mpsc, thread, time::Duration};
         use sysinfo::{Pid, ProcessRefreshKind, RefreshKind, System};
 
         const PROCESS_CHECK_INTERVAL: Duration = Duration::from_secs(2);
 
-        let should_die = Arc::new(Mutex::new(false));
-        let thread_handle = {
-            let should_die = should_die.clone();
-            thread::spawn(move || {
-                let mut system = System::new_with_specifics(
-                    RefreshKind::new().with_processes(ProcessRefreshKind::new()),
-                );
-                let my_pid = Pid::from_u32(process::id());
+        let (kill_thread_tx, kill_thread_rx) = mpsc::channel();
+        let thread_handle = thread::spawn(move || {
+            let mut system = System::new_with_specifics(
+                RefreshKind::new().with_processes(ProcessRefreshKind::new()),
+            );
+            let my_pid = Pid::from_u32(process::id());
 
-                let parent_pid = system.process(my_pid).and_then(|process| process.parent());
-                debug!(?my_pid, ?parent_pid);
+            let parent_pid = system.process(my_pid).and_then(|process| process.parent());
+            debug!(?my_pid, ?parent_pid);
 
-                if let Some(parent_pid) = parent_pid {
-                    debug!("watching for parent {:?} to die", parent_pid);
+            if let Some(parent_pid) = parent_pid {
+                debug!("watching for parent {:?} to die", parent_pid);
 
-                    loop {
-                        if *should_die.lock().unwrap() {
+                loop {
+                    if !system.refresh_process_specifics(parent_pid, ProcessRefreshKind::new()) {
+                        warn!("parent {:?} died; exiting", parent_pid);
+                        process::exit(1);
+                    }
+
+                    match kill_thread_rx.recv_timeout(PROCESS_CHECK_INTERVAL) {
+                        Err(RecvTimeoutError::Timeout) => {}
+                        Ok(_) => {
                             debug!("dying");
                             return;
                         }
-
-                        if !system.refresh_process_specifics(parent_pid, ProcessRefreshKind::new())
-                        {
-                            warn!("parent {:?} died; exiting", parent_pid);
-                            thread::sleep(PROCESS_CHECK_INTERVAL);
-                            process::exit(1);
+                        err => {
+                            err.unwrap();
+                            return;
                         }
-
-                        thread::sleep(PROCESS_CHECK_INTERVAL);
                     }
                 }
-            })
-        };
+            }
+        });
 
         move || {
-            *should_die.lock().unwrap() = true;
+            kill_thread_tx.send(()).unwrap();
             thread_handle.join().unwrap();
         }
     };

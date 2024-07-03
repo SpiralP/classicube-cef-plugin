@@ -4,7 +4,7 @@ A ClassiCube plugin that allows placing web browser screens in-game!
 
 ![image](https://i.imgur.com/MyvxVCZ.png)
 
-**You probably want [the loader plugin](https://github.com/SpiralP/classicube-cef-loader-plugin/blob/master/README.md#installing) that installs and updates this plugin instead of compiling it yourself!**
+**You probably want [the loader plugin](https://github.com/SpiralP/classicube-cef-loader-plugin/blob/HEAD/README.md#installing) that installs and updates this plugin instead of compiling it yourself!**
 
 ## Prerequisites
 

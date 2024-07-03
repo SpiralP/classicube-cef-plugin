@@ -24,7 +24,10 @@ impl Plugin {
         debug!("plugin initialize");
 
         PLUGIN.with(|cell| {
-            assert!(cell.borrow().is_none());
+            assert!(
+                cell.borrow().is_none(),
+                "Cef was already loaded but shouldn't be. Are there more than 1 Cef plugin files?"
+            );
 
             Chat::print(format!("Loading Cef v{}", env!("CARGO_PKG_VERSION")));
 

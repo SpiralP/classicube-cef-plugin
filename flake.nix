@@ -12,7 +12,7 @@
           pkgs = import nixpkgs {
             inherit system;
           };
-          inherit (lib.importTOML ./Cargo.toml) package;
+          rustManifest = lib.importTOML ./Cargo.toml;
 
 
           makeCefBinaryAttrs =
@@ -65,8 +65,8 @@
             });
 
           makeDefaultAttrs = (cef_binary: rec {
-            pname = package.name;
-            version = package.version;
+            pname = rustManifest.package.name;
+            version = rustManifest.package.version;
 
             src = lib.sourceByRegex ./. [
               "^\.cargo(/.*)?$"

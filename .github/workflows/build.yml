@@ -116,7 +116,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          body_path: release_body_text.txt
           files: |
             classicube_cef_windows_${{ matrix.config.arch }}.dll
             classicube_cef_windows_${{ matrix.config.arch }}.pdb

@@ -142,7 +142,7 @@ jobs:
         run: |
           sudo dpkg --add-architecture i386
           sudo apt-get -y update
-          sudo apt-get -y install aria2 git gcc g++ build-essential cmake clang pkg-config:i386
+          sudo apt-get -y install aria2 git gcc g++ build-essential cmake clang pkg-config:i386 \
             gcc-multilib g++-multilib \
             libssl-dev:i386 libglib2.0-dev:i386 libpango1.0-dev:i386 libatk1.0-dev:i386 libgtk-3-dev:i386 libgdk-pixbuf2.0-dev:i386 \
             libssl3:i386 libnss3:i386 libasound2:i386 libxss1:i386 libnspr4:i386
@@ -292,10 +292,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-
-      - name: Install deps
-        run: |
-          brew install aria2 cmake
 
       - name: Fetch cef_binary
         run: |

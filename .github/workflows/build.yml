@@ -27,27 +27,17 @@ jobs:
       matrix:
         config:
           - arch: x86_64
-            bits: 64
             target: x86_64-pc-windows-msvc
             url: https://cef-builds.spotifycdn.com/cef_binary_126.2.9%2Bg169fea9%2Bchromium-126.0.6478.127_windows64.tar.bz2
           - arch: i686
-            bits: 32
             target: i686-pc-windows-msvc
             url: https://cef-builds.spotifycdn.com/cef_binary_126.2.9%2Bg169fea9%2Bchromium-126.0.6478.127_windows32.tar.bz2
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
-      - name: Install deps
+      - name: Fetch cef_binary
         run: |
-          iwr -useb get.scoop.sh -outfile install-scoop.ps1
-          .\install-scoop.ps1 -RunAsAdmin
-          rm install-scoop.ps1
-          echo "$HOME\scoop\shims" >> $env:GITHUB_PATH
-          echo "C:\ProgramData\scoop\shims" >> $env:GITHUB_PATH
-          scoop install aria2
-          scoop install --arch ${{ matrix.config.bits }}bit llvm
-          echo "LIBCLANG_PATH=$HOME\scoop\apps\llvm\current\bin" >> $env:GITHUB_ENV
           aria2c '${{ matrix.config.url }}' -o cef_binary.tar.bz2 --max-connection-per-server=4
           7z x -y 'cef_binary.tar.bz2'
           Remove-Item 'cef_binary.tar.bz2'
@@ -57,40 +47,31 @@ jobs:
           Move-Item -Path 'cef_binary' -Destination 'cef_interface'
 
       - name: setup-msbuild
-        uses: microsoft/setup-msbuild@v1
+        uses: microsoft/setup-msbuild@v2
 
-      - name: Install rust for ${{ matrix.config.target }}
-        uses: actions-rs/toolchain@v1
-        with:
-          # we have to use this toolchain because "libclang.dll: invalid DLL (32-bit)"
-          toolchain: stable-${{ matrix.config.target }}
-          target: ${{ matrix.config.target }}
-          override: true
-          components: rustfmt
+      - name: Install rust
+        run: |
+          rustup default stable
+          rustup component add rustfmt
+          rustup target add ${{ matrix.config.target }}
 
       - name: Build
-        uses: actions-rs/cargo@v1
-        if: startsWith(github.ref, 'refs/tags/') != true
-        with:
-          command: build
-          args: --target ${{ matrix.config.target }}
+        if: ${{ startsWith(github.ref, 'refs/tags/') != true }}
+        run: |
+          cargo build --target ${{ matrix.config.target }}
 
       - name: Test
-        uses: actions-rs/cargo@v1
-        if: startsWith(github.ref, 'refs/tags/') != true
-        with:
-          command: test
-          args: --target ${{ matrix.config.target }} -- --nocapture --test-threads 1
+        if: ${{ startsWith(github.ref, 'refs/tags/') != true }}
+        run: |
+          cargo test --target ${{ matrix.config.target }} -- --nocapture --test-threads 1
 
       - name: Build Release
-        uses: actions-rs/cargo@v1
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          command: build
-          args: --target ${{ matrix.config.target }} --release
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
+        run: |
+          cargo build --target ${{ matrix.config.target }} --release
 
       - name: Rename files
-        if: startsWith(github.ref, 'refs/tags/')
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
         run: |
           Move-Item `
             -Path 'target\${{ matrix.config.target }}\release\classicube_cef_plugin.dll' `
@@ -103,8 +84,8 @@ jobs:
             -Destination '.\cef-windows-${{ matrix.config.arch }}.exe'
 
       - name: VirusTotal Scan
-        uses: crazy-max/ghaction-virustotal@v2
-        if: startsWith(github.ref, 'refs/tags/')
+        uses: crazy-max/ghaction-virustotal@v4
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
         id: virustotal
         with:
           vt_api_key: ${{ secrets.VT_API_KEY }}
@@ -113,13 +94,13 @@ jobs:
             cef-windows-${{ matrix.config.arch }}.exe
 
       - name: Generate Release Body Text
-        if: startsWith(github.ref, 'refs/tags/')
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
         run: |
           node .github\format-release.js '${{ steps.virustotal.outputs.analysis }}' > release_body_text.txt
 
       - name: Upload Release
-        uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -146,77 +127,70 @@ jobs:
             url: https://cef-builds.spotifycdn.com/cef_binary_101.0.18%2Bg367b4a0%2Bchromium-101.0.4951.67_linux32.tar.bz2
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Install x86_64 deps
-        if: matrix.config.arch == 'x86_64'
+        if: ${{ matrix.config.arch == 'x86_64' }}
         run: |
-          sudo apt-get -y update \
-          && sudo apt-get -y install aria2 wget curl git gcc g++ build-essential cmake clang pkg-config \
+          sudo apt-get -y update
+          sudo apt-get -y install aria2 git gcc g++ build-essential cmake clang pkg-config \
             libssl-dev libglib2.0-dev libpango1.0-dev libatk1.0-dev libgtk-3-dev libgdk-pixbuf2.0-dev \
-            libssl3 libnss3 libasound2 libxss1 libnspr4 \
-          && aria2c '${{ matrix.config.url }}' -o cef_binary.tar.bz2 --max-connection-per-server=4 \
-          && tar -xjf cef_binary.tar.bz2 \
-          && rm cef_binary.tar.bz2 \
-          && mv cef_binary_* cef_interface/cef_binary
+            libssl3 libnss3 libasound2 libxss1 libnspr4
 
       - name: Install i686 deps
-        if: matrix.config.arch == 'i686'
+        if: ${{ matrix.config.arch == 'i686' }}
         run: |
-          sudo dpkg --add-architecture i386 \
-          && sudo apt-get -y update \
-          && sudo apt-get -y install aria2 wget curl git gcc g++ build-essential cmake clang pkg-config:i386 \
+          sudo dpkg --add-architecture i386
+          sudo apt-get -y update
+          sudo apt-get -y install aria2 git gcc g++ build-essential cmake clang pkg-config:i386
             gcc-multilib g++-multilib \
             libssl-dev:i386 libglib2.0-dev:i386 libpango1.0-dev:i386 libatk1.0-dev:i386 libgtk-3-dev:i386 libgdk-pixbuf2.0-dev:i386 \
-            libssl3:i386 libnss3:i386 libasound2:i386 libxss1:i386 libnspr4:i386 \
-            && aria2c '${{ matrix.config.url }}' -o cef_binary.tar.bz2 --max-connection-per-server=4 \
-            && tar -xjf cef_binary.tar.bz2 \
-          && rm cef_binary.tar.bz2 \
-          && mv cef_binary_* cef_interface/cef_binary \
-          && echo "PKG_CONFIG_ALLOW_CROSS=1" >> "$GITHUB_ENV"
+            libssl3:i386 libnss3:i386 libasound2:i386 libxss1:i386 libnspr4:i386
+          echo "PKG_CONFIG_ALLOW_CROSS=1" >> "$GITHUB_ENV"
 
-      - name: Install rust for ${{ matrix.config.target }}
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          target: ${{ matrix.config.target }}
-          override: true
-          components: rustfmt
+      - name: Fetch cef_binary
+        run: |
+          aria2c '${{ matrix.config.url }}' -o cef_binary.tar.bz2 --max-connection-per-server=4
+          tar -xjf cef_binary.tar.bz2
+          rm cef_binary.tar.bz2
+          mv cef_binary_* cef_interface/cef_binary
+
+      - name: Install rust
+        run: |
+          rustup default stable
+          rustup component add rustfmt
+          rustup target add ${{ matrix.config.target }}
 
       - name: Build
-        uses: actions-rs/cargo@v1
-        if: startsWith(github.ref, 'refs/tags/') != true
-        with:
-          command: build
-          args: --target ${{ matrix.config.target }}
+        if: ${{ startsWith(github.ref, 'refs/tags/') != true }}
+        run: |
+          cargo build --target ${{ matrix.config.target }}
+          file 'target/${{ matrix.config.target }}/debug/libclassicube_cef_plugin.so'
+          file 'target/${{ matrix.config.target }}/debug/cef'
 
       - name: Test
-        uses: actions-rs/cargo@v1
-        if: startsWith(github.ref, 'refs/tags/') != true
-        with:
-          command: test
-          args: --target ${{ matrix.config.target }} -- --nocapture --test-threads 1
+        if: ${{ startsWith(github.ref, 'refs/tags/') != true }}
+        run: |
+          cargo test --target ${{ matrix.config.target }} -- --nocapture --test-threads 1
 
       - name: Build Release
-        uses: actions-rs/cargo@v1
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          command: build
-          args: --target ${{ matrix.config.target }} --release
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
+        run: |
+          cargo build --target ${{ matrix.config.target }} --release
+          file 'target/${{ matrix.config.target }}/release/libclassicube_cef_plugin.so'
+          file 'target/${{ matrix.config.target }}/release/cef'
 
       - name: Rename files
-        if: startsWith(github.ref, 'refs/tags/')
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
         run: |
           mv 'target/${{ matrix.config.target }}/release/libclassicube_cef_plugin.so' \
-            './classicube_cef_linux_${{ matrix.config.arch }}.so' \
-          && file './classicube_cef_linux_${{ matrix.config.arch }}.so' \
-          && mv target/${{ matrix.config.target }}/release/cef \
+            './classicube_cef_linux_${{ matrix.config.arch }}.so'
+          mv 'target/${{ matrix.config.target }}/release/cef' \
             './cef-linux-${{ matrix.config.arch }}' \
-          && file './cef-linux-${{ matrix.config.arch }}'
 
       - name: Upload Release
-        uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -239,63 +213,65 @@ jobs:
             url: https://cef-builds.spotifycdn.com/cef_binary_126.2.9%2Bg169fea9%2Bchromium-126.0.6478.127_linuxarm64.tar.bz2
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Install armhf deps
-        if: matrix.config.arch == 'armhf'
+        if: ${{ matrix.config.arch == 'armhf' }}
         run: |
-          docker build --pull -t cross-armhf -f .github/cross-armhf.Dockerfile . \
-          && aria2c '${{ matrix.config.url }}' -o cef_binary.tar.bz2 --max-connection-per-server=4 \
-          && tar -xjf cef_binary.tar.bz2 \
-          && rm cef_binary.tar.bz2 \
-          && mv cef_binary_* cef_interface/cef_binary
+          docker build --pull -t cross-armhf -f .github/cross-armhf.Dockerfile .
 
       - name: Install aarch64 deps
-        if: matrix.config.arch == 'aarch64'
+        if: ${{ matrix.config.arch == 'aarch64' }}
         run: |
-          docker build --pull -t cross-aarch64 -f .github/cross-aarch64.Dockerfile . \
-          && aria2c '${{ matrix.config.url }}' -o cef_binary.tar.bz2 --max-connection-per-server=4 \
-          && tar -xjf cef_binary.tar.bz2 \
-          && rm cef_binary.tar.bz2 \
-          && mv cef_binary_* cef_interface/cef_binary
+          docker build --pull -t cross-aarch64 -f .github/cross-aarch64.Dockerfile .
 
-      - name: Install rust for ${{ matrix.config.target }}
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          target: ${{ matrix.config.target }}
-          override: true
-          components: rustfmt
+      - name: Fetch cef_binary
+        run: |
+          aria2c '${{ matrix.config.url }}' -o cef_binary.tar.bz2 --max-connection-per-server=4
+          tar -xjf cef_binary.tar.bz2
+          rm cef_binary.tar.bz2
+          mv cef_binary_* cef_interface/cef_binary
+
+      - name: Install rust
+        run: |
+          rustup default stable
+          rustup component add rustfmt
+          rustup target add ${{ matrix.config.target }}
+
+      - name: Install cross
+        run: |
+          cargo install cross
 
       - name: Build
-        uses: actions-rs/cargo@v1
-        if: startsWith(github.ref, 'refs/tags/') != true
-        with:
-          use-cross: true
-          command: build
-          args: --target ${{ matrix.config.target }}
+        if: ${{ startsWith(github.ref, 'refs/tags/') != true }}
+        run: |
+          cross build --target ${{ matrix.config.target }}
+          file 'target/${{ matrix.config.target }}/debug/libclassicube_cef_plugin.so'
+          file 'target/${{ matrix.config.target }}/debug/cef'
+
+      - name: Test
+        if: ${{ startsWith(github.ref, 'refs/tags/') != true }}
+        run: |
+          cross test --target ${{ matrix.config.target }} -- --nocapture --test-threads 1
 
       - name: Build Release
-        uses: actions-rs/cargo@v1
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          use-cross: true
-          command: build
-          args: --target ${{ matrix.config.target }} --release
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
+        run: |
+          cross build --target ${{ matrix.config.target }} --release
+          file 'target/${{ matrix.config.target }}/release/libclassicube_cef_plugin.so'
+          file 'target/${{ matrix.config.target }}/release/cef'
 
       - name: Rename files
-        if: startsWith(github.ref, 'refs/tags/')
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
         run: |
           mv 'target/${{ matrix.config.target }}/release/libclassicube_cef_plugin.so' \
-            './classicube_cef_linux_${{ matrix.config.arch }}.so' \
-          && file './classicube_cef_linux_${{ matrix.config.arch }}.so' \
-          && mv target/${{ matrix.config.target }}/release/cef \
-            './cef-linux-${{ matrix.config.arch }}' \
-          && file './cef-linux-${{ matrix.config.arch }}'
+            './classicube_cef_linux_${{ matrix.config.arch }}.so'
+          mv 'target/${{ matrix.config.target }}/release/cef' \
+            './cef-linux-${{ matrix.config.arch }}'
 
       - name: Upload Release
-        uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -315,56 +291,55 @@ jobs:
             url: https://cef-builds.spotifycdn.com/cef_binary_126.2.9%2Bg169fea9%2Bchromium-126.0.6478.127_macosx64.tar.bz2
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Install deps
         run: |
-          brew install aria2 cmake \
-          && aria2c '${{ matrix.config.url }}' -o cef_binary.tar.bz2 --max-connection-per-server=4 \
-          && tar -xjf cef_binary.tar.bz2 \
-          && rm cef_binary.tar.bz2 \
-          && mv cef_binary_* cef_interface/cef_binary
+          brew install aria2 cmake
 
-      - name: Install rust for ${{ matrix.config.target }}
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          target: ${{ matrix.config.target }}
-          override: true
-          components: rustfmt
+      - name: Fetch cef_binary
+        run: |
+          aria2c '${{ matrix.config.url }}' -o cef_binary.tar.bz2 --max-connection-per-server=4
+          tar -xjf cef_binary.tar.bz2
+          rm cef_binary.tar.bz2
+          mv cef_binary_* cef_interface/cef_binary
+
+      - name: Install rust
+        run: |
+          rustup default stable
+          rustup component add rustfmt
+          rustup target add ${{ matrix.config.target }}
 
       - name: Build
-        uses: actions-rs/cargo@v1
-        if: startsWith(github.ref, 'refs/tags/') != true
-        with:
-          command: build
-          args: --target ${{ matrix.config.target }}
+        if: ${{ startsWith(github.ref, 'refs/tags/') != true }}
+        run: |
+          cargo build --target ${{ matrix.config.target }}
+          file 'target/${{ matrix.config.target }}/debug/libclassicube_cef_plugin.dylib'
+          file 'target/${{ matrix.config.target }}/debug/cef'
 
       - name: Test
-        uses: actions-rs/cargo@v1
-        if: startsWith(github.ref, 'refs/tags/') != true
-        with:
-          command: test
-          args: --target ${{ matrix.config.target }} -- --nocapture --test-threads 1
+        if: ${{ startsWith(github.ref, 'refs/tags/') != true }}
+        run: |
+          cargo test --target ${{ matrix.config.target }} -- --nocapture --test-threads 1
 
       - name: Build Release
-        uses: actions-rs/cargo@v1
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          command: build
-          args: --target ${{ matrix.config.target }} --release
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
+        run: |
+          cargo build --target ${{ matrix.config.target }} --release
+          file 'target/${{ matrix.config.target }}/release/libclassicube_cef_plugin.dylib'
+          file 'target/${{ matrix.config.target }}/release/cef'
 
       - name: Rename files
-        if: startsWith(github.ref, 'refs/tags/')
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
         run: |
-          mv 'target/${{ matrix.config.target }}/release/libclassicube_cef_plugin.dylib' './classicube_cef_macos_${{ matrix.config.arch }}.dylib' \
-          && file './classicube_cef_macos_${{ matrix.config.arch }}.dylib' \
-          && mv target/${{ matrix.config.target }}/release/cef './cef-macos-${{ matrix.config.arch }}' \
-          && file './cef-macos-${{ matrix.config.arch }}'
+          mv 'target/${{ matrix.config.target }}/release/libclassicube_cef_plugin.dylib' \
+            './classicube_cef_macos_${{ matrix.config.arch }}.dylib'
+          mv 'target/${{ matrix.config.target }}/release/cef' \
+            './cef-macos-${{ matrix.config.arch }}'
 
       - name: Upload Release
-        uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:

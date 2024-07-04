@@ -1,7 +1,7 @@
 #![cfg_attr(target_os = "windows", windows_subsystem = "windows")]
 
 use classicube_cef_plugin::cef_interface_execute_process;
-use std::{env, ffi::CString, os::raw::c_int, process, sync::mpsc::RecvTimeoutError};
+use std::{env, ffi::CString, os::raw::c_int, process};
 use tracing::{debug, warn};
 use tracing_subscriber::EnvFilter;
 
@@ -36,7 +36,11 @@ fn main() {
     // on mac, i can't seem to reproduce the child process staying after `killall -9 ClassiCube`
     #[cfg(target_os = "windows")]
     let stop_parent_watcher = {
-        use std::{sync::mpsc, thread, time::Duration};
+        use std::{
+            sync::mpsc::{self, RecvTimeoutError},
+            thread,
+            time::Duration,
+        };
         use sysinfo::{Pid, ProcessRefreshKind, RefreshKind, System};
 
         const PROCESS_CHECK_INTERVAL: Duration = Duration::from_secs(2);

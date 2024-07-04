@@ -46,7 +46,7 @@ zstd = "0.13"
 
 [target.'cfg(windows)'.dependencies]
 sysinfo = { version = "0.30", default-features = false }
-windows = { version = "0.57", features = ["Win32_System_Console"] }
+windows = { version = "0.58", features = ["Win32_System_Console"] }
 
 [build-dependencies]
 bindgen = "0.69"

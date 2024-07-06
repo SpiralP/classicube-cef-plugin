@@ -1,0 +1,40 @@
+name: Update CEF version
+
+on:
+  schedule:
+    - cron: "0 19 * * 5" # friday at noon
+  workflow_dispatch:
+
+concurrency:
+  group: update-cef-version-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update_cef_version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+      - run: |
+          nix run .github#update-cef-version \
+            --print-build-logs --no-write-lock-file --recreate-lock-file
+      - run: git diff && git add -v .
+      - run: |
+          nix build .#default \
+            --print-build-logs --no-update-lock-file
+      - run: git status && git diff --cached
+      - uses: peter-evans/create-pull-request@v6
+        with:
+          git-token: ${{ secrets.GIT_PAT }}
+          branch: update-cef-version
+          title: Update CEF version
+          body: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          commit-message: |
+            Update CEF version
+
+            ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}

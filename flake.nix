@@ -19,18 +19,19 @@
             let
               platforms = {
                 "x86_64-linux" = { platformUrl = "linux64"; projectArchCmake = "x86_64"; };
-                "aarch64-linux" = { platformUrl = "linuxarm64"; projectArchCmake = "arm64"; };
-                "armv7l-linux" = { platformUrl = "linuxarm"; projectArchCmake = "arm"; };
+                # TODO test if arm builds/works before adding these
+                # "aarch64-linux" = { platformUrl = "linuxarm64"; projectArchCmake = "arm64"; };
+                # "armv7l-linux" = { platformUrl = "linuxarm"; projectArchCmake = "arm"; };
                 # TODO need to remove unsupported rpath's on libcef
-                "x86_64-darwin" = { platformUrl = "macosx64"; projectArchCmake = "x86_64"; };
-                "aarch64-darwin" = { platformUrl = "macosarm64"; projectArchCmake = "arm64"; };
+                # "x86_64-darwin" = { platformUrl = "macosx64"; projectArchCmake = "x86_64"; };
+                # "aarch64-darwin" = { platformUrl = "macosarm64"; projectArchCmake = "arm64"; };
               };
 
               platforms."x86_64-linux".hash = "sha256-/5FrvF6YuUbU1vLft+eLdTqUJs5b+ABfpxSGdh0WztA=";
-              platforms."aarch64-linux".hash = "sha256-NbIdkajKoSqbVgQney3RfyBlkr3xGKyRQTw6Sca9EOo=";
-              platforms."armv7l-linux".hash = "sha256-1FQXmh9E+wY/+WjR94znJkDNwFTesLA8XxJZoKIA4PA=";
-              platforms."x86_64-darwin".hash = "sha256-QWrkZoOuMFH9m8eTfnhpg6avC8ZELzH9uor/0zmVsVk=";
-              platforms."aarch64-darwin".hash = "";
+              # platforms."aarch64-linux".hash = "";
+              # platforms."armv7l-linux".hash = "";
+              # platforms."x86_64-darwin".hash = "";
+              # platforms."aarch64-darwin".hash = "";
 
               inherit (platforms.${pkgs.stdenv.hostPlatform.system}) platformUrl projectArchCmake hash;
             in

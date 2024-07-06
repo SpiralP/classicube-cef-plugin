@@ -8,12 +8,24 @@ use crate::{
     chat::PlayerSnapshot,
     entity_manager::{EntityBuilder, EntityManager, TargetEntity},
     error::{bail, Result},
+    player::url_aliases,
     player::{Player, PlayerBuilder, VolumeMode},
 };
 use classicube_helpers::async_manager;
 
 #[derive(Debug, Subcommand)]
 pub enum Commands {
+    /// Creates a URL alias
+    ///
+    /// Allows using short-hand strings like "yt:LXb3EKWsInQ" in
+    /// "cef create" or "cef play".
+    ///
+    /// For example, "cef alias yt https://youtu.be/" makes the above possible.
+    ///
+    /// All aliases are cleared on map change.
+    #[command(name("alias"), alias("urlalias"), alias("url-alias"))]
+    Alias { alias: String, url: String },
+
     /// Creates a new screen
     ///
     /// This will wait for page load unless --no-wait is specified
@@ -89,6 +101,10 @@ pub enum Commands {
 
 pub async fn run(player_snapshot: PlayerSnapshot, commands: Commands) -> Result<()> {
     match commands {
+        Commands::Alias { alias, url } => {
+            url_aliases::add_alias(&alias, &url)?;
+        }
+
         Commands::Create {
             global,
             insecure,

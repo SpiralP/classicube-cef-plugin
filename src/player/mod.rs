@@ -4,6 +4,7 @@ mod helpers;
 mod hls;
 mod image;
 mod media;
+pub mod url_aliases;
 mod volume_fade;
 mod web;
 mod youtube;
@@ -175,11 +176,22 @@ impl PlayerTrait for Player {
             Ok(player) => Ok(Player::Web(player)),
 
             Err(e) => {
-                if input.starts_with("http") {
-                    bail!("no player matched for input: {}", e);
-                } else {
-                    // if it didn't start with http, try again with https:// in front
-                    Player::from_input(&format!("https://{input}"))
+                if input.starts_with("https://") || input.starts_with("http://") {
+                    return Err(e);
+                }
+
+                // try again with https:// in front
+                match Player::from_input(&format!("https://{input}")) {
+                    Ok(player) => Ok(player),
+                    Err(player_err) => {
+                        // try resolving alias
+                        match url_aliases::resolve_alias_url(input) {
+                            Ok(url) => Player::from_input(&url),
+                            Err(alias_err) => {
+                                bail!("{} (and when resolving alias: {})", player_err, alias_err);
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -405,32 +417,56 @@ pub fn on_new_map() {
 
 pub fn on_new_map_loaded() {
     volume_fade::on_new_map_loaded();
+    url_aliases::on_new_map_loaded();
 }
 
 #[test]
 fn test_create_player() {
-    let good_web = [
-        "https://www.classicube.net/",
-        "www.classicube.net/",
-        "https://youtube.com/",
-    ];
+    url_aliases::add_alias("classicube", "https://www.classicube.net/").unwrap();
 
-    for url in &good_web {
+    let good_web = [
+        ("https://www.classicube.net/", "https://www.classicube.net/"),
+        ("www.classicube.net", "https://www.classicube.net/"),
+        ("https://youtube.com/", "https://youtube.com/"),
+        ("classicube", "https://www.classicube.net/"),
+        ("classicube:file", "https://www.classicube.net/file"),
+        ("classicube:/file", "https://www.classicube.net//file"),
+        ("classicube:file/", "https://www.classicube.net/file/"),
+    ];
+    for (url, resolved_url) in good_web {
         let player: Player = Player::from_input(url).unwrap();
         if let Player::Web(_) = player {
+            assert_eq!(player.get_url(), resolved_url);
         } else {
             panic!("not Web");
         }
     }
 
-    let good_youtube = [
-        "https://www.youtube.com/watch?v=9pkD2czKTjE",
-        "www.youtube.com/watch?v=9pkD2czKTjE",
-    ];
+    let bad_web = ["classicue", "classicubenet/", "/", "localhost"];
+    for url in bad_web {
+        let result = Player::from_input(url);
+        assert!(result.is_err(), "not is_err: {url:?}: {result:?}");
+    }
 
-    for url in &good_youtube {
+    let good_youtube = [
+        (
+            "https://youtu.be/9pkD2czKTjE",
+            "https://youtu.be/9pkD2czKTjE",
+        ),
+        (
+            "https://www.youtube.com/watch?v=9pkD2czKTjE",
+            "https://youtu.be/9pkD2czKTjE",
+        ),
+        (
+            "www.youtube.com/watch?v=9pkD2czKTjE",
+            "https://youtu.be/9pkD2czKTjE",
+        ),
+        ("9pkD2czKTjE", "https://youtu.be/9pkD2czKTjE"),
+    ];
+    for (url, resolved_url) in good_youtube {
         let player: Player = Player::from_input(url).unwrap();
         if let Player::YouTube(_) = player {
+            assert_eq!(player.get_url(), resolved_url, "{url:?}");
         } else {
             panic!("not YouTube");
         }

@@ -128,7 +128,7 @@ fn test_youtube_video() {
     async_manager::initialize();
 
     async_manager::spawn_local_on_main_thread(async {
-        println!("{:#?}", video("QH2-TGUlwu4").await.unwrap());
+        println!("{:#?}", video("whBoLspQSqQ").await.unwrap());
     });
 
     async_manager::run();

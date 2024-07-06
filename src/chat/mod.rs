@@ -23,24 +23,24 @@ pub use self::chat_command::CefChatCommand;
 use crate::chat::helpers::is_continuation_message;
 
 thread_local!(
-    static LAST_CHAT: RefCell<Option<String>> = RefCell::new(None);
+    static LAST_CHAT: RefCell<Option<String>> = const { RefCell::new(None) };
 );
 
 thread_local!(
-    static SIMULATING: Cell<bool> = Cell::new(false);
+    static SIMULATING: Cell<bool> = const { Cell::new(false) };
 );
 
 thread_local!(
-    static TAB_LIST: RefCell<Option<TabList>> = RefCell::new(None);
+    static TAB_LIST: RefCell<Option<TabList>> = const { RefCell::new(None) };
 );
 
 // TODO make this not public :p
 thread_local!(
-    pub static ENTITIES: RefCell<Option<Entities>> = RefCell::new(None);
+    pub static ENTITIES: RefCell<Option<Entities>> = const { RefCell::new(None) };
 );
 
 thread_local!(
-    static FUTURE_HANDLE: Cell<Option<RemoteHandle<()>>> = Cell::new(None);
+    static FUTURE_HANDLE: Cell<Option<RemoteHandle<()>>> = const { Cell::new(None) };
 );
 
 pub struct Chat {

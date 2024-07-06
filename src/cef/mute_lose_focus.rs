@@ -4,7 +4,7 @@ use classicube_sys::WindowInfo;
 use std::cell::{Cell, RefCell};
 
 thread_local!(
-    pub static IS_FOCUSED: Cell<bool> = Cell::new(true);
+    pub static IS_FOCUSED: Cell<bool> = const { Cell::new(true) };
 );
 
 thread_local!(

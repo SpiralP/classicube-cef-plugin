@@ -8,7 +8,7 @@ use std::{
 use tracing::warn;
 
 thread_local!(
-    static TASK_ID: Cell<u64> = Cell::new(0);
+    static TASK_ID: Cell<u64> = const { Cell::new(0) };
 );
 
 thread_local!(

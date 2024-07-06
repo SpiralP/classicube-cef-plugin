@@ -8,7 +8,9 @@ use tracing_subscriber::{
 };
 
 enum Guard {
+    #[allow(dead_code)]
     Appender(tracing_appender::non_blocking::WorkerGuard),
+    #[allow(dead_code)]
     Flame(tracing_flame::FlushGuard<BufWriter<File>>),
 }
 static mut GUARDS: Option<Vec<Guard>> = None;

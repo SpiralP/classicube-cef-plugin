@@ -8,7 +8,7 @@ use classicube_sys::{
 };
 
 thread_local!(
-    pub static TEX_VB: RefCell<Option<OwnedGfxVertexBuffer>> = RefCell::new(None);
+    pub static TEX_VB: RefCell<Option<OwnedGfxVertexBuffer>> = const { RefCell::new(None) };
 );
 
 pub unsafe fn Gfx_Draw2DTexture(tex: &mut Texture, col: PackedCol) {

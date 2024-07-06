@@ -28,12 +28,12 @@ pub fn query() {
 
         // whole query shouldn't take more than 30 seconds
         // includes whispering and browser creation
-        match async_manager::timeout_local(Duration::from_secs(30), async {
+        let result = async_manager::timeout_local(Duration::from_secs(30), async {
             let messages = get_clients().await?;
             process_clients_response(messages).await
         })
-        .await
-        {
+        .await;
+        match result {
             Some(result) => {
                 if let Err(e) = result {
                     warn!("clients query failed: {}", e);

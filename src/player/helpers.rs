@@ -112,8 +112,8 @@ async fn start_loop(entity_id: usize) -> Result<()> {
             // we have to do this in parts because get_real_time() is async
             // while with_entity is not
             Ok(match &entity.player {
-                Player::Media(_) => Some((entity.browser.as_ref().cloned(), Kind::Media)),
-                Player::YouTube(_) => Some((entity.browser.as_ref().cloned(), Kind::YouTube)),
+                Player::Media(_) => Some((entity.browser.clone(), Kind::Media)),
+                Player::YouTube(_) => Some((entity.browser.clone(), Kind::YouTube)),
 
                 _ => None,
             })

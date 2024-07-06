@@ -52,7 +52,7 @@ thread_local!(
 );
 
 thread_local!(
-    static IS_INITIALIZED: Cell<bool> = Cell::new(false);
+    static IS_INITIALIZED: Cell<bool> = const { Cell::new(false) };
 );
 
 #[tracing::instrument]

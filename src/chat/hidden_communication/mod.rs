@@ -18,7 +18,7 @@ use std::{
 use tracing::debug;
 
 thread_local!(
-    static SHOULD_BLOCK: Cell<bool> = Cell::new(false);
+    static SHOULD_BLOCK: Cell<bool> = const { Cell::new(false) };
 );
 
 thread_local!(

@@ -14,7 +14,7 @@ thread_local!(
 );
 
 thread_local!(
-    static VTABLE: Cell<Option<Pin<Box<EntityVTABLE>>>> = Cell::new(None);
+    static VTABLE: Cell<Option<Pin<Box<EntityVTABLE>>>> = const { Cell::new(None) };
 );
 
 /// This is called when `LocalPlayer_RenderModel` is called.

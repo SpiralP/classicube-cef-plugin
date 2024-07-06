@@ -7,7 +7,7 @@ use tracing::{debug, error};
 use crate::{cef::Cef, chat::Chat, entity_manager::EntityManager, player};
 
 thread_local!(
-    static PLUGIN: RefCell<Option<Plugin>> = RefCell::new(None);
+    static PLUGIN: RefCell<Option<Plugin>> = const { RefCell::new(None) };
 );
 
 pub struct Plugin {

@@ -9,7 +9,6 @@
     clippy::module_name_repetitions,
     clippy::needless_pass_by_value,
     clippy::struct_excessive_bools,
-    clippy::to_string_trait_impl,
     clippy::too_many_lines,
     clippy::unused_self
 )]

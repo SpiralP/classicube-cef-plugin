@@ -34,7 +34,7 @@ pub const DEFAULT_MODEL_WIDTH: u8 = 16;
 pub const DEFAULT_MODEL_HEIGHT: u8 = 9;
 
 thread_local!(
-    static ENTITY_ID: Cell<usize> = Cell::new(0);
+    static ENTITY_ID: Cell<usize> = const { Cell::new(0) };
 );
 
 // entity_id, entity

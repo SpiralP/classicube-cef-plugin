@@ -24,7 +24,14 @@ pub enum Commands {
     ///
     /// All aliases are cleared on map change.
     #[command(name("alias"), alias("urlalias"), alias("url-alias"))]
-    Alias { alias: String, url: String },
+    Alias {
+        alias: String,
+
+        // url has to be multiple because urls can be chopped in half by
+        // line continuations, so we join the parts together as a hack
+        #[arg(allow_hyphen_values(true))]
+        url: Vec<String>,
+    },
 
     /// Creates a new screen
     ///
@@ -102,6 +109,7 @@ pub enum Commands {
 pub async fn run(player_snapshot: PlayerSnapshot, commands: Commands) -> Result<()> {
     match commands {
         Commands::Alias { alias, url } => {
+            let url = url.join("");
             url_aliases::add_alias(&alias, &url)?;
         }
 

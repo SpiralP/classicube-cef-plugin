@@ -56,6 +56,7 @@ pub async fn run(
 
     match CefArgs::try_parse_from(args) {
         Ok(args) => {
+            debug!(?args, "CefArgs::try_parse_from");
             let fut = async move {
                 match args.sub {
                     CefArgsSub::Global(args) => {

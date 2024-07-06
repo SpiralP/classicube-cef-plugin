@@ -120,6 +120,13 @@ pub fn resolve_alias_url(alias_url: &str) -> Result<String> {
     Ok(url)
 }
 
+pub fn get_all_aliases() -> HashMap<String, String> {
+    URL_ALIASES.with(move |cell| {
+        let url_aliases = &mut *cell.borrow_mut();
+        url_aliases.clone()
+    })
+}
+
 #[test]
 fn test_add_alias() {
     for (alias, url, expected) in [

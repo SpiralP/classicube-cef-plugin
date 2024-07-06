@@ -5,11 +5,13 @@ use classicube_sys::{Chat_Send, OwnedString};
 
 use super::helpers::move_entity;
 use crate::{
-    chat::PlayerSnapshot,
+    chat::{Chat, PlayerSnapshot},
     entity_manager::{EntityBuilder, EntityManager, TargetEntity},
     error::{bail, Result},
-    player::url_aliases,
-    player::{Player, PlayerBuilder, VolumeMode},
+    player::{
+        url_aliases::{add_alias, get_all_aliases},
+        Player, PlayerBuilder, VolumeMode,
+    },
 };
 use classicube_helpers::async_manager;
 
@@ -25,11 +27,16 @@ pub enum Commands {
     /// All aliases are cleared on map change.
     #[command(name("alias"), alias("urlalias"), alias("url-alias"))]
     Alias {
-        alias: String,
+        /// List current aliases
+        #[arg(long, short, exclusive(true))]
+        list: bool,
+
+        #[arg(required(true))]
+        alias: Option<String>,
 
         // url has to be multiple because urls can be chopped in half by
         // line continuations, so we join the parts together as a hack
-        #[arg(allow_hyphen_values(true))]
+        #[arg(required(true), allow_hyphen_values(true))]
         url: Vec<String>,
     },
 
@@ -108,9 +115,15 @@ pub enum Commands {
 
 pub async fn run(player_snapshot: PlayerSnapshot, commands: Commands) -> Result<()> {
     match commands {
-        Commands::Alias { alias, url } => {
-            let url = url.join("");
-            url_aliases::add_alias(&alias, &url)?;
+        Commands::Alias { list, alias, url } => {
+            if list {
+                for (key, value) in get_all_aliases() {
+                    Chat::print(format!("{key} = {value}"));
+                }
+            } else if let Some(alias) = alias {
+                let url = url.join("");
+                add_alias(&alias, &url)?;
+            }
         }
 
         Commands::Create {
@@ -217,4 +230,31 @@ pub async fn run(player_snapshot: PlayerSnapshot, commands: Commands) -> Result<
     }
 
     Ok(())
+}
+
+#[test]
+fn test_commands_global() {
+    let run = |cmd: &'static str| async {
+        crate::chat::commands::run(
+            unsafe { std::mem::zeroed() },
+            cmd.split(' ').map(str::to_string).collect(),
+            true,
+            true,
+        )
+        .await
+        .unwrap();
+    };
+
+    crate::logger::initialize(true, true, false);
+    async_manager::initialize();
+
+    async_manager::spawn_local_on_main_thread(async move {
+        run("alias --list").await;
+        run("alias --list a b").await;
+        run("alias a https://b.com/").await;
+        run("alias a").await;
+    });
+
+    async_manager::run();
+    async_manager::shutdown();
 }

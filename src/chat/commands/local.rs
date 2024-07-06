@@ -44,6 +44,7 @@ pub enum Commands {
     Sync { player_name: String },
 
     /// Fake a crash via panic!()
+    #[cfg(debug_assertions)]
     #[command(alias("panic"), hide(true))]
     Crash,
 }
@@ -130,6 +131,7 @@ pub async fn run(player: PlayerSnapshot, commands: Commands) -> Result<()> {
             // TODO 0 args, randomly chosen? maybe everyone like map join?
         }
 
+        #[cfg(debug_assertions)]
         Commands::Crash => {
             panic!("here's your crash!");
         }

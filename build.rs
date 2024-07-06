@@ -204,6 +204,19 @@ fn build_cef_interface(libcef_include_dir: &Path, links: &mut Vec<Link>) {
     #[cfg(not(target_os = "windows"))]
     let build = build.flag("-Wno-unused-parameter");
 
+    #[cfg(target_os = "windows")]
+    // warning C4100: 's': unreferenced formal parameter
+    let build = build.flag("/wd4100");
+
+    // TODO fix these
+    #[cfg(target_os = "windows")]
+    // warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+    let build = build.flag("/wd4530");
+
+    #[cfg(target_os = "windows")]
+    // warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+    let build = build.flag("/wd4996");
+
     build.compile("cef_interface");
 
     links.push(Link::new(

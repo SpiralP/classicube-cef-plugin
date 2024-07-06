@@ -120,6 +120,13 @@
               mkdir -vp $out/cef/cef_binary
               ln -vs ${cef_binary}/lib/* $out/cef/cef_binary/
             '';
+
+            # so that when developing we don't get spammed with
+            # "warning _FORTIFY_SOURCE requires compiling with optimization (-O)"
+            hardeningDisable =
+              if dev
+              then [ "all" ]
+              else [ ];
           });
         in
         rec {

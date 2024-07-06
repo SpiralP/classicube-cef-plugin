@@ -187,18 +187,24 @@ fn build_cef_interface(libcef_include_dir: &Path, links: &mut Vec<Link>) {
     println!("cargo:rerun-if-changed=cef_interface/serialize.cc");
     println!("cargo:rerun-if-changed=cef_interface/serialize.hh");
 
-    cc::Build::new()
+    let mut build = cc::Build::new();
+    let build = build
         .cpp(true)
         .std("c++17")
+        .warnings(true)
+        .warnings_into_errors(true)
         .static_crt(true) // only ever uses /MT, never /MTd
         .cargo_metadata(false)
-        .warnings(!cfg!(debug_assertions))
         .include(libcef_include_dir)
         .file("cef_interface/app.cc")
         .file("cef_interface/client.cc")
         .file("cef_interface/interface.cc")
-        .file("cef_interface/serialize.cc")
-        .compile("cef_interface");
+        .file("cef_interface/serialize.cc");
+
+    #[cfg(not(target_os = "windows"))]
+    let build = build.flag("-Wno-unused-parameter");
+
+    build.compile("cef_interface");
 
     links.push(Link::new(
         LinkKind::Static,

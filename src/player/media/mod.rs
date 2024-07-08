@@ -96,7 +96,7 @@ impl PlayerTrait for MediaPlayer {
 
         match get_ext(&url)? {
             "mp3" | "wav" | "ogg" | "aac" | "mp4" | "webm" | "avi" | "3gp" | "mov" | "mkv"
-            | "media" => Ok(Self {
+            | "m4a" | "media" => Ok(Self {
                 url: url.to_string(),
                 ..Default::default()
             }),

@@ -273,12 +273,26 @@ fn test_get_clients() {
         ),
         ("> &7&fname", true),
         ("asdf", false),
+        // testing client line found after non-client line
         (
             "&7  ClassiCube 1.2.4 + cef1.3.0 +cs3.6.0 + MM 1.2.5 + Ponies",
             true,
         ),
         ("> &7v2.1: &fSpiralP", true),
         ("okay", false),
+        ("&7  Classic 0.28-0.30: &fusernameusername-", true),
+        ("&7  ViaFabricPlus: &fusernameusername-", true),
+        // /mapinfo
+        ("&bAbout &7main6: Width=256 Height=256 Length=256", false),
+        ("&7  Physics are &cOFF&7, gun usage is &cdisabled", false),
+        (
+            "&7  Created 12h 42m ago, last backup (27d 18h 14m ago): &a16",
+            false,
+        ),
+        // /whois
+        ("k&g[&fDNI&g] &oSpiralP &7(SpiralP+) has:", false),
+        ("&7  Rank of &9Regular&7, wrote &a107580 &7messages", false),
+        ("&7  Pronouns: &ait/its", false),
     ];
 
     for (message, should_block) in messages {

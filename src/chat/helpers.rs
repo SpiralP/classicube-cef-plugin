@@ -1,12 +1,14 @@
 pub fn is_outgoing_whisper(message: &str) -> bool {
     message.len() >= 6
         && message.get(0..1).map_or(false, |a| a == "&")
+        && message.get(1..2).is_some()
         && message.get(2..6).map_or(false, |a| a == "[<] ")
 }
 
 pub fn is_incoming_whisper(message: &str) -> bool {
     message.len() >= 6
         && message.get(0..1).map_or(false, |a| a == "&")
+        && message.get(1..2).is_some()
         && message.get(2..6).map_or(false, |a| a == "[>] ")
 }
 
@@ -66,6 +68,7 @@ pub fn is_continuation_message(mut message: &str) -> Option<&str> {
 pub fn is_clients_start_message(message: &str) -> bool {
     message.len() >= 14
         && message.get(0..1).map_or(false, |a| a == "&")
+        && message.get(1..2).is_some()
         && message.get(2..).map_or(false, |a| a == "Players using:")
 }
 
@@ -76,11 +79,17 @@ pub fn is_clients_message(message: &str) -> Option<&str> {
     // > &7Poni: &fSpiralP
     // > &7+ Pon: &fSpiralP
     // &7  ClassiCraft 1.1.3: &fFaeEmpress
-    if message.len() >= 16
+    // &7  Classic 0.28-0.30: &fmagallanesmappin-
+    // &7  ViaFabricPlus: &fDutchAngelDragon-
+    if message.len() >= 20
         && message.get(0..1).map_or(false, |a| a == "&")
+        && message.get(1..2).is_some()
+        && message.get(2..4).map_or(false, |a| a == "  ")
         // limit to "ClassiCube" or else we hide other messages with spaces at the beginning,
         // like /mapinfo and /whois
-        && message.get(2..15).map_or(false, |a| a == "  ClassiCube ")
+        && (message.get(4..15).map_or(false, |a| a == "ClassiCube ")
+            || message.get(4..12).map_or(false, |a| a == "Classic ")
+            || message.get(4..17).map_or(false, |a| a == "ViaFabricPlus"))
     {
         Some(message.get(4..)?)
     } else {
@@ -113,8 +122,18 @@ fn test_is_clients_message() {
         ("&7  ClassiCube ", None),
         ("&7 ClassiCube ", None),
         ("&7 ClassiCube a", None),
-        ("&7  ClassiCube a", Some("ClassiCube a")),
-        ("&7  not ClassiCube a", None),
+        // not long enough
+        ("&7  ClassiCube a", None),
+        ("&7  ClassiCube 1.2.3: a", Some("ClassiCube 1.2.3: a")),
+        (
+            "&7  Classic 0.28-0.30: &fusernameusername-",
+            Some("Classic 0.28-0.30: &fusernameusername-"),
+        ),
+        (
+            "&7  ViaFabricPlus: &fusernameusername-",
+            Some("ViaFabricPlus: &fusernameusername-"),
+        ),
+        ("&7  not ClassiCube 1.2.3: a", None),
         (
             "&7  ClassiCube 1.1.6 + cef0.9.4 + Ponies v2.1: &f¿ Mew, ┌ Glim",
             Some("ClassiCube 1.1.6 + cef0.9.4 + Ponies v2.1: &f¿ Mew, ┌ Glim"),

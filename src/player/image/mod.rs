@@ -40,8 +40,33 @@ impl PlayerTrait for ImagePlayer {
 
         let url = Url::parse(url)?;
         match get_ext(&url)? {
-            "png" | "jpg" | "jpeg" | "gif" | "webp" | "svg" | "apng" | "avif" | "jfif"
-            | "pjpeg" | "pjp" | "image" => Ok(Self {
+            "apng" | // don't format me
+            "arw" |
+            "avif" |
+            "bmp" |
+            "cr2" |
+            "dng" |
+            "gif" |
+            "ico" |
+            "jfi" |
+            "jfif" |
+            "jif" |
+            "jpe" |
+            "jpeg" |
+            "jpg" |
+            "nef" |
+            "nrw" |
+            "orf" |
+            "pjp" |
+            "pjpeg" |
+            "png" |
+            "raf" |
+            "rw2" |
+            "svg" |
+            "svgz" |
+            "webp" |
+
+            "image" => Ok(Self {
                 url: url.to_string(),
                 ..Default::default()
             }),

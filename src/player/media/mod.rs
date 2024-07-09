@@ -95,8 +95,32 @@ impl PlayerTrait for MediaPlayer {
         let url = Url::parse(url)?;
 
         match get_ext(&url)? {
-            "mp3" | "wav" | "ogg" | "aac" | "mp4" | "webm" | "avi" | "3gp" | "mov" | "mkv"
-            | "m4a" | "media" => Ok(Self {
+            "3gp" | // don't format me
+            "aac" |
+            "avi" |
+            "flac" |
+            "m4a" |
+            "m4v" |
+            "mkv" |
+            "mov" |
+            "mp3" |
+            "mp4" |
+            "mpeg" |
+            "mpeg4" |
+            "mpg" |
+            "mpg4" |
+            "oga" |
+            "ogg" |
+            "ogm" |
+            "ogv" |
+            "ogx" |
+            "opus" |
+            "wav" |
+            "weba" |
+            "webm" |
+
+            "media"
+              => Ok(Self {
                 url: url.to_string(),
                 ..Default::default()
             }),

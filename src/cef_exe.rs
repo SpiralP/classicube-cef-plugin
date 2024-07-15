@@ -16,8 +16,21 @@ fn main() {
         }
     }
 
+    let debug = true;
+    let other_crates = false;
+    let my_crate_name = module_path!();
+
+    let level = if debug { "debug" } else { "info" };
+
+    let mut filter = EnvFilter::from_default_env();
+    if other_crates {
+        filter = filter.add_directive(level.parse().unwrap());
+    } else {
+        filter = filter.add_directive(format!("{my_crate_name}={level}").parse().unwrap());
+    }
+
     tracing_subscriber::fmt()
-        .with_env_filter(EnvFilter::from_default_env().add_directive("cef=debug".parse().unwrap()))
+        .with_env_filter(filter)
         .with_thread_ids(false)
         .with_thread_names(false)
         .with_ansi(true)

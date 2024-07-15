@@ -15,7 +15,7 @@ enum Guard {
 }
 static mut GUARDS: Option<Vec<Guard>> = None;
 
-pub fn initialize(debug: bool, other_crates: bool, flame: bool) {
+pub fn initialize(debug: bool, module_filter: Option<&str>, flame: bool) {
     static ONCE: Once = Once::new();
     ONCE.call_once(move || {
         {
@@ -28,14 +28,12 @@ pub fn initialize(debug: bool, other_crates: bool, flame: bool) {
         }
 
         let level = if debug { "debug" } else { "info" };
-        let my_crate_name = env!("CARGO_PKG_NAME").replace('-', "_");
 
         let mut filter = EnvFilter::from_default_env();
-
-        if other_crates {
-            filter = filter.add_directive(level.parse().unwrap());
+        if let Some(module) = module_filter {
+            filter = filter.add_directive(format!("{module}={level}").parse().unwrap());
         } else {
-            filter = filter.add_directive(format!("{my_crate_name}={level}").parse().unwrap());
+            filter = filter.add_directive(level.parse().unwrap());
         }
 
         let mut guards = Vec::with_capacity(2);

@@ -247,7 +247,7 @@ fn test_get_names_with_cef() {
 
 #[test]
 fn test_get_clients() {
-    crate::logger::initialize(true, false, false);
+    crate::logger::initialize(true, None, false);
     async_manager::initialize();
 
     async_manager::spawn_local_on_main_thread(async {

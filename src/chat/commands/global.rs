@@ -245,7 +245,7 @@ fn test_commands_global() {
         .unwrap();
     };
 
-    crate::logger::initialize(true, true, false);
+    crate::logger::initialize(true, None, false);
     async_manager::initialize();
 
     async_manager::spawn_local_on_main_thread(async move {

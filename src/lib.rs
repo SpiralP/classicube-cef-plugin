@@ -35,7 +35,7 @@ use tracing::debug;
 extern "C" fn init() {
     panic::install_hook();
 
-    logger::initialize(true, false, false);
+    logger::initialize(true, Some(module_path!()), false);
 
     tracing::debug_span!("init").in_scope(|| {
         debug!(

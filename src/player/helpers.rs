@@ -1,5 +1,6 @@
 use std::{path::Path, time::Duration};
 
+use classicube_helpers::async_manager;
 use classicube_sys::{Camera, Vec3};
 use ncollide3d::na::Vector3;
 use reqwest::Url;
@@ -11,7 +12,6 @@ use crate::{
     error::{bail, Error, Result, ResultExt},
     helpers::vec3_to_vector3,
 };
-use classicube_helpers::async_manager;
 
 pub async fn start_update_loop(entity_id: usize) {
     let result = start_loop(entity_id).await;

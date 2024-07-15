@@ -3,7 +3,10 @@ use std::{
     time::{Duration, Instant},
 };
 
-use classicube_helpers::color::{SILVER, TEAL};
+use classicube_helpers::{
+    async_manager,
+    color::{SILVER, TEAL},
+};
 use futures::{future::RemoteHandle, prelude::*};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
@@ -18,7 +21,6 @@ use crate::{
     options,
     options::SUBTITLES,
 };
-use classicube_helpers::async_manager;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct YouTubePlayer {

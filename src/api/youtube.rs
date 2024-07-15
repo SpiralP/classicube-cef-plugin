@@ -1,8 +1,8 @@
+use classicube_helpers::async_manager;
 use serde::Deserialize;
 use tracing::debug;
 
 use crate::error::{bail, Error, Result};
-use classicube_helpers::async_manager;
 
 const API_URL: &str = "https://youtube-api.spiralp.xyz";
 const APP_USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"));

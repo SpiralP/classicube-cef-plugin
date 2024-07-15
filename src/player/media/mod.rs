@@ -1,6 +1,9 @@
 use std::time::{Duration, Instant};
 
-use classicube_helpers::color::{SILVER, TEAL};
+use classicube_helpers::{
+    async_manager,
+    color::{SILVER, TEAL},
+};
 use futures::{future::RemoteHandle, prelude::*};
 use serde::{Deserialize, Serialize};
 use tracing::{debug, warn};
@@ -16,7 +19,6 @@ use crate::{
     error::{bail, Result},
     options,
 };
-use classicube_helpers::async_manager;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct MediaPlayer {

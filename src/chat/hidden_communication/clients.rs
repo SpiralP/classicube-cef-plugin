@@ -1,3 +1,10 @@
+use std::{cell::RefCell, collections::HashSet, time::Duration};
+
+use classicube_helpers::{async_manager, tab_list::remove_color, WithInner};
+use classicube_sys::ENTITIES_SELF_ID;
+use futures::{future::RemoteHandle, prelude::*};
+use tracing::{debug, warn};
+
 use super::{wait_for_message, SHOULD_BLOCK};
 use crate::{
     chat::{
@@ -8,12 +15,6 @@ use crate::{
     error::{Result, ResultExt},
     plugin::APP_NAME,
 };
-use classicube_helpers::async_manager;
-use classicube_helpers::{tab_list::remove_color, WithInner};
-use classicube_sys::ENTITIES_SELF_ID;
-use futures::{future::RemoteHandle, prelude::*};
-use std::{cell::RefCell, collections::HashSet, time::Duration};
-use tracing::{debug, warn};
 
 thread_local!(
     static CURRENT_RUNNING: RefCell<Option<RemoteHandle<()>>> = RefCell::default();

@@ -3,21 +3,22 @@ mod browser;
 mod javascript;
 mod mute_lose_focus;
 
-pub use self::bindings::cef_interface_execute_process;
-use classicube_helpers::async_manager;
-use classicube_helpers::{shared::FutureShared, WithInner};
-use futures::stream::{FuturesUnordered, StreamExt};
 use std::{
     cell::{Cell, RefCell},
     collections::HashMap,
     mem,
     os::raw::c_int,
 };
+
+use classicube_helpers::{async_manager, shared::FutureShared, WithInner};
+use futures::stream::{FuturesUnordered, StreamExt};
 use tokio::sync::broadcast;
 use tracing::{debug, debug_span, error, warn, Instrument};
 
 pub use self::{
-    bindings::{Callbacks, RustRefApp, RustRefBrowser, RustRefClient},
+    bindings::{
+        cef_interface_execute_process, Callbacks, RustRefApp, RustRefBrowser, RustRefClient,
+    },
     javascript::RustV8Value,
 };
 use self::{

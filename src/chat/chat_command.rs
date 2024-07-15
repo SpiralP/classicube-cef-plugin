@@ -1,9 +1,11 @@
-use super::{commands, Chat};
-use crate::chat::PlayerSnapshot;
+use std::{os::raw::c_int, slice};
+
 use classicube_helpers::async_manager;
 use classicube_sys::{cc_string, OwnedChatCommand, ENTITIES_SELF_ID};
-use std::{os::raw::c_int, slice};
 use tracing::warn;
+
+use super::{commands, Chat};
+use crate::chat::PlayerSnapshot;
 
 extern "C" fn c_chat_command_callback(args: *const cc_string, args_count: c_int) {
     let args = unsafe { slice::from_raw_parts(args, args_count.unsigned_abs() as _) };

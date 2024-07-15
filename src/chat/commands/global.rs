@@ -1,6 +1,7 @@
 //! global commands not targetted at a specific entity
 
 use clap::Subcommand;
+use classicube_helpers::async_manager;
 use classicube_sys::{Chat_Send, OwnedString};
 
 use super::helpers::move_entity;
@@ -13,7 +14,6 @@ use crate::{
         Player, PlayerBuilder, VolumeMode,
     },
 };
-use classicube_helpers::async_manager;
 
 #[derive(Debug, Subcommand)]
 pub enum Commands {

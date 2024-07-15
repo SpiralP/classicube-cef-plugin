@@ -1,11 +1,13 @@
-use super::bindings::{FFIRustV8Response, RustRefBrowser};
-use futures::channel::oneshot;
 use std::{
     cell::{Cell, RefCell},
     collections::HashMap,
     os::raw::c_double,
 };
+
+use futures::channel::oneshot;
 use tracing::warn;
+
+use super::bindings::{FFIRustV8Response, RustRefBrowser};
 
 thread_local!(
     static TASK_ID: Cell<u64> = const { Cell::new(0) };

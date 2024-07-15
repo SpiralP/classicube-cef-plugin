@@ -1,5 +1,6 @@
-use crate::error::{Result, ResultExt};
 use std::{cell::Cell, fmt::Display, str::FromStr, thread::LocalKey};
+
+use crate::error::{Result, ResultExt};
 
 pub struct RustOption<T>
 where

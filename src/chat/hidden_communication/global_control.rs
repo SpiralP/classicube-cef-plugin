@@ -1,3 +1,14 @@
+use std::{
+    cell::{Cell, RefCell},
+    pin::Pin,
+    time::Duration,
+};
+
+use classicube_helpers::async_manager;
+use classicube_sys::ENTITIES_SELF_ID;
+use futures::{channel::mpsc, future::RemoteHandle, prelude::*};
+use tracing::{debug, info, warn};
+
 use super::wait_for_message;
 use crate::{
     chat::{
@@ -10,15 +21,6 @@ use crate::{
     options,
     player::{PlayerBuilder, PlayerTrait, VolumeMode},
 };
-use classicube_helpers::async_manager;
-use classicube_sys::ENTITIES_SELF_ID;
-use futures::{channel::mpsc, future::RemoteHandle, prelude::*};
-use std::{
-    cell::{Cell, RefCell},
-    pin::Pin,
-    time::Duration,
-};
-use tracing::{debug, info, warn};
 
 thread_local!(
     pub static CURRENT_MAP_THEME: Cell<Option<usize>> = Cell::default();

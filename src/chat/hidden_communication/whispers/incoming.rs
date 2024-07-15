@@ -1,3 +1,8 @@
+use std::time::Duration;
+
+use classicube_helpers::{async_manager, shared::FutureShared, WithInner};
+use tracing::{debug, info, warn};
+
 use super::{encoding, wait_for_message, SHOULD_BLOCK};
 use crate::{
     chat::{
@@ -8,10 +13,6 @@ use crate::{
     },
     error::{Result, ResultExt},
 };
-use classicube_helpers::async_manager;
-use classicube_helpers::{shared::FutureShared, WithInner};
-use std::time::Duration;
-use tracing::{debug, info, warn};
 
 pub async fn listen_loop() {
     loop {

@@ -1,5 +1,8 @@
 use base64::{prelude::BASE64_STANDARD, Engine};
-use classicube_helpers::color::{SILVER, TEAL};
+use classicube_helpers::{
+    async_manager,
+    color::{SILVER, TEAL},
+};
 use futures::{future::RemoteHandle, prelude::*};
 use serde::{Deserialize, Serialize};
 use tracing::debug;
@@ -15,7 +18,6 @@ use crate::{
     error::{bail, Result},
     options,
 };
-use classicube_helpers::async_manager;
 
 const PAGE_HTML: &str = include_str!("page.html");
 

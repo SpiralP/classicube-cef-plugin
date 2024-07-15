@@ -1,7 +1,8 @@
 #![cfg_attr(target_os = "windows", windows_subsystem = "windows")]
 
-use classicube_cef_plugin::cef_interface_execute_process;
 use std::{env, ffi::CString, os::raw::c_int, process};
+
+use classicube_cef_plugin::cef_interface_execute_process;
 use tracing::{debug, warn};
 use tracing_subscriber::EnvFilter;
 
@@ -54,6 +55,7 @@ fn main() {
             thread,
             time::Duration,
         };
+
         use sysinfo::{Pid, ProcessRefreshKind, RefreshKind, System};
 
         const PROCESS_CHECK_INTERVAL: Duration = Duration::from_secs(2);

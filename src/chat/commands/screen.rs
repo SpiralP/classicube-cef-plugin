@@ -7,7 +7,10 @@ use std::{
 
 use async_recursion::async_recursion;
 use clap::Subcommand;
-use classicube_helpers::color::{GOLD, SILVER, TEAL};
+use classicube_helpers::{
+    async_manager,
+    color::{GOLD, SILVER, TEAL},
+};
 
 use super::helpers::{get_click_coords, move_entity};
 use crate::{
@@ -18,7 +21,6 @@ use crate::{
     helpers::format_duration,
     player::{PlayerBuilder, PlayerTrait, VolumeMode},
 };
-use classicube_helpers::async_manager;
 
 #[derive(Debug, Subcommand)]
 pub enum Commands {

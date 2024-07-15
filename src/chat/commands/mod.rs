@@ -4,11 +4,12 @@ mod local;
 mod options;
 mod screen;
 
-use super::{Chat, PlayerSnapshot};
-use crate::error::{Error, Result};
 use clap::{Parser, Subcommand};
 use classicube_helpers::async_manager;
 use tracing::{debug, warn};
+
+use super::{Chat, PlayerSnapshot};
+use crate::error::{Error, Result};
 
 /// Cef video player
 #[derive(Parser, Debug)]

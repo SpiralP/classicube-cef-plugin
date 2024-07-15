@@ -1,5 +1,7 @@
 //! commands for setting local config options
 
+use clap::Subcommand;
+
 use super::Chat;
 use crate::{
     chat::hidden_communication::CURRENT_MAP_THEME,
@@ -8,7 +10,6 @@ use crate::{
     options,
     player::PlayerTrait,
 };
-use clap::Subcommand;
 
 #[derive(Debug, Subcommand)]
 pub enum Commands {

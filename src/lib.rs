@@ -25,12 +25,14 @@ mod panic;
 mod player;
 mod plugin;
 
-pub use self::cef::cef_interface_execute_process;
-use self::plugin::Plugin;
+use std::{os::raw::c_int, ptr};
+
 use classicube_helpers::{test_noop_fn, test_noop_static, time, time_silent};
 use classicube_sys::IGameComponent;
-use std::{os::raw::c_int, ptr};
 use tracing::debug;
+
+pub use self::cef::cef_interface_execute_process;
+use self::plugin::Plugin;
 
 extern "C" fn init() {
     panic::install_hook();

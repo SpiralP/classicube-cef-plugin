@@ -6,13 +6,12 @@ mod helpers;
 mod model;
 mod render_model_hook;
 
-pub use self::{cef_paint::cef_paint_callback, entity::CefEntity, entity_builder::EntityBuilder};
-use self::{context_handler::ContextHandler, model::CefModel};
-use crate::{
-    cef::{Cef, CefEvent, RustRefBrowser},
-    error::{bail, Error, Result},
-    player::PlayerTrait,
+use std::{
+    cell::{Cell, RefCell},
+    collections::HashMap,
+    os::raw::c_int,
 };
+
 use classicube_helpers::async_manager;
 use classicube_sys::Vec3;
 use futures::{
@@ -20,12 +19,15 @@ use futures::{
     prelude::*,
     stream::{FuturesUnordered, StreamExt},
 };
-use std::{
-    cell::{Cell, RefCell},
-    collections::HashMap,
-    os::raw::c_int,
-};
 use tracing::{debug, warn};
+
+pub use self::{cef_paint::cef_paint_callback, entity::CefEntity, entity_builder::EntityBuilder};
+use self::{context_handler::ContextHandler, model::CefModel};
+use crate::{
+    cef::{Cef, CefEvent, RustRefBrowser},
+    error::{bail, Error, Result},
+    player::PlayerTrait,
+};
 
 pub const TEXTURE_WIDTH: u16 = 2048;
 pub const TEXTURE_HEIGHT: u16 = 2048;

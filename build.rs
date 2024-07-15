@@ -98,7 +98,8 @@ fn build_libcef(links: &mut Vec<Link>) -> PathBuf {
     assert_eq!(
         libcef_include_dir.file_name().expect("file_name"),
         "include",
-        "LIBCEF_INCLUDE_DIR directory needs to be named 'include' because of strange cef #include's"
+        "LIBCEF_INCLUDE_DIR directory needs to be named 'include' because of strange cef \
+         #include's"
     );
     assert!(libcef_include_dir.pop());
 

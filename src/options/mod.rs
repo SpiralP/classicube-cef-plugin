@@ -1,9 +1,10 @@
 mod rust_option;
 
-use self::rust_option::RustOption;
+use std::{cell::Cell, ffi::CString, os::raw::c_char};
+
 use classicube_sys::{cc_string, Options_Get, Options_Set, OwnedString, STRING_SIZE};
-use std::cell::Cell;
-use std::{ffi::CString, os::raw::c_char};
+
+use self::rust_option::RustOption;
 
 fn get<S: Into<Vec<u8>>>(key: S) -> Option<String> {
     let c_key = CString::new(key).unwrap();

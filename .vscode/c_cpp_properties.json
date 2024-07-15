@@ -4,7 +4,8 @@
       "name": "Linux",
       "includePath": [
         "${workspaceFolder}/cef_interface",
-        "${workspaceFolder}/cef_interface/cef_binary"
+        "${workspaceFolder}/cef_interface/cef_binary",
+        "${env:LIBCEF_INCLUDE_DIR}/.."
       ],
       "defines": [],
       "cStandard": "c17",

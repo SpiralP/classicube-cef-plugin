@@ -399,6 +399,8 @@ impl YouTubePlayer {
             Err("not http/https".into())
         } else if let Some(this) = Self::from_embed(url) {
             Ok(this)
+        } else if let Some(this) = Self::from_shorts(url) {
+            Ok(this)
         } else if let Some(this) = Self::from_short(url) {
             Ok(this)
         } else if let Some(this) = Self::from_normal(url) {
@@ -451,6 +453,30 @@ impl YouTubePlayer {
         Self::from_id_and_time(id, time)
     }
 
+    fn from_shorts(url: &Url) -> Option<Self> {
+        // https://www.youtube.com/shorts/Je1DW8b4Uoc?t=19&feature=share
+        let host_str = url.host_str()?;
+        if host_str != "youtube.com" && host_str != "www.youtube.com" {
+            return None;
+        }
+
+        let mut path_segments = url.path_segments()?;
+        if path_segments.next()? != "shorts" {
+            return None;
+        }
+
+        let id = path_segments.next()?;
+
+        let query: HashMap<_, _> = url.query_pairs().collect();
+        let time = query
+            .get("t")
+            .and_then(|s| s.parse().ok())
+            .map(Duration::from_secs)
+            .unwrap_or_default();
+
+        Self::from_id_and_time(id, time)
+    }
+
     fn from_embed(url: &Url) -> Option<Self> {
         let host_str = url.host_str()?;
         if host_str != "youtube.com" && host_str != "www.youtube.com" {
@@ -490,6 +516,7 @@ fn test_youtube() {
             "https://www.youtube.com/watch?v=pNMRBTN1SGU%feature=youtu.be",
             "https://www.youtube.com/watch?v=pNMRBTN1SGU&ab_channel=VvporTV",
             "https://www.youtube.com/watch?v=pNMRBTN1SGU%ab_channel=VvporTV",
+            "https://www.youtube.com/shorts/pNMRBTN1SGU",
         ];
 
         let should = YouTubePlayer {
@@ -593,6 +620,7 @@ fn test_youtube() {
             let ids = [
                 "https://youtu.be/mZpa3nOLOa8?list=PLDfU1tT3TQ16cW3WdAKf2WicS6wrdgZxB&t=69",
                 "https://www.youtube.com/watch?v=mZpa3nOLOa8&list=PLDfU1tT3TQ16cW3WdAKf2WicS6wrdgZxB&index=1&t=69",
+                "https://www.youtube.com/shorts/mZpa3nOLOa8?t=69&feature=share"
             ];
             let should = YouTubePlayer {
                 id: "mZpa3nOLOa8".to_string(),

@@ -60,3 +60,11 @@ ci = []
 [package.metadata.release]
 pre-release-commit-message = "Release {{version}}"
 tag-message = "Release version {{version}}"
+
+
+[patch.crates-io]
+classicube-sys = { git = "https://github.com/SpiralP/rust-classicube-sys.git", branch = "next" }
+
+
+[patch."https://github.com/SpiralP/rust-classicube-helpers.git"]
+classicube-helpers = { git = "https://github.com/SpiralP/rust-classicube-helpers.git//", branch = "next" }

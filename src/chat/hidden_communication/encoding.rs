@@ -67,7 +67,7 @@ pub fn create_message() -> Message {
                 let size = entity.get_size();
                 let scale = entity.get_scale();
                 let rotation = (e.RotX, e.RotY);
-                let position = (e.Position.X, e.Position.Y, e.Position.Z);
+                let position = (e.Position.x, e.Position.y, e.Position.z);
                 let background_color = entity.background_color;
 
                 LightEntity {

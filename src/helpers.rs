@@ -4,7 +4,7 @@ use classicube_sys::Vec3;
 use ncollide3d::na::Vector3;
 
 pub fn vec3_to_vector3(v: &Vec3) -> Vector3<f32> {
-    Vector3::new(v.X, v.Y, v.Z)
+    Vector3::new(v.x, v.y, v.z)
 }
 
 // fn vector3_to_vec3(v: &Vector3<f32>) -> Vec3 {

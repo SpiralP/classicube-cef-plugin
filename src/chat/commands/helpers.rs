@@ -13,9 +13,9 @@ pub fn move_entity(entity: &mut CefEntity, player: &PlayerSnapshot) {
     let dir = Vec3::get_dir_vector(player.Yaw.to_radians(), player.Pitch.to_radians());
 
     entity.entity.Position.set(
-        player.eye_position.X + dir.X,
-        player.eye_position.Y + dir.Y,
-        player.eye_position.Z + dir.Z,
+        player.eye_position.x + dir.x,
+        player.eye_position.y + dir.y,
+        player.eye_position.z + dir.z,
     );
 
     // turn it to face the player
@@ -42,7 +42,7 @@ pub fn get_camera_trace() -> Option<RayTracer> {
     local_player.ReachDistance = old_reach_distance;
 
     // debug!("{:#?}", ray_tracer);
-    if ray_tracer.Valid == 0 {
+    if ray_tracer.valid == 0 {
         None
     } else {
         Some(ray_tracer)
@@ -118,8 +118,8 @@ pub fn get_click_coords(
         let up = up.normalize();
         let right = -left;
 
-        let width = entity_scale.X * (entity_size.0 as f32);
-        let height = entity_scale.Y * (entity_size.1 as f32);
+        let width = entity_scale.x * (entity_size.0 as f32);
+        let height = entity_scale.y * (entity_size.1 as f32);
 
         let top_left = screen_pos - 0.5 * right * width + up * height;
 

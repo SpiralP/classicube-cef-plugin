@@ -82,7 +82,7 @@
               outputHashes = {
                 "async-dispatcher-0.1.0" = "sha256-rqpQ176/PnI9vvPrwQvK3GJbryjb3hHkb+o1RyCZ3Vg=";
                 "clap-4.2.7" = "sha256-PccqMT2KltTC2gVL9/xfCNFOAu3+6ash9HqM/TkpgmU=";
-                "classicube-helpers-2.0.0+classicube.1.3.6" = "sha256-V5PBZR0rj42crA1fGUjMk4rDh0ZpjjNcbMCe6bgotW8=";
+                "classicube-helpers-2.0.0+classicube.1.3.6" = "sha256-mGRzuvxKXKBxKgZuLkc7qzmABIj9uADuxAkahR8e840=";
               };
             };
 

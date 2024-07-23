@@ -1,7 +1,6 @@
 use std::{
     cell::Cell,
     os::raw::{c_double, c_float},
-    pin::Pin,
 };
 
 use classicube_sys::{Entities, Entity, EntityVTABLE, ENTITIES_SELF_ID};
@@ -14,7 +13,7 @@ thread_local!(
 );
 
 thread_local!(
-    static VTABLE: Cell<Option<Pin<Box<EntityVTABLE>>>> = const { Cell::new(None) };
+    static VTABLE: Cell<Option<Box<EntityVTABLE>>> = const { Cell::new(None) };
 );
 
 /// This is called when `LocalPlayer_RenderModel` is called.
@@ -55,8 +54,8 @@ pub fn initialize() {
 
     new_v_table.RenderModel = Some(hook);
 
-    let new_v_table = Box::pin(new_v_table);
-    me.VTABLE = new_v_table.as_ref().get_ref();
+    let new_v_table = Box::new(new_v_table);
+    me.VTABLE = new_v_table.as_ref();
 
     VTABLE.with(|cell| {
         cell.set(Some(new_v_table));

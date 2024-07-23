@@ -1,4 +1,7 @@
-use std::{ffi::CString, mem, pin::Pin};
+use std::{
+    ffi::{CStr, CString},
+    mem,
+};
 
 use classicube_sys::{
     Bitmap, Entity, Gfx_SetAlphaTest, Gfx_SetTexturing, Model, ModelTex, ModelVertex, Model_Init,
@@ -11,11 +14,11 @@ use super::{helpers::Texture_RenderShaded, TEXTURE_HEIGHT, TEXTURE_WIDTH};
 const WHITE: PackedCol = PackedCol_Make(255, 255, 255, 255);
 
 pub struct CefModel {
-    name: Pin<Box<CString>>,
-    default_texture_name: Pin<Box<CString>>,
-    model: Pin<Box<Model>>,
-    vertices: Pin<Box<[ModelVertex; MODEL_BOX_VERTICES as usize]>>,
-    default_model_tex: Pin<Box<ModelTex>>,
+    name: Box<CStr>,
+    default_texture_name: Box<CStr>,
+    model: Box<Model>,
+    vertices: Box<[ModelVertex; MODEL_BOX_VERTICES as usize]>,
+    default_model_tex: Box<ModelTex>,
 
     default_texture: Option<OwnedGfxTexture>,
 }
@@ -25,11 +28,13 @@ impl CefModel {
         let name = "cef";
         let default_texture_name = format!("{name}_texture");
 
-        let model = Box::pin(unsafe { mem::zeroed() });
-        let name = Box::pin(CString::new(name).unwrap());
-        let default_texture_name = Box::pin(CString::new(default_texture_name).unwrap());
-        let vertices = Box::pin(unsafe { mem::zeroed() });
-        let default_model_tex = Box::pin(unsafe { mem::zeroed() });
+        let model = Box::new(unsafe { mem::zeroed() });
+        let name = CString::new(name).unwrap().into_boxed_c_str();
+        let default_texture_name = CString::new(default_texture_name)
+            .unwrap()
+            .into_boxed_c_str();
+        let vertices = Box::new(unsafe { mem::zeroed() });
+        let default_model_tex = Box::new(unsafe { mem::zeroed() });
 
         let mut this = Self {
             model,
@@ -40,18 +45,16 @@ impl CefModel {
             default_texture: None,
         };
 
-        unsafe {
-            this.register_gfx_texture();
-            this.register_texture();
-            this.register_model();
-        }
+        this.register_gfx_texture();
+        this.register_texture();
+        this.register_model();
 
         this
     }
 }
 
 impl CefModel {
-    unsafe fn register_gfx_texture(&mut self) {
+    fn register_gfx_texture(&mut self) {
         // must be a vec or else we try to fit huge array onto stack and crash!
         let mut pixels: Vec<u32> =
             vec![0xFFFF_FFFF; TEXTURE_WIDTH as usize * TEXTURE_HEIGHT as usize];
@@ -67,7 +70,7 @@ impl CefModel {
         self.default_texture = Some(default_texture);
     }
 
-    unsafe fn register_texture(&mut self) {
+    fn register_texture(&mut self) {
         let CefModel {
             default_model_tex,
             default_texture_name,
@@ -95,7 +98,7 @@ impl CefModel {
         }
     }
 
-    unsafe fn register_model(&mut self) {
+    fn register_model(&mut self) {
         let CefModel {
             default_model_tex,
             model,
@@ -106,7 +109,7 @@ impl CefModel {
 
         model.name = name.as_ptr();
         model.vertices = vertices.as_mut_ptr();
-        model.defaultTex = default_model_tex.as_mut().get_unchecked_mut();
+        model.defaultTex = default_model_tex.as_mut();
 
         extern "C" fn make_parts() {}
         model.MakeParts = Some(make_parts);
@@ -129,10 +132,14 @@ impl CefModel {
         extern "C" fn get_picking_bounds(_entity: *mut Entity) {}
         model.GetPickingBounds = Some(get_picking_bounds);
 
-        Model_Init(model.as_mut().get_unchecked_mut());
+        unsafe {
+            Model_Init(model.as_mut());
+        }
 
         model.bobbing = 0;
 
-        Model_Register(model.as_mut().get_unchecked_mut());
+        unsafe {
+            Model_Register(model.as_mut());
+        }
     }
 }

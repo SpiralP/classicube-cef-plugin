@@ -2,7 +2,6 @@ use std::{
     collections::VecDeque,
     mem,
     os::raw::c_short,
-    pin::Pin,
     sync::{Arc, Mutex},
     time::Duration,
 };
@@ -31,7 +30,7 @@ pub struct CefEntity {
     pub id: usize,
     pub name: Option<String>,
 
-    pub entity: Pin<Box<Entity>>,
+    pub entity: Box<Entity>,
     pub browser: Option<RustRefBrowser>,
 
     pub player: Player,
@@ -39,7 +38,7 @@ pub struct CefEntity {
     pub should_send: bool,
     pub background_color: u32,
 
-    v_table: Pin<Box<EntityVTABLE>>,
+    v_table: Box<EntityVTABLE>,
     texture: OwnedGfxTexture,
 
     page_loaded_senders: Vec<oneshot::Sender<()>>,
@@ -54,9 +53,9 @@ impl CefEntity {
         should_send: bool,
         background_color: u32,
     ) -> Self {
-        let entity = Box::pin(unsafe { mem::zeroed() });
+        let entity = Box::new(unsafe { mem::zeroed() });
 
-        let v_table = Box::pin(EntityVTABLE {
+        let v_table = Box::new(EntityVTABLE {
             Tick: Some(Self::tick),
             Despawn: Some(Self::despawn),
             SetLocation: Some(Self::set_location),
@@ -94,30 +93,28 @@ impl CefEntity {
             page_loaded_senders: Vec::new(),
         };
 
-        unsafe {
-            this.register_entity();
-        }
+        this.register_entity();
 
         this
     }
 
-    unsafe extern "C" fn tick(_entity: *mut Entity, _delta: f64) {}
+    extern "C" fn tick(_entity: *mut Entity, _delta: f64) {}
 
-    unsafe extern "C" fn despawn(_entity: *mut Entity) {}
+    extern "C" fn despawn(_entity: *mut Entity) {}
 
-    unsafe extern "C" fn set_location(_entity: *mut Entity, _update: *mut LocationUpdate) {}
+    extern "C" fn set_location(_entity: *mut Entity, _update: *mut LocationUpdate) {}
 
-    unsafe extern "C" fn get_col(_entity: *mut Entity) -> PackedCol {
+    extern "C" fn get_col(_entity: *mut Entity) -> PackedCol {
         PACKEDCOL_WHITE
     }
 
-    unsafe extern "C" fn c_render_model(_entity: *mut Entity, _delta_time: f64, _t: f32) {
+    extern "C" fn c_render_model(_entity: *mut Entity, _delta_time: f64, _t: f32) {
         // we use the render_model function below directly instead
     }
 
-    unsafe extern "C" fn render_name(_entity: *mut Entity) {}
+    extern "C" fn render_name(_entity: *mut Entity) {}
 
-    unsafe fn register_entity(&mut self) {
+    fn register_entity(&mut self) {
         let CefEntity {
             entity,
             v_table,
@@ -125,15 +122,16 @@ impl CefEntity {
             ..
         } = self;
 
-        Entity_Init(entity);
+        unsafe {
+            Entity_Init(entity);
+        }
 
         let model_name = OwnedString::new("cef");
-        Entity_SetModel(
-            entity.as_mut().get_unchecked_mut(),
-            model_name.as_cc_string(),
-        );
+        unsafe {
+            Entity_SetModel(entity.as_mut(), model_name.as_cc_string());
+        }
 
-        entity.VTABLE = v_table.as_mut().get_unchecked_mut();
+        entity.VTABLE = v_table.as_mut();
         entity.Velocity.set(0.0, 0.0, 0.0);
         entity.RotZ = 180.0;
         entity.TextureId = texture.resource_id;
@@ -172,7 +170,7 @@ impl CefEntity {
         if self.get_scale() != 0.0 {
             let entity = self.entity.as_mut();
             unsafe {
-                Model_Render(entity.Model, entity.get_unchecked_mut());
+                Model_Render(entity.Model, entity);
             }
         }
     }

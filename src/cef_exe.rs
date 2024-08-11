@@ -104,6 +104,9 @@ fn main() {
                     debug!(?parent_handle, parent_pid, "watching for parent to die");
                     let result = unsafe { WaitForSingleObject(parent_handle, INFINITE) };
                     warn!(?result, ?parent_handle, parent_pid, "parent died; exiting");
+                    unsafe {
+                        CloseHandle(parent_handle)?;
+                    }
                     process::exit(1);
                 }
                 Err(e) => {

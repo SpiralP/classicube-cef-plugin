@@ -45,7 +45,7 @@ url = "2"
 zstd = "0.13"
 
 [target.'cfg(windows)'.dependencies]
-sysinfo = { version = "0.30", default-features = false }
+sysinfo = { version = "0.31", default-features = false }
 windows = { version = "0.58", features = ["Win32_System_Console"] }
 
 [build-dependencies]

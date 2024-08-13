@@ -27,7 +27,7 @@
                 # "aarch64-darwin" = { platformUrl = "macosarm64"; projectArchCmake = "arm64"; };
               };
 
-              platforms."x86_64-linux".hash = "sha256-gmAnAU6wbphJBf7SAbF9/6AclflBwoXoaqXj61xn6Ts=";
+              platforms."x86_64-linux".hash = "sha256-wIPM7D/D6xDoDkj0Mxvp8a30LhU6oGi0Q+LPGOEHZjY=";
               # platforms."aarch64-linux".hash = "";
               # platforms."armv7l-linux".hash = "";
               # platforms."x86_64-darwin".hash = "";
@@ -36,7 +36,7 @@
               inherit (platforms.${pkgs.stdenv.hostPlatform.system}) platformUrl projectArchCmake hash;
             in
             (prev: rec {
-              version = "127.1.4+ge71a509+chromium-127.0.6533.89";
+              version = "127.3.2+gf1af617+chromium-127.0.6533.100";
 
               src = pkgs.fetchzip {
                 inherit hash;

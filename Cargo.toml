@@ -52,7 +52,7 @@ windows = { version = "0.58", features = [
 ] }
 
 [build-dependencies]
-bindgen = "0.69"
+bindgen = "0.70"
 cc = "1"
 cmake = "0.1"
 

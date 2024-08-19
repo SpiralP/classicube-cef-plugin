@@ -49,56 +49,72 @@ fn main() {
     //
     // on mac, i can't seem to reproduce the child process staying after `killall -9 ClassiCube`
     #[cfg(target_os = "windows")]
-    let stop_parent_watcher = {
-        use std::{
-            sync::mpsc::{self, RecvTimeoutError},
-            thread,
-            time::Duration,
+    {
+        use std::thread;
+
+        use windows::{
+            core::Error,
+            Win32::{
+                Foundation::{CloseHandle, FALSE, HANDLE},
+                System::{
+                    Diagnostics::ToolHelp::{
+                        CreateToolhelp32Snapshot, Process32First, Process32Next, PROCESSENTRY32,
+                        TH32CS_SNAPPROCESS,
+                    },
+                    Threading::{
+                        GetCurrentProcessId, OpenProcess, WaitForSingleObject, INFINITE,
+                        PROCESS_SYNCHRONIZE,
+                    },
+                },
+            },
         };
 
-        use sysinfo::{Pid, ProcessRefreshKind, RefreshKind, System};
+        thread::spawn(move || {
+            unsafe fn get_parent_handle() -> Result<(HANDLE, u32), Error> {
+                let current_process_id = GetCurrentProcessId();
 
-        const PROCESS_CHECK_INTERVAL: Duration = Duration::from_secs(2);
+                let snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0)?;
+                let mut process_entry = PROCESSENTRY32 {
+                    dwSize: core::mem::size_of::<PROCESSENTRY32>() as _,
+                    ..Default::default()
+                };
 
-        let (kill_thread_tx, kill_thread_rx) = mpsc::channel();
-        let thread_handle = thread::spawn(move || {
-            let mut system = System::new_with_specifics(
-                RefreshKind::new().with_processes(ProcessRefreshKind::new()),
-            );
-            let my_pid = Pid::from_u32(process::id());
-
-            let parent_pid = system.process(my_pid).and_then(|process| process.parent());
-            debug!(?my_pid, ?parent_pid);
-
-            if let Some(parent_pid) = parent_pid {
-                debug!("watching for parent {:?} to die", parent_pid);
-
+                Process32First(snapshot, &mut process_entry)?;
                 loop {
-                    if !system.refresh_process_specifics(parent_pid, ProcessRefreshKind::new()) {
-                        warn!("parent {:?} died; exiting", parent_pid);
-                        process::exit(1);
+                    if process_entry.th32ProcessID == current_process_id {
+                        break;
                     }
 
-                    match kill_thread_rx.recv_timeout(PROCESS_CHECK_INTERVAL) {
-                        Err(RecvTimeoutError::Timeout) => {}
-                        Ok(_) => {
-                            debug!("dying");
-                            return;
-                        }
-                        err => {
-                            err.unwrap();
-                            return;
-                        }
+                    Process32Next(snapshot, &mut process_entry)?;
+                }
+                CloseHandle(snapshot)?;
+
+                Ok((
+                    OpenProcess(
+                        PROCESS_SYNCHRONIZE,
+                        FALSE,
+                        process_entry.th32ParentProcessID,
+                    )?,
+                    process_entry.th32ParentProcessID,
+                ))
+            }
+
+            match unsafe { get_parent_handle() } {
+                Ok((parent_handle, parent_pid)) => {
+                    debug!(?parent_handle, parent_pid, "watching for parent to die");
+                    let result = unsafe { WaitForSingleObject(parent_handle, INFINITE) };
+                    warn!(?result, ?parent_handle, parent_pid, "parent died; exiting");
+                    if let Err(e) = unsafe { CloseHandle(parent_handle) } {
+                        warn!(?e, "CloseHandle");
                     }
+                    process::exit(1);
+                }
+                Err(e) => {
+                    warn!(?e, "get_parent_handle");
                 }
             }
         });
-
-        move || {
-            kill_thread_tx.send(()).unwrap();
-            thread_handle.join().unwrap();
-        }
-    };
+    }
 
     let arg_v = env::args()
         .map(|s| CString::new(s).unwrap())
@@ -109,9 +125,6 @@ fn main() {
 
     let ret = unsafe { cef_interface_execute_process(arg_c, arg_v.as_ptr()) };
     warn!(?ret, "cef_interface_execute_process");
-
-    #[cfg(target_os = "windows")]
-    stop_parent_watcher();
 
     process::exit(ret);
 }

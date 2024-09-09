@@ -32,7 +32,7 @@ jobs:
           nix build .#default \
             --print-build-logs --no-update-lock-file
       - run: git status && git diff --cached
-      - uses: peter-evans/create-pull-request@v6
+      - uses: peter-evans/create-pull-request@v7
         with:
           git-token: ${{ secrets.GIT_PAT }}
           branch: upgrade-cef-binary

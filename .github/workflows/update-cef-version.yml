@@ -32,10 +32,10 @@ jobs:
           nix build .#default \
             --print-build-logs --no-update-lock-file
       - run: git status && git diff --cached
-      - uses: peter-evans/create-pull-request@v6
+      - uses: peter-evans/create-pull-request@v7
         with:
-          git-token: ${{ secrets.GIT_PAT }}
           branch: upgrade-cef-binary
+          branch-token: ${{ secrets.GIT_PAT }}
           title: Upgrade cef_binary to `${{ steps.update_cef_version.outputs.cef_binary_version }}`
           body: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           commit-message: Upgrade cef_binary to `${{ steps.update_cef_version.outputs.cef_binary_version }}`

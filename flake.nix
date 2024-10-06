@@ -27,7 +27,7 @@
                 # "aarch64-darwin" = { platformUrl = "macosarm64"; projectArchCmake = "arm64"; };
               };
 
-              platforms."x86_64-linux".hash = "sha256-Q8PFWpc7C68H/TPp4QsDSRV2EIdpmqq0XNGRo4P053Q=";
+              platforms."x86_64-linux".hash = "sha256-0NAbXioAYwPUqc/mOqyq9dA0Vt2rGfytCQ125D5/aho=";
               # platforms."aarch64-linux".hash = "";
               # platforms."armv7l-linux".hash = "";
               # platforms."x86_64-darwin".hash = "";
@@ -36,7 +36,7 @@
               inherit (platforms.${pkgs.stdenv.hostPlatform.system}) platformUrl projectArchCmake hash;
             in
             (prev: rec {
-              version = "128.4.12+g1d7a1f9+chromium-128.0.6613.138";
+              version = "129.0.11+g57354b8+chromium-129.0.6668.90";
 
               src = pkgs.fetchzip {
                 inherit hash;
@@ -44,15 +44,14 @@
                 url = "https://cef-builds.spotifycdn.com/cef_binary_${version}_${platformUrl}.tar.bz2";
               };
 
-              installPhase = ''
-                ${prev.installPhase}
-
+              installPhase = prev.installPhase + ''
                 # cef wants icu file next to the .so
                 mv -v $out/share/cef/* $out/lib/
                 rmdir $out/share/cef $out/share
 
-                # needed to fix "FATAL:udev_loader.cc(48)] Check failed: false."
-                patchelf --add-rpath "${lib.makeLibraryPath [pkgs.libudev0-shim]}" $out/lib/*.so
+                # old: needed to fix "FATAL:udev_loader.cc(48)] Check failed: false."
+                # needs libudev.so.1 now instead of previous ^ so.0 to link at compile time
+                patchelf --add-rpath "${lib.makeLibraryPath [ pkgs.udev ]}" $out/lib/*.so
               '';
 
               cmakeFlags =

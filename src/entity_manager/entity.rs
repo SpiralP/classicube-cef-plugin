@@ -61,7 +61,7 @@ impl CefEntity {
             SetLocation: Some(Self::set_location),
             GetCol: Some(Self::get_col),
             RenderModel: Some(Self::c_render_model),
-            RenderName: Some(Self::render_name),
+            ShouldRenderName: Some(Self::should_render_name),
         });
 
         let mut pixels: Vec<u32> =
@@ -98,7 +98,7 @@ impl CefEntity {
         this
     }
 
-    extern "C" fn tick(_entity: *mut Entity, _delta: f64) {}
+    extern "C" fn tick(_entity: *mut Entity, _delta: f32) {}
 
     extern "C" fn despawn(_entity: *mut Entity) {}
 
@@ -108,11 +108,13 @@ impl CefEntity {
         PACKEDCOL_WHITE
     }
 
-    extern "C" fn c_render_model(_entity: *mut Entity, _delta_time: f64, _t: f32) {
+    extern "C" fn c_render_model(_entity: *mut Entity, _delta_time: f32, _t: f32) {
         // we use the render_model function below directly instead
     }
 
-    extern "C" fn render_name(_entity: *mut Entity) {}
+    extern "C" fn should_render_name(_entity: *mut Entity) -> u8 {
+        0
+    }
 
     fn register_entity(&mut self) {
         let CefEntity {
@@ -143,23 +145,23 @@ impl CefEntity {
         // used in CefModel::draw
         entity.NameTex = Texture {
             ID: entity.TextureId,
-            X: -(DEFAULT_MODEL_WIDTH as cc_int16 / 2),
-            Y: -(DEFAULT_MODEL_HEIGHT as cc_int16),
-            Width: DEFAULT_MODEL_WIDTH as _,
-            Height: DEFAULT_MODEL_HEIGHT as _,
+            x: -(DEFAULT_MODEL_WIDTH as cc_int16 / 2),
+            y: -(DEFAULT_MODEL_HEIGHT as cc_int16),
+            width: DEFAULT_MODEL_WIDTH as _,
+            height: DEFAULT_MODEL_HEIGHT as _,
             uv: TextureRec {
-                U1: 0.0,
-                V1: 0.0,
-                U2: 1.0,
-                V2: 1.0,
+                u1: 0.0,
+                v1: 0.0,
+                u2: 1.0,
+                v2: 1.0,
             },
         };
     }
 
     pub fn update_texture(&mut self, mut part: Bitmap) {
         // update uv's
-        self.entity.NameTex.uv.U2 = part.width as f32 / TEXTURE_WIDTH as f32;
-        self.entity.NameTex.uv.V2 = part.height as f32 / TEXTURE_HEIGHT as f32;
+        self.entity.NameTex.uv.u2 = part.width as f32 / TEXTURE_WIDTH as f32;
+        self.entity.NameTex.uv.v2 = part.height as f32 / TEXTURE_HEIGHT as f32;
 
         unsafe {
             Gfx_UpdateTexturePart(self.texture.resource_id, 0, 0, &mut part, 0);
@@ -184,20 +186,20 @@ impl CefEntity {
 
     pub fn get_scale(&self) -> f32 {
         let CefEntity { entity, .. } = self;
-        entity.ModelScale.X
+        entity.ModelScale.x
     }
 
     pub fn set_size(&mut self, width: u16, height: u16) {
         let CefEntity { entity, .. } = self;
-        entity.NameTex.X = -c_short::try_from(width / 2).unwrap();
-        entity.NameTex.Y = -c_short::try_from(height).unwrap();
-        entity.NameTex.Width = width;
-        entity.NameTex.Height = height;
+        entity.NameTex.x = -c_short::try_from(width / 2).unwrap();
+        entity.NameTex.y = -c_short::try_from(height).unwrap();
+        entity.NameTex.width = width;
+        entity.NameTex.height = height;
     }
 
     pub fn get_size(&self) -> (u16, u16) {
         let CefEntity { entity, .. } = self;
-        (entity.NameTex.Width, entity.NameTex.Height)
+        (entity.NameTex.width, entity.NameTex.height)
     }
 }
 

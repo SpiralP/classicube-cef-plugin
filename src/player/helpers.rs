@@ -43,7 +43,7 @@ fn compute_real_volume(entity: &CefEntity) -> Option<(f32, VolumeMode)> {
     };
 
     let my_pos = vec3_to_vector3(&position);
-    let my_forward = vec3_to_vector3(&Vec3::get_dir_vector(orientation.X, 0.0));
+    let my_forward = vec3_to_vector3(&Vec3::get_dir_vector(orientation.x, 0.0));
 
     let ent_pos = vec3_to_vector3(&entity.entity.Position);
 

@@ -75,7 +75,7 @@ pub async fn run(player: PlayerSnapshot, commands: Commands) -> Result<()> {
             let trace = get_camera_trace().chain_err(|| "no picked block")?;
 
             // the block's hit face
-            let (mult, yaw) = match trace.Closest as FACE_CONSTS {
+            let (mult, yaw) = match trace.closest as FACE_CONSTS {
                 FACE_CONSTS_FACE_XMIN => (Vec3::new(-0.01, 0.0, 0.0), 270.0),
                 FACE_CONSTS_FACE_XMAX => (Vec3::new(1.01, 0.0, 1.0), 90.0),
                 FACE_CONSTS_FACE_ZMIN => (Vec3::new(1.0, 0.0, -0.01), 0.0),
@@ -99,9 +99,9 @@ pub async fn run(player: PlayerSnapshot, commands: Commands) -> Result<()> {
             // let position = position - Vec3::new(0.5, 0.0, 0.5);
 
             let maybe_name = name.map(|name| format!(" -n {name}")).unwrap_or_default();
-            let Vec3 { X, Y, Z } = position;
+            let Vec3 { x, y, z } = position;
             let pitch = 0.0;
-            Chat::send(format!("cef at{maybe_name} {X} {Y} {Z} {yaw} {pitch}"));
+            Chat::send(format!("cef at{maybe_name} {x} {y} {z} {yaw} {pitch}"));
         }
 
         Commands::Devtools { name } => {

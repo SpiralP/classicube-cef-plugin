@@ -14,7 +14,7 @@ permissions:
   pull-requests: write
 
 jobs:
-  update_nix_hashes:
+  update_lock_files:
     uses: SpiralP/github-reusable-workflows/.github/workflows/update-lock-files.yml@main
     with:
       rust-attribute: default

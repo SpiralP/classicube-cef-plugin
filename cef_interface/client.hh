@@ -47,6 +47,22 @@ class MyClient : public CefClient,
   bool DoClose(CefRefPtr<CefBrowser> browser) override;
   void OnAfterCreated(CefRefPtr<CefBrowser> browser) override;
   void OnBeforeClose(CefRefPtr<CefBrowser> browser) override;
+#if CEF_VERSION_MAJOR >= 131
+  bool OnBeforePopup(
+      CefRefPtr<CefBrowser> browser,
+      CefRefPtr<CefFrame> frame,
+      int popup_id,
+      const CefString& target_url,
+      const CefString& target_frame_name,
+      CefLifeSpanHandler::WindowOpenDisposition target_disposition,
+      bool user_gesture,
+      const CefPopupFeatures& popupFeatures,
+      CefWindowInfo& windowInfo,
+      CefRefPtr<CefClient>& client,
+      CefBrowserSettings& settings,
+      CefRefPtr<CefDictionaryValue>& extra_info,
+      bool* no_javascript_access) override;
+#else
   bool OnBeforePopup(
       CefRefPtr<CefBrowser> browser,
       CefRefPtr<CefFrame> frame,
@@ -60,6 +76,7 @@ class MyClient : public CefClient,
       CefBrowserSettings& settings,
       CefRefPtr<CefDictionaryValue>& extra_info,
       bool* no_javascript_access) override;
+#endif
 
   // CefRenderHandler methods:
   void GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) override;

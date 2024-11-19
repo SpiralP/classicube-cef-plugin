@@ -93,6 +93,29 @@ bool MyClient::DoClose(CefRefPtr<CefBrowser> browser) {
   return false;
 }
 
+#if CEF_VERSION_MAJOR >= 131
+bool MyClient::OnBeforePopup(
+    CefRefPtr<CefBrowser> browser,
+    CefRefPtr<CefFrame> frame,
+    int popup_id,
+    const CefString& target_url,
+    const CefString& target_frame_name,
+    CefLifeSpanHandler::WindowOpenDisposition target_disposition,
+    bool user_gesture,
+    const CefPopupFeatures& popupFeatures,
+    CefWindowInfo& windowInfo,
+    CefRefPtr<CefClient>& client,
+    CefBrowserSettings& settings,
+    CefRefPtr<CefDictionaryValue>& extra_info,
+    bool* no_javascript_access) {
+  rust_debug("popup detected");
+
+  frame->LoadURL(target_url);
+
+  // block the popup
+  return true;
+}
+#else
 bool MyClient::OnBeforePopup(
     CefRefPtr<CefBrowser> browser,
     CefRefPtr<CefFrame> frame,
@@ -113,6 +136,7 @@ bool MyClient::OnBeforePopup(
   // block the popup
   return true;
 }
+#endif
 
 // CefRenderHandler methods:
 void MyClient::GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) {

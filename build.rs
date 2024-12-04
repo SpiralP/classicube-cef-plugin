@@ -131,6 +131,11 @@ fn build_libcef_dll_wrapper(links: &mut Vec<Link>) {
 
         let mut build = cmake::Config::new("cef_interface/cef_binary");
 
+        // fix for mac:
+        // clang: error: overriding '-mmacosx-version-min=11.0' option with '--target=x86_64-apple-macosx14.5'
+        #[cfg(target_os = "macos")]
+        build.cflag("-Wno-overriding-t-option");
+
         // rust builds with /MT (static C-RunTime), but libcef_dll_wrapper uses /MTd,
         // and windows does NOT like this! So remove the "d" in a big hack
         #[cfg(target_os = "windows")]

@@ -3,7 +3,7 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.11";
   };
 
-  outputs = { nixpkgs, ... }:
+  outputs = { self, nixpkgs }:
     let
       inherit (nixpkgs) lib;
 
@@ -66,7 +66,7 @@
 
           makeDefaultAttrs = (cef_binary: rec {
             pname = rustManifest.package.name;
-            version = rustManifest.package.version;
+            version = "${rustManifest.package.version}-${self.shortRev or self.dirtyShortRev}";
 
             src = lib.sourceByRegex ./. [
               "^\.cargo(/.*)?$"
@@ -78,11 +78,7 @@
 
             cargoLock = {
               lockFile = ./Cargo.lock;
-              outputHashes = {
-                "async-dispatcher-0.1.0" = "sha256-GHKvmhHXvjSI2DZj+rdJugYcrNDkw8SGxRcNzGsF0VM=";
-                "clap-4.2.7" = "sha256-/nd/Wh6Ea3fM7Z4UUpQWFCJ9KtozND6DHUdwL/oLXmA=";
-                "classicube-helpers-3.0.0+classicube.1.3.7" = "sha256-3hWKS6NmAH0x+SOi/nBKJLIQi/3ilG7WSRrPvF++wGE=";
-              };
+              allowBuiltinFetchGit = true;
             };
 
             nativeBuildInputs = with pkgs; [

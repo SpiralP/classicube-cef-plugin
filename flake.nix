@@ -7,13 +7,16 @@
     let
       inherit (nixpkgs) lib;
 
+      rustManifest = lib.importTOML ./Cargo.toml;
+
+      revSuffix = lib.optionalString (self ? shortRev || self ? dirtyShortRev)
+        "-${self.shortRev or self.dirtyShortRev}";
+
       makePackages = (system: dev:
         let
           pkgs = import nixpkgs {
             inherit system;
           };
-          rustManifest = lib.importTOML ./Cargo.toml;
-
 
           makeCefBinaryAttrs =
             let
@@ -66,7 +69,7 @@
 
           makeDefaultAttrs = (cef_binary: rec {
             pname = rustManifest.package.name;
-            version = "${rustManifest.package.version}-${self.shortRev or self.dirtyShortRev}";
+            version = rustManifest.package.version + revSuffix;
 
             src = lib.sourceByRegex ./. [
               "^\.cargo(/.*)?$"

@@ -55,7 +55,7 @@ fn main() {
         use windows::{
             core::Error,
             Win32::{
-                Foundation::{CloseHandle, FALSE, HANDLE},
+                Foundation::{CloseHandle, HANDLE},
                 System::{
                     Diagnostics::ToolHelp::{
                         CreateToolhelp32Snapshot, Process32First, Process32Next, PROCESSENTRY32,
@@ -92,7 +92,7 @@ fn main() {
                 Ok((
                     OpenProcess(
                         PROCESS_SYNCHRONIZE,
-                        FALSE,
+                        false,
                         process_entry.th32ParentProcessID,
                     )?,
                     process_entry.th32ParentProcessID,

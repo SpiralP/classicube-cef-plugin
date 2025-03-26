@@ -64,7 +64,7 @@ pub extern "C" fn rust_handle_scheme_create(
         Ok(data) => RustSchemeReturn {
             data: data.as_ptr() as *mut std::os::raw::c_void,
             data_size: data.len() as _,
-            mime_type: b"text/html\0".as_ptr() as *mut std::os::raw::c_char,
+            mime_type: c"text/html".as_ptr().cast_mut(),
         },
 
         Err(e) => {

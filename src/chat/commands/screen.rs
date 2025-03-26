@@ -575,11 +575,7 @@ pub async fn run(player: PlayerSnapshot, commands: Commands) -> Result<()> {
                             .player
                             .set_volume_mode(entity.browser.as_ref(), VolumeMode::Global)?;
                     } else {
-                        let multiplier = if let Some(volume) = multiplier {
-                            volume
-                        } else {
-                            1.0
-                        };
+                        let multiplier = multiplier.unwrap_or(1.0);
 
                         if panning {
                             entity.player.set_volume_mode(

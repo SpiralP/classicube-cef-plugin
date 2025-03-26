@@ -32,7 +32,7 @@ pub async fn start_whispering(players: Vec<(u8, String)>) -> Result<()> {
 
     debug!("start_whispering {:#?}", real_players);
 
-    real_players.shuffle(&mut rand::thread_rng());
+    real_players.shuffle(&mut rand::rng());
 
     for (_id, real_name) in real_players {
         match outgoing::query_whisper(real_name).await {

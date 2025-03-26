@@ -37,7 +37,7 @@ impl PlayerTrait for WebPlayer {
             return Err("not http/https".into());
         }
 
-        let has_tld = url.host().map_or(false, |host| {
+        let has_tld = url.host().is_some_and(|host| {
             if let url::Host::Domain(s) = host {
                 s.contains('.')
             } else {

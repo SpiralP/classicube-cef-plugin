@@ -211,7 +211,10 @@ fn build_cef_interface(libcef_include_dir: &Path, links: &mut Vec<Link>) {
         .file("cef_interface/serialize.cc");
 
     #[cfg(not(target_os = "windows"))]
-    let build = build.flag("-Wno-unused-parameter");
+    let build = build.flag("-Wno-error=unused-parameter");
+
+    #[cfg(not(target_os = "windows"))]
+    let build = build.flag("-Wno-error=missing-field-initializers");
 
     #[cfg(target_os = "windows")]
     // warning C4100: 's': unreferenced formal parameter

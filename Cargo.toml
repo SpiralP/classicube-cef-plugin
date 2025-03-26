@@ -17,7 +17,7 @@ async-dispatcher = { git = "https://github.com/SpiralP/rust-async-dispatcher.git
 async-recursion = "1"
 backtrace = "0.3"
 base64 = "0.22"
-bincode = "1"
+bincode = { version = "2", features = ["serde"] }
 clap = { git = "https://github.com/SpiralP/rust-clap-classicube.git", features = [
     "derive",
 ] }
@@ -45,7 +45,7 @@ url = "2"
 zstd = "0.13"
 
 [target.'cfg(windows)'.dependencies]
-windows = { version = "0.60", features = [
+windows = { version = "0.61", features = [
     "Win32_System_Console",
     "Win32_System_Threading",
     "Win32_System_Diagnostics_ToolHelp",

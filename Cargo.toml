@@ -17,7 +17,7 @@ async-dispatcher = { git = "https://github.com/SpiralP/rust-async-dispatcher.git
 async-recursion = "1"
 backtrace = "0.3"
 base64 = "0.22"
-bincode = "2"
+bincode = { version = "2", features = ["serde"] }
 clap = { git = "https://github.com/SpiralP/rust-clap-classicube.git", features = [
     "derive",
 ] }

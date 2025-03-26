@@ -70,13 +70,13 @@ pub fn initialize(debug: bool, module_filter: Option<&str>, flame: bool) {
         }
 
         unsafe {
-            GUARDS.replace(guards);
+            GUARDS = Some(guards);
         }
     });
 }
 
 pub fn free() {
     unsafe {
-        drop(GUARDS.take());
+        GUARDS = None;
     }
 }

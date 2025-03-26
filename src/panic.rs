@@ -1,4 +1,11 @@
-use std::{ffi::CString, fs, io::Write, mem, panic, panic::PanicInfo, process, thread};
+use std::{
+    ffi::CString,
+    fs,
+    io::Write,
+    mem,
+    panic::{self, PanicHookInfo},
+    process, thread,
+};
 
 use backtrace::Backtrace;
 use classicube_sys::{DateTime, DateTime_CurrentLocal, Window_ShowDialog};
@@ -7,7 +14,7 @@ pub fn install_hook() {
     panic::set_hook(Box::new(panic_hook));
 }
 
-fn panic_hook(info: &PanicInfo<'_>) {
+fn panic_hook(info: &PanicHookInfo<'_>) {
     crate::logger::free();
 
     let (popup_message, stderr_message, verbose_message) = {

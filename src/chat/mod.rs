@@ -262,7 +262,7 @@ fn handle_chat_received(message: String, message_type: MsgType) {
 
         if split
             .first()
-            .map_or(false, |first| remove_color(first) == "cef")
+            .is_some_and(|first| remove_color(first) == "cef")
         {
             // remove "cef"
             split.remove(0);

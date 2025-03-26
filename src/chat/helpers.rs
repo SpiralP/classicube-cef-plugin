@@ -1,15 +1,15 @@
 pub fn is_outgoing_whisper(message: &str) -> bool {
     message.len() >= 6
-        && message.get(0..1).map_or(false, |a| a == "&")
+        && (message.get(0..1) == Some("&"))
         && message.get(1..2).is_some()
-        && message.get(2..6).map_or(false, |a| a == "[<] ")
+        && (message.get(2..6) == Some("[<] "))
 }
 
 pub fn is_incoming_whisper(message: &str) -> bool {
     message.len() >= 6
-        && message.get(0..1).map_or(false, |a| a == "&")
+        && (message.get(0..1) == Some("&"))
         && message.get(1..2).is_some()
-        && message.get(2..6).map_or(false, |a| a == "[>] ")
+        && (message.get(2..6) == Some("[>] "))
 }
 
 pub fn is_cef_request_whisper(message: &str) -> bool {
@@ -67,9 +67,9 @@ pub fn is_continuation_message(mut message: &str) -> Option<&str> {
 
 pub fn is_clients_start_message(message: &str) -> bool {
     message.len() >= 14
-        && message.get(0..1).map_or(false, |a| a == "&")
+        && (message.get(0..1) == Some("&"))
         && message.get(1..2).is_some()
-        && message.get(2..).map_or(false, |a| a == "Players using:")
+        && (message.get(2..) == Some("Players using:"))
 }
 
 pub fn is_clients_message(message: &str) -> Option<&str> {
@@ -82,14 +82,14 @@ pub fn is_clients_message(message: &str) -> Option<&str> {
     // &7  Classic 0.28-0.30: &fmagallanesmappin-
     // &7  ViaFabricPlus: &fDutchAngelDragon-
     if message.len() >= 20
-        && message.get(0..1).map_or(false, |a| a == "&")
+        && (message.get(0..1) == Some("&"))
         && message.get(1..2).is_some()
-        && message.get(2..4).map_or(false, |a| a == "  ")
+        && (message.get(2..4) == Some("  "))
         // limit to "ClassiCube" or else we hide other messages with spaces at the beginning,
         // like /mapinfo and /whois
-        && (message.get(4..15).map_or(false, |a| a == "ClassiCube ")
-            || message.get(4..12).map_or(false, |a| a == "Classic ")
-            || message.get(4..17).map_or(false, |a| a == "ViaFabricPlus"))
+        && ((message.get(4..15) == Some("ClassiCube "))
+            || (message.get(4..12) == Some("Classic "))
+            || (message.get(4..17) == Some("ViaFabricPlus")))
     {
         Some(message.get(4..)?)
     } else {
@@ -98,7 +98,7 @@ pub fn is_clients_message(message: &str) -> Option<&str> {
 }
 
 pub fn remove_color_left(mut text: &str) -> &str {
-    while text.len() >= 2 && text.get(0..1).map_or(false, |c| c == "&") {
+    while text.len() >= 2 && (text.get(0..1) == Some("&")) {
         if let Some(trimmed) = text.get(2..) {
             text = trimmed;
         } else {

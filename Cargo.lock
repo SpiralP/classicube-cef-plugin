@@ -68,9 +68,9 @@ checksum = "ace50bade8e6234aa140d9a2f552bbee1db4d353f69b8217bc503490fc1a9f26"
 
 [[package]]
 name = "backtrace"
-version = "0.3.74"
+version = "0.3.75"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8d82cb332cdfaed17ae235a638438ac4d4839913cc2af585c3c6746e8f8bee1a"
+checksum = "6806a6321ec58106fea15becdad98371e28d92ccbc7c8f1b3b6dd724fe8f1002"
 dependencies = [
  "addr2line",
  "cfg-if",
@@ -185,9 +185,9 @@ checksum = "f61dac84819c6588b558454b194026eb1f09c293b9036ae9b159e74e73ab6cf9"
 
 [[package]]
 name = "cc"
-version = "1.2.17"
+version = "1.2.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1fcb57c740ae1daf453ae85f16e37396f672b039e00d9d866e07ddb24e328e3a"
+checksum = "5f4ac86a9e5bc1e2b3449ab9d7d3a6a405e3d1bb28d7b9be8614f55846ae3766"
 dependencies = [
  "jobserver",
  "libc",
@@ -223,7 +223,7 @@ dependencies = [
 [[package]]
 name = "clap"
 version = "4.2.7"
-source = "git+https://github.com/SpiralP/rust-clap-classicube.git#793b692db0084386a84314aa8f48c03d188c9f8d"
+source = "git+https://github.com/SpiralP/rust-clap-classicube.git#790028813e61251d5498ef8413827215060c4450"
 dependencies = [
  "clap_builder",
  "clap_derive",
@@ -233,7 +233,7 @@ dependencies = [
 [[package]]
 name = "clap_builder"
 version = "4.2.7"
-source = "git+https://github.com/SpiralP/rust-clap-classicube.git#793b692db0084386a84314aa8f48c03d188c9f8d"
+source = "git+https://github.com/SpiralP/rust-clap-classicube.git#790028813e61251d5498ef8413827215060c4450"
 dependencies = [
  "bitflags 1.3.2",
  "clap_lex",
@@ -244,7 +244,7 @@ dependencies = [
 [[package]]
 name = "clap_derive"
 version = "4.2.0"
-source = "git+https://github.com/SpiralP/rust-clap-classicube.git#793b692db0084386a84314aa8f48c03d188c9f8d"
+source = "git+https://github.com/SpiralP/rust-clap-classicube.git#790028813e61251d5498ef8413827215060c4450"
 dependencies = [
  "heck",
  "proc-macro2",
@@ -255,7 +255,7 @@ dependencies = [
 [[package]]
 name = "clap_lex"
 version = "0.4.1"
-source = "git+https://github.com/SpiralP/rust-clap-classicube.git#793b692db0084386a84314aa8f48c03d188c9f8d"
+source = "git+https://github.com/SpiralP/rust-clap-classicube.git#790028813e61251d5498ef8413827215060c4450"
 
 [[package]]
 name = "classicube-cef-plugin"
@@ -298,7 +298,7 @@ dependencies = [
 [[package]]
 name = "classicube-helpers"
 version = "3.0.0+classicube.1.3.7"
-source = "git+https://github.com/SpiralP/rust-classicube-helpers.git#0624402a63305dfad0a6ec6624e10e5db3cfd861"
+source = "git+https://github.com/SpiralP/rust-classicube-helpers.git#ec8cffca5adcef3f12fe057fa001081530be0a58"
 dependencies = [
  "async-dispatcher",
  "classicube-sys",
@@ -374,9 +374,9 @@ dependencies = [
 
 [[package]]
 name = "deunicode"
-version = "1.6.1"
+version = "1.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dc55fe0d1f6c107595572ec8b107c0999bb1a2e0b75e37429a4fb0d6474a0e7d"
+checksum = "abd57806937c9cc163efc8ea3910e00a62e2aeb0b8119f1793a978088f8f6b04"
 
 [[package]]
 name = "dirs"
@@ -1376,7 +1376,7 @@ version = "0.2.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "77957b295656769bb8ad2b6a6b09d897d94f05c41b069aede1fcdaa675eaea04"
 dependencies = [
- "zerocopy 0.7.35",
+ "zerocopy",
 ]
 
 [[package]]
@@ -1409,13 +1409,12 @@ dependencies = [
 
 [[package]]
 name = "rand"
-version = "0.9.0"
+version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3779b94aeb87e8bd4e834cee3650289ee9e0d5677f976ecdb6d219e5f4f6cd94"
+checksum = "9fbfd9d094a40bf3ae768db9361049ace4c0e04a4fd6b359518bd7b73a73dd97"
 dependencies = [
  "rand_chacha",
  "rand_core",
- "zerocopy 0.8.21",
 ]
 
 [[package]]
@@ -1997,9 +1996,9 @@ dependencies = [
 
 [[package]]
 name = "tokio"
-version = "1.44.2"
+version = "1.45.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e6b88822cbe49de4185e3a4cbf8321dd487cf5fe0c5c65695fef6346371e9c48"
+checksum = "2513ca694ef9ede0fb23fe71a4ee4107cb102b9dc1930f6d0fd77aae068ae165"
 dependencies = [
  "backtrace",
  "bytes",
@@ -2711,16 +2710,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1b9b4fd18abc82b8136838da5d50bae7bdea537c574d8dc1a34ed098d6c166f0"
 dependencies = [
  "byteorder",
- "zerocopy-derive 0.7.35",
-]
-
-[[package]]
-name = "zerocopy"
-version = "0.8.21"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dcf01143b2dd5d134f11f545cf9f1431b13b749695cb33bcce051e7568f99478"
-dependencies = [
- "zerocopy-derive 0.8.21",
+ "zerocopy-derive",
 ]
 
 [[package]]
@@ -2728,17 +2718,6 @@ name = "zerocopy-derive"
 version = "0.7.35"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fa4f8080344d4671fb4e831a13ad1e68092748387dfc4f55e356242fae12ce3e"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.98",
-]
-
-[[package]]
-name = "zerocopy-derive"
-version = "0.8.21"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "712c8386f4f4299382c9abee219bee7084f78fb939d88b6840fcc1320d5f6da2"
 dependencies = [
  "proc-macro2",
  "quote",

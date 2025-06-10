@@ -14,47 +14,47 @@ path = "src/cef_exe.rs"
 
 [dependencies]
 async-dispatcher = { git = "https://github.com/SpiralP/rust-async-dispatcher.git", branch = "main" }
-async-recursion = "1"
-backtrace = "0.3"
-base64 = "0.22"
-bincode = { version = "2", features = ["serde"] }
+async-recursion = "=1.1.1"
+backtrace = "=0.3.74"
+base64 = "=0.22.1"
+bincode = { version = "=2.0.1", features = ["serde"] }
 clap = { git = "https://github.com/SpiralP/rust-clap-classicube.git", branch = "master", features = [
     "derive",
 ] }
 classicube-helpers = { git = "https://github.com/SpiralP/rust-classicube-helpers.git", branch = "main" }
-classicube-sys = "4"
-deunicode = "1"
-dirs = "6"
-error-chain = "0.12"
-futures = "0.3"
-futures-timer = "3"
-lazy_static = "1"
-ncollide3d = "0.33"
-rand = "0.9"
-regex = "1"
-reqwest = "0.12"
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
-tokio = { version = "1", features = ["full"] }
-tracing = "0.1"
-tracing-appender = "0.2"
-tracing-flame = "0.2"
-tracing-futures = "0.2"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-url = "2"
-zstd = "0.13"
+classicube-sys = "=4.0.0"
+deunicode = "=1.6.1"
+dirs = "=6.0.0"
+error-chain = "=0.12.4"
+futures = "=0.3.31"
+futures-timer = "=3.0.3"
+lazy_static = "=1.5.0"
+ncollide3d = "=0.33.0"
+rand = "=0.9.0"
+regex = "=1.11.1"
+reqwest = "=0.12.15"
+serde = { version = "=1.0.219", features = ["derive"] }
+serde_json = "=1.0.140"
+tokio = { version = "=1.44.2", features = ["full"] }
+tracing = "=0.1.41"
+tracing-appender = "=0.2.3"
+tracing-flame = "=0.2.0"
+tracing-futures = "=0.2.5"
+tracing-subscriber = { version = "=0.3.19", features = ["env-filter"] }
+url = "=2.5.4"
+zstd = "=0.13.3"
 
 [target.'cfg(windows)'.dependencies]
-windows = { version = "0.61", features = [
+windows = { version = "=0.61.1", features = [
     "Win32_System_Console",
     "Win32_System_Threading",
     "Win32_System_Diagnostics_ToolHelp",
 ] }
 
 [build-dependencies]
-bindgen = "0.71"
-cc = "1"
-cmake = "0.1"
+bindgen = "=0.71.1"
+cc = "=1.2.17"
+cmake = "=0.1.54"
 
 [features]
 ci = []

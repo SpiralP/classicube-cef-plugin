@@ -13,11 +13,11 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: write
+  contents: write # for uploading release artifacts
 
 jobs:
   linux_nix:
-    uses: SpiralP/github-reusable-workflows/.github/workflows/build.yml@main
+    uses: SpiralP/github-reusable-workflows/.github/workflows/build.yml@c58353d68dbd7c7bd33c8d5bf522f8b31fe04b17 # main
 
   windows_x86:
     name: Build Windows ${{ matrix.config.arch }}

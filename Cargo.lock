@@ -38,7 +38,7 @@ dependencies = [
 [[package]]
 name = "async-dispatcher"
 version = "0.1.0"
-source = "git+https://github.com/SpiralP/rust-async-dispatcher.git#f0e86ff7a59f895eda4bd12cabf238ebe601a7e4"
+source = "git+https://github.com/SpiralP/rust-async-dispatcher.git?branch=main#f0e86ff7a59f895eda4bd12cabf238ebe601a7e4"
 dependencies = [
  "futures",
 ]
@@ -223,7 +223,7 @@ dependencies = [
 [[package]]
 name = "clap"
 version = "4.2.7"
-source = "git+https://github.com/SpiralP/rust-clap-classicube.git#793b692db0084386a84314aa8f48c03d188c9f8d"
+source = "git+https://github.com/SpiralP/rust-clap-classicube.git?branch=master#da7e44f53db944ed1acf89d77640977155ab3c7c"
 dependencies = [
  "clap_builder",
  "clap_derive",
@@ -233,7 +233,7 @@ dependencies = [
 [[package]]
 name = "clap_builder"
 version = "4.2.7"
-source = "git+https://github.com/SpiralP/rust-clap-classicube.git#793b692db0084386a84314aa8f48c03d188c9f8d"
+source = "git+https://github.com/SpiralP/rust-clap-classicube.git?branch=master#da7e44f53db944ed1acf89d77640977155ab3c7c"
 dependencies = [
  "bitflags 1.3.2",
  "clap_lex",
@@ -244,7 +244,7 @@ dependencies = [
 [[package]]
 name = "clap_derive"
 version = "4.2.0"
-source = "git+https://github.com/SpiralP/rust-clap-classicube.git#793b692db0084386a84314aa8f48c03d188c9f8d"
+source = "git+https://github.com/SpiralP/rust-clap-classicube.git?branch=master#da7e44f53db944ed1acf89d77640977155ab3c7c"
 dependencies = [
  "heck",
  "proc-macro2",
@@ -255,7 +255,7 @@ dependencies = [
 [[package]]
 name = "clap_lex"
 version = "0.4.1"
-source = "git+https://github.com/SpiralP/rust-clap-classicube.git#793b692db0084386a84314aa8f48c03d188c9f8d"
+source = "git+https://github.com/SpiralP/rust-clap-classicube.git?branch=master#da7e44f53db944ed1acf89d77640977155ab3c7c"
 
 [[package]]
 name = "classicube-cef-plugin"
@@ -298,7 +298,7 @@ dependencies = [
 [[package]]
 name = "classicube-helpers"
 version = "3.0.0+classicube.1.3.7"
-source = "git+https://github.com/SpiralP/rust-classicube-helpers.git#0624402a63305dfad0a6ec6624e10e5db3cfd861"
+source = "git+https://github.com/SpiralP/rust-classicube-helpers.git?branch=main#f6de5ac23ac9d03016921cd5c8fd28d03d4a7c1c"
 dependencies = [
  "async-dispatcher",
  "classicube-sys",

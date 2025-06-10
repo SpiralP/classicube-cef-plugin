@@ -10,11 +10,11 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: write # to push branch
+  pull-requests: write # to create pr
 
 jobs:
   update_lock_files:
-    uses: SpiralP/github-reusable-workflows/.github/workflows/update-lock-files.yml@main
+    uses: SpiralP/github-reusable-workflows/.github/workflows/update-lock-files.yml@c58353d68dbd7c7bd33c8d5bf522f8b31fe04b17 # main
     with:
       rust-attribute: default

@@ -1,4 +1,4 @@
-FROM debian:bullseye@sha256:cf48c31af360e1c0a0aedd33aae4d928b68c2cdf093f1612650eb1ff434d1c34
+FROM debian:bookworm@sha256:bd73076dc2cd9c88f48b5b358328f24f2a4289811bd73787c031e20db9f97123
 
 RUN export DEBIAN_FRONTEND=noninteractive \
     && apt-get -y update \

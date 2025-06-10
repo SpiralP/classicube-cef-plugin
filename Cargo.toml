@@ -13,15 +13,15 @@ path = "src/cef_exe.rs"
 
 
 [dependencies]
-async-dispatcher = { git = "https://github.com/SpiralP/rust-async-dispatcher.git" }
+async-dispatcher = { git = "https://github.com/SpiralP/rust-async-dispatcher.git", branch = "main" }
 async-recursion = "1"
 backtrace = "0.3"
 base64 = "0.22"
 bincode = { version = "2", features = ["serde"] }
-clap = { git = "https://github.com/SpiralP/rust-clap-classicube.git", features = [
+clap = { git = "https://github.com/SpiralP/rust-clap-classicube.git", branch = "master", features = [
     "derive",
 ] }
-classicube-helpers = { git = "https://github.com/SpiralP/rust-classicube-helpers.git" }
+classicube-helpers = { git = "https://github.com/SpiralP/rust-classicube-helpers.git", branch = "main" }
 classicube-sys = "4"
 deunicode = "1"
 dirs = "6"

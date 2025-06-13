@@ -28,10 +28,10 @@ jobs:
         config:
           - arch: x86_64
             target: x86_64-pc-windows-msvc
-            url: https://cef-builds.spotifycdn.com/cef_binary_134.3.8%2Bgfe66d80%2Bchromium-134.0.6998.166_windows64.tar.bz2
+            url: https://cef-builds.spotifycdn.com/cef_binary_137.0.17%2Bgf354b0e%2Bchromium-137.0.7151.104_windows64.tar.bz2
           - arch: i686
             target: i686-pc-windows-msvc
-            url: https://cef-builds.spotifycdn.com/cef_binary_134.3.8%2Bgfe66d80%2Bchromium-134.0.6998.166_windows32.tar.bz2
+            url: https://cef-builds.spotifycdn.com/cef_binary_137.0.17%2Bgf354b0e%2Bchromium-137.0.7151.104_windows32.tar.bz2
 
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -130,7 +130,7 @@ jobs:
         config:
           - arch: x86_64
             target: x86_64-unknown-linux-gnu
-            url: https://cef-builds.spotifycdn.com/cef_binary_134.3.8%2Bgfe66d80%2Bchromium-134.0.6998.166_linux64.tar.bz2
+            url: https://cef-builds.spotifycdn.com/cef_binary_137.0.17%2Bgf354b0e%2Bchromium-137.0.7151.104_linux64.tar.bz2
           - arch: i686
             target: i686-unknown-linux-gnu
             # Linux x86 32-bit builds are discontinued after version 101 (details)
@@ -218,10 +218,10 @@ jobs:
         config:
           - arch: armhf
             target: armv7-unknown-linux-gnueabihf
-            url: https://cef-builds.spotifycdn.com/cef_binary_134.3.8%2Bgfe66d80%2Bchromium-134.0.6998.166_linuxarm.tar.bz2
+            url: https://cef-builds.spotifycdn.com/cef_binary_137.0.17%2Bgf354b0e%2Bchromium-137.0.7151.104_linuxarm.tar.bz2
           - arch: aarch64
             target: aarch64-unknown-linux-gnu
-            url: https://cef-builds.spotifycdn.com/cef_binary_134.3.8%2Bgfe66d80%2Bchromium-134.0.6998.166_linuxarm64.tar.bz2
+            url: https://cef-builds.spotifycdn.com/cef_binary_137.0.17%2Bgf354b0e%2Bchromium-137.0.7151.104_linuxarm64.tar.bz2
 
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -299,7 +299,7 @@ jobs:
         config:
           - arch: x86_64
             target: x86_64-apple-darwin
-            url: https://cef-builds.spotifycdn.com/cef_binary_134.3.8%2Bgfe66d80%2Bchromium-134.0.6998.166_macosx64.tar.bz2
+            url: https://cef-builds.spotifycdn.com/cef_binary_137.0.17%2Bgf354b0e%2Bchromium-137.0.7151.104_macosx64.tar.bz2
 
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2

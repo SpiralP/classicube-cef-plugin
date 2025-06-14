@@ -2,5 +2,17 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "github>SpiralP/github-reusable-workflows//.github/renovate.json"
+  ],
+  "packageRules": [
+    {
+      "matchManagers": [
+        "dockerfile"
+      ],
+      "matchDepNames": [
+        "ghcr.io/cross-rs/aarch64-unknown-linux-gnu",
+        "ghcr.io/cross-rs/armv7-unknown-linux-gnueabihf"
+      ],
+      "automerge": true
+    }
   ]
 }

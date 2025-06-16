@@ -17,7 +17,7 @@ jobs:
   update_cef_version:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - uses: DeterminateSystems/nix-installer-action@main
       - uses: DeterminateSystems/magic-nix-cache-action@main
       - id: update_cef_version
@@ -32,7 +32,7 @@ jobs:
           nix build .#default \
             --print-build-logs --no-update-lock-file
       - run: git status && git diff --cached
-      - uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e # v7
+      - uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e # v7.0.8
         with:
           branch: upgrade-cef-binary
           title: Upgrade cef_binary to `${{ steps.update_cef_version.outputs.cef_binary_version }}`

@@ -1,0 +1,23 @@
+name: Release
+
+on:
+  push:
+    branches: [master, main]
+  workflow_dispatch:
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false # don't cancel, since the commit this flow pushes will trigger it again
+
+permissions: {} # none, since we use a custom app
+
+jobs:
+  release:
+    uses: SpiralP/github-reusable-workflows/.github/workflows/release.yml@04f586b53ddde574dd30ccfb15e769dd0e75756f # main
+    with:
+      replace-files: |
+        Cargo.lock
+        Cargo.toml
+    secrets:
+      app-id: ${{ secrets.APP_ID }}
+      app-private-key: ${{ secrets.APP_PRIVATE_KEY }}

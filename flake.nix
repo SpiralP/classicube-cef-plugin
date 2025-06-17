@@ -9,8 +9,8 @@
 
       rustManifest = lib.importTOML ./Cargo.toml;
 
-      revSuffix = lib.optionalString (self ? shortRev || self ? dirtyShortRev)
-        "-${self.shortRev or self.dirtyShortRev}";
+      revSuffix = lib.optionalString (self ? dirtyShortRev)
+        "-${self.dirtyShortRev}";
 
       makePackages = (system: dev:
         let
@@ -39,7 +39,7 @@
               inherit (platforms.${pkgs.stdenv.hostPlatform.system}) platformUrl projectArchCmake hash;
             in
             (prev: rec {
-              version = "134.3.8+gfe66d80+chromium-134.0.6998.166";
+              version = lib.strings.trim (builtins.readFile ./cef_binary_version);
 
               src = pkgs.fetchzip {
                 inherit hash;

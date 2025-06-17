@@ -52,10 +52,9 @@
             name = "get-current-cef-version";
             runtimeInputs = with pkgs; [
               coreutils
-              nix
             ];
             text = ''
-              CURRENT_VERSION="$(nix eval --no-update-lock-file --raw .#cef_binary.version)"
+              CURRENT_VERSION="$(cat cef_binary_version)"
               test -z "$CURRENT_VERSION" && exit 1
               echo "$CURRENT_VERSION"
             '';
@@ -74,33 +73,11 @@
               OLD_VERSION="$(${lib.getExe get-current-cef-version})"
 
               echo "$OLD_VERSION" "$NEW_VERSION"
-              test -z "$OLD_VERSION" && exit 1
-              test -z "$NEW_VERSION" && exit 1
+              test -z "$OLD_VERSION" && echo 'OLD_VERSION missing' && exit 1
+              test -z "$NEW_VERSION" && echo 'NEW_VERSION missing' && exit 1
               test "$OLD_VERSION" = "$NEW_VERSION" && exit 0
-
-              NEW_VERSION_ENCODED="$(echo "$NEW_VERSION" | sd --fixed-strings '+' '%2B')"
-              OLD_VERSION_ENCODED="$(echo "$OLD_VERSION" | sd --fixed-strings '+' '%2B')"
-              if ! grep -q "$OLD_VERSION_ENCODED" .github/workflows/build.yml; then
-                echo "couldn't find old version in .github/workflows/build.yml"
-                exit 1
-              fi
-              sd --fixed-strings "$OLD_VERSION_ENCODED" "$NEW_VERSION_ENCODED" .github/workflows/build.yml
-              if ! grep -q "$NEW_VERSION_ENCODED" .github/workflows/build.yml; then
-                echo "couldn't find new version in .github/workflows/build.yml"
-                exit 1
-              fi
-
-
-              if ! grep -q "$OLD_VERSION" flake.nix; then
-                echo "couldn't find old version in flake.nix"
-                exit 1
-              fi
-              sd --fixed-strings "$OLD_VERSION" "$NEW_VERSION" flake.nix
-              if ! grep -q "$NEW_VERSION" flake.nix; then
-                echo "couldn't find new version in flake.nix"
-                exit 1
-              fi
-
+              
+              echo "$NEW_VERSION" > cef_binary_version
 
               URL="$(nix eval --no-update-lock-file --raw .#cef_binary.src.url)"
               NAME="$(nix eval --no-update-lock-file --raw .#cef_binary.src.name)"

@@ -28,23 +28,26 @@ jobs:
         config:
           - arch: x86_64
             target: x86_64-pc-windows-msvc
-            url: https://cef-builds.spotifycdn.com/cef_binary_134.3.8%2Bgfe66d80%2Bchromium-134.0.6998.166_windows64.tar.bz2
+            url_target: windows64
           - arch: i686
             target: i686-pc-windows-msvc
-            url: https://cef-builds.spotifycdn.com/cef_binary_134.3.8%2Bgfe66d80%2Bchromium-134.0.6998.166_windows32.tar.bz2
+            url_target: windows32
 
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Fetch cef_binary
         run: |
-          aria2c '${{ matrix.config.url }}' -o cef_binary.tar.bz2 --max-connection-per-server=4
+          $version = (Get-Content -Path cef_binary_version).Trim()
+          $dirname = "cef_binary_${version}_${{ matrix.config.url_target }}"
+          $url = "https://cef-builds.spotifycdn.com/$dirname.tar.bz2"
+          echo "$url"
+          aria2c "$url" -o cef_binary.tar.bz2 --max-connection-per-server=4
           7z x -y 'cef_binary.tar.bz2'
           Remove-Item 'cef_binary.tar.bz2'
           7z x -y 'cef_binary.tar'
           Remove-Item 'cef_binary.tar'
-          Get-ChildItem cef_binary_* | Rename-Item -NewName 'cef_binary'
-          Move-Item -Path 'cef_binary' -Destination 'cef_interface'
+          Move-Item -Path "$dirname" -Destination 'cef_interface/cef_binary'
 
       - name: setup-msbuild
         uses: microsoft/setup-msbuild@6fb02220983dee41ce7ae257b6f4d8f9bf5ed4ce # v2
@@ -130,12 +133,10 @@ jobs:
         config:
           - arch: x86_64
             target: x86_64-unknown-linux-gnu
-            url: https://cef-builds.spotifycdn.com/cef_binary_134.3.8%2Bgfe66d80%2Bchromium-134.0.6998.166_linux64.tar.bz2
+            url_target: linux64
           - arch: i686
             target: i686-unknown-linux-gnu
-            # Linux x86 32-bit builds are discontinued after version 101 (details)
-            # https://cef-builds.spotifycdn.com/index.html#linux32
-            url: https://cef-builds.spotifycdn.com/cef_binary_101.0.18%2Bg367b4a0%2Bchromium-101.0.4951.67_linux32.tar.bz2
+            url_target: linux32
 
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -160,11 +161,30 @@ jobs:
           echo "PKG_CONFIG_ALLOW_CROSS=1" >> "$GITHUB_ENV"
 
       - name: Fetch cef_binary
+        if: ${{ matrix.config.arch == 'x86_64' }}
         run: |
-          aria2c '${{ matrix.config.url }}' -o cef_binary.tar.bz2 --max-connection-per-server=4
+          version="$(cat cef_binary_version)"
+          dirname="cef_binary_${version}_${{ matrix.config.url_target }}"
+          url="https://cef-builds.spotifycdn.com/$dirname.tar.bz2"
+          echo "$url"
+          aria2c "$url" -o cef_binary.tar.bz2 --max-connection-per-server=4
           tar -xjf cef_binary.tar.bz2
           rm cef_binary.tar.bz2
-          mv cef_binary_* cef_interface/cef_binary
+          mv "$dirname" cef_interface/cef_binary
+
+      - name: Fetch cef_binary
+        if: ${{ matrix.config.arch == 'i686' }}
+        # Linux x86 32-bit builds are discontinued after version 101 (details)
+        # https://cef-builds.spotifycdn.com/index.html#linux32
+        run: |
+          version='101.0.18+g367b4a0+chromium-101.0.4951.67'
+          dirname="cef_binary_${version}_${{ matrix.config.url_target }}"
+          url="https://cef-builds.spotifycdn.com/$dirname.tar.bz2"
+          echo "$url"
+          aria2c "$url" -o cef_binary.tar.bz2 --max-connection-per-server=4
+          tar -xjf cef_binary.tar.bz2
+          rm cef_binary.tar.bz2
+          mv "$dirname" cef_interface/cef_binary
 
       - name: Install rust
         run: |
@@ -218,10 +238,10 @@ jobs:
         config:
           - arch: armhf
             target: armv7-unknown-linux-gnueabihf
-            url: https://cef-builds.spotifycdn.com/cef_binary_134.3.8%2Bgfe66d80%2Bchromium-134.0.6998.166_linuxarm.tar.bz2
+            url_target: linuxarm
           - arch: aarch64
             target: aarch64-unknown-linux-gnu
-            url: https://cef-builds.spotifycdn.com/cef_binary_134.3.8%2Bgfe66d80%2Bchromium-134.0.6998.166_linuxarm64.tar.bz2
+            url_target: linuxarm64
 
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -238,10 +258,14 @@ jobs:
 
       - name: Fetch cef_binary
         run: |
-          aria2c '${{ matrix.config.url }}' -o cef_binary.tar.bz2 --max-connection-per-server=4
+          version="$(cat cef_binary_version)"
+          dirname="cef_binary_${version}_${{ matrix.config.url_target }}"
+          url="https://cef-builds.spotifycdn.com/$dirname.tar.bz2"
+          echo "$url"
+          aria2c "$url" -o cef_binary.tar.bz2 --max-connection-per-server=4
           tar -xjf cef_binary.tar.bz2
           rm cef_binary.tar.bz2
-          mv cef_binary_* cef_interface/cef_binary
+          mv "$dirname" cef_interface/cef_binary
 
       - name: Install rust
         run: |
@@ -299,17 +323,21 @@ jobs:
         config:
           - arch: x86_64
             target: x86_64-apple-darwin
-            url: https://cef-builds.spotifycdn.com/cef_binary_134.3.8%2Bgfe66d80%2Bchromium-134.0.6998.166_macosx64.tar.bz2
+            url_target: macosx64
 
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Fetch cef_binary
         run: |
-          aria2c '${{ matrix.config.url }}' -o cef_binary.tar.bz2 --max-connection-per-server=4
+          version="$(cat cef_binary_version)"
+          dirname="cef_binary_${version}_${{ matrix.config.url_target }}"
+          url="https://cef-builds.spotifycdn.com/$dirname.tar.bz2"
+          echo "$url"
+          aria2c "$url" -o cef_binary.tar.bz2 --max-connection-per-server=4
           tar -xjf cef_binary.tar.bz2
           rm cef_binary.tar.bz2
-          mv cef_binary_* cef_interface/cef_binary
+          mv "$dirname" cef_interface/cef_binary
 
       - name: Install rust
         run: |

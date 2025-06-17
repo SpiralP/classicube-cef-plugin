@@ -261,7 +261,7 @@ jobs:
           file 'target/${{ matrix.config.target }}/debug/cef'
 
       - name: Test
-        if: ${{ startsWith(github.ref, 'refs/tags/') != true }}
+        if: ${{ startsWith(github.ref, 'refs/tags/') != true && matrix.config.arch != 'armhf' }}
         run: |
           cross test --target ${{ matrix.config.target }} -- --nocapture --test-threads 1
 

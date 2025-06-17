@@ -24,7 +24,6 @@ clap = { git = "https://github.com/SpiralP/rust-clap-classicube.git", branch = "
 classicube-helpers = { git = "https://github.com/SpiralP/rust-classicube-helpers.git", branch = "main" }
 classicube-sys = "=4.0.0"
 deunicode = "=1.6.2"
-dirs = "=6.0.0"
 error-chain = "=0.12.4"
 futures = "=0.3.31"
 futures-timer = "=3.0.3"

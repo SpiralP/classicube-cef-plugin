@@ -96,17 +96,11 @@ jobs:
       - name: VirusTotal Scan
         uses: crazy-max/ghaction-virustotal@d34968c958ae283fe976efed637081b9f9dcf74f # v4.2.0
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
-        id: virustotal
         with:
           vt_api_key: ${{ secrets.VT_API_KEY }}
           files: |
             classicube_cef_windows_${{ matrix.config.arch }}.dll
             cef-windows-${{ matrix.config.arch }}.exe
-
-      - name: Generate Release Body Text
-        if: ${{ startsWith(github.ref, 'refs/tags/') && matrix.config.arch == 'x86_64' }}
-        run: |
-          node .github\format-release.js '${{ steps.virustotal.outputs.analysis }}' > release_body_text.txt
 
       - name: Upload Release
         uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8 # v2.3.2
@@ -114,7 +108,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          body_path: release_body_text.txt
           files: |
             classicube_cef_windows_${{ matrix.config.arch }}.dll
             classicube_cef_windows_${{ matrix.config.arch }}.pdb

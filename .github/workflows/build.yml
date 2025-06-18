@@ -21,7 +21,7 @@ jobs:
 
   windows_x86:
     name: Build Windows ${{ matrix.config.arch }}
-    runs-on: windows-latest
+    runs-on: windows-2025
     strategy:
       fail-fast: false
       matrix:
@@ -245,7 +245,7 @@ jobs:
 
   linux_arm:
     name: Build Linux ${{ matrix.config.arch }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -337,7 +337,7 @@ jobs:
 
   mac_x86:
     name: Build MacOS ${{ matrix.config.arch }}
-    runs-on: macos-latest
+    runs-on: macos-14
     strategy:
       fail-fast: false
       matrix:

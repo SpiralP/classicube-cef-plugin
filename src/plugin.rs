@@ -16,8 +16,6 @@ pub struct Plugin {
     context_initialized: bool,
 }
 
-pub const APP_NAME: &str = concat!("cef", env!("CARGO_PKG_VERSION"));
-
 impl Plugin {
     /// Called once on our plugin's `Init`
     pub fn initialize() {
@@ -31,10 +29,12 @@ impl Plugin {
 
             Chat::print(format!("Loading Cef v{}", env!("CARGO_PKG_VERSION")));
 
-            let append_app_name = CString::new(format!(" {APP_NAME}")).unwrap();
-            let c_str = append_app_name.as_ptr();
-            unsafe {
-                String_AppendConst(&raw mut Server.AppName, c_str);
+            if !unsafe { Server.AppName.to_string().contains(" cef") } {
+                let append_app_name = CString::new(" cef").unwrap();
+                let c_str = append_app_name.as_ptr();
+                unsafe {
+                    String_AppendConst(&raw mut Server.AppName, c_str);
+                }
             }
 
             let mut chat = Chat::new();

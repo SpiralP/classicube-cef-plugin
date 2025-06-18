@@ -13,7 +13,6 @@ use crate::{
         is_continuation_message, Chat, TAB_LIST,
     },
     error::{Result, ResultExt},
-    plugin::APP_NAME,
 };
 
 thread_local!(
@@ -136,16 +135,7 @@ async fn get_clients() -> Result<Vec<String>> {
 }
 
 fn get_names_with_cef(messages: &[String]) -> Result<HashSet<String>> {
-    // cef0.13.2-alpha.0
-    let app_name_without_last_number = format!(
-        "{}.",
-        APP_NAME
-            .splitn(3, '.')
-            .take(2)
-            .collect::<Vec<_>>()
-            .join(".")
-    );
-    debug!("{:#?} {:?}", messages, app_name_without_last_number);
+    debug!(?messages);
 
     let mut names_with_cef: HashSet<String> = HashSet::new();
     for message in messages {
@@ -157,7 +147,7 @@ fn get_names_with_cef(messages: &[String]) -> Result<HashSet<String>> {
         if let Some(right) = right.get(2..) {
             let names: HashSet<String> = right.split(", ").map(ToString::to_string).collect();
 
-            if left.contains(&app_name_without_last_number) {
+            if left.contains(" cef") {
                 for name in names {
                     names_with_cef.insert(name);
                 }
@@ -200,24 +190,14 @@ async fn process_clients_response(messages: Vec<String>) -> Result<()> {
 
 #[test]
 fn test_get_names_with_cef() {
-    let parts = APP_NAME
-        .get(3..)
-        .unwrap()
-        .splitn(3, '.')
-        .collect::<Vec<_>>();
-    let without_last_number = format!(
-        "cef{}",
-        parts.iter().copied().take(2).collect::<Vec<_>>().join(".")
-    );
-
     {
         let lines = vec![
-            format!("ClassiCube 1.2.4 + {APP_NAME}: name1"),
-            format!("ClassiCube 1.2.4 {APP_NAME} +cs3.5.15 + Ponies v2.1: name2"),
-            format!("ClassiCube 1.2.4 + {APP_NAME} +cs3.5.15 + Ponies v2.1: name3"),
-            format!("ClassiCube 1.2.4 {APP_NAME} cs3.5.15 + Ponies v2.1: name4"),
-            format!("ClassiCube 1.2.4 {}.0: name5", without_last_number),
-            format!("ClassiCube 1.2.4 {}.: name6", without_last_number),
+            format!("ClassiCube 1.2.4 + cef1.2.3: name1"),
+            format!("ClassiCube 1.2.4 cef1.2.3 +cs3.5.15 + Ponies v2.1: name2"),
+            format!("ClassiCube 1.2.4 + cef1.2.3 +cs3.5.15 + Ponies v2.1: name3"),
+            format!("ClassiCube 1.2.4 cef cs3.5.15 + Ponies v2.1: name4"),
+            format!("ClassiCube 1.2.4 cef.0: name5"),
+            format!("ClassiCube 1.2.4 cef.: name6"),
         ];
 
         let r = get_names_with_cef(&lines).unwrap();
@@ -230,12 +210,11 @@ fn test_get_names_with_cef() {
     }
 
     {
-        let with_next_minor = format!("cef{}.99.0", parts[0]);
         let lines = vec![
-            format!("ClassiCube 1.2.4 {}: name7", with_next_minor),
-            format!("ClassiCube 1.2.4 + {}: name8", with_next_minor),
-            format!("ClassiCube 1.2.4 cef0.0.0: name9"),
-            format!("ClassiCube 1.2.4 + cef0.0.0: name10"),
+            format!("ClassiCube 1.2.4cef: name7"),
+            format!("ClassiCube 1.2.4 +cef1.2: name8"),
+            format!("ClassiCube 1.2.4cef0.0.0: name9"),
+            format!("ClassiCube 1.2.4cef0.0.0: name10"),
         ];
 
         let r = get_names_with_cef(&lines).unwrap();

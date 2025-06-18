@@ -335,6 +335,7 @@ fn handle_chat_received(message: String, message_type: MsgType) {
     }
 }
 
+#[allow(dead_code)]
 #[allow(non_snake_case)]
 #[derive(Debug, Clone)]
 pub struct PlayerSnapshot {

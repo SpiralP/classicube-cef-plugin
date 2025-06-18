@@ -18,6 +18,7 @@ thread_local!(
         RefCell::default();
 );
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub enum RustV8Value {
     Unknown,

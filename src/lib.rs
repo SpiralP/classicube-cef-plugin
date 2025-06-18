@@ -3,6 +3,7 @@
     clippy::cast_lossless,
     clippy::cast_possible_truncation,
     clippy::cast_precision_loss,
+    clippy::doc_markdown,
     clippy::items_after_statements,
     clippy::missing_errors_doc,
     clippy::missing_safety_doc,
@@ -84,9 +85,11 @@ extern "C" fn on_new_map_loaded() {
     });
 }
 
+#[allow(non_upper_case_globals)]
 #[no_mangle]
 pub static Plugin_ApiVersion: c_int = 1;
 
+#[allow(non_upper_case_globals)]
 #[no_mangle]
 pub static mut Plugin_Component: IGameComponent = IGameComponent {
     // Called when the game is being loaded.

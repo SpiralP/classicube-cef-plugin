@@ -194,8 +194,8 @@ pub fn get_ext(url: &Url) -> Result<&str> {
             }
         })
         .unwrap_or_else(|| {
-            let parts = url.path_segments().chain_err(|| "no path segments")?;
-            let last_part = parts.last().chain_err(|| "no last_part")?;
+            let mut parts = url.path_segments().chain_err(|| "no path segments")?;
+            let last_part = parts.next_back().chain_err(|| "no last_part")?;
 
             let path = Path::new(last_part);
             path.extension()

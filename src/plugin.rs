@@ -29,7 +29,9 @@ impl Plugin {
 
             Chat::print(format!("Loading Cef v{}", env!("CARGO_PKG_VERSION")));
 
-            if !unsafe { Server.AppName.to_string().contains(" cef") } {
+            #[allow(static_mut_refs)]
+            let app_name = unsafe { Server.AppName.to_string() };
+            if !app_name.contains(" cef") {
                 let append_app_name = CString::new(" cef").unwrap();
                 let c_str = append_app_name.as_ptr();
                 unsafe {

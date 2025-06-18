@@ -3,6 +3,7 @@ mod generated;
 use std::{
     env,
     ffi::{CStr, CString},
+    fmt::Display,
     fs, io,
     iter::Iterator,
     mem,
@@ -373,10 +374,10 @@ impl Clone for RustRefBrowser {
     }
 }
 
-impl ToString for RustRefString {
-    fn to_string(&self) -> String {
+impl Display for RustRefString {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let s = unsafe { slice::from_raw_parts(self.ptr.cast::<u8>(), self.len) };
-        String::from_utf8_lossy(s).into_owned()
+        String::from_utf8_lossy(s).fmt(f)
     }
 }
 

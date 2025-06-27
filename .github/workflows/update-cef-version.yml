@@ -35,5 +35,5 @@ jobs:
         with:
           body: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           branch: update-cef-binary
-          commit-message: "feat(cef_binary): update cef_binary to `${{ steps.update_cef_version.outputs.cef_binary_version }}`"
-          title: "feat(cef_binary): update cef_binary to `${{ steps.update_cef_version.outputs.cef_binary_version }}`"
+          commit-message: "fix(cef_binary): update cef_binary to `${{ steps.update_cef_version.outputs.cef_binary_version }}`"
+          title: "fix(cef_binary): update cef_binary to `${{ steps.update_cef_version.outputs.cef_binary_version }}`"

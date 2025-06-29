@@ -409,3 +409,78 @@ jobs:
           files: |
             classicube_cef_macos_${{ matrix.config.arch }}.dylib
             cef-macos-${{ matrix.config.arch }}
+
+  mac_arm:
+    name: Build MacOS ${{ matrix.config.arch }}
+    runs-on: macos-14
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - arch: aarch64
+            target: aarch64-apple-darwin
+            url_target: macosarm64
+
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        id: cache-cef-binary
+        with:
+          path: cef_interface/cef_binary
+          key: cef-binary-${{ hashFiles('cef_binary_version') }}-${{ matrix.config.url_target }}
+
+      - name: Fetch cef_binary
+        if: ${{ steps.cache-cef-binary.outputs.cache-hit != 'true' }}
+        run: |
+          version="$(cat cef_binary_version)"
+          dirname="cef_binary_${version}_${{ matrix.config.url_target }}"
+          url="https://cef-builds.spotifycdn.com/$dirname.tar.bz2"
+          echo "$url"
+          aria2c "$url" -o cef_binary.tar.bz2 --max-connection-per-server=4
+          tar -xjf cef_binary.tar.bz2
+          rm cef_binary.tar.bz2
+          mv "$dirname" cef_interface/cef_binary
+
+      - name: Install rust
+        run: |
+          rustup default stable
+          rustup component add rustfmt
+          rustup target add ${{ matrix.config.target }}
+
+      - name: Build
+        if: ${{ startsWith(github.ref, 'refs/tags/') != true }}
+        run: |
+          cargo build --target ${{ matrix.config.target }}
+          file 'target/${{ matrix.config.target }}/debug/libclassicube_cef_plugin.dylib'
+          file 'target/${{ matrix.config.target }}/debug/cef'
+
+      - name: Test
+        if: ${{ startsWith(github.ref, 'refs/tags/') != true }}
+        run: |
+          cargo test --target ${{ matrix.config.target }} -- --nocapture --test-threads 1
+
+      - name: Build Release
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
+        run: |
+          cargo build --target ${{ matrix.config.target }} --release
+          file 'target/${{ matrix.config.target }}/release/libclassicube_cef_plugin.dylib'
+          file 'target/${{ matrix.config.target }}/release/cef'
+
+      - name: Rename files
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
+        run: |
+          mv 'target/${{ matrix.config.target }}/release/libclassicube_cef_plugin.dylib' \
+            './classicube_cef_macos_${{ matrix.config.arch }}.dylib'
+          mv 'target/${{ matrix.config.target }}/release/cef' \
+            './cef-macos-${{ matrix.config.arch }}'
+
+      - name: Upload Release
+        uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8 # v2.3.2
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          files: |
+            classicube_cef_macos_${{ matrix.config.arch }}.dylib
+            cef-macos-${{ matrix.config.arch }}

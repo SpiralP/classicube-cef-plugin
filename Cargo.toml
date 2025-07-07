@@ -34,7 +34,7 @@ regex = "=1.11.1"
 reqwest = "=0.12.22"
 serde = { version = "=1.0.219", features = ["derive"] }
 serde_json = "=1.0.140"
-tokio = { version = "=1.45.1", features = ["full"] }
+tokio = { version = "=1.46.1", features = ["full"] }
 tracing = "=0.1.41"
 tracing-appender = "=0.2.3"
 tracing-flame = "=0.2.0"
@@ -52,7 +52,7 @@ windows = { version = "=0.61.3", features = [
 
 [build-dependencies]
 bindgen = "=0.72.0"
-cc = "=1.2.28"
+cc = "=1.2.29"
 cmake = "=0.1.54"
 
 [features]

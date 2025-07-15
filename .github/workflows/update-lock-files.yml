@@ -15,6 +15,6 @@ permissions:
 
 jobs:
   update_lock_files:
-    uses: SpiralP/github-reusable-workflows/.github/workflows/update-lock-files.yml@fec6455c4d94686ea90e752669bac8b26664442d # main
+    uses: SpiralP/github-reusable-workflows/.github/workflows/update-lock-files.yml@7f6631e67d85d1a1676cd99f745fa187e19fecaa # main
     with:
       rust-attribute: default

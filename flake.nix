@@ -30,7 +30,7 @@
                 # "aarch64-darwin" = { platformUrl = "macosarm64"; projectArchCmake = "arm64"; };
               };
 
-              platforms."x86_64-linux".hash = "sha256-ZMi93R6Bp9kYmGBob8WYCNHsHHrvAreMBB6nNTwLVIQ=";
+              platforms."x86_64-linux".hash = "sha256-rEKZQr0hTT8ca/X+nN3lAue+Gib4zFxRTRgOW4oDb3M=";
               # platforms."aarch64-linux".hash = "";
               # platforms."armv7l-linux".hash = "";
               # platforms."x86_64-darwin".hash = "";

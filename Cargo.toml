@@ -34,7 +34,7 @@ regex = "=1.11.1"
 reqwest = "=0.12.22"
 serde = { version = "=1.0.219", features = ["derive"] }
 serde_json = "=1.0.142"
-tokio = { version = "=1.47.0", features = ["full"] }
+tokio = { version = "=1.47.1", features = ["full"] }
 tracing = "=0.1.41"
 tracing-appender = "=0.2.3"
 tracing-flame = "=0.2.0"

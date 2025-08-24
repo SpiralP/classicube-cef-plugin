@@ -40,7 +40,7 @@ tracing-appender = "=0.2.3"
 tracing-flame = "=0.2.0"
 tracing-futures = "=0.2.5"
 tracing-subscriber = { version = "=0.3.19", features = ["env-filter"] }
-url = "=2.5.4"
+url = "=2.5.6"
 zstd = "=0.13.3"
 
 [target.'cfg(windows)'.dependencies]

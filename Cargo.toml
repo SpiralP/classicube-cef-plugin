@@ -30,7 +30,7 @@ futures-timer = "=3.0.3"
 lazy_static = "=1.5.0"
 ncollide3d = "=0.33.0"
 rand = "=0.9.2"
-regex = "=1.11.1"
+regex = "=1.11.2"
 reqwest = "=0.12.23"
 serde = { version = "=1.0.219", features = ["derive"] }
 serde_json = "=1.0.143"
@@ -40,7 +40,7 @@ tracing-appender = "=0.2.3"
 tracing-flame = "=0.2.0"
 tracing-futures = "=0.2.5"
 tracing-subscriber = { version = "=0.3.19", features = ["env-filter"] }
-url = "=2.5.6"
+url = "=2.5.7"
 zstd = "=0.13.3"
 
 [target.'cfg(windows)'.dependencies]
@@ -52,7 +52,7 @@ windows = { version = "=0.61.3", features = [
 
 [build-dependencies]
 bindgen = "=0.72.0"
-cc = "=1.2.33"
+cc = "=1.2.34"
 cmake = "=0.1.54"
 
 [features]

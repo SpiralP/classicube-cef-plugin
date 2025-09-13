@@ -1,6 +1,20 @@
 #!/usr/bin/env zx
 
-/** @type Record<string, {versions: Array<{cef_version: string, channel: "stable"|"beta", files: Array<{type: "standard"|"minimal"|"client", name: string, sha1: string}>}>}> */
+/**
+ * @typedef {Object} File
+ * @property {"standard"|"minimal"|"client"} type
+ * @property {string} name
+ * @property {string} sha1
+ */
+
+/**
+ * @typedef {Object} Version
+ * @property {string} cef_version
+ * @property {"stable"|"beta"} channel
+ * @property {File[]} files
+ */
+
+/** @type {Record<string, { versions: Version[] }>} */
 const versionsByOs = await (
   await fetch("https://cef-builds.spotifycdn.com/index.json")
 ).json();
@@ -9,8 +23,16 @@ const mainPlatform = "windows64";
 // linux32, linux64, linuxarm, linuxarm64, macosarm64, macosx64, windows32, windows64, windowsarm64
 const requiredPlatforms = ["windows64", "linux64", "macosx64"];
 
+/** @param {string} chromeVersion */
+function getBranch(chromeVersion) {
+  return parseInt(chromeVersion.split(".")[2]);
+}
+
 function getLatestStableVersion() {
-  for (const version of versionsByOs[mainPlatform].versions) {
+  const sortedVersions = versionsByOs[mainPlatform].versions.sort((a, b) => {
+    return getBranch(b.chromium_version) - getBranch(a.chromium_version);
+  });
+  for (const version of sortedVersions) {
     const { cef_version, channel } = version;
 
     let ok = true;

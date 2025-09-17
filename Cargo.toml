@@ -1,6 +1,6 @@
 [package]
 name = "classicube-cef-plugin"
-version = "1.15.24"
+version = "1.15.25"
 edition = "2021"
 publish = false
 

@@ -337,7 +337,7 @@ jobs:
 
   mac_x86:
     name: Build MacOS ${{ matrix.config.arch }}
-    runs-on: macos-14
+    runs-on: macos-15
     strategy:
       fail-fast: false
       matrix:
@@ -412,7 +412,7 @@ jobs:
 
   mac_arm:
     name: Build MacOS ${{ matrix.config.arch }}
-    runs-on: macos-14
+    runs-on: macos-15
     strategy:
       fail-fast: false
       matrix:

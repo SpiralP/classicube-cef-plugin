@@ -15,7 +15,7 @@ path = "src/cef_exe.rs"
 [dependencies]
 async-dispatcher = { git = "https://github.com/SpiralP/rust-async-dispatcher.git", branch = "main" }
 async-recursion = "=1.1.1"
-backtrace = "=0.3.75"
+backtrace = "=0.3.76"
 base64 = "=0.22.1"
 bincode = { version = "=2.0.1", features = ["serde"] }
 clap = { git = "https://github.com/SpiralP/rust-clap-classicube.git", branch = "master", features = [
@@ -30,7 +30,7 @@ futures-timer = "=3.0.3"
 lazy_static = "=1.5.0"
 ncollide3d = "=0.33.0"
 rand = "=0.9.2"
-regex = "=1.11.2"
+regex = "=1.11.3"
 reqwest = "=0.12.23"
 serde = { version = "=1.0.225", features = ["derive"] }
 serde_json = "=1.0.145"
@@ -44,7 +44,7 @@ url = "=2.5.7"
 zstd = "=0.13.3"
 
 [target.'cfg(windows)'.dependencies]
-windows = { version = "=0.62.0", features = [
+windows = { version = "=0.62.1", features = [
     "Win32_System_Console",
     "Win32_System_Threading",
     "Win32_System_Diagnostics_ToolHelp",
@@ -52,7 +52,7 @@ windows = { version = "=0.62.0", features = [
 
 [build-dependencies]
 bindgen = "=0.72.1"
-cc = "=1.2.37"
+cc = "=1.2.40"
 cmake = "=0.1.54"
 
 [features]

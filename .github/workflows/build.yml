@@ -36,7 +36,7 @@ jobs:
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
-      - uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         id: cache-cef-binary
         with:
           path: cef_interface/cef_binary
@@ -103,7 +103,7 @@ jobs:
             cef-windows-${{ matrix.config.arch }}.exe
 
       - name: Upload Release
-        uses: softprops/action-gh-release@62c96d0c4e8a889135c1f3a25910db8dbe0e85f7 # v2.3.4
+        uses: softprops/action-gh-release@6da8fa9354ddfdc4aeace5fc48d7f679b5214090 # v2.4.1
         if: ${{ startsWith(github.ref, 'refs/tags/') && matrix.config.arch == 'x86_64' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -114,7 +114,7 @@ jobs:
             cef-windows-${{ matrix.config.arch }}.exe
 
       - name: Upload Release
-        uses: softprops/action-gh-release@62c96d0c4e8a889135c1f3a25910db8dbe0e85f7 # v2.3.4
+        uses: softprops/action-gh-release@6da8fa9354ddfdc4aeace5fc48d7f679b5214090 # v2.4.1
         if: ${{ startsWith(github.ref, 'refs/tags/') && matrix.config.arch != 'x86_64' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -160,7 +160,7 @@ jobs:
             libssl3t64:i386 libglib2.0-0t64:i386 libnss3:i386 libnspr4:i386 libdbus-1-3:i386 libatk1.0-0t64:i386 libatk-bridge2.0-0t64:i386 libcups2t64:i386 libdrm2:i386 libxcomposite1:i386 libxdamage1:i386 libxfixes3:i386 libxrandr2:i386 libgbm1:i386 libxkbcommon0:i386 libpango-1.0-0:i386 libcairo2:i386 libasound2t64:i386 libatspi2.0-0t64:i386
           echo "PKG_CONFIG_ALLOW_CROSS=1" >> "$GITHUB_ENV"
 
-      - uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         if: ${{ matrix.config.arch == 'x86_64' }}
         id: cache-cef-binary
         with:
@@ -179,7 +179,7 @@ jobs:
           rm cef_binary.tar.bz2
           mv "$dirname" cef_interface/cef_binary
 
-      - uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         if: ${{ matrix.config.arch == 'i686' }}
         id: cache-cef-binary-i686
         with:
@@ -234,7 +234,7 @@ jobs:
             './cef-linux-${{ matrix.config.arch }}' \
 
       - name: Upload Release
-        uses: softprops/action-gh-release@62c96d0c4e8a889135c1f3a25910db8dbe0e85f7 # v2.3.4
+        uses: softprops/action-gh-release@6da8fa9354ddfdc4aeace5fc48d7f679b5214090 # v2.4.1
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -270,7 +270,7 @@ jobs:
         run: |
           docker build --pull -t cross-aarch64 -f .github/cross-aarch64.Dockerfile .
 
-      - uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         id: cache-cef-binary
         with:
           path: cef_interface/cef_binary
@@ -326,7 +326,7 @@ jobs:
             './cef-linux-${{ matrix.config.arch }}'
 
       - name: Upload Release
-        uses: softprops/action-gh-release@62c96d0c4e8a889135c1f3a25910db8dbe0e85f7 # v2.3.4
+        uses: softprops/action-gh-release@6da8fa9354ddfdc4aeace5fc48d7f679b5214090 # v2.4.1
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -349,7 +349,7 @@ jobs:
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
-      - uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         id: cache-cef-binary
         with:
           path: cef_interface/cef_binary
@@ -401,7 +401,7 @@ jobs:
             './cef-macos-${{ matrix.config.arch }}'
 
       - name: Upload Release
-        uses: softprops/action-gh-release@62c96d0c4e8a889135c1f3a25910db8dbe0e85f7 # v2.3.4
+        uses: softprops/action-gh-release@6da8fa9354ddfdc4aeace5fc48d7f679b5214090 # v2.4.1
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -424,7 +424,7 @@ jobs:
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
-      - uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         id: cache-cef-binary
         with:
           path: cef_interface/cef_binary
@@ -476,7 +476,7 @@ jobs:
             './cef-macos-${{ matrix.config.arch }}'
 
       - name: Upload Release
-        uses: softprops/action-gh-release@62c96d0c4e8a889135c1f3a25910db8dbe0e85f7 # v2.3.4
+        uses: softprops/action-gh-release@6da8fa9354ddfdc4aeace5fc48d7f679b5214090 # v2.4.1
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

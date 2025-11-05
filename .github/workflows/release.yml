@@ -13,7 +13,7 @@ permissions: {} # none, since we use a custom app
 
 jobs:
   release:
-    uses: SpiralP/github-reusable-workflows/.github/workflows/release.yml@142b7539bcffb778f0a1a037967f0ef956ee0165 # main
+    uses: SpiralP/github-reusable-workflows/.github/workflows/release.yml@6934eeffc79f349e3d8719a99823fe6da6a163eb # main
     with:
       replace-files: |
         Cargo.lock

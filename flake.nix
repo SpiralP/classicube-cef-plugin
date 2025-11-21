@@ -47,18 +47,31 @@
                 url = "https://cef-builds.spotifycdn.com/cef_binary_${version}_${platformUrl}.tar.bz2";
               };
 
-              installPhase = prev.installPhase + ''
+              installPhase = ''
+                pwd
+                cd ..
+                pwd
+                
+                ${prev.installPhase}
+
                 # cef wants icu file next to the .so
-                mv -v $out/share/cef/* $out/lib/
-                rmdir $out/share/cef $out/share
+                mkdir -v $out/lib/
+                mv -v $out/Release/* $out/Resources/* $out/lib/
+                rmdir $out/Release $out/Resources
+
+                mv -v $out/build/libcef_dll_wrapper/libcef_dll_wrapper.a $out/lib/
 
                 # old: needed to fix "FATAL:udev_loader.cc(48)] Check failed: false."
                 # needs libudev.so.1 now instead of previous ^ so.0 to link at compile time
                 patchelf --add-rpath "${lib.makeLibraryPath [ pkgs.udev ]}" $out/lib/*.so
               '';
 
+              nativeBuildInputs = with pkgs; [ cmake ];
+
+              makeFlags = [ "libcef_dll_wrapper" ];
+
               cmakeFlags =
-                if builtins.length prev.cmakeFlags == 1
+                if builtins.length (prev.cmakeFlags or [ ]) == 0
                 then [ "-DPROJECT_ARCH=${projectArchCmake}" ]
                 else throw "cmakeFlags changed?";
 
@@ -148,9 +161,9 @@
             })
           );
 
-          cef_binary = pkgs.libcef.overrideAttrs makeCefBinaryAttrs;
+          cef_binary = pkgs.cef-binary.overrideAttrs makeCefBinaryAttrs;
 
-          cef_binary_debug = (pkgs.enableDebugging pkgs.libcef).overrideAttrs (prev:
+          cef_binary_debug = (pkgs.enableDebugging pkgs.cef-binary).overrideAttrs (prev:
             let
               attrs = makeCefBinaryAttrs prev;
             in

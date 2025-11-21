@@ -54,6 +54,7 @@ jobs:
           Remove-Item 'cef_binary.tar.bz2'
           7z x -y 'cef_binary.tar'
           Remove-Item 'cef_binary.tar'
+          if (Test-Path 'cef_interface/cef_binary') { Remove-Item -Recurse 'cef_interface/cef_binary' }
           Move-Item -Path "$dirname" -Destination 'cef_interface/cef_binary'
 
       - name: setup-msbuild
@@ -177,7 +178,8 @@ jobs:
           aria2c "$url" -o cef_binary.tar.bz2 --max-connection-per-server=4
           tar -xjf cef_binary.tar.bz2
           rm cef_binary.tar.bz2
-          mv "$dirname" cef_interface/cef_binary
+          rm -rf cef_interface/cef_binary
+          mv -vT "$dirname" cef_interface/cef_binary
 
       - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         if: ${{ matrix.config.arch == 'i686' }}
@@ -198,7 +200,8 @@ jobs:
           aria2c "$url" -o cef_binary.tar.bz2 --max-connection-per-server=4
           tar -xjf cef_binary.tar.bz2
           rm cef_binary.tar.bz2
-          mv "$dirname" cef_interface/cef_binary
+          rm -rf cef_interface/cef_binary
+          mv -vT "$dirname" cef_interface/cef_binary
 
       - name: Install rust
         run: |
@@ -286,7 +289,8 @@ jobs:
           aria2c "$url" -o cef_binary.tar.bz2 --max-connection-per-server=4
           tar -xjf cef_binary.tar.bz2
           rm cef_binary.tar.bz2
-          mv "$dirname" cef_interface/cef_binary
+          rm -rf cef_interface/cef_binary
+          mv -vT "$dirname" cef_interface/cef_binary
 
       - name: Install rust
         run: |
@@ -301,6 +305,7 @@ jobs:
       - name: Build
         if: ${{ startsWith(github.ref, 'refs/tags/') != true }}
         run: |
+          file cef_interface/cef_binary/*/libcef.so
           cross build --target ${{ matrix.config.target }}
           file 'target/${{ matrix.config.target }}/debug/libclassicube_cef_plugin.so'
           file 'target/${{ matrix.config.target }}/debug/cef'
@@ -365,7 +370,8 @@ jobs:
           aria2c "$url" -o cef_binary.tar.bz2 --max-connection-per-server=4
           tar -xjf cef_binary.tar.bz2
           rm cef_binary.tar.bz2
-          mv "$dirname" cef_interface/cef_binary
+          rm -rf cef_interface/cef_binary
+          mv -vT "$dirname" cef_interface/cef_binary
 
       - name: Install rust
         run: |
@@ -440,7 +446,8 @@ jobs:
           aria2c "$url" -o cef_binary.tar.bz2 --max-connection-per-server=4
           tar -xjf cef_binary.tar.bz2
           rm cef_binary.tar.bz2
-          mv "$dirname" cef_interface/cef_binary
+          rm -rf cef_interface/cef_binary
+          mv -vT "$dirname" cef_interface/cef_binary
 
       - name: Install rust
         run: |

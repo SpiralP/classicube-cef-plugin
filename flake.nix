@@ -38,7 +38,7 @@
 
               inherit (platforms.${pkgs.stdenv.hostPlatform.system}) platformUrl projectArchCmake hash;
             in
-            (prev: rec {
+            (debug: prev: (rec {
               version = lib.strings.trim (builtins.readFile ./cef_binary_version);
 
               src = pkgs.fetchzip {
@@ -47,25 +47,46 @@
                 url = "https://cef-builds.spotifycdn.com/cef_binary_${version}_${platformUrl}.tar.bz2";
               };
 
-              installPhase = prev.installPhase + ''
-                # cef wants icu file next to the .so
-                mv -v $out/share/cef/* $out/lib/
-                rmdir $out/share/cef $out/share
+              installPhase = ''
+                pwd
+                cd ..
+                pwd
+                find .
 
-                # old: needed to fix "FATAL:udev_loader.cc(48)] Check failed: false."
-                # needs libudev.so.1 now instead of previous ^ so.0 to link at compile time
-                patchelf --add-rpath "${lib.makeLibraryPath [ pkgs.udev ]}" $out/lib/*.so
+                # conserve disk space, before installPhase runs cp
+                rm -rfv ${if debug then "Release" else "Debug"}
+
+                ${prev.installPhase}
+
+                # cef wants icu file next to the .so
+                mv -vT $out/${if debug then "Debug" else "Release"} $out/lib
+                mv -v $out/Resources/* $out/lib/
+                mv -v $out/build/libcef_dll_wrapper/libcef_dll_wrapper.a $out/lib/
+
+                find $out -mindepth 1 -maxdepth 1 ! -name lib ! -name include -exec rm -rfv {} +
               '';
 
+              nativeBuildInputs = with pkgs; [ cmake ];
+
+              makeFlags = [ "libcef_dll_wrapper" ];
+
               cmakeFlags =
-                if builtins.length prev.cmakeFlags == 1
+                if builtins.length (prev.cmakeFlags or [ ]) == 0
                 then [ "-DPROJECT_ARCH=${projectArchCmake}" ]
                 else throw "cmakeFlags changed?";
 
               meta = prev.meta // {
                 platforms = builtins.attrNames platforms;
               };
-            });
+            }) // (
+              lib.attrsets.optionalAttrs debug {
+                pname = "${prev.pname}-debug";
+
+                cmakeBuildType = "Debug";
+
+                hardeningDisable = [ "all" ];
+              }
+            ));
 
           makeDefaultAttrs = (cef_binary: rec {
             pname = rustManifest.package.name;
@@ -148,21 +169,9 @@
             })
           );
 
-          cef_binary = pkgs.libcef.overrideAttrs makeCefBinaryAttrs;
+          cef_binary = pkgs.cef-binary.overrideAttrs (makeCefBinaryAttrs false);
 
-          cef_binary_debug = (pkgs.enableDebugging pkgs.libcef).overrideAttrs (prev:
-            let
-              attrs = makeCefBinaryAttrs prev;
-            in
-            attrs // {
-              pname = "${prev.pname}-debug";
-
-              cmakeBuildType = "Debug";
-
-              installPhase = builtins.replaceStrings [ "/Release/" ] [ "/Debug/" ] attrs.installPhase;
-
-              hardeningDisable = [ "all" ];
-            });
+          cef_binary_debug = (pkgs.enableDebugging pkgs.cef-binary).overrideAttrs (makeCefBinaryAttrs true);
         }
       );
     in

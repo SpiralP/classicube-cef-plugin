@@ -371,7 +371,7 @@ jobs:
           tar -xjf cef_binary.tar.bz2
           rm cef_binary.tar.bz2
           rm -rf cef_interface/cef_binary
-          mv -vT "$dirname" cef_interface/cef_binary
+          mv -v "$dirname" cef_interface/cef_binary
 
       - name: Install rust
         run: |
@@ -447,7 +447,7 @@ jobs:
           tar -xjf cef_binary.tar.bz2
           rm cef_binary.tar.bz2
           rm -rf cef_interface/cef_binary
-          mv -vT "$dirname" cef_interface/cef_binary
+          mv -v "$dirname" cef_interface/cef_binary
 
       - name: Install rust
         run: |

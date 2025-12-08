@@ -17,7 +17,7 @@ jobs:
   update_cef_version:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       - uses: cachix/install-nix-action@0b0e072294b088b73964f1d72dfdac0951439dbd # v31.8.4
       - id: update_cef_version
         run: |
@@ -31,7 +31,7 @@ jobs:
           nix build .#default \
             --print-build-logs --no-update-lock-file
       - run: git status && git diff --cached
-      - uses: peter-evans/create-pull-request@84ae59a2cdc2258d6fa0732dd66352dddae2a412 # v7.0.9
+      - uses: peter-evans/create-pull-request@22a9089034f40e5a961c8808d113e2c98fb63676 # v7.0.11
         with:
           body: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           branch: update-cef-binary

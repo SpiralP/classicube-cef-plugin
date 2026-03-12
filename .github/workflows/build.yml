@@ -17,7 +17,7 @@ permissions:
 
 jobs:
   linux_nix:
-    uses: SpiralP/github-reusable-workflows/.github/workflows/build.yml@6a97e79612d1142ba419025da07a8d6c9243e435 # main
+    uses: SpiralP/github-reusable-workflows/.github/workflows/build.yml@7193e817cc11820b4485129bacae0af6d97dabd5 # main
 
   windows_x86:
     name: Build Windows ${{ matrix.config.arch }}
@@ -95,7 +95,7 @@ jobs:
             -Destination '.\cef-windows-${{ matrix.config.arch }}.exe'
 
       - name: VirusTotal Scan
-        uses: crazy-max/ghaction-virustotal@d34968c958ae283fe976efed637081b9f9dcf74f # v4.2.0
+        uses: crazy-max/ghaction-virustotal@936d8c5c00afe97d3d9a1af26d017cfdf26800a2 # v5.0.0
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
         with:
           vt_api_key: ${{ secrets.VT_API_KEY }}

@@ -191,7 +191,6 @@ fn build_cef_interface(libcef_include_dir: &Path, links: &mut Vec<Link>) {
     let mut build = cc::Build::new();
     let build = build
         .cpp(true)
-        .std("c++17")
         .warnings(true)
         .warnings_into_errors(true)
         .static_crt(true) // only ever uses /MT, never /MTd
@@ -201,6 +200,14 @@ fn build_cef_interface(libcef_include_dir: &Path, links: &mut Vec<Link>) {
         .file("cef_interface/client.cc")
         .file("cef_interface/interface.cc")
         .file("cef_interface/serialize.cc");
+
+    // Older cross-compilation GCC (< 10) for arm/aarch64 only accepts c++2a
+    let build = build.std(
+        match env::var("CARGO_CFG_TARGET_ARCH").unwrap().as_str() {
+            "arm" | "aarch64" => "c++2a",
+            _ => "c++20",
+        },
+    );
 
     #[cfg(not(target_os = "windows"))]
     let build = build.flag("-Wno-error=unused-parameter");
@@ -221,6 +228,10 @@ fn build_cef_interface(libcef_include_dir: &Path, links: &mut Vec<Link>) {
     // warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
     let build = build.flag("/wd4996");
 
+    #[cfg(target_os = "windows")]
+    // Prevent windows.h min/max macros from colliding with std::min/std::max in CEF headers
+    let build = build.define("NOMINMAX", None);
+
     build.compile("cef_interface");
 
     links.push(Link::new(
@@ -236,6 +247,7 @@ fn build_bindings(libcef_include_dir: &Path) {
         .clang_arg("-Icef_interface")
         .clang_arg(format!("-I{}", libcef_include_dir.display()))
         .clang_arg("-xc++")
+        .clang_arg("-std=c++20")
         .header_contents(
             "bindgen.hpp",
             "#include \"interface.hh\"",

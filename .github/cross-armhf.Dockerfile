@@ -25,7 +25,7 @@ RUN update-alternatives --install /usr/bin/arm-linux-gnueabihf-gcc arm-linux-gnu
     && update-alternatives --install /usr/bin/arm-linux-gnueabihf-g++ arm-linux-gnueabihf-g++ /usr/bin/arm-linux-gnueabihf-g++-10 100
 
 ENV PKG_CONFIG_PATH=/usr/lib/arm-linux-gnueabihf/pkgconfig
-ENV CPLUS_INCLUDE_PATH=/usr/arm-linux-gnueabihf/include/c++/5/arm-linux-gnueabihf
+ENV CPLUS_INCLUDE_PATH=/usr/arm-linux-gnueabihf/include/c++/10:/usr/arm-linux-gnueabihf/include/c++/10/arm-linux-gnueabihf
 
 # bits/c++config.h not found
 RUN mkdir -p /usr/include/c++/10/bits \

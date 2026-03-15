@@ -25,7 +25,7 @@ RUN update-alternatives --install /usr/bin/aarch64-linux-gnu-gcc aarch64-linux-g
     && update-alternatives --install /usr/bin/aarch64-linux-gnu-g++ aarch64-linux-gnu-g++ /usr/bin/aarch64-linux-gnu-g++-10 100
 
 ENV PKG_CONFIG_PATH=/usr/lib/aarch64-linux-gnu/pkgconfig
-ENV CPLUS_INCLUDE_PATH=/usr/aarch64-linux-gnu/include/c++/5/aarch64-linux-gnu
+ENV CPLUS_INCLUDE_PATH=/usr/aarch64-linux-gnu/include/c++/10:/usr/aarch64-linux-gnu/include/c++/10/aarch64-linux-gnu
 
 # bits/c++config.h not found
 RUN mkdir -p /usr/include/c++/10/bits \

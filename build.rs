@@ -129,15 +129,6 @@ fn build_libcef_dll_wrapper(links: &mut Vec<Link>) {
     } else {
         println!("cargo:rerun-if-changed=cef_interface/cef_binary/CMakeLists.txt");
 
-        // Older cross-compilation GCC (< 10) for arm/aarch64 only accepts c++2a
-        let arch = env::var("CARGO_CFG_TARGET_ARCH").unwrap();
-        if matches!(arch.as_str(), "arm" | "aarch64") {
-            let path = Path::new("cef_interface/cef_binary/cmake/cef_variables.cmake");
-            if let Ok(contents) = std::fs::read_to_string(path) {
-                let _ = std::fs::write(path, contents.replace("c++20", "c++2a"));
-            }
-        }
-
         let mut build = cmake::Config::new("cef_interface/cef_binary");
 
         // rust builds with /MT (static C-RunTime), but libcef_dll_wrapper uses /MTd,
@@ -210,13 +201,7 @@ fn build_cef_interface(libcef_include_dir: &Path, links: &mut Vec<Link>) {
         .file("cef_interface/interface.cc")
         .file("cef_interface/serialize.cc");
 
-    // Older cross-compilation GCC (< 10) for arm/aarch64 only accepts c++2a
-    let build = build.std(
-        match env::var("CARGO_CFG_TARGET_ARCH").unwrap().as_str() {
-            "arm" | "aarch64" => "c++2a",
-            _ => "c++20",
-        },
-    );
+    let build = build.std("c++20");
 
     #[cfg(not(target_os = "windows"))]
     let build = build.flag("-Wno-error=unused-parameter");

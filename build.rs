@@ -201,13 +201,7 @@ fn build_cef_interface(libcef_include_dir: &Path, links: &mut Vec<Link>) {
         .file("cef_interface/interface.cc")
         .file("cef_interface/serialize.cc");
 
-    // Older cross-compilation GCC (< 10) for arm/aarch64 only accepts c++2a
-    let build = build.std(
-        match env::var("CARGO_CFG_TARGET_ARCH").unwrap().as_str() {
-            "arm" | "aarch64" => "c++2a",
-            _ => "c++20",
-        },
-    );
+    let build = build.std("c++20");
 
     #[cfg(not(target_os = "windows"))]
     let build = build.flag("-Wno-error=unused-parameter");

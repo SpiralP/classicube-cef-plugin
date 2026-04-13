@@ -17,7 +17,7 @@ permissions:
 
 jobs:
   linux_nix:
-    uses: SpiralP/github-reusable-workflows/.github/workflows/build.yml@7288c2ad88149cffd1346c74be49c37d7e3c443f # main
+    uses: SpiralP/github-reusable-workflows/.github/workflows/build.yml@336ab90fffae3d76b55d78bcdf93cb79219de84d # main
 
   windows_x86:
     name: Build Windows ${{ matrix.config.arch }}

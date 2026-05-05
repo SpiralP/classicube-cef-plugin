@@ -42,6 +42,10 @@ void MyApp::OnBeforeCommandLineProcessing(
   add_switch(command_line, "disable-renderer-accessibility");
   add_switch(command_line, "no-proxy-server");
 
+  // force Chromium's Ozone backend to X11/XWayland;
+  // Wayland support is unreliable.
+  command_line->AppendSwitchWithValue("ozone-platform", "x11");
+
   // to make execute_javascript_on_frame work
   add_switch(command_line, "disable-site-isolation-trials");
 

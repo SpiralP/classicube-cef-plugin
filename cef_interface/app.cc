@@ -1,4 +1,7 @@
 #include "app.hh"
+
+#include <cstdlib>
+
 #include "serialize.hh"
 
 // Minimal implementation of CefApp for the browser process.
@@ -41,6 +44,23 @@ void MyApp::OnBeforeCommandLineProcessing(
 
   add_switch(command_line, "disable-renderer-accessibility");
   add_switch(command_line, "no-proxy-server");
+
+  // opt-in: when CEF_DEVTOOLS_PORT is set, expose the Chromium DevTools
+  // protocol over HTTP on that localhost port. Used in place of
+  // ShowDevTools on Linux/macOS, where a native devtools window inside
+  // our OSR + external_message_pump setup freezes on Aura/X11.
+  // Off by default to avoid leaving an inspector port open to other
+  // processes on the machine. Requires restart to take effect.
+  if (const char* port = std::getenv("CEF_DEVTOOLS_PORT")) {
+    if (port[0] != '\0') {
+      command_line->AppendSwitchWithValue("remote-debugging-port", port);
+      // Chromium 111+ rejects DevTools websocket connections whose Origin
+      // doesn't match the listening host. External browsers (Chrome
+      // visiting http://127.0.0.1:<port>/) get a blank inspector without
+      // this opt-out.
+      command_line->AppendSwitchWithValue("remote-allow-origins", "*");
+    }
+  }
 
   // force Chromium's Ozone backend to X11/XWayland;
   // Wayland support is unreliable.

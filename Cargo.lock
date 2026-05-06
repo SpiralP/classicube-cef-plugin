@@ -44,7 +44,7 @@ dependencies = [
 [[package]]
 name = "async-dispatcher"
 version = "0.1.0"
-source = "git+https://github.com/SpiralP/rust-async-dispatcher.git?branch=main#f0e86ff7a59f895eda4bd12cabf238ebe601a7e4"
+source = "git+https://github.com/SpiralP/rust-async-dispatcher.git?branch=main#e31354a7739f18ce65f149941541dbb31d35a578"
 dependencies = [
  "futures",
 ]
@@ -322,8 +322,8 @@ dependencies = [
 
 [[package]]
 name = "classicube-helpers"
-version = "3.0.0+classicube.1.3.7"
-source = "git+https://github.com/SpiralP/rust-classicube-helpers.git?branch=main#671436128a4c4373388f73baa0223ac63a790919"
+version = "4.0.0+ClassiCube.1.3.8"
+source = "git+https://github.com/SpiralP/rust-classicube-helpers.git?branch=main#c9d3a1bf28c8582abc49d4a08832208e203767df"
 dependencies = [
  "async-dispatcher",
  "classicube-sys",
@@ -336,9 +336,9 @@ dependencies = [
 
 [[package]]
 name = "classicube-sys"
-version = "4.3.0+ClassiCube.1.3.7"
+version = "5.0.0+ClassiCube.1.3.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fa859a1502165fedc919443ea0a43c24bb2555f694e01ae8dfa0fdf5108d9b20"
+checksum = "6ff8b288cd38f7685b2de04f754bb679d212fc6b1f497100ca014cb842da050f"
 dependencies = [
  "bindgen",
  "cc",
@@ -482,7 +482,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -1442,7 +1442,7 @@ dependencies = [
  "once_cell",
  "socket2",
  "tracing",
- "windows-sys 0.60.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -1670,7 +1670,7 @@ dependencies = [
  "security-framework",
  "security-framework-sys",
  "webpki-root-certs",
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -2525,7 +2525,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]

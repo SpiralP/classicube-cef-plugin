@@ -142,7 +142,7 @@ impl PlayerTrait for YouTubePlayer {
             params.push(("playlist", "1".to_string()));
         }
 
-        Ok(Url::parse_with_params("local://youtube/", &params)?.into())
+        Ok(Url::parse_with_params("https://classicube-cef.invalid/youtube", &params)?.into())
     }
 
     fn on_page_loaded(&mut self, entity_id: usize, _browser: &RustRefBrowser) {

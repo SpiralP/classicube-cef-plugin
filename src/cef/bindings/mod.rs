@@ -41,20 +41,19 @@ fn handle_scheme_create(
     _scheme_name: *const ::std::os::raw::c_char,
     url: *const ::std::os::raw::c_char,
 ) -> Result<&'static [u8]> {
-    // let scheme_name = unsafe { CStr::from_ptr(scheme_name) }.to_str()?;
     let url = unsafe { CStr::from_ptr(url) }.to_str()?;
     let url = Url::parse(url)?;
-    let host = url.host_str().chain_err(|| "no host part on url")?;
 
-    debug!("rust_handle_scheme_create {:?}", host);
+    debug!("rust_handle_scheme_create {}", url);
 
-    match host {
-        "youtube" => Ok(YOUTUBE_HTML),
-        "media" => Ok(MEDIA_HTML),
-
-        _ => {
-            bail!("no such local scheme for {:?}", host);
-        }
+    // YouTube goes through the synthetic https host so its embedder
+    // identity check sees a valid https origin via ancestorOrigins;
+    // everything else stays on `local://` to keep mixed-content support
+    // (the media player loads plain http streams).
+    match (url.scheme(), url.host_str(), url.path()) {
+        ("https", Some("classicube-cef.invalid"), "/youtube") => Ok(YOUTUBE_HTML),
+        ("local", Some("media"), _) => Ok(MEDIA_HTML),
+        _ => bail!("no page registered for {}", url),
     }
 }
 

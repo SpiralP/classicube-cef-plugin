@@ -14,7 +14,6 @@ class MyClient : public CefClient,
                  public CefRenderHandler,
                  public CefLoadHandler,
                  public CefRequestHandler,
-                 public CefResourceRequestHandler,
                  public CefJSDialogHandler,
                  public CefDialogHandler,
                  public CefDownloadHandler {
@@ -107,13 +106,6 @@ class MyClient : public CefClient,
                           const CefString& request_url,
                           CefRefPtr<CefSSLInfo> ssl_info,
                           CefRefPtr<CefCallback> callback) override;
-
-  // CefResourceRequestHandler methods:
-  CefResourceRequestHandler::ReturnValue OnBeforeResourceLoad(
-      CefRefPtr<CefBrowser> browser,
-      CefRefPtr<CefFrame> frame,
-      CefRefPtr<CefRequest> request,
-      CefRefPtr<CefCallback> callback) override;
 
   // CefJSDialogHandler methods:
   bool OnBeforeUnloadDialog(CefRefPtr<CefBrowser> browser,

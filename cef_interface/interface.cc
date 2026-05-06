@@ -197,16 +197,27 @@ extern "C" int cef_interface_initialize(MyApp* app, CefInitializePaths paths) {
     return -1;
   }
 
+  // Most player pages use the `local://` custom scheme so they can load
+  // mixed-content resources (e.g. plain http:// media streams) without
+  // Chromium blocking them.
   if (!CefRegisterSchemeHandlerFactory("local", "",
                                        new LocalSchemeHandlerFactory())) {
-    rust_warn("CefRegisterSchemeHandlerFactory failed!");
+    rust_warn("CefRegisterSchemeHandlerFactory(local) failed!");
     return -1;
   }
 
-  // if (!CefAddCrossOriginWhitelistEntry("local://media", "http", "", true)) {
-  //   rust_warn("CefAddCrossOriginWhitelistEntry failed!");
-  //   return -1;
-  // }
+  // YouTube's embedder identity check (Error 152,
+  // PLAYABILITY_ERROR_CODE_EMBEDDER_IDENTITY_DENIED) reads
+  // window.location.ancestorOrigins — set by the browser from the
+  // actual frame tree — and rejects any non-http(s) ancestor. So the
+  // YouTube page alone is served from a synthetic HTTPS host, giving
+  // it a real https:// origin string. The host never resolves in DNS;
+  // the factory answers all requests for it directly.
+  if (!CefRegisterSchemeHandlerFactory("https", "classicube-cef.invalid",
+                                       new LocalSchemeHandlerFactory())) {
+    rust_warn("CefRegisterSchemeHandlerFactory(https) failed!");
+    return -1;
+  }
 
   return 0;
 }

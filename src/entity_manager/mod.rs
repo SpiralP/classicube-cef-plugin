@@ -25,7 +25,7 @@ pub use self::{cef_paint::cef_paint_callback, entity::CefEntity, entity_builder:
 use self::{context_handler::ContextHandler, model::CefModel};
 use crate::{
     cef::{Cef, CefEvent, RustRefBrowser},
-    error::{bail, Error, Result},
+    error::{Error, Result, bail},
     player::PlayerTrait,
 };
 

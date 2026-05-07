@@ -2,7 +2,7 @@ use std::collections::VecDeque;
 
 use tracing::debug;
 
-use super::{CefEntity, EntityManager, ENTITIES, NAME_TO_ID};
+use super::{CefEntity, ENTITIES, EntityManager, NAME_TO_ID};
 use crate::{
     cef::Cef,
     error::{Error, Result},

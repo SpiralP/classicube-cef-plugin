@@ -13,11 +13,11 @@ use serde::{Deserialize, Serialize};
 use tracing::{debug, warn};
 use url::Url;
 
-use super::{helpers::start_update_loop, PlayerTrait, VolumeMode};
+use super::{PlayerTrait, VolumeMode, helpers::start_update_loop};
 use crate::{
     cef::{RustRefBrowser, RustV8Value},
     chat::Chat,
-    error::{bail, Result},
+    error::{Result, bail},
     options,
     options::SUBTITLES,
 };

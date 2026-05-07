@@ -8,10 +8,10 @@ use super::helpers::move_entity;
 use crate::{
     chat::{Chat, PlayerSnapshot},
     entity_manager::{EntityBuilder, EntityManager, TargetEntity},
-    error::{bail, Result},
+    error::{Result, bail},
     player::{
-        url_aliases::{add_alias, get_all_aliases},
         Player, PlayerBuilder, VolumeMode,
+        url_aliases::{add_alias, get_all_aliases},
     },
 };
 

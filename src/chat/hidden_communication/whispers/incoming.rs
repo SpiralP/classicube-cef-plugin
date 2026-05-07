@@ -1,15 +1,16 @@
 use std::time::Duration;
 
-use classicube_helpers::{async_manager, shared::FutureShared, WithInner};
+use classicube_helpers::{WithInner, async_manager, shared::FutureShared};
 use tracing::{debug, info, warn};
 
-use super::{encoding, wait_for_message, SHOULD_BLOCK};
+use super::{SHOULD_BLOCK, encoding, wait_for_message};
 use crate::{
     chat::{
+        Chat, ENTITIES, TAB_LIST,
         helpers::{
             is_cef_reply_whisper, is_cef_request_whisper, is_incoming_whisper, is_outgoing_whisper,
         },
-        is_continuation_message, Chat, ENTITIES, TAB_LIST,
+        is_continuation_message,
     },
     error::{Result, ResultExt},
 };

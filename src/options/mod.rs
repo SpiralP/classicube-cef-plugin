@@ -2,7 +2,7 @@ mod rust_option;
 
 use std::{cell::Cell, ffi::CString, os::raw::c_char};
 
-use classicube_sys::{cc_string, Options_Get, Options_Set, OwnedString, STRING_SIZE};
+use classicube_sys::{Options_Get, Options_Set, OwnedString, STRING_SIZE, cc_string};
 
 use self::rust_option::RustOption;
 

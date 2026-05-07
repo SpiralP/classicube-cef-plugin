@@ -5,14 +5,15 @@ use std::time::Duration;
 use clap::Subcommand;
 use classicube_helpers::{async_manager, color::SILVER};
 use classicube_sys::{
-    Entities, Vec3, ENTITIES_SELF_ID, FACE_CONSTS, FACE_CONSTS_FACE_XMAX, FACE_CONSTS_FACE_XMIN,
+    ENTITIES_SELF_ID, Entities, FACE_CONSTS, FACE_CONSTS_FACE_XMAX, FACE_CONSTS_FACE_XMIN,
     FACE_CONSTS_FACE_YMAX, FACE_CONSTS_FACE_YMIN, FACE_CONSTS_FACE_ZMAX, FACE_CONSTS_FACE_ZMIN,
+    Vec3,
 };
 
-use super::{helpers::get_camera_trace, Chat};
+use super::{Chat, helpers::get_camera_trace};
 use crate::{
     api,
-    chat::{hidden_communication::whispers, PlayerSnapshot},
+    chat::{PlayerSnapshot, hidden_communication::whispers},
     entity_manager::{EntityManager, TargetEntity},
     error::{Result, ResultExt},
     helpers::format_duration,

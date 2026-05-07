@@ -8,9 +8,9 @@ use std::{
 
 use classicube_helpers::{async_manager, color::SILVER};
 use classicube_sys::{
-    cc_int16, Bitmap, Entity, EntityVTABLE, Entity_Init, Entity_SetModel, Gfx_UpdateTexturePart,
-    LocationUpdate, Model_Render, OwnedGfxTexture, OwnedString, PackedCol, Texture, TextureRec,
-    PACKEDCOL_WHITE,
+    Bitmap, Entity, Entity_Init, Entity_SetModel, EntityVTABLE, Gfx_UpdateTexturePart,
+    LocationUpdate, Model_Render, OwnedGfxTexture, OwnedString, PACKEDCOL_WHITE, PackedCol,
+    Texture, TextureRec, cc_int16,
 };
 use futures::channel::oneshot;
 use tracing::{debug, warn};

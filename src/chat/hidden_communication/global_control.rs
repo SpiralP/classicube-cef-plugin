@@ -12,12 +12,13 @@ use tracing::{debug, info, warn};
 use super::wait_for_message;
 use crate::{
     chat::{
+        Chat, PlayerSnapshot,
         helpers::{is_global_cef_message, is_map_theme_message},
         hidden_communication::SHOULD_BLOCK,
-        is_continuation_message, Chat, PlayerSnapshot,
+        is_continuation_message,
     },
     entity_manager::{EntityBuilder, EntityManager},
-    error::{bail, Result},
+    error::{Result, bail},
     options,
     player::{PlayerBuilder, PlayerTrait, VolumeMode},
 };

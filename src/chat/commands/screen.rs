@@ -17,7 +17,7 @@ use crate::{
     cef::Cef,
     chat::{Chat, PlayerSnapshot},
     entity_manager::{CefEntity, EntityManager, TargetEntity},
-    error::{bail, ensure, Error, Result, ResultExt},
+    error::{Error, Result, ResultExt, bail, ensure},
     helpers::format_duration,
     player::{PlayerBuilder, PlayerTrait, VolumeMode},
 };

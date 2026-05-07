@@ -3,13 +3,14 @@ use std::time::Duration;
 use classicube_helpers::async_manager;
 use tracing::debug;
 
-use super::{encoding, wait_for_message, SHOULD_BLOCK};
+use super::{SHOULD_BLOCK, encoding, wait_for_message};
 use crate::{
     chat::{
+        Chat,
         helpers::{
             is_cef_reply_whisper, is_cef_request_whisper, is_incoming_whisper, is_outgoing_whisper,
         },
-        is_continuation_message, Chat,
+        is_continuation_message,
     },
     error::{Error, Result, ResultExt},
 };

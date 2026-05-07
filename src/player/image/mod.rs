@@ -1,10 +1,10 @@
-use base64::{prelude::BASE64_STANDARD, Engine};
+use base64::{Engine, prelude::BASE64_STANDARD};
 use classicube_helpers::color::{SILVER, TEAL};
 use serde::{Deserialize, Serialize};
 use tracing::debug;
 use url::Url;
 
-use super::{helpers::get_ext, PlayerTrait};
+use super::{PlayerTrait, helpers::get_ext};
 use crate::{cef::RustRefBrowser, chat::Chat, error::Result, player::WebPlayer};
 
 const PAGE_HTML: &str = include_str!("page.html");

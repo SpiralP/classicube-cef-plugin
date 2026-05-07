@@ -19,7 +19,7 @@ pub use self::{
 };
 use crate::{
     cef::RustRefBrowser,
-    error::{bail, Result},
+    error::{Result, bail},
 };
 
 pub trait PlayerTrait: Clone {

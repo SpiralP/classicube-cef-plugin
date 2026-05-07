@@ -10,24 +10,24 @@ use std::{
     os::raw::c_int,
 };
 
-use classicube_helpers::{async_manager, shared::FutureShared, WithInner};
+use classicube_helpers::{WithInner, async_manager, shared::FutureShared};
 use futures::stream::{FuturesUnordered, StreamExt};
 use tokio::sync::broadcast;
-use tracing::{debug, debug_span, error, warn, Instrument};
+use tracing::{Instrument, debug, debug_span, error, warn};
 
 pub use self::{
     bindings::{
-        cef_interface_execute_process, Callbacks, RustRefApp, RustRefBrowser, RustRefClient,
+        Callbacks, RustRefApp, RustRefBrowser, RustRefClient, cef_interface_execute_process,
     },
     javascript::RustV8Value,
 };
 use self::{
-    browser::{BROWSERS, BROWSER_SIZES},
+    browser::{BROWSER_SIZES, BROWSERS},
     mute_lose_focus::IS_FOCUSED,
 };
 use crate::{
-    entity_manager::{cef_paint_callback, TEXTURE_HEIGHT, TEXTURE_WIDTH},
-    error::{bail, Result, ResultExt},
+    entity_manager::{TEXTURE_HEIGHT, TEXTURE_WIDTH, cef_paint_callback},
+    error::{Result, ResultExt, bail},
 };
 
 pub const CEF_DEFAULT_WIDTH: u16 = 1920;

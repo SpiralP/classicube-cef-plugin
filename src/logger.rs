@@ -3,7 +3,7 @@ use std::{fs::File, io::BufWriter, sync::Once};
 use tracing_flame::FlameLayer;
 use tracing_subscriber::{
     filter::EnvFilter,
-    fmt::{time::SystemTime, Layer},
+    fmt::{Layer, time::SystemTime},
     prelude::*,
 };
 

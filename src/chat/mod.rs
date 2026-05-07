@@ -10,9 +10,9 @@ use std::{
 
 use classicube_helpers::{
     async_manager,
-    entities::{Entities, ENTITY_SELF_ID},
+    entities::{ENTITY_SELF_ID, Entities},
     events::chat::{ChatReceivedEvent, ChatReceivedEventHandler},
-    tab_list::{remove_color, TabList},
+    tab_list::{TabList, remove_color},
 };
 use classicube_sys::{MsgType, MsgType_MSG_TYPE_NORMAL, Server, Vec3};
 use deunicode::deunicode;

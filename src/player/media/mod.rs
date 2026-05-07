@@ -10,13 +10,13 @@ use tracing::{debug, warn};
 use url::Url;
 
 use super::{
-    helpers::{get_ext, start_update_loop},
     PlayerTrait, VolumeMode, WebPlayer,
+    helpers::{get_ext, start_update_loop},
 };
 use crate::{
     cef::{RustRefBrowser, RustV8Value},
     chat::Chat,
-    error::{bail, Result},
+    error::{Result, bail},
     options,
 };
 

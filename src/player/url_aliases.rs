@@ -7,7 +7,7 @@ use tracing::debug;
 use url::Url;
 
 use crate::{
-    error::{bail, ensure, Result},
+    error::{Result, bail, ensure},
     player::{PlayerTrait, WebPlayer},
 };
 

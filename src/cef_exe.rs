@@ -9,7 +9,7 @@ use tracing_subscriber::EnvFilter;
 fn main() {
     #[cfg(all(target_os = "windows", debug_assertions))]
     {
-        use windows::Win32::System::Console::{AttachConsole, ATTACH_PARENT_PROCESS};
+        use windows::Win32::System::Console::{ATTACH_PARENT_PROCESS, AttachConsole};
 
         // if we were called from a console, attach to it to make stdout work
         unsafe {
@@ -53,20 +53,20 @@ fn main() {
         use std::thread;
 
         use windows::{
-            core::Error,
             Win32::{
                 Foundation::{CloseHandle, HANDLE},
                 System::{
                     Diagnostics::ToolHelp::{
-                        CreateToolhelp32Snapshot, Process32First, Process32Next, PROCESSENTRY32,
+                        CreateToolhelp32Snapshot, PROCESSENTRY32, Process32First, Process32Next,
                         TH32CS_SNAPPROCESS,
                     },
                     Threading::{
-                        GetCurrentProcessId, OpenProcess, WaitForSingleObject, INFINITE,
-                        PROCESS_SYNCHRONIZE,
+                        GetCurrentProcessId, INFINITE, OpenProcess, PROCESS_SYNCHRONIZE,
+                        WaitForSingleObject,
                     },
                 },
             },
+            core::Error,
         };
 
         thread::spawn(move || {

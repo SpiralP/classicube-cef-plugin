@@ -1,10 +1,10 @@
 use std::{os::raw::c_int, slice};
 
 use classicube_helpers::async_manager;
-use classicube_sys::{cc_string, OwnedChatCommand, ENTITIES_SELF_ID};
+use classicube_sys::{ENTITIES_SELF_ID, OwnedChatCommand, cc_string};
 use tracing::warn;
 
-use super::{commands, Chat};
+use super::{Chat, commands};
 use crate::chat::PlayerSnapshot;
 
 extern "C" fn c_chat_command_callback(args: *const cc_string, args_count: c_int) {

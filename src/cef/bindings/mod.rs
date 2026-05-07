@@ -17,18 +17,22 @@ use url::Url;
 
 pub use self::generated::*;
 use super::{javascript, javascript::RustV8Value};
-use crate::error::{bail, ErrorKind, Result, ResultExt};
+use crate::error::{ErrorKind, Result, ResultExt, bail};
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn rust_debug(c_str: *const ::std::os::raw::c_char) {
-    let s = CStr::from_ptr(c_str).to_string_lossy().to_string();
+    let s = unsafe { CStr::from_ptr(c_str) }
+        .to_string_lossy()
+        .to_string();
 
     debug!("{}", s);
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn rust_warn(c_str: *const ::std::os::raw::c_char) {
-    let s = CStr::from_ptr(c_str).to_string_lossy().to_string();
+    let s = unsafe { CStr::from_ptr(c_str) }
+        .to_string_lossy()
+        .to_string();
 
     warn!("{}", s);
 }
@@ -57,7 +61,7 @@ fn handle_scheme_create(
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rust_handle_scheme_create(
     browser: RustRefBrowser,
     scheme_name: *const ::std::os::raw::c_char,
@@ -82,7 +86,7 @@ pub extern "C" fn rust_handle_scheme_create(
     }
 }
 
-// #[no_mangle]
+// #[unsafe(no_mangle)]
 // pub unsafe extern "C" fn rust_wprint(c_str: *const u16) {
 //     use widestring::WideCStr;
 

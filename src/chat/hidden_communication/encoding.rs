@@ -1,6 +1,6 @@
 use std::{collections::VecDeque, io::Cursor, time::Duration};
 
-use base64::{prelude::BASE64_STANDARD, Engine};
+use base64::{Engine, prelude::BASE64_STANDARD};
 use serde::{Deserialize, Serialize};
 use tracing::debug;
 
@@ -119,9 +119,9 @@ pub async fn received_message(mut message: Message) -> Result<bool> {
             if time > Duration::from_secs(1) {
                 // this is a couple seconds behind because of the load time
                 // of the browser page and whisper delay, so add a couple seconds
-                if let Player::YouTube(ref mut yt) = &mut info.player {
+                if let Player::YouTube(yt) = &mut info.player {
                     yt.time = time + Duration::from_secs(4);
-                } else if let Player::Media(ref mut media) = &mut info.player {
+                } else if let Player::Media(media) = &mut info.player {
                     media.time = time + Duration::from_secs(4);
                 }
             }

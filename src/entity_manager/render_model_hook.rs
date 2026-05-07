@@ -1,6 +1,6 @@
 use std::cell::Cell;
 
-use classicube_sys::{Entities, Entity, EntityVTABLE, ENTITIES_SELF_ID};
+use classicube_sys::{ENTITIES_SELF_ID, Entities, Entity, EntityVTABLE};
 
 use super::ENTITIES;
 

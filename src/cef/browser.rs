@@ -8,7 +8,7 @@ use std::{
 use classicube_helpers::WithInner;
 use tracing::{debug, warn};
 
-use super::{bindings::RustRect, CefEvent, CEF_DEFAULT_HEIGHT, CEF_DEFAULT_WIDTH, EVENT_QUEUE};
+use super::{CEF_DEFAULT_HEIGHT, CEF_DEFAULT_WIDTH, CefEvent, EVENT_QUEUE, bindings::RustRect};
 use crate::cef::RustRefBrowser;
 
 // identifier, browser

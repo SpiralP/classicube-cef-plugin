@@ -3,12 +3,12 @@ pub mod outgoing;
 
 use std::cell::Cell;
 
-use classicube_helpers::{async_manager, WithInner};
+use classicube_helpers::{WithInner, async_manager};
 use futures::{future::RemoteHandle, prelude::*};
 use rand::seq::SliceRandom;
 use tracing::{debug, warn};
 
-use super::{encoding, wait_for_message, SHOULD_BLOCK};
+use super::{SHOULD_BLOCK, encoding, wait_for_message};
 use crate::{chat::ENTITIES, error::Result};
 
 thread_local!(

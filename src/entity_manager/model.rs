@@ -4,12 +4,12 @@ use std::{
 };
 
 use classicube_sys::{
-    Bitmap, Entity, Gfx_SetAlphaTest, Gfx_SetTexturing, Model, ModelTex, ModelVertex, Model_Init,
-    Model_Register, OwnedGfxTexture, PackedCol, PackedCol_Make, SKIN_TYPE_SKIN_64x64,
-    MODEL_BOX_VERTICES,
+    Bitmap, Entity, Gfx_SetAlphaTest, Gfx_SetTexturing, MODEL_BOX_VERTICES, Model, Model_Init,
+    Model_Register, ModelTex, ModelVertex, OwnedGfxTexture, PackedCol, PackedCol_Make,
+    SKIN_TYPE_SKIN_64x64,
 };
 
-use super::{helpers::Texture_RenderShaded, TEXTURE_HEIGHT, TEXTURE_WIDTH};
+use super::{TEXTURE_HEIGHT, TEXTURE_WIDTH, helpers::Texture_RenderShaded};
 
 const WHITE: PackedCol = PackedCol_Make(255, 255, 255, 255);
 

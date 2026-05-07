@@ -1,4 +1,4 @@
-use base64::{prelude::BASE64_STANDARD, Engine};
+use base64::{Engine, prelude::BASE64_STANDARD};
 use classicube_helpers::{
     async_manager,
     color::{SILVER, TEAL},
@@ -9,13 +9,13 @@ use tracing::debug;
 use url::Url;
 
 use super::{
-    helpers::{get_ext, start_update_loop},
     PlayerTrait, VolumeMode, WebPlayer,
+    helpers::{get_ext, start_update_loop},
 };
 use crate::{
     cef::{RustRefBrowser, RustV8Value},
     chat::Chat,
-    error::{bail, Result},
+    error::{Result, bail},
     options,
 };
 

@@ -9,7 +9,7 @@ use tracing::{debug, warn};
 use super::{MediaPlayer, Player, PlayerTrait, VolumeMode, YouTubePlayer};
 use crate::{
     entity_manager::{CefEntity, EntityManager},
-    error::{bail, Error, Result, ResultExt},
+    error::{Error, Result, ResultExt, bail},
     helpers::vec3_to_vector3,
 };
 

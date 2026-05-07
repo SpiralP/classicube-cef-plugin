@@ -1,16 +1,17 @@
 use std::{cell::RefCell, collections::HashSet, time::Duration};
 
-use classicube_helpers::{async_manager, tab_list::remove_color, WithInner};
+use classicube_helpers::{WithInner, async_manager, tab_list::remove_color};
 use classicube_sys::ENTITIES_SELF_ID;
 use futures::{future::RemoteHandle, prelude::*};
 use tracing::{debug, warn};
 
-use super::{wait_for_message, SHOULD_BLOCK};
+use super::{SHOULD_BLOCK, wait_for_message};
 use crate::{
     chat::{
+        Chat, TAB_LIST,
         helpers::{is_clients_message, is_clients_start_message},
         hidden_communication::whispers::start_whispering,
-        is_continuation_message, Chat, TAB_LIST,
+        is_continuation_message,
     },
     error::{Result, ResultExt},
 };

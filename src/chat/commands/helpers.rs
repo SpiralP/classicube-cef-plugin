@@ -1,4 +1,4 @@
-use classicube_sys::{Camera, Entities, RayTracer, Vec3, ENTITIES_SELF_ID};
+use classicube_sys::{Camera, ENTITIES_SELF_ID, Entities, RayTracer, Vec3};
 use ncollide3d::{
     na::{Isometry3, Point3, Rotation3, UnitQuaternion, Vector3},
     query::{Ray, RayCast, RayIntersection},

@@ -68,6 +68,12 @@ pub fn stop_query() {
     // });
 }
 
+pub fn shutdown() {
+    CURRENT_RUNNING.with(|cell| {
+        cell.borrow_mut().take();
+    });
+}
+
 async fn get_clients() -> Result<Vec<String>> {
     // TODO check for "Server software: MCGalaxy 1.9.2.0"
 

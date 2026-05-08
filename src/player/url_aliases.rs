@@ -25,6 +25,10 @@ pub fn on_new_map_loaded() {
     });
 }
 
+pub fn shutdown() {
+    URL_ALIASES.with(|cell| cell.borrow_mut().clear());
+}
+
 pub fn add_alias(alias: &str, url: &str) -> Result<()> {
     ensure!(!alias.is_empty(), "alias is empty");
 

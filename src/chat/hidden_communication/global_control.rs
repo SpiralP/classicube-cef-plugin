@@ -99,6 +99,8 @@ pub fn stop_listening() {
     LISTENER.with(move |cell| {
         cell.set(None);
     });
+
+    CURRENT_MAP_THEME.set(None);
 }
 
 // we need to execute commands from scripts synchronously

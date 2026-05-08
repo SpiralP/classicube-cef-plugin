@@ -9,6 +9,10 @@ thread_local!(
 );
 
 thread_local!(
+    static ORIGINAL_VTABLE: Cell<Option<*const EntityVTABLE>> = const { Cell::new(None) };
+);
+
+thread_local!(
     static VTABLE: Cell<Option<Box<EntityVTABLE>>> = const { Cell::new(None) };
 );
 
@@ -35,9 +39,8 @@ pub fn initialize() {
     let me = unsafe { &mut *Entities.List[ENTITIES_SELF_ID as usize] };
     let v_table = unsafe { &*me.VTABLE };
 
-    ORIGINAL_FN.with(|cell| {
-        cell.set(v_table.RenderModel);
-    });
+    ORIGINAL_VTABLE.set(Some(me.VTABLE));
+    ORIGINAL_FN.set(v_table.RenderModel);
 
     let mut new_v_table = EntityVTABLE {
         Tick: v_table.Tick,
@@ -59,5 +62,21 @@ pub fn initialize() {
 }
 
 pub fn shutdown() {
-    // self entity doesn't exist anymore so don't do anything
+    // Restore the entity's VTABLE pointer first, then drop the boxed
+    // replacement. If we dropped the box first the entity would briefly
+    // point at freed memory. The local-player entity outlives plugin
+    // reload cycles, so without this restore the next initialize() would
+    // re-hook on top of itself and recurse forever in `hook`.
+    if let Some(original_vtable) = ORIGINAL_VTABLE.take() {
+        let entity_ptr = unsafe { Entities.List[ENTITIES_SELF_ID as usize] };
+        if !entity_ptr.is_null() {
+            let me = unsafe { &mut *entity_ptr };
+            me.VTABLE = original_vtable;
+        }
+    }
+
+    ORIGINAL_FN.set(None);
+    VTABLE.with(|cell| {
+        cell.set(None);
+    });
 }

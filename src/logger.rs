@@ -13,6 +13,11 @@ enum Guard {
     #[allow(dead_code)]
     Flame(tracing_flame::FlushGuard<BufWriter<File>>),
 }
+
+// Held for the lifetime of the process. The tracing subscriber is
+// installed exactly once (via `Once`); on plugin reload we must keep
+// the appender's worker thread alive so log lines after the second
+// `Init` still reach `cef.log`.
 static mut GUARDS: Option<Vec<Guard>> = None;
 
 pub fn initialize(debug: bool, module_filter: Option<&str>, flame: bool) {
@@ -75,7 +80,13 @@ pub fn initialize(debug: bool, module_filter: Option<&str>, flame: bool) {
     });
 }
 
-pub fn free() {
+/// Flush and drop the appender guards. Only call this from the panic hook
+/// just before `process::abort()` — the abort would otherwise skip the
+/// `WorkerGuard` destructor and the file writer would lose buffered log
+/// lines. **Don't** call this from plugin `Free`: a subsequent `Init`
+/// won't re-arm the appender (the `Once` doesn't re-run), and we'd lose
+/// file logging for the rest of the process.
+pub fn flush_for_abort() {
     unsafe {
         GUARDS = None;
     }

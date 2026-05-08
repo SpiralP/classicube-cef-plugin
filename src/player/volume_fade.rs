@@ -40,6 +40,12 @@ pub fn on_new_map_loaded() {
     });
 }
 
+pub fn shutdown() {
+    FADING_HANDLE.with(|cell| {
+        cell.set(None);
+    });
+}
+
 async fn fade_all() -> Result<()> {
     debug!("fade_all");
 

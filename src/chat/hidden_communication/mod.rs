@@ -5,7 +5,7 @@ pub mod whispers;
 
 use std::{
     cell::{Cell, RefCell},
-    slice,
+    ptr, slice,
 };
 
 use classicube_helpers::async_manager;
@@ -54,15 +54,39 @@ extern "C" fn message_handler(data: *mut u8) {
 }
 
 fn install_message_handler() {
-    let old_handler = unsafe { Protocol.Handlers[OPCODE__OPCODE_MESSAGE as usize] };
+    // Idempotent: if our handler is already installed (e.g. reset() called
+    // a second time without an intervening shutdown), don't re-save it as
+    // the "old" handler — that would cause `message_handler` to recurse
+    // into itself.
+    let current = unsafe { Protocol.Handlers[OPCODE__OPCODE_MESSAGE as usize] };
+    if is_our_handler(current) {
+        return;
+    }
+
     unsafe {
         Protocol.Handlers[OPCODE__OPCODE_MESSAGE as usize] = Some(message_handler);
     }
 
     OLD_MESSAGE_HANDLER.with(|cell| {
         let option = &mut *cell.borrow_mut();
-        *option = old_handler;
+        *option = current;
     });
+}
+
+fn uninstall_message_handler() {
+    // Restore whatever was there before our hook so a second init doesn't
+    // save our patched handler as "original" and recurse into itself.
+    let restored = OLD_MESSAGE_HANDLER.with(|cell| cell.borrow_mut().take());
+    let current = unsafe { Protocol.Handlers[OPCODE__OPCODE_MESSAGE as usize] };
+    if is_our_handler(current) {
+        unsafe {
+            Protocol.Handlers[OPCODE__OPCODE_MESSAGE as usize] = restored;
+        }
+    }
+}
+
+fn is_our_handler(handler: Net_Handler) -> bool {
+    handler.is_some_and(|h| ptr::fn_addr_eq(h, message_handler as unsafe extern "C" fn(*mut u8)))
 }
 
 pub fn initialize() {
@@ -107,6 +131,12 @@ pub fn shutdown() {
 
     global_control::stop_listening();
     whispers::stop_listening();
+    clients::shutdown();
+
+    uninstall_message_handler();
+
+    SHOULD_BLOCK.set(false);
+    WAITING_FOR_MESSAGE.with(|cell| cell.borrow_mut().clear());
 }
 
 pub async fn wait_for_message() -> String {

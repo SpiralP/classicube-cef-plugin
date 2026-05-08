@@ -420,6 +420,11 @@ pub fn on_new_map_loaded() {
     url_aliases::on_new_map_loaded();
 }
 
+pub fn shutdown() {
+    volume_fade::shutdown();
+    url_aliases::shutdown();
+}
+
 #[test]
 fn test_create_player() {
     url_aliases::add_alias("classicube", "https://www.classicube.net/").unwrap();

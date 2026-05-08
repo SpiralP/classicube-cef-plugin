@@ -71,3 +71,9 @@ pub fn create_task() -> (oneshot::Receiver<FFIRustV8Response>, u64) {
 
     (receiver, task_id)
 }
+
+pub fn shutdown() {
+    // Drop pending sender halves; their receivers will see `Canceled`.
+    WAITING_TASKS.with(|cell| cell.borrow_mut().clear());
+    TASK_ID.set(0);
+}

@@ -1,4 +1,7 @@
-use std::{cell::RefCell, ffi::CString};
+use std::{
+    cell::{Cell, RefCell},
+    ffi::CString,
+};
 
 use classicube_helpers::{WithInner, async_manager, color::RED};
 use classicube_sys::{Server, String_AppendConst};
@@ -9,6 +12,17 @@ use crate::{cef::Cef, chat::Chat, entity_manager::EntityManager, player};
 thread_local!(
     static PLUGIN: RefCell<Option<Plugin>> = const { RefCell::new(None) };
 );
+
+// Set true at the end of init, false at the start of free. Permanent
+// callbacks (the chat command, etc.) bail when this is false so they
+// can't touch torn-down state during a Free → Init reload window.
+thread_local!(
+    static PLUGIN_ACTIVE: Cell<bool> = const { Cell::new(false) };
+);
+
+pub fn is_plugin_active() -> bool {
+    PLUGIN_ACTIVE.with(Cell::get)
+}
 
 pub struct Plugin {
     chat: Chat,
@@ -58,6 +72,8 @@ impl Plugin {
             };
             *cell.borrow_mut() = Some(plugin);
         });
+
+        PLUGIN_ACTIVE.set(true);
     }
 
     pub fn on_new_map() {
@@ -96,12 +112,15 @@ impl Plugin {
     pub fn shutdown() {
         debug!("plugin shutdown");
 
+        PLUGIN_ACTIVE.set(false);
+
         PLUGIN.with(|cell| {
             let plugin = &mut *cell.borrow_mut();
             let mut plugin = plugin.take().unwrap();
 
             plugin.entity_manager.shutdown();
             plugin.chat.shutdown();
+            player::shutdown();
 
             async_manager::block_on_local(async {
                 Cef::shutdown().await;

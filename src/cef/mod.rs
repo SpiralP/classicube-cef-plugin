@@ -172,6 +172,9 @@ impl Cef {
             });
         }
 
+        browser::shutdown();
+        javascript::shutdown();
+
         IS_INITIALIZED.set(false);
     }
 

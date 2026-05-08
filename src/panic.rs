@@ -15,7 +15,7 @@ pub fn install_hook() {
 }
 
 fn panic_hook(info: &PanicHookInfo<'_>) {
-    crate::logger::free();
+    crate::logger::flush_for_abort();
 
     let (popup_message, stderr_message, verbose_message) = {
         // The current implementation always returns `Some`.

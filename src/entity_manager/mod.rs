@@ -142,6 +142,8 @@ impl EntityManager {
         async_manager::block_on_local(async {
             Self::remove_all_entities().await.unwrap();
         });
+
+        ENTITY_ID.set(0);
     }
 
     pub fn reset(&mut self) {

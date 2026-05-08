@@ -19,7 +19,6 @@ use deunicode::deunicode;
 use futures::{future::RemoteHandle, prelude::*};
 use tracing::{debug, info, warn};
 
-pub use self::chat_command::CefChatCommand;
 use crate::chat::helpers::is_continuation_message;
 
 thread_local!(
@@ -44,14 +43,12 @@ thread_local!(
 );
 
 pub struct Chat {
-    chat_command: CefChatCommand,
     chat_received: ChatReceivedEventHandler,
 }
 
 impl Chat {
     pub fn new() -> Self {
         Self {
-            chat_command: CefChatCommand::new(),
             chat_received: ChatReceivedEventHandler::new(),
         }
     }
@@ -59,7 +56,7 @@ impl Chat {
     pub fn initialize(&mut self) {
         debug!("initialize chat");
 
-        self.chat_command.initialize();
+        chat_command::initialize();
 
         self.chat_received.on(
             |ChatReceivedEvent {
@@ -177,7 +174,12 @@ impl Chat {
             tab_list.take();
         });
 
-        self.chat_command.shutdown();
+        LAST_CHAT.with(|cell| {
+            cell.borrow_mut().take();
+        });
+        FUTURE_HANDLE.with(|cell| {
+            cell.set(None);
+        });
     }
 
     pub fn reset(&mut self) {
@@ -279,7 +281,9 @@ fn handle_chat_received(message: String, message_type: MsgType) {
 
                 let (id2, opt2) = ENTITIES.with(|cell| {
                     let entities = &*cell.borrow();
-                    let entities = entities.as_ref().unwrap();
+                    let Some(entities) = entities.as_ref() else {
+                        return (id, None);
+                    };
                     for (new_id, e) in entities.get_all() {
                         if let Some(e) = e.upgrade() {
                             if real_name == remove_color(e.get_display_name()) {
@@ -353,7 +357,7 @@ impl PlayerSnapshot {
     pub fn from_entity_id(id: u8) -> Option<Self> {
         ENTITIES.with(|cell| {
             let entities = &*cell.borrow();
-            let entities = entities.as_ref().unwrap();
+            let entities = entities.as_ref()?;
             let entity = entities.get(id)?;
             let entity = entity.upgrade()?;
             let position = entity.get_position();
@@ -434,8 +438,7 @@ fn find_player_from_message(mut full_msg: String) -> Option<(u8, String, String)
             TAB_LIST.with(|cell| {
                 let tab_list = &*cell.borrow();
                 tab_list
-                    .as_ref()
-                    .unwrap()
+                    .as_ref()?
                     .find_entry_by_nick_name(&full_nick)
                     .map(|entry| {
                         let entry = entry.upgrade()?;

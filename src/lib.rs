@@ -60,8 +60,6 @@ extern "C" fn free() {
             Plugin::shutdown();
         });
     });
-
-    logger::free();
 }
 
 #[tracing::instrument]

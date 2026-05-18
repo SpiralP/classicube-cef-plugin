@@ -59,6 +59,8 @@ cmake = "=0.1.58"
 ci = []
 
 
-[package.metadata.release]
-pre-release-commit-message = "Release {{version}}"
-tag-message = "Release version {{version}}"
+[package.metadata.cross.target.aarch64-unknown-linux-gnu]
+dockerfile = ".github/cross-aarch64.Dockerfile"
+
+[package.metadata.cross.target.armv7-unknown-linux-gnueabihf]
+dockerfile = ".github/cross-armhf.Dockerfile"

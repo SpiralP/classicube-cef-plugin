@@ -1,23 +1,47 @@
-name: Release
+name: release
 
 on:
   push:
-    branches: [ master, main ]
+    branches: [main, master, alpha, beta]
   workflow_dispatch:
 
-concurrency:
-  group: release-${{ github.ref }}
-  cancel-in-progress: false # don't cancel, since the commit this flow pushes will trigger it again
-
-permissions: {} # none, since we use a custom app
+permissions: {} # both jobs declare their own
 
 jobs:
+  # Release-build smoke test before letting semantic-release push a
+  # chore(release) commit. build.yml is also dispatched on the release tag
+  # later via `build-workflow`, but at that point a chore(release) commit is
+  # already on main; running the same release build here first stops broken
+  # commits from getting that far.
+  build:
+    uses: ./.github/workflows/build.yml
+    if: "${{ ! startsWith(github.event.head_commit.message, 'chore(release): ') }}"
+    permissions:
+      contents: read # for build's checkout
+      id-token: write # for build-classicube-plugin's attest step
+      attestations: write # ditto
+
   release:
     uses: SpiralP/github-reusable-workflows/.github/workflows/release.yml@a7630d0468733e888f9104a242063f1bcb6a0022 # main
+    needs: build
+    concurrency:
+      group: release-${{ github.ref }}
+      cancel-in-progress: false # do not cancel in-progress jobs
+    permissions: {} # none needed, uses a custom GitHub App token
     with:
+      environment-name: release
       replace-files: |
         Cargo.lock
         Cargo.toml
+      assets: |
+        *.{so,dll,dylib,exe}
+        cef_*
+      # Dispatch build.yml on the just-pushed release tag during the publish
+      # phase (before the GH release is created), so binaries are compiled
+      # against the bumped commit and attached to the release atomically.
+      # `gh workflow run --ref <tag>` checks out the tagged commit by default,
+      # so no extra inputs are needed on the dispatched workflow.
+      build-workflow: build.yml
     secrets:
       app-client-id: ${{ secrets.APP_CLIENT_ID }}
       app-private-key: ${{ secrets.APP_PRIVATE_KEY }}

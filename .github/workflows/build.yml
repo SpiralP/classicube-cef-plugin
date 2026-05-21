@@ -17,6 +17,10 @@ permissions:
 
 jobs:
   linux_nix:
+    # Skip when dispatched from release.yml's publish phase: the smoke
+    # `build` job already validated nix against this commit minutes earlier,
+    # and the nix output isn't attached to the GitHub release.
+    if: ${{ github.event_name != 'workflow_dispatch' }}
     uses: SpiralP/github-reusable-workflows/.github/workflows/build.yml@a7630d0468733e888f9104a242063f1bcb6a0022 # main
 
   windows:

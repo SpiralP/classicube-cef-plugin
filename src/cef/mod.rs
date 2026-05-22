@@ -28,6 +28,7 @@ use self::{
 use crate::{
     entity_manager::{TEXTURE_HEIGHT, TEXTURE_WIDTH, cef_paint_callback},
     error::{Result, ResultExt, bail},
+    options::MUTE_LOSE_FOCUS,
 };
 
 pub const CEF_DEFAULT_WIDTH: u16 = 1920;
@@ -237,13 +238,24 @@ impl Cef {
 
         debug!("Cef::create_browser => {}", browser_id);
 
-        if !IS_FOCUSED.get() {
+        if Self::should_mute_for_focus() {
             browser.set_audio_muted(true)?;
         }
 
         drop(mutex);
 
         Ok(browser)
+    }
+
+    /// Returns whether new/navigating browsers should be muted right now,
+    /// based on the `cef-mute-lose-focus` option and the focus state tracked
+    /// by `mute_lose_focus`.
+    ///
+    /// CEF's `SetAudioMuted` state is not preserved across `LoadURL`, so
+    /// callers that load a new URL into an existing browser must reapply
+    /// the mute via this helper to keep `cef-mute-lose-focus` honored.
+    pub fn should_mute_for_focus() -> bool {
+        MUTE_LOSE_FOCUS.get().unwrap_or(false) && !IS_FOCUSED.get()
     }
 
     pub async fn close_browser(browser: &RustRefBrowser) -> Result<()> {

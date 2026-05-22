@@ -66,8 +66,6 @@ jobs:
         with:
           arch: ${{ matrix.config.arch }}
           target: ${{ matrix.config.target }}
-          test-command: cargo test
-          test-args: -- --nocapture --test-threads 1
 
   linux:
     name: Build Linux ${{ matrix.config.arch }}
@@ -160,8 +158,6 @@ jobs:
           arch: ${{ matrix.config.arch }}
           target: ${{ matrix.config.target }}
           use-cross: ${{ matrix.config.arch == 'aarch64' || matrix.config.arch == 'armhf' }}
-          test-command: cargo test
-          test-args: -- --nocapture --test-threads 1
 
   mac:
     name: Build MacOS ${{ matrix.config.arch }}
@@ -202,5 +198,3 @@ jobs:
         with:
           arch: ${{ matrix.config.arch }}
           target: ${{ matrix.config.target }}
-          test-command: cargo test
-          test-args: -- --nocapture --test-threads 1

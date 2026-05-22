@@ -47,11 +47,14 @@ fn build_libcef(links: &mut Vec<Link>) -> PathBuf {
         libcef_lib_dir
     );
 
-    // Fixes linux/windows not being able to `cargo test` because STATUS_DLL_NOT_FOUND;
-    // Putting the lib files in OUT_DIR will let `cargo test` link them at runtime.
+    // Fixes linux/windows not being able to `cargo test` / `cargo nextest run`
+    // because the test binary can't load libcef.so / cef.dll. Cargo only
+    // propagates `rustc-link-search=native=` paths to the dynamic library
+    // search path env var (LD_LIBRARY_PATH / PATH) when they live under
+    // OUT_DIR; symlinking/copying the CEF libs into OUT_DIR/libcef gets them
+    // onto that path for both debug and release test runs.
     // https://doc.rust-lang.org/cargo/reference/environment-variables.html#dynamic-library-paths
-    // Only doing this for dev test builds so that nothing strange happens for release builds.
-    #[cfg(all(debug_assertions, not(target_os = "macos")))]
+    #[cfg(not(target_os = "macos"))]
     let libcef_lib_dir = {
         use std::fs;
 

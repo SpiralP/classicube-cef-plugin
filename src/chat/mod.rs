@@ -63,7 +63,7 @@ impl Chat {
                  message,
                  message_type,
              }| {
-                handle_chat_received(message.to_string(), *message_type);
+                handle_chat_received(message.clone(), *message_type);
             },
         );
 
@@ -285,10 +285,10 @@ fn handle_chat_received(message: String, message_type: MsgType) {
                         return (id, None);
                     };
                     for (new_id, e) in entities.get_all() {
-                        if let Some(e) = e.upgrade() {
-                            if real_name == remove_color(e.get_display_name()) {
-                                return (new_id, PlayerSnapshot::from_entity_id(new_id));
-                            }
+                        if let Some(e) = e.upgrade()
+                            && real_name == remove_color(e.get_display_name())
+                        {
+                            return (new_id, PlayerSnapshot::from_entity_id(new_id));
                         }
                     }
 
@@ -309,16 +309,15 @@ fn handle_chat_received(message: String, message_type: MsgType) {
                         let is_self = id == ENTITY_SELF_ID;
 
                         if let Err(e) = commands::run(player_snapshot, split, is_self, false).await
+                            && is_self
                         {
-                            if is_self {
-                                warn!("chat command error: {:#?}", e);
-                                Chat::print(format!(
-                                    "{}cef command error: {}{}",
-                                    classicube_helpers::color::RED,
-                                    classicube_helpers::color::WHITE,
-                                    e
-                                ));
-                            }
+                            warn!("chat command error: {:#?}", e);
+                            Chat::print(format!(
+                                "{}cef command error: {}{}",
+                                classicube_helpers::color::RED,
+                                classicube_helpers::color::WHITE,
+                                e
+                            ));
                         }
                     }
                     .remote_handle();

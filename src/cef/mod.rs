@@ -266,10 +266,10 @@ impl Cef {
         browser.close()?;
 
         loop {
-            if let CefEvent::BrowserClosed(browser) = event_receiver.recv().await.unwrap() {
-                if browser.get_identifier() == id {
-                    break;
-                }
+            if let CefEvent::BrowserClosed(browser) = event_receiver.recv().await.unwrap()
+                && browser.get_identifier() == id
+            {
+                break;
             }
         }
 

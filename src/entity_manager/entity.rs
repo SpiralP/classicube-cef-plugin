@@ -164,7 +164,7 @@ impl CefEntity {
         self.entity.NameTex.uv.v2 = part.height as f32 / TEXTURE_HEIGHT as f32;
 
         unsafe {
-            Gfx_UpdateTexturePart(self.texture.resource_id, 0, 0, &mut part, 0);
+            Gfx_UpdateTexturePart(self.texture.resource_id, 0, 0, &raw mut part, 0);
         }
     }
 

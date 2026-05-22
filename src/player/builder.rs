@@ -23,21 +23,20 @@ impl PlayerBuilder {
         let mut players = Vec::new();
 
         let mut ids = vec![input.to_string()];
-        if !self.use_youtube_playlist {
-            if let Ok(player) = YouTubePlayer::from_input(input) {
-                if player.is_playlist {
-                    match api::youtube::playlist(&player.id).await {
-                        Ok(video_ids) => {
-                            if video_ids.is_empty() {
-                                warn!("playlist gave 0 results?!");
-                            } else {
-                                ids = video_ids;
-                            }
-                        }
-                        Err(e) => {
-                            warn!("couldn't fetch playlist videos: {}", e);
-                        }
+        if !self.use_youtube_playlist
+            && let Ok(player) = YouTubePlayer::from_input(input)
+            && player.is_playlist
+        {
+            match api::youtube::playlist(&player.id).await {
+                Ok(video_ids) => {
+                    if video_ids.is_empty() {
+                        warn!("playlist gave 0 results?!");
+                    } else {
+                        ids = video_ids;
                     }
+                }
+                Err(e) => {
+                    warn!("couldn't fetch playlist videos: {}", e);
                 }
             }
         }

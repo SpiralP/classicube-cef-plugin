@@ -57,7 +57,7 @@ impl PlayerTrait for WebPlayer {
     }
 
     fn on_create(&mut self) -> Result<String> {
-        let url = self.url.to_string();
+        let url = self.url.clone();
         if url != Self::blank_page().url {
             Self::from_input(&url)?;
         }

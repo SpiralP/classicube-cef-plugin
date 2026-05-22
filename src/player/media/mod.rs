@@ -132,13 +132,13 @@ impl PlayerTrait for MediaPlayer {
     }
 
     fn on_create(&mut self) -> Result<String> {
-        let url = self.url.to_string();
+        let url = self.url.clone();
         Self::from_input(&url)?;
         debug!("MediaPlayer on_create {}", url);
         self.create_time = Some(Instant::now());
 
         let mut params = vec![
-            ("url", self.url.to_string()),
+            ("url", self.url.clone()),
             ("time", format!("{}", self.time.as_secs())),
             ("volume", format!("{}", self.volume)),
             ("speed", format!("{}", self.speed)),
@@ -209,11 +209,11 @@ impl PlayerTrait for MediaPlayer {
 
     /// volume is a float between 0-1
     fn set_volume(&mut self, browser: Option<&RustRefBrowser>, volume: f32) -> Result<()> {
-        if let Some(browser) = browser {
-            if (volume - self.volume).abs() > 0.0001 {
-                let volume_modifier = options::VOLUME.get()?;
-                Self::execute(browser, &format!("setVolume({})", volume * volume_modifier))?;
-            }
+        if let Some(browser) = browser
+            && (volume - self.volume).abs() > 0.0001
+        {
+            let volume_modifier = options::VOLUME.get()?;
+            Self::execute(browser, &format!("setVolume({})", volume * volume_modifier))?;
         }
 
         self.volume = volume;
@@ -248,17 +248,9 @@ impl PlayerTrait for MediaPlayer {
         Ok(())
     }
 
-    fn get_autoplay(&self) -> bool {
-        self.autoplay
-    }
-
     fn set_autoplay(&mut self, _browser: Option<&RustRefBrowser>, autoplay: bool) -> Result<()> {
         self.autoplay = autoplay;
         Ok(())
-    }
-
-    fn get_loop(&self) -> bool {
-        self.should_loop
     }
 
     fn set_loop(&mut self, _browser: Option<&RustRefBrowser>, should_loop: bool) -> Result<()> {

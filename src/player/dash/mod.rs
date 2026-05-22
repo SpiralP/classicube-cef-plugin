@@ -83,7 +83,7 @@ impl PlayerTrait for DashPlayer {
     }
 
     fn on_create(&mut self) -> Result<String> {
-        let url = self.url.to_string();
+        let url = self.url.clone();
         Self::from_input(&url)?;
         debug!("DashPlayer on_create {}", url);
 
@@ -119,11 +119,11 @@ impl PlayerTrait for DashPlayer {
 
     /// volume is a float between 0-1
     fn set_volume(&mut self, browser: Option<&RustRefBrowser>, volume: f32) -> Result<()> {
-        if let Some(browser) = browser {
-            if (volume - self.volume).abs() > 0.0001 {
-                let volume_modifier = options::VOLUME.get()?;
-                Self::get_player_field(browser, &format!("volume = {}", volume * volume_modifier));
-            }
+        if let Some(browser) = browser
+            && (volume - self.volume).abs() > 0.0001
+        {
+            let volume_modifier = options::VOLUME.get()?;
+            Self::get_player_field(browser, &format!("volume = {}", volume * volume_modifier));
         }
 
         self.volume = volume;

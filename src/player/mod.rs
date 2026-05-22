@@ -62,9 +62,6 @@ pub trait PlayerTrait: Clone {
         bail!("setting volume mode not supported");
     }
 
-    fn get_autoplay(&self) -> bool {
-        true
-    }
     fn set_autoplay(&mut self, _browser: Option<&RustRefBrowser>, autoplay: bool) -> Result<()> {
         if autoplay {
             Ok(())
@@ -73,9 +70,6 @@ pub trait PlayerTrait: Clone {
         }
     }
 
-    fn get_loop(&self) -> bool {
-        false
-    }
     fn set_loop(&mut self, _browser: Option<&RustRefBrowser>, should_loop: bool) -> Result<()> {
         if should_loop {
             bail!("looping unsupported");
@@ -300,17 +294,6 @@ impl PlayerTrait for Player {
         }
     }
 
-    fn get_autoplay(&self) -> bool {
-        match self {
-            Player::YouTube(player) => player.get_autoplay(),
-            Player::Dash(player) => player.get_autoplay(),
-            Player::Hls(player) => player.get_autoplay(),
-            Player::Media(player) => player.get_autoplay(),
-            Player::Image(player) => player.get_autoplay(),
-            Player::Web(player) => player.get_autoplay(),
-        }
-    }
-
     fn set_autoplay(&mut self, browser: Option<&RustRefBrowser>, autoplay: bool) -> Result<()> {
         match self {
             Player::YouTube(player) => player.set_autoplay(browser, autoplay),
@@ -319,17 +302,6 @@ impl PlayerTrait for Player {
             Player::Media(player) => player.set_autoplay(browser, autoplay),
             Player::Image(player) => player.set_autoplay(browser, autoplay),
             Player::Web(player) => player.set_autoplay(browser, autoplay),
-        }
-    }
-
-    fn get_loop(&self) -> bool {
-        match self {
-            Player::YouTube(player) => player.get_loop(),
-            Player::Dash(player) => player.get_loop(),
-            Player::Hls(player) => player.get_loop(),
-            Player::Media(player) => player.get_loop(),
-            Player::Image(player) => player.get_loop(),
-            Player::Web(player) => player.get_loop(),
         }
     }
 

@@ -238,6 +238,7 @@ fn build_cef_interface(libcef_include_dir: &Path, links: &mut Vec<Link>) {
 fn build_bindings(libcef_include_dir: &Path) {
     bindgen::Builder::default()
         .derive_copy(false)
+        .wrap_unsafe_ops(true)
         .clang_arg("-Icef_interface")
         .clang_arg(format!("-I{}", libcef_include_dir.display()))
         .clang_arg("-xc++")

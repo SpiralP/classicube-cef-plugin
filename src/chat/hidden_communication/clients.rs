@@ -107,15 +107,13 @@ async fn get_clients() -> Result<Vec<String>> {
         loop {
             let message = wait_for_message().await;
 
-            if was_clients_message {
-                if let Some(message) = is_continuation_message(&message) {
-                    let message = remove_color(message);
-                    SHOULD_BLOCK.set(true);
+            if was_clients_message && let Some(message) = is_continuation_message(&message) {
+                let message = remove_color(message);
+                SHOULD_BLOCK.set(true);
 
-                    let last_message = messages.last_mut().unwrap();
-                    *last_message = format!("{last_message} {message}");
-                    continue;
-                }
+                let last_message = messages.last_mut().unwrap();
+                *last_message = format!("{last_message} {message}");
+                continue;
             }
             if let Some(message) = is_clients_message(&message) {
                 let message = remove_color(message);

@@ -115,15 +115,15 @@ pub async fn received_message(mut message: Message) -> Result<bool> {
     for mut info in message.entities.drain(..) {
         debug!("creating {:#?}", info);
 
-        if let Ok(time) = info.player.get_current_time() {
-            if time > Duration::from_secs(1) {
-                // this is a couple seconds behind because of the load time
-                // of the browser page and whisper delay, so add a couple seconds
-                if let Player::YouTube(yt) = &mut info.player {
-                    yt.time = time + Duration::from_secs(4);
-                } else if let Player::Media(media) = &mut info.player {
-                    media.time = time + Duration::from_secs(4);
-                }
+        if let Ok(time) = info.player.get_current_time()
+            && time > Duration::from_secs(1)
+        {
+            // this is a couple seconds behind because of the load time
+            // of the browser page and whisper delay, so add a couple seconds
+            if let Player::YouTube(yt) = &mut info.player {
+                yt.time = time + Duration::from_secs(4);
+            } else if let Player::Media(media) = &mut info.player {
+                media.time = time + Duration::from_secs(4);
             }
         }
 

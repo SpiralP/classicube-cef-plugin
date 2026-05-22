@@ -76,7 +76,7 @@ impl PlayerTrait for ImagePlayer {
     }
 
     fn on_create(&mut self) -> Result<String> {
-        let url = self.url.to_string();
+        let url = self.url.clone();
         Self::from_input(&url)?;
         debug!("ImagePlayer on_create {}", url);
 

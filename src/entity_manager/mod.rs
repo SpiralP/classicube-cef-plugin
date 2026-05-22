@@ -189,7 +189,7 @@ impl EntityManager {
                 .iter()
                 .filter_map(|(name, &id)| {
                     if id == entity_id {
-                        Some(name.to_string())
+                        Some(name.clone())
                     } else {
                         None
                     }

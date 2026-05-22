@@ -37,7 +37,7 @@ pub fn get_camera_trace() -> Option<RayTracer> {
         local_player.ReachDistance = 32.0;
     }
     unsafe {
-        get_picked_block(&mut ray_tracer);
+        get_picked_block(&raw mut ray_tracer);
     }
     local_player.ReachDistance = old_reach_distance;
 

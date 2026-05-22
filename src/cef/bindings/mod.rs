@@ -6,7 +6,6 @@ use std::{
     fmt::Display,
     fs, io,
     iter::Iterator,
-    mem,
     os::raw::c_int,
     process, ptr, slice,
     time::{SystemTime, UNIX_EPOCH},
@@ -424,13 +423,13 @@ impl Drop for FFIRustV8Value {
         unsafe {
             let inner = &mut self.__bindgen_anon_1;
 
-            // hack to make sure the union fields call our drop
+            // drop the active union variant in place (no-op for Copy types)
             match self.tag {
-                FFIRustV8ValueTag::Bool => mem::swap(inner.bool_.as_mut(), &mut mem::zeroed()),
-                FFIRustV8ValueTag::Double => mem::swap(inner.double_.as_mut(), &mut mem::zeroed()),
-                FFIRustV8ValueTag::Int => mem::swap(inner.int_.as_mut(), &mut mem::zeroed()),
-                FFIRustV8ValueTag::String => mem::swap(inner.string.as_mut(), &mut mem::zeroed()),
-                FFIRustV8ValueTag::UInt => mem::swap(inner.uint.as_mut(), &mut mem::zeroed()),
+                FFIRustV8ValueTag::Bool => ptr::drop_in_place(inner.bool_.as_mut()),
+                FFIRustV8ValueTag::Double => ptr::drop_in_place(inner.double_.as_mut()),
+                FFIRustV8ValueTag::Int => ptr::drop_in_place(inner.int_.as_mut()),
+                FFIRustV8ValueTag::String => ptr::drop_in_place(inner.string.as_mut()),
+                FFIRustV8ValueTag::UInt => ptr::drop_in_place(inner.uint.as_mut()),
                 FFIRustV8ValueTag::Unknown
                 | FFIRustV8ValueTag::Array
                 | FFIRustV8ValueTag::ArrayBuffer
@@ -448,9 +447,9 @@ impl Drop for FFIRustV8Response {
     fn drop(&mut self) {
         unsafe {
             if self.success {
-                mem::swap(self.__bindgen_anon_1.result.as_mut(), &mut mem::zeroed());
+                ptr::drop_in_place(self.__bindgen_anon_1.result.as_mut());
             } else {
-                mem::swap(self.__bindgen_anon_1.error.as_mut(), &mut mem::zeroed());
+                ptr::drop_in_place(self.__bindgen_anon_1.error.as_mut());
             }
         }
     }

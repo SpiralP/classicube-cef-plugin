@@ -35,7 +35,7 @@ fn panic_hook(info: &PanicHookInfo<'_>) {
 
         let date = unsafe {
             let mut now: cc_datetime = mem::zeroed();
-            DateTime_CurrentLocal(&mut now);
+            DateTime_CurrentLocal(&raw mut now);
             format!(
                 "{:02}/{:02}/{:04} {:02}:{:02}:{:02}",
                 now.day, now.month, now.year, now.hour, now.minute, now.second

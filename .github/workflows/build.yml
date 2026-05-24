@@ -60,8 +60,6 @@ jobs:
           if (Test-Path 'cef_interface/cef_binary') { Remove-Item -Recurse 'cef_interface/cef_binary' }
           Move-Item -Path "$dirname" -Destination 'cef_interface/cef_binary'
 
-      - uses: microsoft/setup-msbuild@30375c66a4eea26614e0d39710365f22f8b0af57 # v3
-
       - uses: SpiralP/github-reusable-workflows/.github/actions/build-classicube-plugin@a7630d0468733e888f9104a242063f1bcb6a0022 # main
         with:
           arch: ${{ matrix.config.arch }}

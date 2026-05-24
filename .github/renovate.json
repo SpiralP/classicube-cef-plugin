@@ -11,6 +11,12 @@
         "ghcr.io/cross-rs/armv7-unknown-linux-gnueabihf"
       ],
       "automerge": true
+    },
+    {
+      "matchManagers": ["cargo"],
+      "matchDepNames": ["bincode"],
+      "allowedVersions": "<3",
+      "description": "bincode 3.0.0 is a tombstone release: the maintainer stopped development after a harassment incident, and since crates.io has no way to archive a crate or transfer ownership, they shipped a final version whose lib.rs is just `compile_error!(\"https://xkcd.com/2347/\")` to signal the crate is unmaintained"
     }
   ]
 }

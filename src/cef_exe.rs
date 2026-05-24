@@ -71,32 +71,34 @@ fn main() {
 
         thread::spawn(move || {
             unsafe fn get_parent_handle() -> Result<(HANDLE, u32), Error> {
-                let current_process_id = GetCurrentProcessId();
+                unsafe {
+                    let current_process_id = GetCurrentProcessId();
 
-                let snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0)?;
-                let mut process_entry = PROCESSENTRY32 {
-                    dwSize: core::mem::size_of::<PROCESSENTRY32>() as _,
-                    ..Default::default()
-                };
+                    let snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0)?;
+                    let mut process_entry = PROCESSENTRY32 {
+                        dwSize: core::mem::size_of::<PROCESSENTRY32>() as _,
+                        ..Default::default()
+                    };
 
-                Process32First(snapshot, &mut process_entry)?;
-                loop {
-                    if process_entry.th32ProcessID == current_process_id {
-                        break;
+                    Process32First(snapshot, &mut process_entry)?;
+                    loop {
+                        if process_entry.th32ProcessID == current_process_id {
+                            break;
+                        }
+
+                        Process32Next(snapshot, &mut process_entry)?;
                     }
+                    CloseHandle(snapshot)?;
 
-                    Process32Next(snapshot, &mut process_entry)?;
-                }
-                CloseHandle(snapshot)?;
-
-                Ok((
-                    OpenProcess(
-                        PROCESS_SYNCHRONIZE,
-                        false,
+                    Ok((
+                        OpenProcess(
+                            PROCESS_SYNCHRONIZE,
+                            false,
+                            process_entry.th32ParentProcessID,
+                        )?,
                         process_entry.th32ParentProcessID,
-                    )?,
-                    process_entry.th32ParentProcessID,
-                ))
+                    ))
+                }
             }
 
             match unsafe { get_parent_handle() } {

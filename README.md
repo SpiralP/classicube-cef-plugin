@@ -31,7 +31,9 @@ A ClassiCube plugin that allows placing web browser screens in-game!
 In a directory with the `ClassiCube` executable:
 
 - Copy:
-  - All files in `./cef_binary/Release/` and `./cef_binary/Resources/` to `./` (same folder as ClassiCube.exe)
+  - All files in `./cef_binary/Release/` to `./` (same folder as ClassiCube.exe)
+  - Everything in `./cef_binary/Resources/` **except** the `locales/` directory to `./` (same folder as ClassiCube.exe)
+  - `./cef_binary/Resources/locales/` to `./cef/cef_binary/locales/`
   - The `cef.exe` file to `./cef/cef.exe`
 
 * Copy our plugin `classicube_cef_plugin.dll` to `./plugins/classicube_cef_plugin.dll`

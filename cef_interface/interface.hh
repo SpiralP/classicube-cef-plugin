@@ -134,6 +134,8 @@ struct CefInitializePaths {
 
   const char* main_bundle_path;
   const char* framework_dir_path;
+
+  const char* log_file;
 };
 
 // functions to rust

@@ -178,7 +178,7 @@ extern "C" int cef_interface_initialize(MyApp* app, CefInitializePaths paths) {
 
   settings.background_color = 0xFFFFFFFF;
 
-  CefString(&settings.log_file).FromASCII("cef-binary.log");
+  CefString(&settings.log_file).FromString(paths.log_file);
 
   CefString(&settings.browser_subprocess_path)
       .FromString(paths.browser_subprocess_path);

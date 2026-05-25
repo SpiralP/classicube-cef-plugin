@@ -290,7 +290,7 @@ dependencies = [
  "cc",
  "clap",
  "classicube-helpers",
- "classicube-sys",
+ "classicube-sys 6.0.4+ClassiCube.1.3.8",
  "cmake",
  "deunicode",
  "error-chain",
@@ -320,7 +320,7 @@ version = "4.0.0+ClassiCube.1.3.8"
 source = "git+https://github.com/SpiralP/rust-classicube-helpers.git?branch=main#17d9483df0ceb34330dbe9baa660307f24774989"
 dependencies = [
  "async-dispatcher",
- "classicube-sys",
+ "classicube-sys 5.0.0+ClassiCube.1.3.8",
  "futures",
  "futures-timer",
  "paste",
@@ -333,6 +333,19 @@ name = "classicube-sys"
 version = "5.0.0+ClassiCube.1.3.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6ff8b288cd38f7685b2de04f754bb679d212fc6b1f497100ca014cb842da050f"
+dependencies = [
+ "bindgen",
+ "cc",
+ "fs_extra",
+ "paste",
+ "regex",
+]
+
+[[package]]
+name = "classicube-sys"
+version = "6.0.4+ClassiCube.1.3.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "687dbce552c7a5347270bab286c230a271b6da155d4277a4230c12fc5e147d50"
 dependencies = [
  "bindgen",
  "cc",

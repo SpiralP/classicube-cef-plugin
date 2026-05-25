@@ -128,7 +128,7 @@ impl Chat {
                         .expect("don't worry about this error");
                     }
 
-                    async_manager::sleep(Duration::from_millis(2000)).await;
+                    async_manager::sleep(Duration::from_secs(2)).await;
                     run(&["create", "-n", "ag", "-s", "4sk0uDbM5lc"]).await;
                     run(&["volume", "-n", "ag", "-p", "10"]).await;
 

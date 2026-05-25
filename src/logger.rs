@@ -65,13 +65,16 @@ pub fn initialize(debug: bool, module_filter: Option<&str>, flame: bool) {
                     .with_timer(SystemTime),
             );
 
-        if flame {
+        let result = if flame {
             let (flame_layer, guard) = FlameLayer::with_file("./flame.log").unwrap();
             guards.push(Guard::Flame(guard));
 
-            subscriber.with(flame_layer).init();
+            subscriber.with(flame_layer).try_init()
         } else {
-            subscriber.init();
+            subscriber.try_init()
+        };
+        if let Err(e) = result {
+            eprintln!("failed to init tracing subscriber: {e}");
         }
 
         unsafe {

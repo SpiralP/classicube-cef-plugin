@@ -612,7 +612,7 @@ fn test_youtube() {
             let ids = [
                 "https://youtu.be/mZpa3nOLOa8?list=PLDfU1tT3TQ16cW3WdAKf2WicS6wrdgZxB&t=69",
                 "https://www.youtube.com/watch?v=mZpa3nOLOa8&list=PLDfU1tT3TQ16cW3WdAKf2WicS6wrdgZxB&index=1&t=69",
-                "https://www.youtube.com/shorts/mZpa3nOLOa8?t=69&feature=share"
+                "https://www.youtube.com/shorts/mZpa3nOLOa8?t=69&feature=share",
             ];
             let should = YouTubePlayer {
                 id: "mZpa3nOLOa8".to_string(),

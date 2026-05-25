@@ -21,10 +21,7 @@ impl ContextHandler {
         // create texture buffer
 
         TEX_VB.with(|cell| {
-            *cell.borrow_mut() = OwnedGfxVertexBuffer::new(
-                VertexFormat__VERTEX_FORMAT_TEXTURED,
-                4,
-            );
+            *cell.borrow_mut() = OwnedGfxVertexBuffer::new(VertexFormat__VERTEX_FORMAT_TEXTURED, 4);
         });
     }
 

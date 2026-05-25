@@ -174,6 +174,8 @@ impl RustRefApp {
         #[cfg(target_os = "macos")]
         let locales_dir_path = std::path::PathBuf::new();
 
+        let log_file = current_dir_path.join("cef-binary.log");
+
         let browser_subprocess_path =
             CString::new(format!("{}", browser_subprocess_path.display()))?;
         let root_cache_path = CString::new(format!("{}", root_cache_path.display()))?;
@@ -184,6 +186,8 @@ impl RustRefApp {
         let resources_dir_path = CString::new(format!("{}", resources_dir_path.display()))?;
         let locales_dir_path = CString::new(format!("{}", locales_dir_path.display()))?;
 
+        let log_file = CString::new(format!("{}", log_file.display()))?;
+
         let paths = CefInitializePaths {
             browser_subprocess_path: browser_subprocess_path.as_ptr(),
             root_cache_path: root_cache_path.as_ptr(),
@@ -193,6 +197,8 @@ impl RustRefApp {
 
             main_bundle_path: main_bundle_path.as_ptr(),
             framework_dir_path: framework_dir_path.as_ptr(),
+
+            log_file: log_file.as_ptr(),
         };
 
         to_result(unsafe { cef_interface_initialize(self.ptr, paths) })

@@ -32,6 +32,7 @@ In a directory with the `ClassiCube` executable:
 
 - Copy:
   - All files in `./cef_binary/Release/` and `./cef_binary/Resources/` to `./` (same folder as ClassiCube.exe)
+  - `./cef_binary/Resources/locales/` to `./cef/cef_binary/`
   - The `cef.exe` file to `./cef/cef.exe`
 
 * Copy our plugin `classicube_cef_plugin.dll` to `./plugins/classicube_cef_plugin.dll`

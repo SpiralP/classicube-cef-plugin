@@ -65,9 +65,7 @@ impl CefModel {
             height: i32::from(TEXTURE_HEIGHT),
         };
 
-        let default_texture = OwnedGfxTexture::new(&mut bmp, true, false);
-
-        self.default_texture = Some(default_texture);
+        self.default_texture = OwnedGfxTexture::new(&mut bmp, true, false);
     }
 
     fn register_texture(&mut self) {

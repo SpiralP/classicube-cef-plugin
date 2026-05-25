@@ -21,6 +21,11 @@ fn main() {
     #[cfg(target_os = "macos")]
     links.push(Link::new(LinkKind::Dynamic, "c++".to_string(), None));
 
+    // Debug libcef_dll_wrapper calls MessageBoxW from DisplayDebugMessageInDialog
+    // (compiled out when NDEBUG is defined). user32 isn't in Rust's MSVC default libs.
+    #[cfg(all(target_os = "windows", debug_assertions))]
+    links.push(Link::new(LinkKind::Dynamic, "user32".to_string(), None));
+
     let libcef_include_dir = build_libcef(&mut links);
     build_libcef_dll_wrapper(&mut links);
     build_cef_interface(&libcef_include_dir, &mut links);

@@ -47,8 +47,12 @@ pub trait PlayerTrait: Clone {
     fn get_volume(&self) -> f32 {
         1.0
     }
-    fn set_volume(&mut self, _browser: Option<&RustRefBrowser>, _percent: f32) -> Result<()> {
-        bail!("setting volume not supported");
+    fn set_volume(&mut self, _browser: Option<&RustRefBrowser>, percent: f32) -> Result<()> {
+        if (percent - 1.0).abs() > 0.01 {
+            bail!("setting volume not supported");
+        } else {
+            Ok(())
+        }
     }
 
     fn get_volume_mode(&self) -> VolumeMode {
@@ -57,9 +61,13 @@ pub trait PlayerTrait: Clone {
     fn set_volume_mode(
         &mut self,
         _browser: Option<&RustRefBrowser>,
-        _mode: VolumeMode,
+        mode: VolumeMode,
     ) -> Result<()> {
-        bail!("setting volume mode not supported");
+        if mode == VolumeMode::Global {
+            Ok(())
+        } else {
+            bail!("setting volume mode not supported");
+        }
     }
 
     fn set_autoplay(&mut self, _browser: Option<&RustRefBrowser>, autoplay: bool) -> Result<()> {

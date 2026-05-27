@@ -108,7 +108,7 @@ pub async fn search(query: &str) -> Result<SearchResponse> {
 }
 
 #[test]
-#[ignore]
+#[ignore = "hits live YouTube API; requires network and credentials"]
 fn test_youtube_search() {
     crate::logger::initialize(true, None, false);
     async_manager::initialize();
@@ -122,7 +122,7 @@ fn test_youtube_search() {
 }
 
 #[test]
-#[ignore]
+#[ignore = "hits live YouTube API; requires network and credentials"]
 fn test_youtube_video() {
     crate::logger::initialize(true, None, false);
     async_manager::initialize();

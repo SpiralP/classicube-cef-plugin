@@ -52,10 +52,16 @@ thread_local!(
     static BROWSER_ID_TO_ENTITY_ID: RefCell<HashMap<c_int, usize>> = RefCell::default();
 );
 
-pub struct EntityManager {
-    // model is just the shape, the entities holds the texture id and scaling
-    model: Option<CefModel>,
+thread_local!(
+    // ClassiCube has no `Model_Unregister` exposed via the plugin API, so we
+    // register exactly once per process and never drop the CefModel. Dropping
+    // it would free the `Box<Model>` and its `name: Box<CStr>` while still
+    // referenced by ClassiCube's `models_head` linked list, crashing the next
+    // `Model_Get` walk (e.g. on a CPE ChangeModel packet after reload).
+    static MODEL: RefCell<Option<CefModel>> = const { RefCell::new(None) };
+);
 
+pub struct EntityManager {
     context_handler: ContextHandler,
 
     cef_event_page_loaded: Option<RemoteHandle<()>>,
@@ -65,7 +71,6 @@ pub struct EntityManager {
 impl EntityManager {
     pub fn new() -> Self {
         Self {
-            model: None,
             context_handler: ContextHandler::new(),
             cef_event_page_loaded: None,
             cef_event_title_change: None,
@@ -77,7 +82,12 @@ impl EntityManager {
 
         self.context_handler.initialize();
         render_model_hook::initialize();
-        self.model = Some(CefModel::register());
+        MODEL.with(|cell| {
+            let mut slot = cell.borrow_mut();
+            if slot.is_none() {
+                *slot = Some(CefModel::register());
+            }
+        });
 
         self.initialize_listeners();
     }
@@ -134,7 +144,6 @@ impl EntityManager {
 
         self.context_handler.shutdown();
         render_model_hook::shutdown();
-        self.model.take();
         self.cef_event_page_loaded.take();
         self.cef_event_title_change.take();
 

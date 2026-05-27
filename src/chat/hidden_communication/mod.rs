@@ -18,6 +18,7 @@ use tracing::debug;
 
 pub use self::global_control::CURRENT_MAP_THEME;
 use super::SIMULATING;
+use crate::plugin::is_plugin_active;
 
 thread_local!(
     static SHOULD_BLOCK: Cell<bool> = const { Cell::new(false) };
@@ -32,12 +33,16 @@ thread_local!(
 );
 
 extern "C" fn message_handler(data: *mut u8) {
-    {
+    // If the plugin has been shut down but our hook is still reachable via
+    // another plugin's chain, skip our processing — handle_chat_message
+    // would touch async_manager and WAITING_FOR_MESSAGE which shutdown()
+    // tears down. Fall straight through to the saved next handler.
+    if is_plugin_active() {
         use classicube_sys::MsgType;
 
-        let data = unsafe { slice::from_raw_parts(data, 65) };
-        let message_type = data[0] as MsgType;
-        let text = unsafe { UNSAFE_GetString(&data[1..]) }.to_string();
+        let bytes = unsafe { slice::from_raw_parts(data, 65) };
+        let message_type = bytes[0] as MsgType;
+        let text = unsafe { UNSAFE_GetString(&bytes[1..]) }.to_string();
 
         if message_type == MsgType_MSG_TYPE_NORMAL && handle_chat_message(&text) {
             return;
@@ -45,10 +50,10 @@ extern "C" fn message_handler(data: *mut u8) {
     }
 
     OLD_MESSAGE_HANDLER.with(|cell| {
-        let option = &*cell.borrow();
-        let f = option.unwrap();
-        unsafe {
-            f(data);
+        if let Some(f) = *cell.borrow() {
+            unsafe {
+                f(data);
+            }
         }
     });
 }
@@ -63,6 +68,16 @@ fn install_message_handler() {
         return;
     }
 
+    // We previously installed ourselves and another plugin has since stacked
+    // its own hook on top. Re-pushing to the top would set
+    //   slot = us, OLD_MESSAGE_HANDLER = other_plugin
+    // while other_plugin's saved "old" still points at us — an infinite
+    // recursion through our own handler on every chat message. Leave the
+    // chain alone; we're still reachable via the existing chain.
+    if OLD_MESSAGE_HANDLER.with(|cell| cell.borrow().is_some()) {
+        return;
+    }
+
     unsafe {
         Protocol.Handlers[OPCODE__OPCODE_MESSAGE as usize] = Some(message_handler);
     }
@@ -74,11 +89,12 @@ fn install_message_handler() {
 }
 
 fn uninstall_message_handler() {
-    // Restore whatever was there before our hook so a second init doesn't
-    // save our patched handler as "original" and recurse into itself.
-    let restored = OLD_MESSAGE_HANDLER.with(|cell| cell.borrow_mut().take());
+    // If another plugin stacked on top of us, our message_handler is still
+    // reachable via their chain — keep OLD_MESSAGE_HANDLER populated so the
+    // fall-through call still works instead of dropping the message.
     let current = unsafe { Protocol.Handlers[OPCODE__OPCODE_MESSAGE as usize] };
     if is_our_handler(current) {
+        let restored = OLD_MESSAGE_HANDLER.with(|cell| cell.borrow_mut().take());
         unsafe {
             Protocol.Handlers[OPCODE__OPCODE_MESSAGE as usize] = restored;
         }

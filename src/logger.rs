@@ -34,12 +34,14 @@ pub fn initialize(debug: bool, module_filter: Option<&str>, flame: bool) {
 
         let level = if debug { "debug" } else { "info" };
 
-        let mut filter = EnvFilter::from_default_env();
-        if let Some(module) = module_filter {
-            filter = filter.add_directive(format!("{module}={level}").parse().unwrap());
+        let default_directive = if let Some(module) = module_filter {
+            format!("{module}={level}").parse().unwrap()
         } else {
-            filter = filter.add_directive(level.parse().unwrap());
-        }
+            level.parse().unwrap()
+        };
+        let filter = EnvFilter::builder()
+            .with_default_directive(default_directive)
+            .from_env_lossy();
 
         let mut guards = Vec::with_capacity(2);
 

@@ -28,6 +28,25 @@ void add_switch(CefRefPtr<CefCommandLine> command_line, const CefString& name) {
 void MyApp::OnBeforeCommandLineProcessing(
     const CefString& process_type,
     CefRefPtr<CefCommandLine> command_line) {
+#if defined(__linux__)
+  // The zygote process model is Linux-only, so this workaround is too;
+  // Windows/macOS don't fork a zygote and --no-zygote is a no-op there.
+  // Browser-process-only (process_type is empty for the browser process).
+  if (process_type.empty()) {
+    // Work around Chromium's stack-guard-change-on-fork hardening
+    // (crbug.com/1206626 / cef#3912): the zygote re-randomizes
+    // __stack_chk_guard after fork, which requires every frame live across
+    // content::RunZygote() to be built without stack canaries. Our hardened
+    // cef_interface_execute_process frame is inherited by forked subprocesses
+    // and stays on their stack, so on teardown its stale canary no longer
+    // matches the re-randomized global and glibc aborts with "stack smashing
+    // detected". Disabling the zygote removes the fork path entirely; safe
+    // because we run with no_sandbox = true (--no-zygote on Linux requires
+    // --no-sandbox).
+    add_switch(command_line, "no-zygote");
+  }
+#endif
+
   command_line->AppendSwitchWithValue("autoplay-policy",
                                       "no-user-gesture-required");
 

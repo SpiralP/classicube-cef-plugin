@@ -1,15 +1,14 @@
 use std::{
     ffi::{CStr, CString},
-    mem,
+    mem, ptr,
 };
 
 use classicube_sys::{
-    Bitmap, Entity, Gfx_SetAlphaTest, Gfx_SetTexturing, MODEL_BOX_VERTICES, Model, Model_Init,
-    Model_Register, ModelTex, ModelVertex, OwnedGfxTexture, PackedCol, PackedCol_Make,
-    SKIN_TYPE_SKIN_64x64,
+    Entity, Gfx_SetAlphaTest, Gfx_SetTexturing, MODEL_BOX_VERTICES, Model, Model_Init,
+    Model_Register, ModelTex, ModelVertex, PackedCol, PackedCol_Make, SKIN_TYPE_SKIN_64x64,
 };
 
-use super::{TEXTURE_HEIGHT, TEXTURE_WIDTH, helpers::Texture_RenderShaded};
+use super::helpers::Texture_RenderShaded;
 
 const WHITE: PackedCol = PackedCol_Make(255, 255, 255, 255);
 
@@ -19,8 +18,6 @@ pub struct CefModel {
     model: Box<Model>,
     vertices: Box<[ModelVertex; MODEL_BOX_VERTICES as usize]>,
     default_model_tex: Box<ModelTex>,
-
-    default_texture: Option<OwnedGfxTexture>,
 }
 
 impl CefModel {
@@ -42,10 +39,8 @@ impl CefModel {
             default_texture_name,
             vertices,
             default_model_tex,
-            default_texture: None,
         };
 
-        this.register_gfx_texture();
         this.register_texture();
         this.register_model();
 
@@ -54,20 +49,6 @@ impl CefModel {
 }
 
 impl CefModel {
-    fn register_gfx_texture(&mut self) {
-        // must be a vec or else we try to fit huge array onto stack and crash!
-        let mut pixels: Vec<u32> =
-            vec![0xFFFF_FFFF; TEXTURE_WIDTH as usize * TEXTURE_HEIGHT as usize];
-
-        let mut bmp = Bitmap {
-            scan0: pixels.as_mut_ptr(),
-            width: i32::from(TEXTURE_WIDTH),
-            height: i32::from(TEXTURE_HEIGHT),
-        };
-
-        self.default_texture = OwnedGfxTexture::new(&mut bmp, true, false);
-    }
-
     fn register_texture(&mut self) {
         let CefModel {
             default_model_tex,
@@ -77,7 +58,15 @@ impl CefModel {
 
         default_model_tex.name = default_texture_name.as_ptr();
         default_model_tex.skinType = SKIN_TYPE_SKIN_64x64 as _;
-        default_model_tex.texID = self.default_texture.as_mut().unwrap().resource_id;
+        // No backing GPU texture: our `draw` renders each entity's own
+        // `NameTex` via Texture_RenderShaded and never calls
+        // Model_ApplyTexture, so `defaultTex->texID` is never sampled.
+        // Allocating one here would leak a D3D9 resource (and keep the
+        // device alive) because `MODEL` is intentionally never dropped -
+        // ClassiCube has no Model_Unregister - so the texture could never
+        // be freed before Gfx_Free. A null texID binds no texture, which is
+        // safe.
+        default_model_tex.texID = ptr::null_mut();
 
         // we don't need to register our texture!
         // Model_RegisterTexture(default_model_tex.as_mut().get_unchecked_mut());

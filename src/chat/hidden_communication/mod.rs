@@ -3,22 +3,15 @@ pub mod encoding;
 pub mod global_control;
 pub mod whispers;
 
-use std::{
-    cell::{Cell, RefCell},
-    ptr, slice,
-};
+use std::cell::{Cell, RefCell};
 
-use classicube_helpers::async_manager;
-use classicube_sys::{
-    MsgType_MSG_TYPE_NORMAL, Net_Handler, OPCODE__OPCODE_MESSAGE, Protocol, Server,
-    UNSAFE_GetString,
-};
+use classicube_helpers::{async_manager, protocol_hook::ProtocolMessageHook};
+use classicube_sys::Server;
 use futures::channel::oneshot;
 use tracing::debug;
 
 pub use self::global_control::CURRENT_MAP_THEME;
 use super::SIMULATING;
-use crate::plugin::is_plugin_active;
 
 thread_local!(
     static SHOULD_BLOCK: Cell<bool> = const { Cell::new(false) };
@@ -29,81 +22,8 @@ thread_local!(
 );
 
 thread_local!(
-    static OLD_MESSAGE_HANDLER: RefCell<Net_Handler> = RefCell::default();
+    static HOOK: RefCell<Option<ProtocolMessageHook>> = const { RefCell::new(None) };
 );
-
-extern "C" fn message_handler(data: *mut u8) {
-    // If the plugin has been shut down but our hook is still reachable via
-    // another plugin's chain, skip our processing — handle_chat_message
-    // would touch async_manager and WAITING_FOR_MESSAGE which shutdown()
-    // tears down. Fall straight through to the saved next handler.
-    if is_plugin_active() {
-        use classicube_sys::MsgType;
-
-        let bytes = unsafe { slice::from_raw_parts(data, 65) };
-        let message_type = bytes[0] as MsgType;
-        let text = unsafe { UNSAFE_GetString(&bytes[1..]) }.to_string();
-
-        if message_type == MsgType_MSG_TYPE_NORMAL && handle_chat_message(&text) {
-            return;
-        }
-    }
-
-    OLD_MESSAGE_HANDLER.with(|cell| {
-        if let Some(f) = *cell.borrow() {
-            unsafe {
-                f(data);
-            }
-        }
-    });
-}
-
-fn install_message_handler() {
-    // Idempotent: if our handler is already installed (e.g. reset() called
-    // a second time without an intervening shutdown), don't re-save it as
-    // the "old" handler — that would cause `message_handler` to recurse
-    // into itself.
-    let current = unsafe { Protocol.Handlers[OPCODE__OPCODE_MESSAGE as usize] };
-    if is_our_handler(current) {
-        return;
-    }
-
-    // We previously installed ourselves and another plugin has since stacked
-    // its own hook on top. Re-pushing to the top would set
-    //   slot = us, OLD_MESSAGE_HANDLER = other_plugin
-    // while other_plugin's saved "old" still points at us — an infinite
-    // recursion through our own handler on every chat message. Leave the
-    // chain alone; we're still reachable via the existing chain.
-    if OLD_MESSAGE_HANDLER.with(|cell| cell.borrow().is_some()) {
-        return;
-    }
-
-    unsafe {
-        Protocol.Handlers[OPCODE__OPCODE_MESSAGE as usize] = Some(message_handler);
-    }
-
-    OLD_MESSAGE_HANDLER.with(|cell| {
-        let option = &mut *cell.borrow_mut();
-        *option = current;
-    });
-}
-
-fn uninstall_message_handler() {
-    // If another plugin stacked on top of us, our message_handler is still
-    // reachable via their chain — keep OLD_MESSAGE_HANDLER populated so the
-    // fall-through call still works instead of dropping the message.
-    let current = unsafe { Protocol.Handlers[OPCODE__OPCODE_MESSAGE as usize] };
-    if is_our_handler(current) {
-        let restored = OLD_MESSAGE_HANDLER.with(|cell| cell.borrow_mut().take());
-        unsafe {
-            Protocol.Handlers[OPCODE__OPCODE_MESSAGE as usize] = restored;
-        }
-    }
-}
-
-fn is_our_handler(handler: Net_Handler) -> bool {
-    handler.is_some_and(|h| ptr::fn_addr_eq(h, message_handler as unsafe extern "C" fn(*mut u8)))
-}
 
 pub fn initialize() {
     debug!("initialize hidden_communication");
@@ -115,17 +35,20 @@ pub fn initialize() {
     whispers::start_listening();
     global_control::start_listening();
 
-    install_message_handler();
+    HOOK.with_borrow_mut(|hook| {
+        *hook = ProtocolMessageHook::install(handle_chat_message);
+    });
 }
 
 pub fn reset() {
     debug!("reset hidden_communication");
 
-    if unsafe { Server.IsSinglePlayer } != 0 {
-        return;
-    }
-
-    install_message_handler();
+    // reinstall() is a no-op in singleplayer and HOOK is None there anyway.
+    HOOK.with_borrow(|hook| {
+        if let Some(hook) = hook {
+            hook.reinstall();
+        }
+    });
 }
 
 pub fn on_new_map() {
@@ -149,7 +72,9 @@ pub fn shutdown() {
     whispers::stop_listening();
     clients::shutdown();
 
-    uninstall_message_handler();
+    // Drop uninstalls (when on top) and always clears the callback, so a
+    // trampoline still reachable via a foreign plugin's chain just forwards.
+    HOOK.with_borrow_mut(|hook| *hook = None);
 
     SHOULD_BLOCK.set(false);
     WAITING_FOR_MESSAGE.with(|cell| cell.borrow_mut().clear());

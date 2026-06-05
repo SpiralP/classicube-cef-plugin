@@ -4,7 +4,7 @@
 # we need at least glibc 2.29
 # 0.2.4 and 0.2.5 have glibc 2.23, so use main which has glibc 2.31
 # https://github.com/cross-rs/cross/pkgs/container/aarch64-unknown-linux-gnu
-FROM ghcr.io/cross-rs/armv7-unknown-linux-gnueabihf:main@sha256:8eccb9344d0f551eba3bb9ada1c1f7df5c7e9a1329d2bfd45ccf9655fb3fe319
+FROM ghcr.io/cross-rs/armv7-unknown-linux-gnueabihf:main@sha256:8810a0ec4301b063def6dd1e3eeabc077002b9348d514786377c86ff2e60d7f4
 
 # we're root
 RUN export DEBIAN_FRONTEND=noninteractive \

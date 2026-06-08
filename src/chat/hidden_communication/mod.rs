@@ -5,7 +5,7 @@ pub mod whispers;
 
 use std::cell::{Cell, RefCell};
 
-use classicube_helpers::{async_manager, protocol_hook::ProtocolMessageHook};
+use classicube_helpers::{async_manager, chat::ProtocolMessageHook};
 use classicube_sys::Server;
 use futures::channel::oneshot;
 use tracing::debug;

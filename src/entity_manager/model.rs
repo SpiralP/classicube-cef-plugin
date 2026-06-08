@@ -34,9 +34,9 @@ impl CefModel {
         let default_model_tex = Box::new(unsafe { mem::zeroed() });
 
         let mut this = Self {
-            model,
             name,
             default_texture_name,
+            model,
             vertices,
             default_model_tex,
         };

@@ -11,6 +11,7 @@
 #endif
 
 #ifdef _WIN32
+#include <windows.h>
 #include <direct.h>  // getcwd
 #define getcwd _getcwd
 #else
@@ -76,9 +77,60 @@ extern "C" int cef_interface_delete_ref_string(const char* c_str) {
 
 // functions to rust
 
+#if defined(_WIN64) || defined(_WIN32)
+// Chromium (Chrome runtime / M108+) sets the process DPI awareness to
+// Per-Monitor-V2 during browser- and GPU-process startup when no awareness has
+// been set yet (CefEnableHighDPISupport was removed; high-DPI is always on now).
+// This plugin runs CEF in-process inside ClassiCube.exe, which ships no
+// DPI-awareness manifest (DPI-unaware) and relies on Windows DPI virtualization
+// (bitmap scaling). Letting CEF flip the shared process to DPI-aware makes
+// Windows stop scaling the already-created game window, so it shrinks on >100%
+// display scaling ("Make everything bigger").
+//
+// Process DPI awareness can be set only ONCE; the first successful call wins and
+// later attempts are ignored. Claim DPI_AWARENESS_CONTEXT_UNAWARE before any CEF
+// call so Chromium's later attempt becomes a no-op and the process stays unaware
+// (restoring the pre-regression behavior the 2020 fix established). Called from
+// both the browser process (cef_interface_initialize, in ClassiCube's process)
+// and the sub-processes (cef_interface_execute_process, in cef.exe) so their
+// awareness matches.
+static void set_process_dpi_unaware() {
+  // SetProcessDpiAwarenessContext (Windows 10 1607+) is resolved dynamically (as
+  // Chromium and the cefclient sample do) so this compiles regardless of the
+  // SDK's WINVER level under build.rs's warnings_into_errors, on both x86_64 and
+  // i686 MSVC.
+  //
+  // DPI_AWARENESS_CONTEXT is an opaque DECLARE_HANDLE, so a HANDLE is
+  // ABI-identical; DPI_AWARENESS_CONTEXT_UNAWARE == (HANDLE)-1. WINAPI
+  // (__stdcall) in the typedef matters on i686, where the default is __cdecl and
+  // user32 exports are __stdcall (no-op on x86_64). intptr_t(-1) keeps the
+  // all-ones handle value pointer-width on both 32- and 64-bit.
+  using SetProcessDpiAwarenessContextFn = BOOL(WINAPI*)(HANDLE);
+  HANDLE dpi_unaware = reinterpret_cast<HANDLE>(static_cast<intptr_t>(-1));
+  if (HMODULE user32 = GetModuleHandleW(L"user32.dll")) {
+    auto set_ctx = reinterpret_cast<SetProcessDpiAwarenessContextFn>(
+        GetProcAddress(user32, "SetProcessDpiAwarenessContext"));
+    if (set_ctx) {
+      if (!set_ctx(dpi_unaware)) {
+        // Non-fatal: most likely awareness was already set. Proceed anyway.
+        rust_warn(
+            "SetProcessDpiAwarenessContext(UNAWARE) failed or was ignored");
+      }
+    } else {
+      rust_warn(
+          "SetProcessDpiAwarenessContext unavailable; DPI awareness unchanged");
+    }
+  }
+}
+#endif
+
 extern "C" int cef_interface_execute_process(int argc,
                                              const char* const argv[]) {
   rust_debug("cef_interface_execute_process");
+
+#if defined(_WIN64) || defined(_WIN32)
+  set_process_dpi_unaware();
+#endif
 
 #if defined(OS_MACOSX)
   if (!cef_load_library("./cef/Chromium Embedded Framework.framework/Chromium "
@@ -150,6 +202,10 @@ class LocalSchemeHandlerFactory : public CefSchemeHandlerFactory {
 };
 
 extern "C" int cef_interface_initialize(MyApp* app, CefInitializePaths paths) {
+#if defined(_WIN64) || defined(_WIN32)
+  set_process_dpi_unaware();
+#endif
+
 #if defined(OS_MACOSX)
   if (!cef_load_library("./cef/Chromium Embedded Framework.framework/Chromium "
                         "Embedded Framework")) {

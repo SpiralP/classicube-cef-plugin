@@ -44,7 +44,7 @@ dependencies = [
 [[package]]
 name = "async-dispatcher"
 version = "0.1.0"
-source = "git+https://github.com/SpiralP/rust-async-dispatcher.git?branch=main#e31354a7739f18ce65f149941541dbb31d35a578"
+source = "git+https://github.com/SpiralP/rust-async-dispatcher.git#e31354a7739f18ce65f149941541dbb31d35a578"
 dependencies = [
  "futures",
 ]
@@ -243,7 +243,7 @@ dependencies = [
 [[package]]
 name = "clap"
 version = "4.2.7"
-source = "git+https://github.com/SpiralP/rust-clap-classicube.git?branch=master#da7e44f53db944ed1acf89d77640977155ab3c7c"
+source = "git+https://github.com/SpiralP/rust-clap-classicube.git#f961ec4c263c5bc5c7b2a3ec4f8452f0bbcb3223"
 dependencies = [
  "clap_builder",
  "clap_derive",
@@ -253,7 +253,7 @@ dependencies = [
 [[package]]
 name = "clap_builder"
 version = "4.2.7"
-source = "git+https://github.com/SpiralP/rust-clap-classicube.git?branch=master#da7e44f53db944ed1acf89d77640977155ab3c7c"
+source = "git+https://github.com/SpiralP/rust-clap-classicube.git#f961ec4c263c5bc5c7b2a3ec4f8452f0bbcb3223"
 dependencies = [
  "bitflags 1.3.2",
  "clap_lex",
@@ -264,7 +264,7 @@ dependencies = [
 [[package]]
 name = "clap_derive"
 version = "4.2.0"
-source = "git+https://github.com/SpiralP/rust-clap-classicube.git?branch=master#da7e44f53db944ed1acf89d77640977155ab3c7c"
+source = "git+https://github.com/SpiralP/rust-clap-classicube.git#f961ec4c263c5bc5c7b2a3ec4f8452f0bbcb3223"
 dependencies = [
  "heck 0.4.1",
  "proc-macro2",
@@ -275,7 +275,7 @@ dependencies = [
 [[package]]
 name = "clap_lex"
 version = "0.4.1"
-source = "git+https://github.com/SpiralP/rust-clap-classicube.git?branch=master#da7e44f53db944ed1acf89d77640977155ab3c7c"
+source = "git+https://github.com/SpiralP/rust-clap-classicube.git#f961ec4c263c5bc5c7b2a3ec4f8452f0bbcb3223"
 
 [[package]]
 name = "classicube-cef-plugin"
@@ -316,8 +316,8 @@ dependencies = [
 
 [[package]]
 name = "classicube-helpers"
-version = "5.0.2+ClassiCube.1.3.8"
-source = "git+https://github.com/SpiralP/rust-classicube-helpers.git?branch=main#b731885c471435f4d3d5342c0bf16586a6128318"
+version = "5.1.0+ClassiCube.1.3.8"
+source = "git+https://github.com/SpiralP/rust-classicube-helpers.git#82dd644b3fefae396ec888075e12ced5585a7f04"
 dependencies = [
  "async-dispatcher",
  "classicube-sys",
@@ -674,9 +674,9 @@ checksum = "0cc23270f6e1808e30a928bdc84dea0b9b4136a8bc82338574f23baf47bbd280"
 
 [[package]]
 name = "h2"
-version = "0.4.14"
+version = "0.4.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "171fefbc92fe4a4de27e0698d6a5b392d6a0e333506bc49133760b3bcf948733"
+checksum = "6cb093c84e8bd9b188d4c4a8cb6579fc016968d14c99882163cd3ff402a4f155"
 dependencies = [
  "atomic-waker",
  "bytes",

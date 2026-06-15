@@ -1,30 +1,20 @@
-use std::cell::Cell;
+use std::cell::RefCell;
 
-use classicube_sys::{ENTITIES_SELF_ID, Entities, Entity, EntityVTABLE};
+use classicube_helpers::local_player_vtable_hook::{
+    LocalPlayerVTableHook, LocalPlayerVTableHooks, RenderModelFn,
+};
+use classicube_sys::Entity;
 
 use super::ENTITIES;
 
 thread_local!(
-    static ORIGINAL_FN: Cell<Option<unsafe extern "C" fn(*mut Entity, f32, f32)>> = Cell::new(None);
+    static HOOK: RefCell<Option<LocalPlayerVTableHook>> = const { RefCell::new(None) };
 );
 
-thread_local!(
-    static ORIGINAL_VTABLE: Cell<Option<*const EntityVTABLE>> = const { Cell::new(None) };
-);
-
-thread_local!(
-    static VTABLE: Cell<Option<Box<EntityVTABLE>>> = const { Cell::new(None) };
-);
-
-/// This is called when `LocalPlayer_RenderModel` is called.
-extern "C" fn hook(local_player_entity: *mut Entity, delta: f32, t: f32) {
-    ORIGINAL_FN.with(|cell| {
-        if let Some(f) = cell.get() {
-            unsafe {
-                f(local_player_entity, delta, t);
-            }
-        }
-    });
+fn render_model(local_player_entity: *mut Entity, delta: f32, t: f32, original: RenderModelFn) {
+    unsafe {
+        original(local_player_entity, delta, t);
+    }
 
     ENTITIES.with(|entities| {
         let entities = &mut *entities.borrow_mut();
@@ -36,47 +26,18 @@ extern "C" fn hook(local_player_entity: *mut Entity, delta: f32, t: f32) {
 }
 
 pub fn initialize() {
-    let me = unsafe { &mut *Entities.List[ENTITIES_SELF_ID as usize] };
-    let v_table = unsafe { &*me.VTABLE };
-
-    ORIGINAL_VTABLE.set(Some(me.VTABLE));
-    ORIGINAL_FN.set(v_table.RenderModel);
-
-    let mut new_v_table = EntityVTABLE {
-        Tick: v_table.Tick,
-        Despawn: v_table.Despawn,
-        SetLocation: v_table.SetLocation,
-        GetCol: v_table.GetCol,
-        RenderModel: v_table.RenderModel,
-        ShouldRenderName: v_table.ShouldRenderName,
-    };
-
-    new_v_table.RenderModel = Some(hook);
-
-    let new_v_table = Box::new(new_v_table);
-    me.VTABLE = new_v_table.as_ref();
-
-    VTABLE.with(|cell| {
-        cell.set(Some(new_v_table));
+    HOOK.with(|cell| {
+        let mut slot = cell.borrow_mut();
+        let hook = LocalPlayerVTableHook::install(LocalPlayerVTableHooks {
+            render_model: Some(Box::new(render_model)),
+            ..Default::default()
+        });
+        *slot = Some(hook);
     });
 }
 
 pub fn shutdown() {
-    // Restore the entity's VTABLE pointer first, then drop the boxed
-    // replacement. If we dropped the box first the entity would briefly
-    // point at freed memory. The local-player entity outlives plugin
-    // reload cycles, so without this restore the next initialize() would
-    // re-hook on top of itself and recurse forever in `hook`.
-    if let Some(original_vtable) = ORIGINAL_VTABLE.take() {
-        let entity_ptr = unsafe { Entities.List[ENTITIES_SELF_ID as usize] };
-        if !entity_ptr.is_null() {
-            let me = unsafe { &mut *entity_ptr };
-            me.VTABLE = original_vtable;
-        }
-    }
-
-    ORIGINAL_FN.set(None);
-    VTABLE.with(|cell| {
-        cell.set(None);
+    HOOK.with(|cell| {
+        cell.borrow_mut().take();
     });
 }

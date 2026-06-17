@@ -21,7 +21,7 @@ jobs:
     # `build` job already validated nix against this commit minutes earlier,
     # and the nix output isn't attached to the GitHub release.
     if: ${{ github.event_name != 'workflow_dispatch' }}
-    uses: SpiralP/github-reusable-workflows/.github/workflows/build.yml@234b03bbea7bec154f094bebf3ac7bb5fbd7d995 # main
+    uses: SpiralP/github-reusable-workflows/.github/workflows/build.yml@7d0e0da0bda7b9e7825eb06d682db2e9086bc0e2 # main
 
   windows:
     name: Build Windows ${{ matrix.config.arch }}
@@ -60,7 +60,7 @@ jobs:
           if (Test-Path 'cef_interface/cef_binary') { Remove-Item -Recurse 'cef_interface/cef_binary' }
           Move-Item -Path "$dirname" -Destination 'cef_interface/cef_binary'
 
-      - uses: SpiralP/github-reusable-workflows/.github/actions/build-classicube-plugin@234b03bbea7bec154f094bebf3ac7bb5fbd7d995 # main
+      - uses: SpiralP/github-reusable-workflows/.github/actions/build-classicube-plugin@7d0e0da0bda7b9e7825eb06d682db2e9086bc0e2 # main
         with:
           arch: ${{ matrix.config.arch }}
           target: ${{ matrix.config.target }}
@@ -151,7 +151,7 @@ jobs:
           rm -rf cef_interface/cef_binary
           mv -vT "$dirname" cef_interface/cef_binary
 
-      - uses: SpiralP/github-reusable-workflows/.github/actions/build-classicube-plugin@234b03bbea7bec154f094bebf3ac7bb5fbd7d995 # main
+      - uses: SpiralP/github-reusable-workflows/.github/actions/build-classicube-plugin@7d0e0da0bda7b9e7825eb06d682db2e9086bc0e2 # main
         with:
           arch: ${{ matrix.config.arch }}
           target: ${{ matrix.config.target }}
@@ -192,7 +192,7 @@ jobs:
           rm -rf cef_interface/cef_binary
           mv -v "$dirname" cef_interface/cef_binary
 
-      - uses: SpiralP/github-reusable-workflows/.github/actions/build-classicube-plugin@234b03bbea7bec154f094bebf3ac7bb5fbd7d995 # main
+      - uses: SpiralP/github-reusable-workflows/.github/actions/build-classicube-plugin@7d0e0da0bda7b9e7825eb06d682db2e9086bc0e2 # main
         with:
           arch: ${{ matrix.config.arch }}
           target: ${{ matrix.config.target }}

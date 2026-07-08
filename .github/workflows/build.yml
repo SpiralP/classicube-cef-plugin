@@ -37,7 +37,7 @@ jobs:
             }
           - { arch: i686, target: i686-pc-windows-msvc, url_target: windows32 }
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
       - uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         id: cache-cef-binary
@@ -90,7 +90,7 @@ jobs:
             }
 
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
       # x86_64: all build tools (gcc/g++/cmake/clang/rustup/aria2/pkg-config/
       # libssl-dev) and chromium runtime libs (transitive deps of the
@@ -171,7 +171,7 @@ jobs:
             }
           - { arch: x86_64, target: x86_64-apple-darwin, url_target: macosx64 }
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
       - uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         id: cache-cef-binary

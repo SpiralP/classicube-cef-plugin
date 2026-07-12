@@ -30,7 +30,7 @@ futures-timer = "=3.0.4"
 lazy_static = "=1.5.0"
 ncollide3d = "=0.33.0"
 rand = "=0.10.2"
-regex = "=1.12.4"
+regex = "=1.13.0"
 reqwest = { version = "=0.13.4", features = ["query"] }
 serde = { version = "=1.0.228", features = ["derive"] }
 serde_json = "=1.0.150"
@@ -52,7 +52,7 @@ windows = { version = "=0.62.2", features = [
 
 [build-dependencies]
 bindgen = "=0.72.1"
-cc = "=1.2.66"
+cc = "=1.2.67"
 cmake = "=0.1.58"
 
 [features]

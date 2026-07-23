@@ -274,7 +274,7 @@ source = "git+https://github.com/SpiralP/rust-clap-classicube.git#f961ec4c263c5b
 
 [[package]]
 name = "classicube-cef-plugin"
-version = "2.0.22"
+version = "2.0.23"
 dependencies = [
  "async-dispatcher",
  "async-recursion",

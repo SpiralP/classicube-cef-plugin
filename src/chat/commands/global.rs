@@ -111,6 +111,13 @@ pub enum Commands {
     /// For example when screens are finished loading via "cef create".
     #[command(name("replytwo"), alias("reply-two"))]
     ReplyTwo { num: String },
+
+    /// Run a "/Input" command on the server
+    ///
+    /// This is useful to use in scripts to know when cef commands have finished executing.
+    /// For example when screens are finished loading via "cef create".
+    #[command(name("input"))]
+    Input { input: String },
 }
 
 pub async fn run(player_snapshot: PlayerSnapshot, commands: Commands) -> Result<()> {
@@ -223,6 +230,13 @@ pub async fn run(player_snapshot: PlayerSnapshot, commands: Commands) -> Result<
 
         Commands::ReplyTwo { num } => {
             let owned_string = OwnedString::new(format!("/ReplyTwo {num}"));
+            unsafe {
+                Chat_Send(owned_string.as_cc_string(), 0);
+            }
+        }
+
+        Commands::Input { input } => {
+            let owned_string = OwnedString::new(format!("/Input {input}"));
             unsafe {
                 Chat_Send(owned_string.as_cc_string(), 0);
             }

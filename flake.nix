@@ -12,7 +12,7 @@
             "x86_64-linux" = {
               platformUrl = "linux64";
               projectArchCmake = "x86_64";
-              hash = "sha256-ExokI2UuUBWC9M91HMfFEZXeSI05Dx4hX33vPkWwMjU=";
+              hash = "sha256-sGZ5HdmmnClZoageOSVrVHVtSNE1l1lNa26Xs//qFV0=";
             };
             # TODO test if arm builds/works before adding these
             # "aarch64-linux" = { platformUrl = "linuxarm64"; projectArchCmake = "arm64"; hash = ""; };

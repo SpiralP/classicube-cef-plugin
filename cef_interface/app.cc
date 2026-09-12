@@ -88,6 +88,14 @@ void MyApp::OnBeforeCommandLineProcessing(
   // to make execute_javascript_on_frame work
   add_switch(command_line, "disable-site-isolation-trials");
 
+  // Chromium 151+ shows a "Chromium Additional Terms of Service" modal on
+  // first run in Linux builds (first_run_internal_linux.cc ShowEulaDialog,
+  // gated in chrome_browser_main.cc on first_run::IsChromeFirstRun() and
+  // master_prefs_->eula_required, which defaults to true on Linux). The game
+  // needs no first-run flow: --no-first-run makes IsChromeFirstRun() false,
+  // so the dialog is never shown, on any platform.
+  add_switch(command_line, "no-first-run");
+
   // don't show popup for "Chromium Safe Storage" on mac
   add_switch(command_line, "use-mock-keychain");
 

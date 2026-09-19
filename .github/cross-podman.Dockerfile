@@ -2,7 +2,7 @@
 # and command podman run --rm -it --device /dev/fuse --user 0:0 -v "$PWD:$PWD" -w "$PWD" temp cross build --target aarch64-unknown-linux-gnu
 # and ls -lAhSr target/aarch64-unknown-linux-gnu/debug/
 
-FROM rust@sha256:bf5a9aa29062a6cb03c49bd59a46eb55e3cc770caf598a221a7866e500be3082
+FROM rust@sha256:c92b3414e418f5b250f13c5bd393f90192f0b4bb4767e64f29c9e583197b27cb
 
 RUN apt-get update && apt-get install -y \
     podman \

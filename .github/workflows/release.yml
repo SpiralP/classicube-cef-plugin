@@ -22,7 +22,7 @@ jobs:
       attestations: write # ditto
 
   release:
-    uses: SpiralP/github-reusable-workflows/.github/workflows/release.yml@6bdceabb261dd5bad27d9dfc22f4076e37d92725 # main
+    uses: SpiralP/github-reusable-workflows/.github/workflows/release.yml@1c5b3a0ed1bd59af5ca93e03c2ee5df58076baea # main
     needs: build
     concurrency:
       group: release-${{ github.ref }}

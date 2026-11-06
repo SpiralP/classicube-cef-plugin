@@ -27,6 +27,29 @@
           makeCefBinaryAttrs = debug: prev:
             let
               p = platforms.${system};
+
+              # CEF 156+ links ANGLE statically and ships no libEGL.so or
+              # libGLESv2.so. nixpkgs' installPhase patchelfs both
+              # unconditionally, so guard those two calls. replaceStrings is a
+              # silent no-op if nixpkgs ever changes the lines, hence the warn.
+              gl_rpath = lib.makeLibraryPath [ pkgs.stdenv.cc.cc ];
+              patchelfEgl = ''patchelf --set-rpath "${gl_rpath}" Release/libEGL.so'';
+              patchelfGles = ''patchelf --add-needed libGL.so.1 --set-rpath "${gl_rpath}" Release/libGLESv2.so'';
+              patchedInstallPhase =
+                let
+                  replaced =
+                    lib.replaceStrings
+                      [ patchelfEgl patchelfGles ]
+                      [
+                        ''if test -e Release/libEGL.so; then patchelf --set-rpath "${gl_rpath}" Release/libEGL.so; fi''
+                        ''if test -e Release/libGLESv2.so; then patchelf --add-needed libGL.so.1 --set-rpath "${gl_rpath}" Release/libGLESv2.so; fi''
+                      ]
+                      prev.installPhase;
+                in
+                if replaced == prev.installPhase && lib.hasInfix "Release/libEGL.so" prev.installPhase then
+                  lib.warn "cef-binary installPhase changed, CEF 156+ libEGL/libGLESv2 guard no longer applies" replaced
+                else
+                  replaced;
             in
             (rec {
               version = lib.strings.trim (builtins.readFile ./cef_binary_version);
@@ -46,7 +69,7 @@
                 # conserve disk space, before installPhase runs cp
                 rm -rfv ${if debug then "Release" else "Debug"}
 
-                ${prev.installPhase}
+                ${patchedInstallPhase}
 
                 # cef wants icu file next to the .so
                 mv -vT $out/${if debug then "Debug" else "Release"} $out/lib

@@ -251,6 +251,10 @@ fn build_bindings(libcef_include_dir: &Path) {
         .clang_arg(format!("-I{}", libcef_include_dir.display()))
         .clang_arg("-xc++")
         .clang_arg("-std=c++20")
+        // Newer MSVC STL (VS 2026 / MSVC 14.52) hard-errors when the parsing
+        // compiler is not Clang 22+, but bindgen only needs to parse the
+        // headers -- codegen still goes through the real MSVC toolchain.
+        .clang_arg("-D_ALLOW_COMPILER_AND_STL_VERSION_MISMATCH")
         .header_contents(
             "bindgen.hpp",
             "#include \"interface.hh\"",
